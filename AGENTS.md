@@ -74,3 +74,14 @@ If a rule conflicts, a placeholder is incomplete, the required authority is
 missing, or an error requires judgment beyond the documented automatic track,
 stop the affected workflow and report what must be resolved. Preserve all
 available evidence.
+
+## Notes
+
+For optimization runs, use the flag `--skip-tests 1` to skip test and save time. Also add the following params for monitoriring:
+
+```txt
+--monitor-gpu 1 \
+--monitor-gpu-interval 10 \
+--monitor-gpu-pcie-width-warning 16 \
+--monitor-gpu-pcie-gen-warning 5
+```
