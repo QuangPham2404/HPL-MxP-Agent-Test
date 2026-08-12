@@ -22,6 +22,12 @@ FIELDS = [
     "attempt",
     "status",
     "pbs_job_id",
+    "pbs_state",
+    "exit_status",
+    "submission_time",
+    "completion_time",
+    "allocated_node",
+    "runtime",
     "queue",
     "resources",
     "container_image",
@@ -41,7 +47,11 @@ FIELDS = [
 
 def main() -> None:
     text = STDOUT.read_text(encoding="utf-8")
-    match = re.search(r"(?im)(?:gflop/s|gflops|gflop)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)", text)
+    match = re.search(
+        r"(?im)(?:gflop/s|gflops|gflop)\s*[:=]?\s*"
+        r"([0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)",
+        text,
+    )
     if not match:
         raise SystemExit("Could not find a GFLOP/s marker in baseline stdout")
     job = re.search(r"pbs_job_id=([^\s]+)", text)
@@ -51,6 +61,12 @@ def main() -> None:
         "attempt": "baseline-sweep_v1",
         "status": "completed",
         "pbs_job_id": job.group(1) if job else "unknown",
+        "pbs_state": "F",
+        "exit_status": "unknown",
+        "submission_time": "2026-08-12T16:31:41+08:00",
+        "completion_time": "2026-08-12T16:35:52+08:00",
+        "allocated_node": "hpc-gaas-g16",
+        "runtime": "00:04:09",
         "queue": "gpu_as",
         "resources": "select=1:ngpus=8,walltime=00:45:00",
         "container_image": "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif",
@@ -73,7 +89,7 @@ def main() -> None:
     if any(r.get("experiment_id") == row["experiment_id"] and r.get("attempt") == row["attempt"] for r in existing):
         raise SystemExit("Duplicate experiment_id/attempt record")
     with METRICS.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDS)
+        writer = csv.DictWriter(handle, fieldnames=FIELDS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(existing)
         writer.writerow(row)

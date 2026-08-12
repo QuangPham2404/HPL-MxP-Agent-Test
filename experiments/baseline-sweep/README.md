@@ -30,8 +30,13 @@ is successful and finite, and the reported GFLOP/s value can be extracted.
 
 ## Attempt record
 
-| Attempt | PBS job ID | State/exit | Stdout | Stderr | Correctness | GFLOP/s |
-|---|---|---|---|---|---|---|
-| `baseline-sweep_v1` | pending | pending | `outputs/baseline-sweep_v1.o` | `outputs/baseline-sweep_v1.e` | pending | pending |
+| Attempt | PBS job ID | State/exit | Node/runtime | Stdout | Stderr | Correctness | GFLOP/s |
+|---|---|---|---|---|---|---|---|
+| `baseline-sweep_v1` | `47686.gaas` | `F` / unknown | `hpc-gaas-g16` / `00:04:09` | `outputs/baseline-sweep_v1.o` | `outputs/baseline-sweep_v1.e` | PASSED; residual `3.795803E-04` | `1.4432e+06` |
+
+PBS accounting did not expose an `exit_status` field in the retained history;
+the application output completed normally and reported a passed verification.
+The stderr file contains the module-load line and an Apptainer warning about an
+unknown group ID; no runtime failure was reported.
 
 No runtime patching or retry is authorized by this experiment record.
