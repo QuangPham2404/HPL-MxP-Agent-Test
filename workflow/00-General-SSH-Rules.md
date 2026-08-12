@@ -45,22 +45,14 @@ new cluster. Preserve the universal rules when adapting this file.
 
 Replace every placeholder below. This section is the active cluster adapter.
 
-- Cluster name: `<cluster-name>`
-- SSH alias: `<ssh-alias>`
-- Persistent connection check: `<connection-check-command>`
-- If unavailable, user recovery command: `<recovery-command>`
-- Required SSH form: `<ssh-command-form>`
-- Required SCP form: `<scp-command-form>`
-- Required rsync form, if used: `<rsync-command-form>`
-- Remote project root: `<remote-project-root>`
-- Scheduler: `<PBS|Slurm|other>`
-- Scheduler submission command: `<submission-command>`
-- Scheduler monitoring command and polling limit: `<monitoring-policy>`
-- MPI or application launcher: `<launcher>`
-- Module policy: `<module-policy>`
-- Login-node restrictions: `<login-node-policy>`
-- Compute-node execution restrictions: `<compute-node-policy>`
-- Approved remote paths: `<approved-paths>`
+- Cluster name: `GAAS`
+- SSH command: `<ssh gaas>`
+- Scheduler: `PBS`
+- Scheduler submission command: `qsub`
+- Scheduler monitoring command and polling limit: `qstat -u $USER`
+- Module policy: use `module avail` to check
+- Login-node restrictions: `Do not run builds/experiments on login-node`
+- Approved project remote path: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization`
 
 ## Cluster adaptation checks
 

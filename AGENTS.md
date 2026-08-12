@@ -9,7 +9,7 @@ Before taking action, Codex must:
 
 1. Read every numbered file in `workflow/` in numerical order.
 2. Read `APPLICATION.md`.
-3. Read the latest progress report under `progress/`.
+3. Read the latest progress report under `progress/`
 4. Check the project Git state according to `workflow/01-Git-Sync-Policy.md`.
 
 The workflow files are related and must all be read. Do not selectively route
@@ -17,12 +17,12 @@ only one workflow file based on the immediate task.
 
 ## Active project configuration
 
-- Application: `<application-name>`
-- Active cluster: `<cluster-name>`
+- Application: `HPL-MxP (NVIDIA container implementation: https://docs.nvidia.com/nvidia-hpc-benchmarks/HPL_MxP_benchmark.html)`
+- Active cluster: `GAAS`
 - Workflow pack path: `workflow/`
 - Application overview: `APPLICATION.md`
 - Remote project root: also record and verify this in
-  `workflow/00-General-SSH-Rules.md`
+  `workflow/00-General-SSH-Rules.md`: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization`
 
 Complete the cluster-specific placeholders in
 `workflow/00-General-SSH-Rules.md` before remote work begins. That file is the
