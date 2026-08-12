@@ -50,6 +50,17 @@ The workflow pack does not grant permission to install packages, modify shared
 software, change source code, change resource policy, delete material, cancel
 jobs, or start a new optimization direction.
 
+Experiment output policy:
+
+- PBS stdout and stderr files produced by experiments, specifically `.o` and
+  `.e` files under `experiments/*/outputs/`, are useful run evidence and must
+  normally be tracked and pushed to GitHub with the corresponding experiment
+  record.
+- Preserve attempt-specific filenames; do not overwrite evidence from an
+  earlier attempt.
+- This policy applies to experiment outputs only. Do not commit unrelated
+  temporary files or outputs outside the designated experiment directories.
+
 ## Application-specific instructions
 
 Maintain `APPLICATION.md` as the application overview. Record the source URL
