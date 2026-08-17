@@ -9,6 +9,10 @@ This is for user's use. Agents do not need to execute these todos unless specifi
 2. Pull hpl-mxp.sh from container to host to see if the web page captures all tuning param (DONE - use baseline output as source of truth)
 
 3. Proceed to tune simple starting param before proceeding to deeper optimization (hardware-track only, software track later)
+- Push `--n`
+- Sweep `--nprow` and `--npcol` and then `--nporder`
+- Balance `--nb`
+- Analyse key steps with NVIDIA NSIGHT
 
 ## Notes
 - From baseline run results, we see some of the params are different from the guide, including:
