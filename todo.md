@@ -10,8 +10,8 @@ This is for user's use. Agents do not need to execute these todos unless specifi
 
 3. Proceed to tune simple starting param before proceeding to deeper optimization (hardware-track only, software track later)
 - Push `--n`
-- Sweep `--nprow` and `--npcol` and then `--nporder`
-- Balance `--nb`
+- Sweep `--nprow` and `--npcol` and then `--nporder` --> re-verify results
+- Balance `--nb` --> couple with `n`, nearly there, just need some final clarifications
 - Analyse key steps with NVIDIA NSIGHT
 - **POSSIBLE BOTTLENECK: System RAM is filled but VRAM is NOT**
 
