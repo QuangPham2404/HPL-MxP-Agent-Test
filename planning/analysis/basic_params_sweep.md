@@ -51,22 +51,22 @@ all percentage comparisons.
 
 ### Baseline
 
-| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) |
-|---|---:|---:|---|---|---:|
-| `baseline-sweep_v1` | 370000 | 1024 | 2x4 | row | 1.4432e+06 |
+| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) | Increase vs baseline |
+|---|---:|---:|---|---|---:|---:|
+| `baseline-sweep_v1` | 370000 | 1024 | 2x4 | row | 1.4432e+06 | 0.00% |
 
 This is the reference point for the three sweep groups below.
 
 ### Sweep N
 
-| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) |
-|---|---:|---:|---|---|---:|
-| `N-sweep_399k` | 399360 | 1024 | 2x4 | row | 1.4918e+06 |
-| `N-sweep_v1` | 400000 | 1024 | 2x4 | row | 1.5569e+06 |
-| `N-sweep_400k` | 400384 | 1024 | 2x4 | row | 1.5751e+06 |
-| `N-sweep_401k` | 401408 | 1024 | 2x4 | row | 1.5821e+06 |
-| `N-sweep_402k` | 402423 | 1024 | 2x4 | row | 7.6797e+05 |
-| `N-sweep_404k` | 404000 | 1024 | 2x4 | row | 1.4871e+06 |
+| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) | Increase vs baseline |
+|---|---:|---:|---|---|---:|---:|
+| `N-sweep_399k` | 399360 | 1024 | 2x4 | row | 1.4918e+06 | 3.37% |
+| `N-sweep_v1` | 400000 | 1024 | 2x4 | row | 1.5569e+06 | 7.88% |
+| `N-sweep_400k` | 400384 | 1024 | 2x4 | row | 1.5751e+06 | 9.14% |
+| `N-sweep_401k` | 401408 | 1024 | 2x4 | row | 1.5821e+06 | 9.62% |
+| `N-sweep_402k` | 402423 | 1024 | 2x4 | row | 7.6797e+05 | -46.79% |
+| `N-sweep_404k` | 404000 | 1024 | 2x4 | row | 1.4871e+06 | 3.04% |
 
 At `NB=1024` and `2x4` row, the highest N-sweep result is `N=401408`,
 `1.5821e+06` GFLOP/s, 9.62% above baseline. The valid results from
@@ -77,16 +77,16 @@ optimal or representative.
 
 ### Sweep NB
 
-| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) |
-|---|---:|---:|---|---|---:|
-| `nb-sweep_1024` | 401408 | 1024 | 2x4 | row | 1.5782e+06 |
-| `nb-sweep_2048` | 401408 | 2048 | 2x4 | row | 1.7879e+06 |
-| `nb-sweep_3072` | 401408 | 3072 | 2x4 | row | 1.8209e+06 |
-| `nb-sweep_4096` | 401408 | 4096 | 2x4 | row | 1.8040e+06 |
-| `nb-sweep_5120` | 401408 | 5120 | 2x4 | row | 1.7569e+06 |
-| `nb-sweep_8192` | 401408 | 8192 | 2x4 | row | 1.7445e+06 |
-| `n-resweep_399k` | 399360 | 3072 | 2x4 | row | 1.8177e+06 |
-| `n-resweep_402k` | 402432 | 3072 | 2x4 | row | 1.6981e+06 |
+| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) | Increase vs baseline |
+|---|---:|---:|---|---|---:|---:|
+| `nb-sweep_1024` | 401408 | 1024 | 2x4 | row | 1.5782e+06 | 9.35% |
+| `nb-sweep_2048` | 401408 | 2048 | 2x4 | row | 1.7879e+06 | 23.88% |
+| `nb-sweep_3072` | 401408 | 3072 | 2x4 | row | 1.8209e+06 | 26.17% |
+| `nb-sweep_4096` | 401408 | 4096 | 2x4 | row | 1.8040e+06 | 25.00% |
+| `nb-sweep_5120` | 401408 | 5120 | 2x4 | row | 1.7569e+06 | 21.74% |
+| `nb-sweep_8192` | 401408 | 8192 | 2x4 | row | 1.7445e+06 | 20.88% |
+| `n-resweep_399k` | 399360 | 3072 | 2x4 | row | 1.8177e+06 | 25.95% |
+| `n-resweep_402k` | 402432 | 3072 | 2x4 | row | 1.6981e+06 | 17.66% |
 
 With `N=401408` and `2x4` row, performance rises from `1.5782e+06` at
 `NB=1024` to a local maximum of `1.8209e+06` at `NB=3072`, then declines at
@@ -96,12 +96,12 @@ but does not establish an N optimum by itself.
 
 ### Sweep grid (`--nprow`, `--npcol`, `--nporder`)
 
-| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) |
-|---|---:|---:|---|---|---:|
-| `2x4_row` | 399360 | 3072 | 2x4 | row | 1.7302e+06 |
-| `2x4_col` | 399360 | 3072 | 2x4 | column | 1.7625e+06 |
-| `4x2_row` | 399360 | 3072 | 4x2 | row | 1.8126e+06 |
-| `4x2_col` | 399360 | 3072 | 4x2 | column | 1.8441e+06 |
+| Attempt | N | NB | Grid | Order | Reported result (GFLOP/s) | Increase vs baseline |
+|---|---:|---:|---|---|---:|---:|
+| `2x4_row` | 399360 | 3072 | 2x4 | row | 1.7302e+06 | 19.89% |
+| `2x4_col` | 399360 | 3072 | 2x4 | column | 1.7625e+06 | 22.12% |
+| `4x2_row` | 399360 | 3072 | 4x2 | row | 1.8126e+06 | 25.60% |
+| `4x2_col` | 399360 | 3072 | 4x2 | column | 1.8441e+06 | 27.78% |
 
 At fixed `N=399360` and `NB=3072`, the `4x2` grid outperforms `2x4` for both
 orderings. Column ordering outperforms row ordering for both tested grids. The
