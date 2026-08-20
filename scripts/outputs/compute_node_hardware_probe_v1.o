@@ -1,0 +1,312 @@
+probe_id=compute_node_hardware_probe_v1
+probe_scope=read-only compute-node characterization
+pbs_job_id=50473.gaas
+submitted_workdir=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization/scripts
+2026-08-20T16:57:43+08:00
+hpc-gaas-g11
+
+============================================================
+SECTION 1: JOB, HOST, KERNEL, AND OPERATING SYSTEM
+============================================================
+pwd=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization/scripts
+
+### Kernel and architecture
++ uname -a
+Linux hpc-gaas-g11 5.14.0-611.36.1.el9_7.x86_64 #1 SMP PREEMPT_DYNAMIC Tue Mar 3 17:30:12 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+[exit_status=0]
+
+### Operating-system release
++ cat /etc/os-release
+NAME="Rocky Linux"
+VERSION="9.7 (Blue Onyx)"
+ID="rocky"
+ID_LIKE="rhel centos fedora"
+VERSION_ID="9.7"
+PLATFORM_ID="platform:el9"
+PRETTY_NAME="Rocky Linux 9.7 (Blue Onyx)"
+ANSI_COLOR="0;32"
+LOGO="fedora-logo-icon"
+CPE_NAME="cpe:/o:rocky:rocky:9::baseos"
+HOME_URL="https://rockylinux.org/"
+VENDOR_NAME="RESF"
+VENDOR_URL="https://resf.org/"
+BUG_REPORT_URL="https://bugs.rockylinux.org/"
+SUPPORT_END="2032-05-31"
+ROCKY_SUPPORT_PRODUCT="Rocky-Linux-9"
+ROCKY_SUPPORT_PRODUCT_VERSION="9.7"
+REDHAT_SUPPORT_PRODUCT="Rocky Linux"
+REDHAT_SUPPORT_PRODUCT_VERSION="9.7"
+[exit_status=0]
+
+### PBS allocation environment
++ bash -c env | sort | grep "^PBS_"
+PBS_CWD_PATH=/home/pham0094
+PBS_ENVIRONMENT=PBS_BATCH
+PBS_JOBCOOKIE=5AF1FFA35702D7E40F925A964834977A
+PBS_JOBDIR=/home/pham0094
+PBS_JOBID=50473.gaas
+PBS_JOBNAME=hpl_mxp_hw_probe_v1
+PBS_MOMPORT=15003
+PBS_NODEFILE=/var/spool/pbs/aux/50473.gaas
+PBS_NODENUM=0
+PBS_O_HOME=/home/pham0094
+PBS_O_HOST=hpc-gaas-hn2
+PBS_O_INTERACTIVE_AUTH_METHOD=resvport
+PBS_O_LANG=en_US.UTF-8
+PBS_O_LOGNAME=pham0094
+PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin
+PBS_O_QUEUE=gpu_as
+PBS_O_SHELL=/bin/bash
+PBS_O_SYSTEM=Linux
+PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization/scripts
+PBS_QUEUE=gpu_as
+PBS_STDERR_PATH=/var/spool/pbs/spool/50473.gaas.ER
+PBS_STDIN_PATH=/dev/null
+PBS_STDOUT_PATH=/var/spool/pbs/spool/50473.gaas.OU
+PBS_TASKNUM=1
+[exit_status=0]
+
+============================================================
+SECTION 2: CPU TOPOLOGY AND FEATURES
+============================================================
+
+### Logical CPU count
++ nproc --all
+112
+[exit_status=0]
+
+### Detailed CPU topology
++ lscpu
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           46 bits physical, 57 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  112
+On-line CPU(s) list:                     0-111
+Vendor ID:                               GenuineIntel
+Model name:                              INTEL(R) XEON(R) PLATINUM 8570
+CPU family:                              6
+Model:                                   207
+Thread(s) per core:                      1
+Core(s) per socket:                      56
+Socket(s):                               2
+Stepping:                                2
+CPU(s) scaling MHz:                      91%
+CPU max MHz:                             4000.0000
+CPU min MHz:                             800.0000
+BogoMIPS:                                4200.00
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cat_l2 cdp_l3 cdp_l2 ssbd mba ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect user_shstk avx_vnni avx512_bf16 wbnoinvd dtherm ida arat pln pts avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid bus_lock_detect cldemote movdiri movdir64b enqcmd fsrm md_clear serialize tsxldtrk pconfig arch_lbr ibt amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities
+L1d cache:                               5.3 MiB (112 instances)
+L1i cache:                               3.5 MiB (112 instances)
+L2 cache:                                224 MiB (112 instances)
+L3 cache:                                600 MiB (2 instances)
+NUMA node(s):                            2
+NUMA node0 CPU(s):                       0-55
+NUMA node1 CPU(s):                       56-111
+Vulnerability Gather data sampling:      Not affected
+Vulnerability Indirect target selection: Not affected
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Not affected
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Mitigation; IBPB before exit to userspace
+[exit_status=0]
+
+### CPU-to-core/socket/NUMA mapping
++ lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE
+CPU CORE SOCKET NODE ONLINE
+  0    0      0    0    yes
+  1    1      0    0    yes
+  2    2      0    0    yes
+  3    3      0    0    yes
+  4    4      0    0    yes
+  5    5      0    0    yes
+  6    6      0    0    yes
+  7    7      0    0    yes
+  8    8      0    0    yes
+  9    9      0    0    yes
+ 10   10      0    0    yes
+ 11   11      0    0    yes
+ 12   12      0    0    yes
+ 13   13      0    0    yes
+ 14   14      0    0    yes
+ 15   15      0    0    yes
+ 16   16      0    0    yes
+ 17   17      0    0    yes
+ 18   18      0    0    yes
+ 19   19      0    0    yes
+ 20   20      0    0    yes
+ 21   21      0    0    yes
+ 22   22      0    0    yes
+ 23   23      0    0    yes
+ 24   24      0    0    yes
+ 25   25      0    0    yes
+ 26   26      0    0    yes
+ 27   27      0    0    yes
+ 28   28      0    0    yes
+ 29   29      0    0    yes
+ 30   30      0    0    yes
+ 31   31      0    0    yes
+ 32   32      0    0    yes
+ 33   33      0    0    yes
+ 34   34      0    0    yes
+ 35   35      0    0    yes
+ 36   36      0    0    yes
+ 37   37      0    0    yes
+ 38   38      0    0    yes
+ 39   39      0    0    yes
+ 40   40      0    0    yes
+ 41   41      0    0    yes
+ 42   42      0    0    yes
+ 43   43      0    0    yes
+ 44   44      0    0    yes
+ 45   45      0    0    yes
+ 46   46      0    0    yes
+ 47   47      0    0    yes
+ 48   48      0    0    yes
+ 49   49      0    0    yes
+ 50   50      0    0    yes
+ 51   51      0    0    yes
+ 52   52      0    0    yes
+ 53   53      0    0    yes
+ 54   54      0    0    yes
+ 55   55      0    0    yes
+ 56   56      1    1    yes
+ 57   57      1    1    yes
+ 58   58      1    1    yes
+ 59   59      1    1    yes
+ 60   60      1    1    yes
+ 61   61      1    1    yes
+ 62   62      1    1    yes
+ 63   63      1    1    yes
+ 64   64      1    1    yes
+ 65   65      1    1    yes
+ 66   66      1    1    yes
+ 67   67      1    1    yes
+ 68   68      1    1    yes
+ 69   69      1    1    yes
+ 70   70      1    1    yes
+ 71   71      1    1    yes
+ 72   72      1    1    yes
+ 73   73      1    1    yes
+ 74   74      1    1    yes
+ 75   75      1    1    yes
+ 76   76      1    1    yes
+ 77   77      1    1    yes
+ 78   78      1    1    yes
+ 79   79      1    1    yes
+ 80   80      1    1    yes
+ 81   81      1    1    yes
+ 82   82      1    1    yes
+ 83   83      1    1    yes
+ 84   84      1    1    yes
+ 85   85      1    1    yes
+ 86   86      1    1    yes
+ 87   87      1    1    yes
+ 88   88      1    1    yes
+ 89   89      1    1    yes
+ 90   90      1    1    yes
+ 91   91      1    1    yes
+ 92   92      1    1    yes
+ 93   93      1    1    yes
+ 94   94      1    1    yes
+ 95   95      1    1    yes
+ 96   96      1    1    yes
+ 97   97      1    1    yes
+ 98   98      1    1    yes
+ 99   99      1    1    yes
+100  100      1    1    yes
+101  101      1    1    yes
+102  102      1    1    yes
+103  103      1    1    yes
+104  104      1    1    yes
+105  105      1    1    yes
+106  106      1    1    yes
+107  107      1    1    yes
+108  108      1    1    yes
+109  109      1    1    yes
+110  110      1    1    yes
+111  111      1    1    yes
+[exit_status=0]
+
+### CPU feature flags
++ bash -c grep -m 1 '^Features\|^flags' /proc/cpuinfo
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cat_l2 cdp_l3 cdp_l2 ssbd mba ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect user_shstk avx_vnni avx512_bf16 wbnoinvd dtherm ida arat pln pts avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid bus_lock_detect cldemote movdiri movdir64b enqcmd fsrm md_clear serialize tsxldtrk pconfig arch_lbr ibt amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities
+[exit_status=0]
+
+============================================================
+SECTION 3: NUMA TOPOLOGY, AFFINITY, AND MEMORY
+============================================================
+
+### NUMA hardware summary
++ numactl -H
+available: 2 nodes (0-1)
+node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55
+node 0 size: 1031576 MB
+node 0 free: 920394 MB
+node 1 cpus: 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111
+node 1 size: 1032171 MB
+node 1 free: 757200 MB
+node distances:
+node     0    1 
+   0:   10   21 
+   1:   21   10 
+[exit_status=0]
+
+### NUMA memory statistics
++ numastat -m
+
+Per-node system memory usage (in MBs):
+                          Node 0          Node 1           Total
+                 --------------- --------------- ---------------
+MemTotal              1031576.04      1032171.14      2063747.18
+MemFree                920394.20       757200.46      1677594.67
+MemUsed                111181.84       274970.68       386152.52
+SwapCached                 63.01            3.75           66.76
+Active                  10667.27       146900.91       157568.18
+Inactive                68870.21        96874.33       165744.54
+Active(anon)              438.75          255.03          693.78
+Inactive(anon)            369.51          281.15          650.66
+Active(file)            10228.52       146645.88       156874.41
+Inactive(file)          68500.70        96593.18       165093.88
+Unevictable             13120.19        12536.59        25656.78
+Mlocked                 13117.19        12536.59        25653.78
+Dirty                       0.04            0.03            0.07
+Writeback                   0.20            0.00            0.20
+FilePages               81176.51       244831.34       326007.84
+Mapped                   2275.07         1566.92         3841.99
+AnonPages               11458.06        11473.07        22931.13
+Shmem                    1758.95         1569.50         3328.44
+KernelStack                16.38           19.62           36.00
+PageTables                 68.09           63.16          131.25
+SecPageTables               0.00            0.00            0.00
+NFS_Unstable                0.00            0.00            0.00
+Bounce                      0.00            0.00            0.00
+WritebackTmp                0.00            0.00            0.00
+KReclaimable             3874.58         3242.95         7117.53
+Slab                     4500.71         4027.32         8528.03
+SReclaimable             3874.58         3242.95         7117.53
+SUnreclaim                626.13          784.37         1410.50
+AnonHugePages            8750.00         8684.00        17434.00
+ShmemHugePages              0.00            0.00            0.00
+ShmemPmdMapped              0.00            0.00            0.00
+FileHugePages               0.00            0.00            0.00
+FilePmdMapped               0.00            0.00            0.00
+Unaccepted                  0.00            0.00            0.00
+HugePages_Total          8436.00         8460.00        16896.00
+HugePages_Free              0.00            0.00            0.00
+HugePages_Surp              0.00            0.00            0.00
+[exit_status=0]
+
+### NUMA-aware topology
+[unavailable: command 'lstopo-no-graphics' was not found]

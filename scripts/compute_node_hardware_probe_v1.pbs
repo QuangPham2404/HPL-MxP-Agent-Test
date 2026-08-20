@@ -11,8 +11,8 @@
 #PBS -P hpc_admin
 #PBS -l select=1:ngpus=8
 #PBS -l walltime=00:10:00
-#PBS -o outputs/compute_node_hardware_probe_v1.o
-#PBS -e outputs/compute_node_hardware_probe_v1.e
+#PBS -o outputs/compute_node_hardware_probe_v1.1.o
+#PBS -e outputs/compute_node_hardware_probe_v1.1.e
 
 set -uo pipefail
 
@@ -34,7 +34,7 @@ run_optional() {
     fi
 }
 
-echo "probe_id=compute_node_hardware_probe_v1"
+echo "probe_id=compute_node_hardware_probe_v1.1"
 echo "probe_scope=read-only compute-node characterization"
 echo "pbs_job_id=${PBS_JOBID:-unknown}"
 echo "submitted_workdir=${PBS_O_WORKDIR:-unknown}"
@@ -70,7 +70,7 @@ echo "============================================================"
 run_optional "NUMA hardware summary" numactl -H
 run_optional "NUMA memory statistics" numastat -m
 run_optional "NUMA-aware topology" lstopo-no-graphics
-run_optional "NUMA node memory files" bash -c "for f in /sys/devices/system/node/node*/meminfo; do echo --- \"$f\"; sed -n '1,12p' \"$f\"; done"
+run_optional "NUMA node memory files" bash -c 'for f in /sys/devices/system/node/node*/meminfo; do echo --- "$f"; sed -n "1,12p" "$f"; done'
 run_optional "Host memory summary" free -h
 run_optional "Kernel memory accounting" cat /proc/meminfo
 run_optional "Virtual-memory counters" vmstat -s
