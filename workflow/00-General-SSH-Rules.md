@@ -46,7 +46,7 @@ new cluster. Preserve the universal rules when adapting this file.
 Replace every placeholder below. This section is the active cluster adapter.
 
 - Cluster name: `GAAS`
-- SSH command: `<ssh gaas>`
+- SSH command: `ssh gaas`
 - Scheduler: `PBS`
 - Scheduler submission command: `qsub`
 - Scheduler monitoring command and polling limit: `qstat -u $USER`
