@@ -61,6 +61,23 @@ RESIDUAL = re.compile(r"^\s+\|\|Ax-b\|\|_oo .*=\s+([0-9.Ee+-]+)\s+\.\.\.\.\.\.\s
 GFLOPS = re.compile(r"GFLOPS = ([0-9.eE+-]+), per GPU")
 
 
+def stderr_for(stdout: Path) -> Path:
+    """Resolve stderr evidence when a retained PBS stem was mistyped."""
+    direct = stdout.with_suffix(".e")
+    if direct.exists():
+        return direct
+    aliases = {
+        "N-sweep_402_re": "N-sweep_402k_re",
+        "n-resweep_399_": "n-resweep_399k_",
+    }
+    for source, target in aliases.items():
+        if stdout.stem.startswith(source):
+            candidate = stdout.with_name(stdout.stem.replace(source, target, 1) + ".e")
+            if candidate.exists():
+                return candidate
+    return direct
+
+
 def parse_stdout(text: str) -> dict:
     settings: dict[str, str] = {}
     pbs_job_id = "unknown"
@@ -102,7 +119,7 @@ def build_rows() -> list[dict]:
     for stdout in sorted(OUTPUTS.glob("*/outputs/*.o")):
         experiment = stdout.parents[1].name
         attempt = stdout.stem
-        stderr = stdout.with_suffix(".e")
+        stderr = stderr_for(stdout)
         data = parse_stdout(stdout.read_text(encoding="utf-8"))
         row = {
             "experiment_id": experiment,
