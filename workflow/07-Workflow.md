@@ -150,6 +150,75 @@ include relevant failed or invalid results, do not invent missing values, and
 check correctness before ranking performance. The suggested next section is a
 recommendation for user review, not execution permission.
 
+Every new or substantially updated analysis file must use the following
+sections:
+
+```markdown
+# Analysis: <optimization direction>
+
+## 1. Concise summary
+
+What was tried, why it was tried, and the scope of this analysis.
+
+## 2. Scope and evaluation criteria
+
+Record the source revision, compiler/MPI environment, workload, baseline,
+correctness requirements, performance metrics, included experiments, and
+exclusions.
+
+## 3. Data and analysis
+
+Use clearly labeled subsections for each grouped test. Present the selected
+data in tables or concise excerpts, followed by an interpretation of that
+group. Values must agree with `results/metrics.csv`.
+
+## 4. Insights gained
+
+Record confirmed wins, regressions, invalid or inconclusive results, noise,
+reproducibility limits, and other constraints.
+
+## 5. Suggested next section
+
+State the proposed next optimization direction, hypothesis, configurations,
+required controls or repetitions, success criteria, and unresolved questions.
+
+## 6. Provenance
+
+Link to the source CSV, experiment IDs and attempts, raw output files, and
+record the analysis date.
+```
+
+The exact headings may include descriptive text, but the six required content
+areas must remain identifiable: concise summary; scope and evaluation criteria;
+data and analysis; insights; suggested next section; and provenance. The
+suggested next section is a recommendation for user review, not permission to
+execute it.
+
+For an authorized `ANALYSE_RESULTS` request:
+
+1. Read the current `results/README.md`, `results/metrics.csv`, and
+   `results/RESULTS.md`, then identify the requested rows and their raw
+   evidence.
+2. Check correctness and validity before ranking performance. Correctness,
+   finite numerical fields, and the documented acceptance criteria take
+   precedence over runtime and FOM.
+3. Copy the selected data needed for the comparison into the relevant
+   `planning/analysis/<analysis-id>.md` file, retaining row identity and
+   provenance links.
+4. Analyze wins, regressions, failures, weak or strong scaling implications,
+   timing noise, resource effects, and unresolved limitations as applicable.
+5. Record a cautious, evidence-based suggested next section. Do not turn a
+   single noisy or warning-affected measurement into a definitive conclusion.
+6. Create or update the corresponding entry and link in `planning/PLANS.md`.
+7. Present the selected data, analysis, limitations, and suggested next
+   section to the user. The final response must be understandable without
+   opening the analysis file.
+
+The analysis workflow should preserve existing analysis history. When new
+measurements are added later, update the affected analysis file with a new
+analysis date and explain what changed; do not overwrite prior evidence or
+silently rewrite an earlier conclusion.
+
 ## Step 7: End the session and resume
 
 Before ending, write a dated `progress/YYYY-MM-DD-progress[_sN].md` file.
