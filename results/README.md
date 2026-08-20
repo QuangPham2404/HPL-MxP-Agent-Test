@@ -10,9 +10,12 @@ without the applicable analysis authorization.
 Columns and semantics for the HPL-MxP sweeps:
 
 - `experiment_id`: experiment directory name (`baseline-sweep`, `N-sweep`,
-  `nb-sweep`, `np-sweep`).
+  `nb-sweep`, `np-sweep`, `affinity-sweep`).
 - `attempt`: unique attempt label; matches the raw stdout/stderr file stem so
-  provenance is direct.
+  provenance is direct. For `affinity-sweep`, the output stem identifies the
+  tested configuration (`cpu_aff_free`, `cpu_aff_neutral`, `cpu_aff_strict`,
+  `mem_aff`, or `thread_10`); the exact affinity and environment settings are
+  documented in the experiment README and run scripts.
 - `status`: `completed` when the run produced the final benchmark output and a
   `PASSED` verification marker, otherwise `failed`.
 - `pbs_job_id`: PBS job identifier as echoed in raw stdout.

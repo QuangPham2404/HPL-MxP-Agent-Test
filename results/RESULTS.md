@@ -21,6 +21,11 @@ This report records validated raw result data only. No optimization analysis or 
 | N-sweep | N-sweep_403k | 403456 | 1024 | 2x4 | row | PASSED | 1.5818e+06 | experiments/N-sweep/outputs/N-sweep_403k.o |
 | N-sweep | N-sweep_404k | 404480 | 1024 | 2x4 | row | PASSED | 1.5540e+06 | experiments/N-sweep/outputs/N-sweep_404k.o |
 | N-sweep | N-sweep_v1 | 400000 | 1024 | 2x4 | row | PASSED | 1.5569e+06 | experiments/N-sweep/outputs/N-sweep_v1.o |
+| affinity-sweep | cpu_aff_free | 399360 | 3072 | 4x2 | column | PASSED | 1.8596e+06 | experiments/affinity-sweep/outputs/cpu_aff_free.o |
+| affinity-sweep | cpu_aff_neutral | 399360 | 3072 | 4x2 | column | PASSED | 1.8077e+06 | experiments/affinity-sweep/outputs/cpu_aff_neutral.o |
+| affinity-sweep | cpu_aff_strict | 399360 | 3072 | 4x2 | column | PASSED | 1.6919e+06 | experiments/affinity-sweep/outputs/cpu_aff_strict.o |
+| affinity-sweep | mem_aff | 399360 | 3072 | 4x2 | column | PASSED | 1.8428e+06 | experiments/affinity-sweep/outputs/mem_aff.o |
+| affinity-sweep | thread_10 | 399360 | 3072 | 4x2 | column | PASSED | 8.7049e+05 | experiments/affinity-sweep/outputs/thread_10.o |
 | baseline-sweep | baseline-sweep_v1 | 370000 | 1024 | 2x4 | row | PASSED | 1.4432e+06 | experiments/baseline-sweep/outputs/baseline-sweep_v1.o |
 | nb-sweep | n-resweep_399_1 | 399360 | 3072 | 2x4 | row | PASSED | 1.7624e+06 | experiments/nb-sweep/outputs/n-resweep_399_1.o |
 | nb-sweep | n-resweep_399_2 | 399360 | 3072 | 2x4 | row | PASSED | 1.8038e+06 | experiments/nb-sweep/outputs/n-resweep_399_2.o |
