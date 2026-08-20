@@ -72,12 +72,32 @@ measurements, not a repeated estimate of the curve.
 
 ### Register step
 
-| Configuration | Result | Percentage vs original baseline |
-|---|---|---:|
-| Changed `--cuda-host-register-step` | `NOT TESTED / TBD`; no CSV row, raw output, or performance value exists | `TBD` |
+| Attempt | Register step | Node | Residual marker | GFLOP/s | Percentage vs original baseline | vs matched buffer-32768 control |
+|---|---:|---|---|---:|---:|---:|
+| `reg_sweep_512` | `512` | `hpc-gaas-g14` | PASSED (`4.607964E-04`) | `1.9646e+06` | `+36.13%` | `-0.14%` |
+| `reg_sweep_1024` | `1024` | `hpc-gaas-g11` | PASSED (`4.226508E-04`) | `1.9822e+06` | `+37.35%` | `+0.76%` |
+| `reg_sweep_3072` | `3072` | `hpc-gaas-g11` | PASSED (`4.293472E-04`) | `1.9789e+06` | `+37.12%` | `+0.59%` |
+| `reg_sweep_4096` | `4096` | `hpc-gaas-g14` | PASSED (`4.341100E-04`) | `1.9521e+06` | `+35.26%` | `-0.77%` |
+| `reg_sweep_5012` | `5012` | `hpc-gaas-g15` | PASSED (`4.514143E-04`) | `1.9468e+06` | `+34.89%` | `-1.04%` |
 
-All four placement outputs show `--cuda-host-register-step = 2048`, so this
-parameter is held constant rather than evaluated in the current data.
+The register-step sweep uses the buffer-32768 placement result
+(`1.9673e+06` GFLOP/s) as its matched control. All five register-step values
+passed verification and remain above the original baseline, but the observed
+spread is small and each value has one attempt.
+
+## Register-step analysis addendum
+
+The best recorded register step is `1024` at `1.9822e+06` GFLOP/s, only
+`+0.76%` above the matched buffer-32768 control. Steps `3072`, `512`, `4096`,
+and `5012` are respectively `+0.59%`, `-0.14%`, `-0.77%`, and `-1.04%` versus
+that control. This does not establish a stable optimum because the runs are
+single measurements across three nodes and retained runtime/PBS exit metadata
+are unavailable.
+
+The register-step results therefore narrow the candidate region toward
+`1024`/`3072`, but require matched repetitions before selection. No
+correctness regression is present: every attempt reports a finite residual
+and `PASSED` verification.
 
 ## 4. Insights gained
 

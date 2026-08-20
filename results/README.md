@@ -17,7 +17,7 @@ Columns and semantics for the HPL-MxP sweeps:
   `mem_aff`, or `thread_10`); the exact affinity and environment settings are
   documented in the experiment README and run scripts. For
   `matrix-placement-control`, the output stem identifies the tested
-  `--fill-device-buffer-size` configuration.
+  `--fill-device-buffer-size` or `--cuda-host-register-step` configuration.
 - `status`: `completed` when the run produced the final benchmark output and a
   `PASSED` verification marker, otherwise `failed`.
 - `pbs_job_id`: PBS job identifier as echoed in raw stdout.

@@ -31,6 +31,11 @@ This report records validated raw result data only. No optimization analysis or 
 | matrix-placement-control | buffer_sweep_32768 | 399360 | 3072 | 4x2 | column | PASSED | 1.9673e+06 | experiments/matrix-placement-control/outputs/buffer_sweep_32768.o |
 | matrix-placement-control | buffer_sweep_8192 | 399360 | 3072 | 4x2 | column | PASSED | 2.1420e+06 | experiments/matrix-placement-control/outputs/buffer_sweep_8192.o |
 | matrix-placement-control | fill_device_default | 399360 | 3072 | 4x2 | column | PASSED | 2.1763e+06 | experiments/matrix-placement-control/outputs/fill_device_default.o |
+| matrix-placement-control | reg_sweep_1024 | 399360 | 3072 | 4x2 | column | PASSED | 1.9822e+06 | experiments/matrix-placement-control/outputs/reg_sweep_1024.o |
+| matrix-placement-control | reg_sweep_3072 | 399360 | 3072 | 4x2 | column | PASSED | 1.9789e+06 | experiments/matrix-placement-control/outputs/reg_sweep_3072.o |
+| matrix-placement-control | reg_sweep_4096 | 399360 | 3072 | 4x2 | column | PASSED | 1.9521e+06 | experiments/matrix-placement-control/outputs/reg_sweep_4096.o |
+| matrix-placement-control | reg_sweep_5012 | 399360 | 3072 | 4x2 | column | PASSED | 1.9468e+06 | experiments/matrix-placement-control/outputs/reg_sweep_5012.o |
+| matrix-placement-control | reg_sweep_512 | 399360 | 3072 | 4x2 | column | PASSED | 1.9646e+06 | experiments/matrix-placement-control/outputs/reg_sweep_512.o |
 | nb-sweep | n-resweep_399_1 | 399360 | 3072 | 2x4 | row | PASSED | 1.7624e+06 | experiments/nb-sweep/outputs/n-resweep_399_1.o |
 | nb-sweep | n-resweep_399_2 | 399360 | 3072 | 2x4 | row | PASSED | 1.8038e+06 | experiments/nb-sweep/outputs/n-resweep_399_2.o |
 | nb-sweep | n-resweep_399_3 | 399360 | 3072 | 2x4 | row | PASSED | 1.7933e+06 | experiments/nb-sweep/outputs/n-resweep_399_3.o |

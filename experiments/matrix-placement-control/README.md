@@ -21,3 +21,16 @@ observed default value `3048`.
 | `buffer_sweep_32768` | `32768` | `50493.gaas` | `hpc-gaas-g15` | PASSED (`5.224120E-04`) | `1.9673e+06` | `outputs/buffer_sweep_32768.{o,e}` |
 
 All raw PBS stdout/stderr files under `outputs/` are authoritative evidence.
+
+## Register-step sweep
+
+These runs keep `--fill-device 1`, buffer size `32768`, and the validated
+workload fixed while varying `--cuda-host-register-step`.
+
+| Attempt | Register step | PBS job | Node | Residual check | GFLOP/s | Evidence |
+|---|---:|---:|---|---|---:|---|
+| `reg_sweep_512` | `512` | `50536.gaas` | `hpc-gaas-g14` | PASSED (`4.607964E-04`) | `1.9646e+06` | `outputs/reg_sweep_512.{o,e}` |
+| `reg_sweep_1024` | `1024` | `50535.gaas` | `hpc-gaas-g11` | PASSED (`4.226508E-04`) | `1.9822e+06` | `outputs/reg_sweep_1024.{o,e}` |
+| `reg_sweep_3072` | `3072` | `50526.gaas` | `hpc-gaas-g11` | PASSED (`4.293472E-04`) | `1.9789e+06` | `outputs/reg_sweep_3072.{o,e}` |
+| `reg_sweep_4096` | `4096` | `50528.gaas` | `hpc-gaas-g14` | PASSED (`4.341100E-04`) | `1.9521e+06` | `outputs/reg_sweep_4096.{o,e}` |
+| `reg_sweep_5012` | `5012` | `50529.gaas` | `hpc-gaas-g15` | PASSED (`4.514143E-04`) | `1.9468e+06` | `outputs/reg_sweep_5012.{o,e}` |
