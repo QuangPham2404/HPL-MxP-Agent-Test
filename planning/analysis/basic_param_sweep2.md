@@ -231,7 +231,13 @@ effect. One recorded rerun is `1.7624e+06`; this is the CSV value used here.
 
 **Manual ideation**
 
-We proceed with `Precision and memory-placement controls` flags. The report of memory usage from our best run:
+### Test affinity flags and omp thread flags 
+
+First we test affinity flags, and test out omp thread flags. Then fix the best run.
+
+### FP64 matrix memory placement control
+
+Then we proceed with `Precision and memory-placement controls` flags. The report of memory usage from our best run:
 
 ```txt
 The current best run is:
@@ -253,7 +259,7 @@ The current best run is:
   The output reports total device memory of 139.80 GB. No host or VRAM exhaustion is shown in this run.
 ```
 
-With VRAM unused fully after we push n and nb, i think we can ultilize it for this "Precision and memory-placement controls" with these flags:
+The idea is that the more part of the FP64 original matrix stored in VRAM, the faster the IR process, which is a clear bottle neck as we already see from our baseline run reported timings. With VRAM unused fully after we push n and nb, i think we can ultilize it for this "Precision and memory-placement controls" with these flags:
 
 - `--sloppy-type <value>`
 
@@ -264,8 +270,6 @@ With VRAM unused fully after we push n and nb, i think we can ultilize it for th
 - `--fill-device-buffer-size <int>`
 
 - `--cuda-host-register-step <int>`
-
-Since
 
 **Agent ideation**
 
