@@ -5,13 +5,13 @@
 # manual-test reference. Outputs: attempt-specific PBS stdout and stderr.
 # Assumptions: the approved container and required modules exist on GAAS.
 
-#PBS -N HPL_CPU_AFF_NEUTRAL
+#PBS -N HPL_MxP_THREAD_10
 #PBS -q gpu_as
 #PBS -P hpc_admin
 #PBS -l select=1:ngpus=8
 #PBS -l walltime=00:45:00
-#PBS -o outputs/cpu_aff_neutral.o
-#PBS -e outputs/cpu_aff_neutral.e
+#PBS -o outputs/thread_10.o
+#PBS -e outputs/thread_10.e
 
 set -euo pipefail
 
@@ -34,14 +34,24 @@ module load gocryptfs/2.5.0
 # Record the allocated GPU topology before launching the container workload.
 nvidia-smi topo -m
 
+# OMP_THREAD_FLAGS
+export OMP_NUM_THREADS=10
+export OMP_PLACES=cores
+export APPTAINERENV_OMP_NUM_THREADS=10
+export APPTAINERENV_OMP_PLACES=cores
+
 # Execute the unchanged HPL-MxP baseline command from the GAAS reference.
 apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif" \
   mpirun -np 8 \
     --bind-to none \
+    -x OMP_NUM_THREADS \
+    -x APPTAINERENV_OMP_NUM_THREADS \
+    -x OMP_PLACES \
+    -x APPTAINERENV_OMP_PLACES \
     /workspace/hpl-mxp.sh \
       --gpu-affinity 0:1:2:3:4:5:6:7 \
       --mem-affinity 0:0:0:0:1:1:1:1 \
-      --cpu-affinity 0-11:12-23:24-35:36-49:56-66:67-77:78-89:90-101 \
+      --cpu-affinity 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 \
       --nprow 4 \
       --npcol 2 \
       --nporder column \
