@@ -5,13 +5,13 @@
 # manual-test reference. Outputs: attempt-specific PBS stdout and stderr.
 # Assumptions: the approved container and required modules exist on GAAS.
 
-#PBS -N HPL_MXP_N_SWEEP_402k
+#PBS -N HPL_MEM_AFF
 #PBS -q gpu_as
 #PBS -P hpc_admin
 #PBS -l select=1:ngpus=8
 #PBS -l walltime=00:45:00
-#PBS -o outputs/N-sweep_402432_3.o
-#PBS -e outputs/N-sweep_402432_3.e
+#PBS -o outputs/mem_aff.o
+#PBS -e outputs/mem_aff.e
 
 set -euo pipefail
 
@@ -40,11 +40,12 @@ apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.
     --bind-to none \
     /workspace/hpl-mxp.sh \
       --gpu-affinity 0:1:2:3:4:5:6:7 \
-      --nprow 2 \
-      --npcol 4 \
-      --nporder row \
-      --n 402432 \
-      --nb 1024 \
+      --mem-affinity 0:0:0:0:1:1:1:1 \
+      --nprow 4 \
+      --npcol 2 \
+      --nporder column \
+      --n 399360 \
+      --nb 3072 \
       --skip-tests 1 \
       --monitor-gpu 1 \
       --monitor-gpu-interval 10 \
