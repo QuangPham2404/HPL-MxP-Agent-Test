@@ -64,6 +64,14 @@ The N sweep holds `NB=1024` and `2x4 row` fixed.
 | `N-sweep_403k` | 403456 | 1024 | 2x4 row | 1.5818e+06 | 9.61% |
 | `N-sweep_404k` | 404480 | 1024 | 2x4 row | 1.5540e+06 | 7.68% |
 
+*Manual analysis*
+
+- The trend is clear: pushing N increase throughput until ~402k where the performance starts to plateau.
+- The significant drop in the case `402423` as the sole outlier is likely due to it being a non-NB multiple of N. Results of the following experiements suggest that choosing N so that `N mod NB = 0` can either have no affect at all or completely stumps the result. Therefore, to be safe,  `N` should be set as a multiple of `NB`
+- REMAINING ISSUE: Why the plateu of performance is yet to be define accurately --> likely its due to larger N hitting a limit of CPU (host) RAM.
+
+*Agent analysis*
+
 The valid N results are non-monotonic. The original `402423` result is a
 repeatable outlier: the original was `7.6797e+05`, followed by
 `7.2526e+05`, `7.3508e+05`, and `7.3884e+05`. The corrected divisible case
@@ -104,6 +112,16 @@ rows retain `NB=3072` and the same grid while changing N.
 | `n-resweep_399k` | 399360 | 3072 | 2x4 row | 1.8177e+06 | 25.95% |
 | `n-resweep_399_1..3` | 399360 | 3072 | 2x4 row | 1.7624e+06, 1.8038e+06, 1.7933e+06 | 22.11% to 24.93% |
 | `n-resweep_402k` | 402432 | 3072 | 2x4 row | 1.6981e+06 | 17.66% |
+
+*Manual Analysis*
+
+- Pushing `NB` yeilds the biggest gain in the basic param sweeps, jumping from ~9% to ~23%.
+- However, after 4096, the results starts to deteriorate.
+- REMAINING ISSUES:
+  - The increase in performance is likely do to the fact that pushing `NB` pushes the VRAM usage while keeping the CPU RAM usage under the limit. However, we still need to verify specifically.
+  - We also need to verify what causes the decrease after `NB` reaches 4096.
+
+*Agent Analysis*
 
 At fixed `N=401408`, increasing NB from 1024 to 2048 improves performance by
 13.29% relative to the NB=1024 point; NB=3072 adds a further 1.85% over
@@ -146,6 +164,16 @@ The grid sweep holds `N=399360` and `NB=3072` fixed.
 | `4x2_col_re` | 399360 | 3072 | 4x2 column | 1.8370e+06 | 27.27% |
 | `4x2_row_re` | 399360 | 3072 | 4x2 row | 1.8304e+06 | 26.82% |
 
+*Manual Analysis*
+
+- A clear trend: 4x2 > 2x4
+- However, row-major vs col-major shows little difference.
+- A note: due to the jobs being ran on different nodes, the expected difference in performance is around 5%.
+- REMAINING ISSUE
+  - Explain why 4x2 > 2x4: Intuition is that 4x2 have more communication for panel factorization compared to 2x4? is it because this his H200 mxp connectied by 8-way NVLink?
+
+*Agent Analysis*
+
 At fixed N and NB, the original single runs showed 4x2 ahead of 2x4 by about
 4.6–4.8%, but the reruns reduce the estimated shape effect to about 3%:
 2x4 row averages `1.7752e+06` across its two reruns versus `1.8304e+06` for
@@ -173,7 +201,7 @@ effect. One recorded rerun is `1.7624e+06`; this is the CSV value used here.
 ## 4. Insights gained
 
 - **Best measured result:** `4x2 column`, `N=399360`, `NB=3072`, at
-  `1.8441e+06` GFLOP/s, 27.78% above baseline. It passed verification.
+  `1.8441e+06` GFLOP/s, *27.78%* above baseline. It passed verification.
 - **NB has the clearest isolated effect:** at `N=401408`, `2x4 row`, the
   result rises from `1.5782e+06` at NB=1024 to `1.8209e+06` at NB=3072,
   then declines through NB=8192. The sampled peak is broad enough to justify
