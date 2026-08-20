@@ -85,19 +85,33 @@ The register-step sweep uses the buffer-32768 placement result
 passed verification and remain above the original baseline, but the observed
 spread is small and each value has one attempt.
 
+### Register step resweep at buffer 3048
+
+| Attempt | Register step | Node | Residual marker | GFLOP/s | Percentage vs original baseline | vs matched buffer-3048 control |
+|---|---:|---|---|---:|---:|---:|
+| `reg_sweep_512_b3048` | `512` | `hpc-gaas-g11` | PASSED (`3.738744E-04`) | `2.2002e+06` | `+52.45%` | `+1.10%` |
+| `reg_sweep_1024_b3048` | `1024` | `hpc-gaas-g14` | PASSED (`4.607039E-04`) | `2.1335e+06` | `+47.83%` | `-1.97%` |
+| `reg_sweep_3072_b3048` | `3072` | `hpc-gaas-g15` | PASSED (`3.711735E-04`) | `2.1518e+06` | `+49.10%` | `-1.13%` |
+| `reg_sweep_4096_b3048` | `4096` | `hpc-gaas-g16` | PASSED (`4.018509E-04`) | `2.1335e+06` | `+47.83%` | `-1.97%` |
+| `reg_sweep_5012_b3048` | `5012` | `hpc-gaas-g11` | PASSED (`4.025842E-04`) | `2.1634e+06` | `+49.90%` | `-0.59%` |
+
+The buffer-3048 resweep uses the default-fill result `2.1763e+06` GFLOP/s
+as its matched control. All ten register-step attempts passed verification
+and remain above the original baseline.
+
 ## Register-step analysis addendum
 
-The best recorded register step is `1024` at `1.9822e+06` GFLOP/s, only
-`+0.76%` above the matched buffer-32768 control. Steps `3072`, `512`, `4096`,
-and `5012` are respectively `+0.59%`, `-0.14%`, `-0.77%`, and `-1.04%` versus
-that control. This does not establish a stable optimum because the runs are
-single measurements across three nodes and retained runtime/PBS exit metadata
-are unavailable.
+For buffer 32768, the best recorded step is `1024` at `1.9822e+06` GFLOP/s,
+`+0.76%` above its matched control. For buffer 3048, the best is `512` at
+`2.2002e+06`, `+1.10%` above its matched control. At the same register steps,
+the buffer-3048 resweep is higher than the buffer-32768 sweep by 11.99% at
+512, 7.63% at 1024, 8.74% at 3072, 9.29% at 4096, and 11.13% at 5012.
 
-The register-step results therefore narrow the candidate region toward
-`1024`/`3072`, but require matched repetitions before selection. No
-correctness regression is present: every attempt reports a finite residual
-and `PASSED` verification.
+The two buffer settings do not identify one stable register-step optimum:
+1024 leads at buffer 32768, while 512 leads at buffer 3048. These are single
+measurements across multiple nodes, and retained runtime/PBS exit metadata
+are unavailable. No correctness regression is present; every attempt reports
+a finite residual and `PASSED` verification.
 
 ## 4. Insights gained
 
@@ -109,8 +123,8 @@ and `PASSED` verification.
   this is based on one attempt per configuration.
 - The placement runs span nodes `hpc-gaas-g11`, `g14`, and `g15`; node
   variation and unavailable runtime metadata limit causal confidence.
-- The data does not support a conclusion about `--cuda-host-register-step`
-  because no changed-step configuration was executed.
+- The register-step sweeps are now populated at buffers 32768 and 3048; the
+  best step depends on the buffer setting in these single measurements.
 - No scientific correctness regressions were observed: all included rows have
   finite residuals and `PASSED` verification.
 
@@ -119,9 +133,9 @@ and `PASSED` verification.
 For user review, repeat `fill_device_default` and the matched
 `fill-device=0` control on comparable nodes, retaining runtime and exact
 launch metadata. If the fill-device improvement reproduces, test a small
-buffer refinement around 3048 and 8192. Separately, prepare a controlled
-register-step sweep that keeps fill-device and buffer size fixed, records the
-actual step values, and includes an unchanged-step control.
+buffer refinement around 3048 and 8192. Separately, repeat both register-step
+sweeps with matched nodes and runtime metadata, including an unchanged-step
+control for each buffer setting.
 
 Require `PASSED` verification and a repeatable improvement over the matched
 control before adopting a placement or register-step setting. This suggestion

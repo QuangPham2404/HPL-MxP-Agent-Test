@@ -34,3 +34,17 @@ workload fixed while varying `--cuda-host-register-step`.
 | `reg_sweep_3072` | `3072` | `50526.gaas` | `hpc-gaas-g11` | PASSED (`4.293472E-04`) | `1.9789e+06` | `outputs/reg_sweep_3072.{o,e}` |
 | `reg_sweep_4096` | `4096` | `50528.gaas` | `hpc-gaas-g14` | PASSED (`4.341100E-04`) | `1.9521e+06` | `outputs/reg_sweep_4096.{o,e}` |
 | `reg_sweep_5012` | `5012` | `50529.gaas` | `hpc-gaas-g15` | PASSED (`4.514143E-04`) | `1.9468e+06` | `outputs/reg_sweep_5012.{o,e}` |
+
+## Register-step resweep at buffer 3048
+
+These resweep attempts repeat the register values above with
+`--fill-device-buffer-size 3048`. The original buffer-32768 results remain
+listed in the preceding table.
+
+| Attempt | Register step | PBS job | Node | Residual check | GFLOP/s | Evidence |
+|---|---:|---:|---|---|---:|---|
+| `reg_sweep_512_b3048` | `512` | `50546.gaas` | `hpc-gaas-g11` | PASSED (`3.738744E-04`) | `2.2002e+06` | `outputs/reg_sweep_512_b3048.{o,e}` |
+| `reg_sweep_1024_b3048` | `1024` | `50547.gaas` | `hpc-gaas-g14` | PASSED (`4.607039E-04`) | `2.1335e+06` | `outputs/reg_sweep_1024_b3048.{o,e}` |
+| `reg_sweep_3072_b3048` | `3072` | `50548.gaas` | `hpc-gaas-g15` | PASSED (`3.711735E-04`) | `2.1518e+06` | `outputs/reg_sweep_3072_b3048.{o,e}` |
+| `reg_sweep_4096_b3048` | `4096` | `50550.gaas` | `hpc-gaas-g16` | PASSED (`4.018509E-04`) | `2.1335e+06` | `outputs/reg_sweep_4096_b3048.{o,e}` |
+| `reg_sweep_5012_b3048` | `5012` | `50551.gaas` | `hpc-gaas-g11` | PASSED (`4.025842E-04`) | `2.1634e+06` | `outputs/reg_sweep_5012_b3048.{o,e}` |

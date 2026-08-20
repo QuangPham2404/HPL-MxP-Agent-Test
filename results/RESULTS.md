@@ -56,5 +56,10 @@ This report records validated raw result data only. No optimization analysis or 
 | np-sweep | 4x2_col_re | 399360 | 3072 | 4x2 | column | PASSED | 1.8370e+06 | experiments/np-sweep/outputs/4x2_col_re.o |
 | np-sweep | 4x2_row | 399360 | 3072 | 4x2 | row | PASSED | 1.8126e+06 | experiments/np-sweep/outputs/4x2_row.o |
 | np-sweep | 4x2_row_re | 399360 | 3072 | 4x2 | row | PASSED | 1.8304e+06 | experiments/np-sweep/outputs/4x2_row_re.o |
+| matrix-placement-control | reg_sweep_512_b3048 | 399360 | 3072 | 4x2 | column | PASSED | 2.2002e+06 | experiments/matrix-placement-control/outputs/reg_sweep_512_b3048.o |
+| matrix-placement-control | reg_sweep_1024_b3048 | 399360 | 3072 | 4x2 | column | PASSED | 2.1335e+06 | experiments/matrix-placement-control/outputs/reg_sweep_1024_b3048.o |
+| matrix-placement-control | reg_sweep_3072_b3048 | 399360 | 3072 | 4x2 | column | PASSED | 2.1518e+06 | experiments/matrix-placement-control/outputs/reg_sweep_3072_b3048.o |
+| matrix-placement-control | reg_sweep_4096_b3048 | 399360 | 3072 | 4x2 | column | PASSED | 2.1335e+06 | experiments/matrix-placement-control/outputs/reg_sweep_4096_b3048.o |
+| matrix-placement-control | reg_sweep_5012_b3048 | 399360 | 3072 | 4x2 | column | PASSED | 2.1634e+06 | experiments/matrix-placement-control/outputs/reg_sweep_5012_b3048.o |
 
 Source: `results/metrics.csv`.
