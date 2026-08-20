@@ -5,13 +5,13 @@
 # manual-test reference. Outputs: attempt-specific PBS stdout and stderr.
 # Assumptions: the approved container and required modules exist on GAAS.
 
-#PBS -N BUFFER_SWEEP
+#PBS -N REG_SWEEP
 #PBS -q gpu_as
 #PBS -P hpc_admin
 #PBS -l select=1:ngpus=8
 #PBS -l walltime=00:45:00
-#PBS -o outputs/buffer_sweep_32768.o
-#PBS -e outputs/buffer_sweep_32768.e
+#PBS -o outputs/reg_sweep_512.o
+#PBS -e outputs/reg_sweep_512.e
 
 set -euo pipefail
 
@@ -44,7 +44,7 @@ apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.
       --cpu-affinity 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 \
       --fill-device 1 \
       --fill-device-buffer-size 32768 \
-      --cuda-host-register-step 2048 \
+      --cuda-host-register-step 512 \
       --nprow 4 \
       --npcol 2 \
       --nporder column \
