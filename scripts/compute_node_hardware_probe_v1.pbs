@@ -1,0 +1,124 @@
+#!/bin/bash
+# Read-only GAAS compute-node hardware and software probe.
+# Expected working directory: scripts/ in the project repository on GAAS.
+# Inputs: one PBS allocation with eight GPUs; no application inputs.
+# Outputs: outputs/compute_node_hardware_probe_v1.o and .e.
+# Assumptions: PBS provides PBS_O_WORKDIR and the allocation exposes the
+# allocated CPU, NUMA, GPU, PCIe/NVLink, and network devices for observation.
+
+#PBS -N hpl_mxp_hw_probe_v1
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=00:10:00
+#PBS -o outputs/compute_node_hardware_probe_v1.o
+#PBS -e outputs/compute_node_hardware_probe_v1.e
+
+set -uo pipefail
+
+# Run an optional diagnostic without making availability of that diagnostic a
+# fatal preflight requirement. The command name and its result remain visible
+# in the raw evidence for later interpretation.
+run_optional() {
+    local label="$1"
+    shift
+    echo
+    echo "### ${label}"
+    if command -v "$1" >/dev/null 2>&1; then
+        echo "+ $*"
+        "$@"
+        local rc=$?
+        echo "[exit_status=${rc}]"
+    else
+        echo "[unavailable: command '$1' was not found]"
+    fi
+}
+
+echo "probe_id=compute_node_hardware_probe_v1"
+echo "probe_scope=read-only compute-node characterization"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "submitted_workdir=${PBS_O_WORKDIR:-unknown}"
+date --iso-8601=seconds
+hostname
+
+if [[ -n "${PBS_O_WORKDIR:-}" ]]; then
+    cd "$PBS_O_WORKDIR"
+fi
+
+echo
+echo "============================================================"
+echo "SECTION 1: JOB, HOST, KERNEL, AND OPERATING SYSTEM"
+echo "============================================================"
+echo "pwd=$PWD"
+run_optional "Kernel and architecture" uname -a
+run_optional "Operating-system release" cat /etc/os-release
+run_optional "PBS allocation environment" bash -c 'env | sort | grep "^PBS_"'
+
+echo
+echo "============================================================"
+echo "SECTION 2: CPU TOPOLOGY AND FEATURES"
+echo "============================================================"
+run_optional "Logical CPU count" nproc --all
+run_optional "Detailed CPU topology" lscpu
+run_optional "CPU-to-core/socket/NUMA mapping" lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE
+run_optional "CPU feature flags" bash -c "grep -m 1 '^Features\|^flags' /proc/cpuinfo"
+
+echo
+echo "============================================================"
+echo "SECTION 3: NUMA TOPOLOGY, AFFINITY, AND MEMORY"
+echo "============================================================"
+run_optional "NUMA hardware summary" numactl -H
+run_optional "NUMA memory statistics" numastat -m
+run_optional "NUMA-aware topology" lstopo-no-graphics
+run_optional "NUMA node memory files" bash -c "for f in /sys/devices/system/node/node*/meminfo; do echo --- \"$f\"; sed -n '1,12p' \"$f\"; done"
+run_optional "Host memory summary" free -h
+run_optional "Kernel memory accounting" cat /proc/meminfo
+run_optional "Virtual-memory counters" vmstat -s
+
+echo
+echo "============================================================"
+echo "SECTION 4: GPU INVENTORY, DRIVER, MEMORY, AND CLOCKS"
+echo "============================================================"
+run_optional "GPU inventory" nvidia-smi -L
+run_optional "GPU summary query" nvidia-smi --query-gpu=index,name,uuid,driver_version,vbios_version,memory.total,memory.used,memory.free,pstate,temperature.gpu,power.draw,clocks.current.graphics,clocks.current.memory --format=csv
+run_optional "Detailed GPU information" nvidia-smi -q
+run_optional "GPU process accounting" nvidia-smi pmon -c 1
+
+echo
+echo "============================================================"
+echo "SECTION 5: GPU, PCIe, NVLINK, AND DEVICE-TO-CPU TOPOLOGY"
+echo "============================================================"
+run_optional "GPU topology matrix" nvidia-smi topo -m
+run_optional "GPU topology legend" nvidia-smi topo -h
+run_optional "GPU PCIe and NUMA details" nvidia-smi -q -d PCI
+for gpu in 0 1 2 3 4 5 6 7; do
+    run_optional "NVLink status for GPU ${gpu}" nvidia-smi -i "$gpu" nvlink --status
+done
+run_optional "PCI devices relevant to GPU and fabric" bash -c "lspci -nn | grep -Ei 'NVIDIA|Mellanox|Ethernet|InfiniBand'"
+
+echo
+echo "============================================================"
+echo "SECTION 6: NETWORK AND FABRIC DEVICES"
+echo "============================================================"
+run_optional "Network interfaces" ip -br link
+run_optional "InfiniBand device-to-network mapping" ibdev2netdev
+run_optional "InfiniBand device status" ibstat
+run_optional "RDMA device inventory" rdma link
+run_optional "Mellanox device inventory" mst status
+
+echo
+echo "============================================================"
+echo "SECTION 7: MODULES, COMPILERS, MPI, AND CONTAINER TOOLS"
+echo "============================================================"
+run_optional "Loaded modules" module list
+run_optional "MPI launcher version" mpirun --version
+run_optional "Apptainer version" apptainer version
+run_optional "NVIDIA compiler version" nvc --version
+run_optional "NVIDIA system-management tool version" nvidia-smi --version
+
+echo
+echo "============================================================"
+echo "SECTION 8: PROBE COMPLETION"
+echo "============================================================"
+echo "probe_end_time=$(date --iso-8601=seconds)"
+echo "probe_status=completed_read_only_observation"
