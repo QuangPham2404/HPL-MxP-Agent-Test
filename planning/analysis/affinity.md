@@ -40,14 +40,20 @@ not reproducible final rankings.
 
 ## 3. Data and analysis
 
+### Baseline
+
+| Reference | GFLOP/s | Percentage vs original baseline |
+|---|---:|---:|
+| `baseline-sweep_v1` (`N=370000`, `NB=1024`, `2x4` row) | `1.4432e+06` | `0.00%` |
+
 ### Affinity flags
 
-| Attempt | Affinity configuration recorded | Node | GFLOP/s | vs matched control |
-|---|---|---|---:|---:|
-| `mem_aff` | Memory affinity `0:0:0:0:1:1:1:1`; no explicit CPU affinity | `hpc-gaas-g11` | `1.8428e+06` | `-0.07%` |
-| `cpu_aff_free` | CPU-affinity variant label; exact launch string not retained | `hpc-gaas-g11` | `1.8596e+06` | `+0.84%` |
-| `cpu_aff_neutral` | CPU affinity `0-11:12-23:24-35:36-49:56-66:67-77:78-89:90-101` plus memory affinity | `hpc-gaas-g14` | `1.8077e+06` | `-1.97%` |
-| `cpu_aff_strict` | CPU-affinity variant label; exact launch string not retained | `hpc-gaas-g11` | `1.6919e+06` | `-8.25%` |
+| Attempt | Affinity configuration recorded | Node | GFLOP/s | Percentage vs original baseline | vs matched control |
+|---|---|---|---:|---:|---:|
+| `mem_aff` | Memory affinity `0:0:0:0:1:1:1:1`; no explicit CPU affinity | `hpc-gaas-g11` | `1.8428e+06` | `+27.69%` | `-0.07%` |
+| `cpu_aff_free` | CPU-affinity variant label; exact launch string not retained | `hpc-gaas-g11` | `1.8596e+06` | `+28.85%` | `+0.84%` |
+| `cpu_aff_neutral` | CPU affinity `0-11:12-23:24-35:36-49:56-66:67-77:78-89:90-101` plus memory affinity | `hpc-gaas-g14` | `1.8077e+06` | `+25.26%` | `-1.97%` |
+| `cpu_aff_strict` | CPU-affinity variant label; exact launch string not retained | `hpc-gaas-g11` | `1.6919e+06` | `+17.23%` | `-8.25%` |
 
 The three CPU-affinity results span `1.6919e+06` to `1.8596e+06` GFLOP/s;
 their simple mean is `1.7864e+06`, 3.06% below the memory-affinity control.
@@ -60,9 +66,9 @@ present in the matched control.
 
 ### OpenMP thread flags
 
-| Attempt | OpenMP configuration | Node | GFLOP/s | vs matched control |
-|---|---|---|---:|---:|
-| `thread_10` | `OMP_NUM_THREADS=10`, `OMP_PLACES=cores`, exported through MPI/container; CPU affinity as documented in the experiment README | `hpc-gaas-g11` | `8.7049e+05` | `-52.80%` |
+| Attempt | OpenMP configuration | Node | GFLOP/s | Percentage vs original baseline | vs matched control |
+|---|---|---|---:|---:|---:|
+| `thread_10` | `OMP_NUM_THREADS=10`, `OMP_PLACES=cores`, exported through MPI/container; CPU affinity as documented in the experiment README | `hpc-gaas-g11` | `8.7049e+05` | `-39.68%` | `-52.80%` |
 
 The one `thread_10` run is a large regression relative to the matched control
 and is also below the project baseline by 39.68%. It passed verification, so
@@ -116,20 +122,3 @@ change.
   - [`thread_10.o`](../../experiments/affinity-sweep/outputs/thread_10.o)
 - Raw residual marker: each selected stdout contains `PASSED` with a finite
   residual and a finite GFLOP/s marker matching the CSV.
-
-## Addendum: original-baseline comparison
-
-To satisfy the current project analysis instructions, the original baseline
-is `baseline-sweep_v1` at `1.4432e+06` GFLOP/s. The table below adds the
-percentage increase relative to that baseline for every affinity/OMP result
-used in this analysis.
-
-| Group | Attempt | GFLOP/s | Percentage vs original baseline |
-|---|---|---:|---:|
-| Baseline | `baseline-sweep_v1` | `1.4432e+06` | `0.00%` |
-| Affinity | `mem_aff` | `1.8428e+06` | `+27.69%` |
-| Affinity | `cpu_aff_free` | `1.8596e+06` | `+28.85%` |
-| Affinity | `cpu_aff_neutral` | `1.8077e+06` | `+25.26%` |
-| Affinity | `cpu_aff_strict` | `1.6919e+06` | `+17.23%` |
-| OpenMP | `thread_10` | `8.7049e+05` | `-39.68%` |
-| Matched control | `np-sweep/4x2_col` | `1.8441e+06` | `+27.78%` |

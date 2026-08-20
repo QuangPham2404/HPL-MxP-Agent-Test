@@ -38,10 +38,10 @@ reported as `NOT TESTED / TBD`.
 
 ### Baseline
 
-| Reference | Fill-device setting | N | NB | Grid/order | GFLOP/s | Verification |
-|---|---|---:|---:|---|---:|---|
-| `baseline-sweep_v1` | `fill-device=0`, buffer `3048` | 370000 | 1024 | 2x4 row | `1.4432e+06` | PASSED |
-| `np-sweep/4x2_col` | `fill-device=0`, buffer `3048` | 399360 | 3072 | 4x2 column | `1.8441e+06` | PASSED |
+| Reference | Fill-device setting | N | NB | Grid/order | GFLOP/s | Percentage vs original baseline | Verification |
+|---|---|---:|---:|---|---:|---:|---|
+| `baseline-sweep_v1` | `fill-device=0`, buffer `3048` | 370000 | 1024 | 2x4 row | `1.4432e+06` | `0.00%` | PASSED |
+| `np-sweep/4x2_col` | `fill-device=0`, buffer `3048` | 399360 | 3072 | 4x2 column | `1.8441e+06` | `+27.78%` | PASSED |
 
 The `4x2` column result is the appropriate matched control for isolating the
 placement flags. It is 27.78% above the project baseline because it also uses
@@ -49,9 +49,9 @@ the improved matrix size, panel size, and process-grid/order configuration.
 
 ### Default fill
 
-| Attempt | Fill-device | Buffer size | Register step | Node | Residual marker | GFLOP/s | vs matched control |
-|---|---:|---:|---:|---|---|---:|---:|
-| `fill_device_default` | 1 | 3048 | 2048 | `hpc-gaas-g11` | PASSED (`3.851395E-04`) | `2.1763e+06` | `+18.01%` |
+| Attempt | Fill-device | Buffer size | Register step | Node | Residual marker | GFLOP/s | Percentage vs original baseline | vs matched control |
+|---|---:|---:|---:|---|---|---:|---:|---:|
+| `fill_device_default` | 1 | 3048 | 2048 | `hpc-gaas-g11` | PASSED (`3.851395E-04`) | `2.1763e+06` | `+50.80%` | `+18.01%` |
 
 The default fill-device run is the highest result in this group and is also
 50.80% above the project baseline. It is a single attempt, so the improvement
@@ -59,11 +59,11 @@ requires repetition before being treated as a stable effect.
 
 ### Buffer sweep
 
-| Attempt | Fill-device | Buffer size | Register step | Node | Residual marker | GFLOP/s | vs matched control |
-|---|---:|---:|---:|---|---|---:|---:|
-| `buffer_sweep_8192` | 1 | 8192 | 2048 | `hpc-gaas-g11` | PASSED (`3.628577E-04`) | `2.1420e+06` | `+16.15%` |
-| `buffer_sweep_16384` | 1 | 16384 | 2048 | `hpc-gaas-g14` | PASSED (`3.659648E-04`) | `2.0709e+06` | `+12.30%` |
-| `buffer_sweep_32768` | 1 | 32768 | 2048 | `hpc-gaas-g15` | PASSED (`5.224120E-04`) | `1.9673e+06` | `+6.68%` |
+| Attempt | Fill-device | Buffer size | Register step | Node | Residual marker | GFLOP/s | Percentage vs original baseline | vs matched control |
+|---|---:|---:|---:|---|---|---:|---:|---:|
+| `buffer_sweep_8192` | 1 | 8192 | 2048 | `hpc-gaas-g11` | PASSED (`3.628577E-04`) | `2.1420e+06` | `+48.42%` | `+16.15%` |
+| `buffer_sweep_16384` | 1 | 16384 | 2048 | `hpc-gaas-g14` | PASSED (`3.659648E-04`) | `2.0709e+06` | `+43.49%` | `+12.30%` |
+| `buffer_sweep_32768` | 1 | 32768 | 2048 | `hpc-gaas-g15` | PASSED (`5.224120E-04`) | `1.9673e+06` | `+36.32%` | `+6.68%` |
 
 The recorded performance decreases as the buffer size increases from 3048 to
 32768. The 8192 result remains 16.15% above the matched control, while 32768
@@ -72,9 +72,9 @@ measurements, not a repeated estimate of the curve.
 
 ### Register step
 
-| Configuration | Result |
-|---|---|
-| Changed `--cuda-host-register-step` | `NOT TESTED / TBD`; no CSV row, raw output, or performance value exists |
+| Configuration | Result | Percentage vs original baseline |
+|---|---|---:|
+| Changed `--cuda-host-register-step` | `NOT TESTED / TBD`; no CSV row, raw output, or performance value exists | `TBD` |
 
 All four placement outputs show `--cuda-host-register-step = 2048`, so this
 parameter is held constant rather than evaluated in the current data.
@@ -120,21 +120,3 @@ does not authorize a new experiment or configuration change.
 - Matched control: [`4x2_col.o`](../../experiments/np-sweep/outputs/4x2_col.o)
 - Project baseline: [`baseline-sweep_v1.o`](../../experiments/baseline-sweep/outputs/baseline-sweep_v1.o)
 - Analysis source revision: `4f4d854`
-
-## Addendum: original-baseline comparison
-
-To satisfy the current project analysis instructions, the original baseline
-is `baseline-sweep_v1` at `1.4432e+06` GFLOP/s. The table below adds the
-percentage increase relative to that baseline for every matrix-placement data
-point, including the matched control. The untested register-step group has no
-percentage value and remains `TBD`.
-
-| Group | Attempt/configuration | GFLOP/s | Percentage vs original baseline |
-|---|---|---:|---:|
-| Baseline | `baseline-sweep_v1` | `1.4432e+06` | `0.00%` |
-| Baseline control | `np-sweep/4x2_col`, fill-device `0` | `1.8441e+06` | `+27.78%` |
-| Default fill | `fill_device_default`, buffer `3048` | `2.1763e+06` | `+50.80%` |
-| Buffer sweep | `buffer_sweep_8192` | `2.1420e+06` | `+48.42%` |
-| Buffer sweep | `buffer_sweep_16384` | `2.0709e+06` | `+43.49%` |
-| Buffer sweep | `buffer_sweep_32768` | `1.9673e+06` | `+36.32%` |
-| Register step | Changed `--cuda-host-register-step` | `TBD` | `TBD` |
