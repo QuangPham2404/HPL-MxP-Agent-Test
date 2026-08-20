@@ -229,6 +229,46 @@ effect. One recorded rerun is `1.7624e+06`; this is the CSV value used here.
 
 ## 5. Suggested next section
 
+**Manual ideation**
+
+We proceed with `Precision and memory-placement controls` flags. The report of memory usage from our best run:
+
+```txt
+The current best run is:
+
+  experiments/np-sweep/outputs/4x2_col.o
+
+  It reports 1.8441e+06 GFLOP/s for N=399360, NB=3072, 4x2, column order.
+
+  Reported memory usage:
+
+  - Host memory per process: maximum 150.826 GB
+  - Host memory available initially: minimum 191.953 GB
+  - Device/VRAM per process: maximum 82.813 GB
+  - Device memory available initially: minimum 138.646 GB
+  - Later during matrix generation:
+      - Host memory available minimum: 43.104 GB
+      - VRAM available minimum: 55.700 GB
+
+  The output reports total device memory of 139.80 GB. No host or VRAM exhaustion is shown in this run.
+```
+
+With VRAM unused fully after we push n and nb, i think we can ultilize it for this "Precision and memory-placement controls" with these flags:
+
+- `--sloppy-type <value>`
+
+- `--Anq-device <int>`
+
+- `--fill-device <0|1>`
+
+- `--fill-device-buffer-size <int>`
+
+- `--cuda-host-register-step <int>`
+
+Since
+
+**Agent ideation**
+
 For user review, the next direction should be controlled confirmation and local
 refinement at the `4x2 column` grid: test aligned N values around 401408–404480,
 refine NB around 3072 with peak VRAM telemetry, and repeat the 2x4/4x2 grid
