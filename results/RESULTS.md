@@ -27,6 +27,10 @@ This report records validated raw result data only. No optimization analysis or 
 | affinity-sweep | mem_aff | 399360 | 3072 | 4x2 | column | PASSED | 1.8428e+06 | experiments/affinity-sweep/outputs/mem_aff.o |
 | affinity-sweep | thread_10 | 399360 | 3072 | 4x2 | column | PASSED | 8.7049e+05 | experiments/affinity-sweep/outputs/thread_10.o |
 | baseline-sweep | baseline-sweep_v1 | 370000 | 1024 | 2x4 | row | PASSED | 1.4432e+06 | experiments/baseline-sweep/outputs/baseline-sweep_v1.o |
+| matrix-placement-control | buffer_sweep_16384 | 399360 | 3072 | 4x2 | column | PASSED | 2.0709e+06 | experiments/matrix-placement-control/outputs/buffer_sweep_16384.o |
+| matrix-placement-control | buffer_sweep_32768 | 399360 | 3072 | 4x2 | column | PASSED | 1.9673e+06 | experiments/matrix-placement-control/outputs/buffer_sweep_32768.o |
+| matrix-placement-control | buffer_sweep_8192 | 399360 | 3072 | 4x2 | column | PASSED | 2.1420e+06 | experiments/matrix-placement-control/outputs/buffer_sweep_8192.o |
+| matrix-placement-control | fill_device_default | 399360 | 3072 | 4x2 | column | PASSED | 2.1763e+06 | experiments/matrix-placement-control/outputs/fill_device_default.o |
 | nb-sweep | n-resweep_399_1 | 399360 | 3072 | 2x4 | row | PASSED | 1.7624e+06 | experiments/nb-sweep/outputs/n-resweep_399_1.o |
 | nb-sweep | n-resweep_399_2 | 399360 | 3072 | 2x4 | row | PASSED | 1.8038e+06 | experiments/nb-sweep/outputs/n-resweep_399_2.o |
 | nb-sweep | n-resweep_399_3 | 399360 | 3072 | 2x4 | row | PASSED | 1.7933e+06 | experiments/nb-sweep/outputs/n-resweep_399_3.o |
