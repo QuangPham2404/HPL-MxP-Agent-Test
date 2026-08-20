@@ -10,8 +10,8 @@
 #PBS -P hpc_admin
 #PBS -l select=1:ngpus=8
 #PBS -l walltime=00:45:00
-#PBS -o outputs/reg_sweep_512.o
-#PBS -e outputs/reg_sweep_512.e
+#PBS -o outputs/reg_sweep_5012.o
+#PBS -e outputs/reg_sweep_5012.e
 
 set -euo pipefail
 
@@ -43,8 +43,8 @@ apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.
       --mem-affinity 0:0:0:0:1:1:1:1 \
       --cpu-affinity 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 \
       --fill-device 1 \
-      --fill-device-buffer-size 32768 \
-      --cuda-host-register-step 512 \
+      --fill-device-buffer-size 3048 \
+      --cuda-host-register-step 5012 \
       --nprow 4 \
       --npcol 2 \
       --nporder column \
