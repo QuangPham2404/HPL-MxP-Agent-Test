@@ -120,3 +120,21 @@ does not authorize a new experiment or configuration change.
 - Matched control: [`4x2_col.o`](../../experiments/np-sweep/outputs/4x2_col.o)
 - Project baseline: [`baseline-sweep_v1.o`](../../experiments/baseline-sweep/outputs/baseline-sweep_v1.o)
 - Analysis source revision: `4f4d854`
+
+## Addendum: original-baseline comparison
+
+To satisfy the current project analysis instructions, the original baseline
+is `baseline-sweep_v1` at `1.4432e+06` GFLOP/s. The table below adds the
+percentage increase relative to that baseline for every matrix-placement data
+point, including the matched control. The untested register-step group has no
+percentage value and remains `TBD`.
+
+| Group | Attempt/configuration | GFLOP/s | Percentage vs original baseline |
+|---|---|---:|---:|
+| Baseline | `baseline-sweep_v1` | `1.4432e+06` | `0.00%` |
+| Baseline control | `np-sweep/4x2_col`, fill-device `0` | `1.8441e+06` | `+27.78%` |
+| Default fill | `fill_device_default`, buffer `3048` | `2.1763e+06` | `+50.80%` |
+| Buffer sweep | `buffer_sweep_8192` | `2.1420e+06` | `+48.42%` |
+| Buffer sweep | `buffer_sweep_16384` | `2.0709e+06` | `+43.49%` |
+| Buffer sweep | `buffer_sweep_32768` | `1.9673e+06` | `+36.32%` |
+| Register step | Changed `--cuda-host-register-step` | `TBD` | `TBD` |

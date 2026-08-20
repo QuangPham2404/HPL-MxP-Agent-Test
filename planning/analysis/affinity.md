@@ -116,3 +116,20 @@ change.
   - [`thread_10.o`](../../experiments/affinity-sweep/outputs/thread_10.o)
 - Raw residual marker: each selected stdout contains `PASSED` with a finite
   residual and a finite GFLOP/s marker matching the CSV.
+
+## Addendum: original-baseline comparison
+
+To satisfy the current project analysis instructions, the original baseline
+is `baseline-sweep_v1` at `1.4432e+06` GFLOP/s. The table below adds the
+percentage increase relative to that baseline for every affinity/OMP result
+used in this analysis.
+
+| Group | Attempt | GFLOP/s | Percentage vs original baseline |
+|---|---|---:|---:|
+| Baseline | `baseline-sweep_v1` | `1.4432e+06` | `0.00%` |
+| Affinity | `mem_aff` | `1.8428e+06` | `+27.69%` |
+| Affinity | `cpu_aff_free` | `1.8596e+06` | `+28.85%` |
+| Affinity | `cpu_aff_neutral` | `1.8077e+06` | `+25.26%` |
+| Affinity | `cpu_aff_strict` | `1.6919e+06` | `+17.23%` |
+| OpenMP | `thread_10` | `8.7049e+05` | `-39.68%` |
+| Matched control | `np-sweep/4x2_col` | `1.8441e+06` | `+27.78%` |
