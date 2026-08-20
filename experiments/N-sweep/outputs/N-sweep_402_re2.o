@@ -1,0 +1,325 @@
+experiment_id=N-sweep
+attempt=N-sweep_v1
+pbs_job_id=50406.gaas
+submitted_workdir=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization/experiments/N-sweep
+2026-08-20T12:51:01+08:00
+hpc-gaas-g14
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+
+================================================================================
+HPL-MxP-NVIDIA 26.2.0  -- NVIDIA accelerated HPL-MxP benchmark benchmark -- NVIDIA
+================================================================================
+
+ ****** HPL MxP Settings ****** 
+
+   --nprow =  2 
+   --npcol =  4 
+   --order = row 
+   --n     = 403423 
+   --nb    = 1024 
+   --tolerance                        = 1.000000e-12 
+   --test-loop                        = 1 
+   --preset-gemm-kernel               = 90 
+   --u-panel-chunk-nbs                = 8 
+   --call-dgemv-with-multiple-threads = 0 
+   --prioritize-trsm                  = 0 
+   --prioritize-factorization         = 0 
+   --use-separate-stream-for-gemm     = 1 
+   --use-mpi-panel-broadcast          = 50 
+   --mpi-use-host-threads             = 1 
+   --sloppy-type                      = FP16 
+   --Anq-device                       = 0 
+   --cuda-host-register-step          = 2048 
+   --mpi-use-mpi                      = 0 
+   --use-host-mpi                     = 0 
+   --fill-device                      = 0 
+   --fill-device-buffer-size          = 3048 
+   --fp4-scaling-factor-a             = 1.000000e-05 
+   --skip-tests                       = 1 
+   --gemm-iterations                  = 100 
+
+
+
+ ****** Monitor GPU Settings ****** 
+
+   --monitor-gpu                      = 1 
+   --monitor-gpu-interval             = 10 
+   --monitor-gpu-clock-warning        = 0 
+   --monitor-gpu-power-warning        = 0 
+   --monitor-gpu-temp-warning         = 0 
+   --monitor-gpu-pcie-width-warning   = 16 
+   --monitor-gpu-pcie-gen-warning     = 5 
+
+
+
+ ****** test 1 of 1 starts ****** 
+
+   n      = 403423
+   nb     = 1024
+   nprow  = 2
+   npcol  = 4
+
+Device info:
+	Peak clock frequency 1980 MHz
+	SM 90
+	Number of SMs 132
+	Total memory available 139.80 GB
+
+---------------------------------------------------------------------------------------------
+[34m Per process host memory consumption MAX = 152.374 GB, available MIN = 191.334 GB[0m
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+[34m Per process device memory consumption MAX = 81.395 GB, available MIN = 138.646 GB[0m
+---------------------------------------------------------------------------------------------
+
+Constructor seconds: AVG = 0.13, MAX = 0.20 (1->hpc-gaas-g14), MIN = 0.06 (3->hpc-gaas-g14)
+
+
+ ****** Matrix Generation ****** 
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 191.317 GB, device = 57.089 GB[0m
+---------------------------------------------------------------------------------------------
+
+RNG seconds: AVG = 39.56, MAX = 41.77 (7->hpc-gaas-g14), MIN = 37.68 (3->hpc-gaas-g14)
+
+Set Diagonal seconds: AVG = 0.02, MAX = 0.03 (5->hpc-gaas-g14), MIN = 0.01 (1->hpc-gaas-g14)
+
+Get Anorm seconds: AVG = 0.16, MAX = 0.21 (3->hpc-gaas-g14), MIN = 0.12 (0->hpc-gaas-g14)
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 39.625 GB, device = 57.089 GB[0m
+---------------------------------------------------------------------------------------------
+
+Sp seconds: AVG = 23.27, MAX = 23.27 (7->hpc-gaas-g14), MIN = 23.26 (0->hpc-gaas-g14)
+
+matgen seconds: AVG = 65.33, MAX = 65.33 (4->hpc-gaas-g14), MIN = 65.33 (1->hpc-gaas-g14)
+
+
+ ****** test loop 1 of 1 starts ****** 
+
+2026-08-20 12:52:30.725
+!!!! WARNING: Rank: 4 : hpc-gaas-g14 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g14 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 115 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g14 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g14 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g14 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 132 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g14 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 133 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g14 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g14 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 175 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=   2.27% N_left=   400351 Time=     1.59 Time_left=      68.43 iTF=     625.12 TF=   625.12 iTF_per=    78.14 TF_per=    78.14[0m
+[0;31m Prog=   3.76% N_left=   398303 Time=     2.48 Time_left=      63.45 iTF=     733.19 TF=   663.97 iTF_per=    91.65 TF_per=    83.00[0m
+[0;31m Prog=   5.24% N_left=   396255 Time=     3.15 Time_left=      57.09 iTF=     955.60 TF=   726.50 iTF_per=   119.45 TF_per=    90.81[0m
+[0;31m Prog=   6.70% N_left=   394207 Time=     3.82 Time_left=      53.25 iTF=     957.96 TF=   766.94 iTF_per=   119.74 TF_per=    95.87[0m
+[0;31m Prog=   8.14% N_left=   392159 Time=     4.48 Time_left=      50.57 iTF=     957.77 TF=   795.08 iTF_per=   119.72 TF_per=    99.39[0m
+[0;31m Prog=   9.58% N_left=   390111 Time=     5.14 Time_left=      48.52 iTF=     956.77 TF=   815.69 iTF_per=   119.60 TF_per=   101.96[0m
+[0;31m Prog=  10.99% N_left=   388063 Time=     5.79 Time_left=      46.86 iTF=     956.13 TF=   831.43 iTF_per=   119.52 TF_per=   103.93[0m
+[0;31m Prog=  12.39% N_left=   386015 Time=     6.43 Time_left=      45.48 iTF=     947.47 TF=   843.11 iTF_per=   118.43 TF_per=   105.39[0m
+[0;31m Prog=  13.78% N_left=   383967 Time=     7.06 Time_left=      44.20 iTF=     964.35 TF=   853.91 iTF_per=   120.54 TF_per=   106.74[0m
+[0;31m Prog=  15.15% N_left=   381919 Time=     7.69 Time_left=      43.08 iTF=     953.45 TF=   862.06 iTF_per=   119.18 TF_per=   107.76[0m
+[0;31m Prog=  16.51% N_left=   379871 Time=     8.31 Time_left=      42.03 iTF=     961.17 TF=   869.43 iTF_per=   120.15 TF_per=   108.68[0m
+[0;31m Prog=  17.85% N_left=   377823 Time=     8.93 Time_left=      41.08 iTF=     954.09 TF=   875.27 iTF_per=   119.26 TF_per=   109.41[0m
+[0;31m Prog=  19.18% N_left=   375775 Time=     9.54 Time_left=      40.17 iTF=     958.57 TF=   880.57 iTF_per=   119.82 TF_per=   110.07[0m
+[0;31m Prog=  20.50% N_left=   373727 Time=    10.15 Time_left=      39.36 iTF=     941.12 TF=   884.22 iTF_per=   117.64 TF_per=   110.53[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g14 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 42 C [0m	[0;31mPower: 332 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g14 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 537 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g14 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 38 C [0m	[0;31mPower: 327 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  21.80% N_left=   371679 Time=    10.74 Time_left=      38.53 iTF=     961.40 TF=   888.47 iTF_per=   120.18 TF_per=   111.06[0m
+!!!! WARNING: Rank: 4 : hpc-gaas-g14 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 50 C [0m	[0;31mPower: 537 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g14 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 40 C [0m	[0;31mPower: 326 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g14 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 44 C [0m	[0;31mPower: 513 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g14 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 527 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g14 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 42 C [0m	[0;31mPower: 330 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  23.08% N_left=   369631 Time=    11.33 Time_left=      37.74 iTF=     956.45 TF=   892.00 iTF_per=   119.56 TF_per=   111.50[0m
+[0;31m Prog=  24.35% N_left=   367583 Time=    11.91 Time_left=      36.99 iTF=     957.02 TF=   895.18 iTF_per=   119.63 TF_per=   111.90[0m
+[0;31m Prog=  25.61% N_left=   365535 Time=    12.48 Time_left=      36.26 iTF=     955.26 TF=   897.95 iTF_per=   119.41 TF_per=   112.24[0m
+[0;31m Prog=  26.85% N_left=   363487 Time=    13.05 Time_left=      35.54 iTF=     962.78 TF=   900.76 iTF_per=   120.35 TF_per=   112.60[0m
+[0;31m Prog=  28.08% N_left=   361439 Time=    13.61 Time_left=      34.86 iTF=     954.13 TF=   902.97 iTF_per=   119.27 TF_per=   112.87[0m
+[0;31m Prog=  29.30% N_left=   359391 Time=    14.16 Time_left=      34.18 iTF=     966.74 TF=   905.45 iTF_per=   120.84 TF_per=   113.18[0m
+[0;31m Prog=  30.50% N_left=   357343 Time=    14.72 Time_left=      33.53 iTF=     953.66 TF=   907.26 iTF_per=   119.21 TF_per=   113.41[0m
+[0;31m Prog=  31.69% N_left=   355295 Time=    15.26 Time_left=      32.89 iTF=     961.66 TF=   909.18 iTF_per=   120.21 TF_per=   113.65[0m
+[0;31m Prog=  32.86% N_left=   353247 Time=    15.80 Time_left=      32.27 iTF=     954.56 TF=   910.73 iTF_per=   119.32 TF_per=   113.84[0m
+[0;31m Prog=  34.03% N_left=   351199 Time=    16.33 Time_left=      31.66 iTF=     958.13 TF=   912.27 iTF_per=   119.77 TF_per=   114.03[0m
+[0;31m Prog=  35.17% N_left=   349151 Time=    16.85 Time_left=      31.06 iTF=     955.57 TF=   913.62 iTF_per=   119.45 TF_per=   114.20[0m
+[0;31m Prog=  36.31% N_left=   347103 Time=    17.37 Time_left=      30.47 iTF=     958.65 TF=   914.96 iTF_per=   119.83 TF_per=   114.37[0m
+[0;31m Prog=  37.43% N_left=   345055 Time=    17.88 Time_left=      29.90 iTF=     955.44 TF=   916.13 iTF_per=   119.43 TF_per=   114.52[0m
+[0;31m Prog=  38.54% N_left=   343007 Time=    18.39 Time_left=      29.33 iTF=     961.64 TF=   917.37 iTF_per=   120.20 TF_per=   114.67[0m
+[0;31m Prog=  39.63% N_left=   340959 Time=    18.89 Time_left=      28.77 iTF=     953.55 TF=   918.34 iTF_per=   119.19 TF_per=   114.79[0m
+[0;31m Prog=  40.71% N_left=   338911 Time=    19.38 Time_left=      28.23 iTF=     960.13 TF=   919.40 iTF_per=   120.02 TF_per=   114.92[0m
+[0;31m Prog=  41.78% N_left=   336863 Time=    19.87 Time_left=      27.69 iTF=     954.36 TF=   920.26 iTF_per=   119.29 TF_per=   115.03[0m
+[0;31m Prog=  42.83% N_left=   334815 Time=    20.35 Time_left=      27.16 iTF=     962.06 TF=   921.25 iTF_per=   120.26 TF_per=   115.16[0m
+[0;31m Prog=  43.36% N_left=   333791 Time=    20.59 Time_left=      26.90 iTF=     945.62 TF=   921.53 iTF_per=   118.20 TF_per=   115.19[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g14 : GPU 0000:5c:00.0 	Clock: 1965 MHz 	[0;31mTemp: 38 C [0m	[0;31mPower: 315 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g14 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 529 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g14 : GPU 0000:1b:00.0 	Clock: 1905 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 318 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g14 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 50 C [0m	[0;31mPower: 526 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g14 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 336 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g14 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 44 C [0m	[0;31mPower: 506 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g14 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 527 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  44.39% N_left=   331743 Time=    21.07 Time_left=      26.39 iTF=     963.22 TF=   922.47 iTF_per=   120.40 TF_per=   115.31[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g14 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 40 C [0m	[0;31mPower: 323 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  45.42% N_left=   329695 Time=    21.54 Time_left=      25.88 iTF=     952.06 TF=   923.11 iTF_per=   119.01 TF_per=   115.39[0m
+[0;31m Prog=  46.43% N_left=   327647 Time=    22.00 Time_left=      25.38 iTF=     958.66 TF=   923.86 iTF_per=   119.83 TF_per=   115.48[0m
+[0;31m Prog=  47.43% N_left=   325599 Time=    22.46 Time_left=      24.90 iTF=     942.28 TF=   924.24 iTF_per=   117.78 TF_per=   115.53[0m
+[0;31m Prog=  48.41% N_left=   323551 Time=    22.91 Time_left=      24.41 iTF=     964.28 TF=   925.02 iTF_per=   120.53 TF_per=   115.63[0m
+[0;31m Prog=  49.39% N_left=   321503 Time=    23.36 Time_left=      23.94 iTF=     941.32 TF=   925.34 iTF_per=   117.66 TF_per=   115.67[0m
+[0;31m Prog=  50.35% N_left=   319455 Time=    23.80 Time_left=      23.47 iTF=     963.56 TF=   926.04 iTF_per=   120.45 TF_per=   115.75[0m
+[0;31m Prog=  51.30% N_left=   317407 Time=    24.24 Time_left=      23.02 iTF=     939.31 TF=   926.28 iTF_per=   117.41 TF_per=   115.78[0m
+[0;31m Prog=  52.23% N_left=   315359 Time=    24.67 Time_left=      22.56 iTF=     963.83 TF=   926.93 iTF_per=   120.48 TF_per=   115.87[0m
+[0;31m Prog=  53.16% N_left=   313311 Time=    25.10 Time_left=      22.12 iTF=     934.89 TF=   927.06 iTF_per=   116.86 TF_per=   115.88[0m
+[0;31m Prog=  54.07% N_left=   311263 Time=    25.51 Time_left=      21.67 iTF=     960.38 TF=   927.61 iTF_per=   120.05 TF_per=   115.95[0m
+[0;31m Prog=  54.97% N_left=   309215 Time=    25.94 Time_left=      21.25 iTF=     930.64 TF=   927.66 iTF_per=   116.33 TF_per=   115.96[0m
+[0;31m Prog=  55.86% N_left=   307167 Time=    26.34 Time_left=      20.82 iTF=     960.59 TF=   928.16 iTF_per=   120.07 TF_per=   116.02[0m
+[0;31m Prog=  56.74% N_left=   305119 Time=    26.76 Time_left=      20.40 iTF=     931.01 TF=   928.21 iTF_per=   116.38 TF_per=   116.03[0m
+[0;31m Prog=  57.60% N_left=   303071 Time=    27.15 Time_left=      19.99 iTF=     951.64 TF=   928.55 iTF_per=   118.95 TF_per=   116.07[0m
+[0;31m Prog=  58.46% N_left=   301023 Time=    27.55 Time_left=      19.58 iTF=     931.55 TF=   928.59 iTF_per=   116.44 TF_per=   116.07[0m
+[0;31m Prog=  59.30% N_left=   298975 Time=    27.94 Time_left=      19.18 iTF=     951.82 TF=   928.92 iTF_per=   118.98 TF_per=   116.11[0m
+[0;31m Prog=  60.13% N_left=   296927 Time=    28.33 Time_left=      18.79 iTF=     928.35 TF=   928.91 iTF_per=   116.04 TF_per=   116.11[0m
+[0;31m Prog=  60.95% N_left=   294879 Time=    28.71 Time_left=      18.40 iTF=     948.99 TF=   929.17 iTF_per=   118.62 TF_per=   116.15[0m
+[0;31m Prog=  61.76% N_left=   292831 Time=    29.09 Time_left=      18.02 iTF=     928.21 TF=   929.16 iTF_per=   116.03 TF_per=   116.15[0m
+[0;31m Prog=  62.55% N_left=   290783 Time=    29.46 Time_left=      17.64 iTF=     950.19 TF=   929.42 iTF_per=   118.77 TF_per=   116.18[0m
+[0;31m Prog=  63.34% N_left=   288735 Time=    29.83 Time_left=      17.27 iTF=     931.35 TF=   929.45 iTF_per=   116.42 TF_per=   116.18[0m
+[0;31m Prog=  64.11% N_left=   286687 Time=    30.19 Time_left=      16.90 iTF=     950.93 TF=   929.70 iTF_per=   118.87 TF_per=   116.21[0m
+[0;31m Prog=  64.88% N_left=   284639 Time=    30.54 Time_left=      16.54 iTF=     928.71 TF=   929.69 iTF_per=   116.09 TF_per=   116.21[0m
+!!!! WARNING: Rank: 4 : hpc-gaas-g14 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 50 C [0m	[0;31mPower: 515 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g14 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 515 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g14 : GPU 0000:1b:00.0 	Clock: 1935 MHz 	[0;31mTemp: 37 C [0m	[0;31mPower: 315 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  65.63% N_left=   282591 Time=    30.89 Time_left=      16.18 iTF=     945.70 TF=   929.87 iTF_per=   118.21 TF_per=   116.23[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g14 : GPU 0000:5c:00.0 	Clock: 1965 MHz 	[0;31mTemp: 39 C [0m	[0;31mPower: 309 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g14 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 44 C [0m	[0;31mPower: 492 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g14 : GPU 0000:4b:00.0 	Clock: 1890 MHz 	[0;31mTemp: 44 C [0m	[0;31mPower: 316 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g14 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 526 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  66.37% N_left=   280543 Time=    31.24 Time_left=      15.83 iTF=     932.82 TF=   929.90 iTF_per=   116.60 TF_per=   116.24[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g14 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 41 C [0m	[0;31mPower: 311 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  67.10% N_left=   278495 Time=    31.58 Time_left=      15.48 iTF=     950.08 TF=   930.12 iTF_per=   118.76 TF_per=   116.26[0m
+[0;31m Prog=  67.82% N_left=   276447 Time=    31.92 Time_left=      15.14 iTF=     930.19 TF=   930.12 iTF_per=   116.27 TF_per=   116.26[0m
+[0;31m Prog=  68.53% N_left=   274399 Time=    32.24 Time_left=      14.81 iTF=     951.26 TF=   930.33 iTF_per=   118.91 TF_per=   116.29[0m
+[0;31m Prog=  69.23% N_left=   272351 Time=    32.57 Time_left=      14.48 iTF=     928.23 TF=   930.31 iTF_per=   116.03 TF_per=   116.29[0m
+[0;31m Prog=  69.92% N_left=   270303 Time=    32.89 Time_left=      14.15 iTF=     947.40 TF=   930.48 iTF_per=   118.43 TF_per=   116.31[0m
+[0;31m Prog=  70.60% N_left=   268255 Time=    33.21 Time_left=      13.83 iTF=     926.43 TF=   930.44 iTF_per=   115.80 TF_per=   116.30[0m
+[0;31m Prog=  70.93% N_left=   267231 Time=    33.37 Time_left=      13.67 iTF=     938.94 TF=   930.48 iTF_per=   117.37 TF_per=   116.31[0m
+[0;31m Prog=  71.60% N_left=   265183 Time=    33.68 Time_left=      13.36 iTF=     947.70 TF=   930.63 iTF_per=   118.46 TF_per=   116.33[0m
+[0;31m Prog=  72.25% N_left=   263135 Time=    33.98 Time_left=      13.05 iTF=     923.52 TF=   930.57 iTF_per=   115.44 TF_per=   116.32[0m
+[0;31m Prog=  72.89% N_left=   261087 Time=    34.28 Time_left=      12.75 iTF=     943.01 TF=   930.68 iTF_per=   117.88 TF_per=   116.33[0m
+[0;31m Prog=  73.53% N_left=   259039 Time=    34.58 Time_left=      12.45 iTF=     922.59 TF=   930.61 iTF_per=   115.32 TF_per=   116.33[0m
+[0;31m Prog=  74.15% N_left=   256991 Time=    34.87 Time_left=      12.16 iTF=     950.39 TF=   930.77 iTF_per=   118.80 TF_per=   116.35[0m
+[0;31m Prog=  74.76% N_left=   254943 Time=    35.16 Time_left=      11.87 iTF=     919.16 TF=   930.67 iTF_per=   114.90 TF_per=   116.33[0m
+[0;31m Prog=  75.37% N_left=   252895 Time=    35.44 Time_left=      11.58 iTF=     948.36 TF=   930.81 iTF_per=   118.55 TF_per=   116.35[0m
+[0;31m Prog=  75.96% N_left=   250847 Time=    35.72 Time_left=      11.31 iTF=     918.83 TF=   930.72 iTF_per=   114.85 TF_per=   116.34[0m
+[0;31m Prog=  76.54% N_left=   248799 Time=    35.99 Time_left=      11.03 iTF=     951.49 TF=   930.87 iTF_per=   118.94 TF_per=   116.36[0m
+[0;31m Prog=  77.12% N_left=   246751 Time=    36.26 Time_left=      10.76 iTF=     922.66 TF=   930.81 iTF_per=   115.33 TF_per=   116.35[0m
+[0;31m Prog=  77.68% N_left=   244703 Time=    36.52 Time_left=      10.49 iTF=     954.98 TF=   930.98 iTF_per=   119.37 TF_per=   116.37[0m
+[0;31m Prog=  78.24% N_left=   242655 Time=    36.79 Time_left=      10.23 iTF=     922.18 TF=   930.92 iTF_per=   115.27 TF_per=   116.36[0m
+[0;31m Prog=  78.79% N_left=   240607 Time=    37.04 Time_left=       9.97 iTF=     951.53 TF=   931.06 iTF_per=   118.94 TF_per=   116.38[0m
+[0;31m Prog=  79.32% N_left=   238559 Time=    37.29 Time_left=       9.72 iTF=     919.21 TF=   930.98 iTF_per=   114.90 TF_per=   116.37[0m
+[0;31m Prog=  79.85% N_left=   236511 Time=    37.54 Time_left=       9.47 iTF=     949.64 TF=   931.10 iTF_per=   118.71 TF_per=   116.39[0m
+[0;31m Prog=  80.37% N_left=   234463 Time=    37.79 Time_left=       9.23 iTF=     918.93 TF=   931.02 iTF_per=   114.87 TF_per=   116.38[0m
+[0;31m Prog=  80.88% N_left=   232415 Time=    38.02 Time_left=       8.99 iTF=     951.87 TF=   931.15 iTF_per=   118.98 TF_per=   116.39[0m
+[0;31m Prog=  81.38% N_left=   230367 Time=    38.26 Time_left=       8.75 iTF=     916.35 TF=   931.06 iTF_per=   114.54 TF_per=   116.38[0m
+[0;31m Prog=  81.87% N_left=   228319 Time=    38.49 Time_left=       8.52 iTF=     949.44 TF=   931.16 iTF_per=   118.68 TF_per=   116.40[0m
+[0;31m Prog=  82.36% N_left=   226271 Time=    38.72 Time_left=       8.29 iTF=     915.14 TF=   931.07 iTF_per=   114.39 TF_per=   116.38[0m
+[0;31m Prog=  82.83% N_left=   224223 Time=    38.94 Time_left=       8.07 iTF=     949.80 TF=   931.17 iTF_per=   118.72 TF_per=   116.40[0m
+[0;31m Prog=  83.30% N_left=   222175 Time=    39.16 Time_left=       7.85 iTF=     915.05 TF=   931.08 iTF_per=   114.38 TF_per=   116.39[0m
+[0;31m Prog=  83.75% N_left=   220127 Time=    39.37 Time_left=       7.64 iTF=     951.20 TF=   931.19 iTF_per=   118.90 TF_per=   116.40[0m
+[0;31m Prog=  84.20% N_left=   218079 Time=    39.58 Time_left=       7.43 iTF=     916.93 TF=   931.11 iTF_per=   114.62 TF_per=   116.39[0m
+[0;31m Prog=  84.64% N_left=   216031 Time=    39.79 Time_left=       7.22 iTF=     950.02 TF=   931.21 iTF_per=   118.75 TF_per=   116.40[0m
+[0;31m Prog=  85.08% N_left=   213983 Time=    40.00 Time_left=       7.02 iTF=     910.66 TF=   931.10 iTF_per=   113.83 TF_per=   116.39[0m
+[0;31m Prog=  85.50% N_left=   211935 Time=    40.19 Time_left=       6.82 iTF=     946.06 TF=   931.17 iTF_per=   118.26 TF_per=   116.40[0m
+[0;31m Prog=  85.92% N_left=   209887 Time=    40.39 Time_left=       6.62 iTF=     912.41 TF=   931.08 iTF_per=   114.05 TF_per=   116.39[0m
+[0;31m Prog=  86.33% N_left=   207839 Time=    40.58 Time_left=       6.43 iTF=     949.26 TF=   931.17 iTF_per=   118.66 TF_per=   116.40[0m
+[0;31m Prog=  86.73% N_left=   205791 Time=    40.77 Time_left=       6.24 iTF=     914.40 TF=   931.09 iTF_per=   114.30 TF_per=   116.39[0m
+!!!! WARNING: Rank: 4 : hpc-gaas-g14 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 51 C [0m	[0;31mPower: 524 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g14 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 38 C [0m	[0;31mPower: 328 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  87.12% N_left=   203743 Time=    40.95 Time_left=       6.06 iTF=     953.55 TF=   931.19 iTF_per=   119.19 TF_per=   116.40[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g14 : GPU 0000:5c:00.0 	Clock: 1950 MHz 	[0;31mTemp: 43 C [0m	[0;31mPower: 320 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g14 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 521 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g14 : GPU 0000:4b:00.0 	Clock: 1965 MHz 	[0;31mTemp: 40 C [0m	[0;31mPower: 331 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g14 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 45 C [0m	[0;31mPower: 497 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g14 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 48 C [0m	[0;31mPower: 525 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  87.50% N_left=   201695 Time=    41.78 Time_left=       5.97 iTF=     202.45 TF=   916.69 iTF_per=    25.31 TF_per=   114.59[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g14 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 216 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  88.79% N_left=   194527 Time=    42.31 Time_left=       5.34 iTF=    1058.22 TF=   918.46 iTF_per=   132.28 TF_per=   114.81[0m
+[0;31m Prog=  90.15% N_left=   186335 Time=    42.95 Time_left=       4.70 iTF=     929.14 TF=   918.62 iTF_per=   116.14 TF_per=   114.83[0m
+[0;31m Prog=  91.39% N_left=   178143 Time=    43.54 Time_left=       4.10 iTF=     924.04 TF=   918.70 iTF_per=   115.51 TF_per=   114.84[0m
+[0;31m Prog=  92.52% N_left=   169951 Time=    44.10 Time_left=       3.56 iTF=     898.68 TF=   918.45 iTF_per=   112.33 TF_per=   114.81[0m
+[0;31m Prog=  93.55% N_left=   161759 Time=    44.58 Time_left=       3.07 iTF=     936.48 TF=   918.64 iTF_per=   117.06 TF_per=   114.83[0m
+[0;31m Prog=  94.48% N_left=   153567 Time=    45.02 Time_left=       2.63 iTF=     919.12 TF=   918.64 iTF_per=   114.89 TF_per=   114.83[0m
+[0;31m Prog=  95.32% N_left=   145375 Time=    45.42 Time_left=       2.23 iTF=     914.51 TF=   918.61 iTF_per=   114.31 TF_per=   114.83[0m
+[0;31m Prog=  96.07% N_left=   137183 Time=    45.78 Time_left=       1.87 iTF=     902.12 TF=   918.48 iTF_per=   112.76 TF_per=   114.81[0m
+[0;31m Prog=  96.65% N_left=   130015 Time=    46.05 Time_left=       1.59 iTF=     960.26 TF=   918.72 iTF_per=   120.03 TF_per=   114.84[0m
+[0;31m Prog=  97.25% N_left=   121823 Time=    46.37 Time_left=       1.31 iTF=     801.27 TF=   917.90 iTF_per=   100.16 TF_per=   114.74[0m
+[0;31m Prog=  99.19% N_left=    80863 Time=    47.38 Time_left=       0.38 iTF=     844.72 TF=   916.34 iTF_per=   105.59 TF_per=   114.54[0m
+[0;31m Prog=  99.90% N_left=    40927 Time=    47.76 Time_left=       0.05 iTF=     815.33 TF=   915.54 iTF_per=   101.92 TF_per=   114.44[0m
+2026-08-20 12:53:18.755
+LU seconds: AVG = 48.03, MAX = 48.03 (4->hpc-gaas-g14), MIN = 48.03 (6->hpc-gaas-g14)
+
+Solver iteration  0, L-infinite residual = 4.89828962e-04
+Solver iteration  1, L-infinite residual = 8.75762791e-10
+Solver iteration  2, L-infinite residual = 9.41462620e-14
+Iterative Solver seconds: AVG = 11.53, MAX = 11.54 (5->hpc-gaas-g14), MIN = 11.52 (0->hpc-gaas-g14)
+
+2026-08-20 12:53:30.350
+
+ ****** HPL MxP Result    ****** 
+
+    EPS           . . . . . . . . . . . . . . . . .          =    2.000000E-16
+    Threshold     . . . . . . . . . . . . . . . . .          =    1.600000E+01
+  ||Ax-b||_oo     . . . . . . . . . . . . . . . . .          =    9.414626E-14
+  ||A   ||_oo     . . . . . . . . . . . . . . . . .          =    4.049622E+05
+  ||x   ||_oo     . . . . . . . . . . . . . . . . .          =    4.975047E-06
+  ||b   ||_oo     . . . . . . . . . . . . . . . . .          =    9.999961E-01
+  ||Ax-b||_oo / (EPS * (||A||_oo * ||x||_oo + ||b||_oo) * N) =    3.870509E-04 ...... PASSED
+
+    N = 403423, NB = 1024, NPROW = 2, NPCOL = 4, SLOPPY-TYPE = FP16
+[0;31m       GFLOPS = 7.3508e+05, per GPU =   91884.53[0m[0;34m ------ The HPL-MxP performance to report[0m
+    LU GFLOPS = 9.1134e+05, per GPU =  113917.29[0;34m ------ The performance excluding the iterative solver part[0m
+
+ ****** HPL MxP Result    ****** 
+
+
+ ****** test loop 1 of 1 done   ****** 
+
+
+ ****** test 1 of 1 done   ****** 
+
