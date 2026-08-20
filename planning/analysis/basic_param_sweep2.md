@@ -271,6 +271,8 @@ The idea is that the more part of the FP64 original matrix stored in VRAM, the f
 
 - `--cuda-host-register-step <int>`
 
+
+
 **Agent ideation**
 
 For user review, the next direction should be controlled confirmation and local

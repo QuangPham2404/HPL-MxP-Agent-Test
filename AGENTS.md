@@ -87,3 +87,5 @@ For optimization runs, use the flag `--skip-tests 1` to skip test and save time.
 --monitor-gpu-pcie-width-warning 16 \
 --monitor-gpu-pcie-gen-warning 5
 ```
+
+For analysis step in the workflow, always include: (1) the baseline from the baseline run (the original baseline), and (2) the data tables must have a column to show the percentage increase compared to that baseline run
