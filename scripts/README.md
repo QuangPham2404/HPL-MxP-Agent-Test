@@ -10,4 +10,6 @@ builds, experiments, or results. Read-only probe output belongs in `outputs/`.
   memory loop because of an outer-shell quoting defect. Raw evidence remains
   in `outputs/compute_node_hardware_probe_v1.{o,e}`.
 - `compute_node_hardware_probe_v1.1`: corrected retry using new PBS output
-  names; intended to collect the complete read-only hardware inventory.
+  names; PBS job `50474.gaas` completed successfully on `hpc-gaas-g11`. The
+  report is in [`probing_report.md`](probing_report.md), with raw stdout and
+  stderr in `outputs/compute_node_hardware_probe_v1.1.{o,e}`.
