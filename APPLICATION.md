@@ -12,7 +12,7 @@ harness for numerical verification.
 - Package release/source revision: NVIDIA HPC Benchmarks `v26.02`
 - Release notes: https://docs.nvidia.com/nvidia-hpc-benchmarks/release_notes.html#v26-02
 - Active cluster: GAAS
-- Remote project root: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization`
+- Remote project root: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test`
 
 The `v26.02` release is the current release identified in NVIDIA's release
 notes at the time this overview was prepared. The exact container image

@@ -22,7 +22,7 @@ only one workflow file based on the immediate task.
 - Workflow pack path: `workflow/`
 - Application overview: `APPLICATION.md`
 - Remote project root: also record and verify this in
-  `workflow/00-General-SSH-Rules.md`: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization`
+  `workflow/00-General-SSH-Rules.md`: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test`
 
 Complete the cluster-specific placeholders in
 `workflow/00-General-SSH-Rules.md` before remote work begins. That file is the

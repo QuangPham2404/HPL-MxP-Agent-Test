@@ -52,7 +52,7 @@ Replace every placeholder below. This section is the active cluster adapter.
 - Scheduler monitoring command and polling limit: `qstat -u $USER`
 - Module policy: use `module avail` to check
 - Login-node restrictions: `Do not run builds/experiments on login-node`
-- Approved project remote path: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Optimization`
+- Approved project remote path: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test`
 
 ## Cluster adaptation checks
 
