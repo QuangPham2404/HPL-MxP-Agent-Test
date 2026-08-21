@@ -4,6 +4,23 @@ This report records validated raw result data only. No optimization analysis or 
 
 | Experiment | Attempt | N | NB | Pgrid | Order | Correctness | GFLOP/s | Stdout |
 |---|---|---|---|---|---|---|---|---|
+| N-sweep | N-sweep_370000 | 370000 | 1024 | 2x4 | row | PASSED | 1.4747e+06 | experiments/N-sweep/outputs/N-sweep_370000.o |
+| N-sweep | N-sweep_380000 | 380000 | 1024 | 2x4 | row | PASSED | 1.5274e+06 | experiments/N-sweep/outputs/N-sweep_380000.o |
+| N-sweep | N-sweep_390000 | 390000 | 1024 | 2x4 | row | PASSED | 1.2724e+06 | experiments/N-sweep/outputs/N-sweep_390000.o |
+| N-sweep | N-sweep_390000_r1 | 390000 | 1024 | 2x4 | row | PASSED | 1.5592e+06 | experiments/N-sweep/outputs/N-sweep_390000_r1.o |
+| N-sweep | N-sweep_400000 | 400000 | 1024 | 2x4 | row | PASSED | 1.5739e+06 | experiments/N-sweep/outputs/N-sweep_400000.o |
+| N-sweep | N-sweep_410000 | 410000 | 1024 | 2x4 | row | PASSED | 1.6077e+06 | experiments/N-sweep/outputs/N-sweep_410000.o |
+| N-sweep | N-sweep_420000 | 420000 | 1024 | 2x4 | row | PASSED | 1.6172e+06 | experiments/N-sweep/outputs/N-sweep_420000.o |
+| N-sweep | N-sweep_430000 | 430000 | 1024 | 2x4 | row | PASSED | 1.6407e+06 | experiments/N-sweep/outputs/N-sweep_430000.o |
+| N-sweep | N-sweep_440000 | 440000 | 1024 | 2x4 | row | PASSED | 1.6963e+06 | experiments/N-sweep/outputs/N-sweep_440000.o |
+| N-sweep | N-sweep_450000 | 450000 | 1024 | 2x4 | row | PASSED | 1.6209e+06 | experiments/N-sweep/outputs/N-sweep_450000.o |
+| N-sweep | N-sweep_450000_r1 | 450000 | 1024 | 2x4 | row | PASSED | 1.6995e+06 | experiments/N-sweep/outputs/N-sweep_450000_r1.o |
+| N-sweep | N-sweep_460000 | 460000 | 1024 | 2x4 | row | PASSED | 1.7225e+06 | experiments/N-sweep/outputs/N-sweep_460000.o |
+| N-sweep | N-sweep_470000 | 470000 | 1024 | 2x4 | row | PASSED | 1.7424e+06 | experiments/N-sweep/outputs/N-sweep_470000.o |
+| N-sweep | N-sweep_480000 | 480000 | 1024 | 2x4 | row | PASSED | 1.7619e+06 | experiments/N-sweep/outputs/N-sweep_480000.o |
+| N-sweep | N-sweep_490000 | 490000 | 1024 | 2x4 | row | PASSED | 1.8293e+06 | experiments/N-sweep/outputs/N-sweep_490000.o |
+| N-sweep | N-sweep_500000 | 500000 | 1024 | 2x4 | row | PASSED | 1.8152e+06 | experiments/N-sweep/outputs/N-sweep_500000.o |
+| N-sweep | N-sweep_510000 | 510000 | 1024 | 2x4 | row | UNKNOWN | unknown | experiments/N-sweep/outputs/N-sweep_510000.o |
 | N-sweep | N-resweep_402k | 402423 | 1024 | 2x4 | row | PASSED | 7.6521e+05 | experiments/N-sweep/outputs/N-resweep_402k.o |
 | N-sweep | N-sweep_399k | 399360 | 1024 | 2x4 | row | PASSED | 1.4918e+06 | experiments/N-sweep/outputs/N-sweep_399k.o |
 | N-sweep | N-sweep_400k | 400384 | 1024 | 2x4 | row | PASSED | 1.5751e+06 | experiments/N-sweep/outputs/N-sweep_400k.o |

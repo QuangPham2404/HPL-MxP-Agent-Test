@@ -14,14 +14,25 @@
 | Basic parameter sweep 2 | `planning/analysis/basic_param_sweep2.md` | 2026-08-20 | all 19 rows in `results/metrics.csv` | Analyzed | NB=3072 is the sampled local peak; 4x2 column gives the best tested grid; best result is 1.8441e+06 GFLOP/s (27.78% over baseline); N-sweep_402k remains a performance anomaly | Repeat the best candidate and the N-sweep_402k anomaly; locally refine NB and N at 4x2 column with repeated controls |
 | Affinity and OpenMP thread flags | `planning/analysis/affinity.md` | 2026-08-20 | five `affinity-sweep` attempts; CPU/memory affinity and `OMP_NUM_THREADS=10` | Analyzed | Memory affinity matches the 4x2-column control within 0.07%; CPU-affinity results range from -8.25% to +0.84%; the single 10-thread run is -52.80% | Repeat matched memory/CPU affinity controls and add an explicit OpenMP default-thread control before a small thread-count sweep |
 | FP64 matrix memory placement | `planning/analysis/fp64-matrix-mem-placement.md` | 2026-08-20 | fourteen `matrix-placement-control` attempts; default fill, buffer sweep, and register-step sweeps at buffers 32768 and 3048 | Analyzed | Buffer 3048 register resweep peaks at step 512 with 2.2002e+06 (+1.10% vs its control); buffer 32768 peaks at step 1024; no stable step winner yet | Repeat both register-step/buffer controls on comparable nodes before selecting settings |
+| N sweep (baseline nb=1024, 2x4 row) | `planning/analysis/n-sweep-370k-510k.md` | 2026-08-21 | `N-sweep` 370000–510000 in 10k steps | Analyzed | Monotonic +26.75% to peak at N=490000 (1.8293e+06); hard memory wall just above N=500000, OOM at 510000; no gradual rolloff | Repeat N sweep at nb=3072 4x2 column; re-run 490k/500k to confirm peak; guard against g13 node noise |
 
 ## Next direction
 
 Repeat the `N-sweep_402k` anomaly and the current best candidate, then run a
 joint local NB/N scan at the 4x2 column grid to confirm the NB=3072 region and
-the best N. Affinity analysis additionally recommends matched affinity and
-OpenMP-control repetitions before selecting a placement/thread configuration.
-The matrix-placement analysis additionally recommends repeating fill-device
-3048 against the matched control before testing buffer refinements or register
+the best N.
+
+The new baseline N sweep (2026-08-21) shows N can be pushed from the 370000
+baseline to N=490000 for a +26.75% gain before hitting the system-memory wall
+(OOM at N=510000). The natural next step is to combine this larger-N win with
+the stronger grid/block size: re-run the N sweep at `--nb 3072`, `4x2` column
+order, and re-run N=490000/N=500000 to pin the peak boundary. Guard every
+boundary run against node-level memory noise (notably `hpc-gaas-g13`).
+
+Affinity analysis additionally recommends matched affinity and OpenMP-control
+repetitions before selecting a placement/thread configuration. The
+matrix-placement analysis additionally recommends repeating fill-device 3048
+against the matched control before testing buffer refinements or register
 steps.
+
 Awaiting user confirmation before preparing the next experiment.

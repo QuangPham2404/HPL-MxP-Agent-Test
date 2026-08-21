@@ -176,11 +176,21 @@ def main() -> None:
 
     new_rows = build_rows()
     final_rows: list[dict] = []
+    seen_keys: set[tuple[str, str]] = set()
     for row in new_rows:
         key = (row["experiment_id"], row["attempt"])
         if key in existing_by_key:
             row = merge_with_existing(row, existing_by_key[key])
         final_rows.append(row)
+        seen_keys.add(key)
+
+    # Preserve existing rows whose raw-evidence files are no longer present so
+    # they would otherwise be dropped by the rebuild-from-.o pass. This keeps
+    # historical records while appending newly extracted attempts.
+    for row in existing:
+        key = (row.get("experiment_id"), row.get("attempt"))
+        if key not in seen_keys:
+            final_rows.append(row)
 
     with METRICS.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=FIELDS, lineterminator="\n")
