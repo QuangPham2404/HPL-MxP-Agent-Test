@@ -26,15 +26,18 @@ def main() -> None:
         "This report records validated raw result data only. No optimization "
         "analysis or ranking is included.",
         "",
-        "| Experiment | Attempt | N | NB | Pgrid | Order | Correctness | GFLOP/s | Stdout |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| Experiment | Attempt | N | NB | Pgrid | Order | THREADS | PLACES | BIND | Correctness | GFLOP/s | Stdout |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         pgrid = f"{r['nprow']}x{r['npcol']}"
+        omp_t = r.get("omp_num_threads", "")
+        omp_p = r.get("omp_places", "")
+        omp_b = r.get("omp_proc_bind", "")
         lines.append(
             f"| {r['experiment_id']} | {r['attempt']} | {r['n']} | {r['nb']} "
-            f"| {pgrid} | {r['nporder']} | {r['verification']} "
-            f"| {r['gflops']} | {r['stdout_path']} |"
+            f"| {pgrid} | {r['nporder']} | {omp_t} | {omp_p} | {omp_b} "
+            f"| {r['verification']} | {r['gflops']} | {r['stdout_path']} |"
         )
     lines += ["", "Source: `results/metrics.csv`.", ""]
 

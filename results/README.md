@@ -39,6 +39,11 @@ Columns and semantics for the HPL-MxP sweeps:
 - `n`: matrix size.
 - `nb`: panel size.
 - `gpu_affinity`: GPU affinity string.
+- `omp_num_threads`, `omp_places`, `omp_proc_bind`: OpenMP thread-count and
+  placement/binding environment values (`OMP_NUM_THREADS`, `OMP_PLACES`,
+  `OMP_PROC_BIND`). `unset` means the variable was not exported for that run
+  (OpenMP runtime default). These are populated for the `omp-sweep` experiment;
+  blank for experiments that predate the columns.
 - `verification`: `PASSED` or `FAILED` from the HPL-MxP residual marker;
   `UNKNOWN` when the marker is absent.
 - `stdout_path`, `stderr_path`: relative raw-output paths.

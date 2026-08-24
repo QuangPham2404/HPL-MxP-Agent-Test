@@ -41,6 +41,9 @@ FIELDS = [
     "n",
     "nb",
     "gpu_affinity",
+    "omp_num_threads",
+    "omp_places",
+    "omp_proc_bind",
     "verification",
     "stdout_path",
     "stderr_path",
@@ -57,6 +60,9 @@ SETTING = re.compile(r"^\s+--(\S+)\s+=\s+(\S+)\s*$")
 JOB_ID = re.compile(r"^pbs_job_id=(\S+)$")
 TIMESTAMP = re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2})$")
 NODE = re.compile(r"^hpc-gaas-g\d+$")
+OMP_THREADS = re.compile(r"^omp_num_threads=(\S+)$")
+OMP_PLACES = re.compile(r"^omp_places=(\S+)$")
+OMP_BIND = re.compile(r"^omp_proc_bind=(\S+)$")
 RESIDUAL = re.compile(r"^\s+\|\|Ax-b\|\|_oo .*=\s+([0-9.Ee+-]+)\s+\.\.\.\.\.\.\s+(PASSED|FAILED)")
 GFLOPS = re.compile(r"GFLOPS = ([0-9.eE+-]+), per GPU")
 
@@ -86,6 +92,9 @@ def parse_stdout(text: str) -> dict:
     verification = "UNKNOWN"
     residual = "unknown"
     gflops = "unknown"
+    omp_num_threads = "unset"
+    omp_places = "unset"
+    omp_proc_bind = "unset"
     for line in text.splitlines():
         m = SETTING.match(line)
         if m:
@@ -102,6 +111,15 @@ def parse_stdout(text: str) -> dict:
             nm = NODE.match(line.strip())
             if nm:
                 node = nm.group(0)
+        ot = OMP_THREADS.match(line)
+        if ot:
+            omp_num_threads = ot.group(1)
+        op = OMP_PLACES.match(line)
+        if op:
+            omp_places = op.group(1)
+        ob = OMP_BIND.match(line)
+        if ob:
+            omp_proc_bind = ob.group(1)
         rm = RESIDUAL.match(line)
         if rm:
             verification = rm.group(2)
@@ -111,7 +129,8 @@ def parse_stdout(text: str) -> dict:
             gflops = gm.group(1)
     return {**settings, "pbs_job_id": pbs_job_id, "submission_time": submission_time,
             "node": node, "verification": verification, "residual": residual,
-            "gflops": gflops}
+            "gflops": gflops, "omp_num_threads": omp_num_threads,
+            "omp_places": omp_places, "omp_proc_bind": omp_proc_bind}
 
 
 def build_rows() -> list[dict]:
@@ -142,6 +161,9 @@ def build_rows() -> list[dict]:
             "n": data.get("n", "unknown"),
             "nb": data.get("nb", "unknown"),
             "gpu_affinity": GPU_AFFINITY,
+            "omp_num_threads": data.get("omp_num_threads", "unset"),
+            "omp_places": data.get("omp_places", "unset"),
+            "omp_proc_bind": data.get("omp_proc_bind", "unset"),
             "verification": data["verification"],
             "stdout_path": str(stdout.relative_to(ROOT)),
             "stderr_path": str(stderr.relative_to(ROOT)),
