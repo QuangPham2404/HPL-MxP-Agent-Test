@@ -1,0 +1,59 @@
+#!/bin/bash
+# Parametrized HPL-MxP N re-sweep at NB=3072 (N aligned to NB) on GAAS.
+# Expected working directory: this experiment directory
+# (experiments/N-nb-resweep/) on GAAS. Submit with qsub -v 'N=<size>,ATTEMPT=<label>'
+# plus -o/-e for the attempt-specific PBS stdout/stderr under outputs/.
+# Inputs: N (matrix size, multiples of 3072) and ATTEMPT (output stem) via
+# environment; fixed block size NB=3072 (the 2026-08-24 NB-sweep peak) and fixed
+# baseline tuning (2x4 row grid, row order), identical to the prior sweeps for a
+# fair N-only comparison with N % NB == 0. Outputs: attempt-specific PBS stdout
+# and stderr under outputs/. Assumptions: the approved container and required
+# modules exist on GAAS; one GPU per MPI process (8 processes, 8 GPUs).
+
+#PBS -N hpl_mxp_nnb_resweep
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+
+# Enter the experiment directory and print reproducibility metadata.
+cd "$PBS_O_WORKDIR"
+echo "experiment_id=N-nb-resweep"
+echo "attempt=${ATTEMPT:-unknown}"
+echo "n=${N:-unknown}"
+echo "nb=3072"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "submitted_workdir=$PWD"
+date --iso-8601=seconds
+hostname
+
+# Load the exact minimal module environment validated for GAAS.
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# Record the allocated GPU topology before launching the container workload.
+nvidia-smi topo -m
+
+# Execute HPL-MxP with fixed NB=3072 and fixed baseline tuning, sweeping N over
+# multiples of 3072. --skip-tests is set per project convention; GPU monitoring
+# flags are included for bottleneck evidence.
+apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif" \
+  mpirun -np 8 \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity 0:1:2:3:4:5:6:7 \
+      --nprow 2 \
+      --npcol 4 \
+      --nporder row \
+      --n "${N}" \
+      --nb 3072 \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
