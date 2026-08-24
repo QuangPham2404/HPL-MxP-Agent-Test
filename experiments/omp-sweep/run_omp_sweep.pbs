@@ -2,16 +2,19 @@
 # Parametrized HPL-MxP OpenMP (OMP_NUM_THREADS / OMP_PLACES / OMP_PROC_BIND) sweep
 # on GAAS. Expected working directory: this experiment directory
 # (experiments/omp-sweep/) on GAAS. Submit with qsub -v
-# 'ATTEMPT=<label>,OMP_NUM_THREADS=<n>[,OMP_PLACES=<p>][,OMP_PROC_BIND=<b>]' plus
-# -o/-e for the attempt-specific PBS stdout/stderr under outputs/.
-# Inputs: ATTEMPT (output stem) and OMP_* values. OMP_PLACES/OMP_PROC_BIND are
-# optional; when unset the corresponding OpenMP env var is omitted (OpenMP
-# default). Fixed matrix size N=491520, block size NB=3072, 2x4 row grid,
-# gpu-affinity 0:1:2:3:4:5:6:7, no --cpu-affinity / --mem-affinity (the current
-# best from 2026-08-24). Outputs: attempt-specific PBS stdout and stderr under
-# outputs/. Assumptions: the approved container and required modules exist on
-# GAAS; one GPU per MPI process (8 processes, 8 GPUs); OMP env vars are forwarded
-# to each MPI rank via `mpirun -x`.
+# 'ATTEMPT=<label>,OMP_NT=<n>[,OMP_PLACES=<p>][,OMP_PROC_BIND=<b>]' plus -o/-e for
+# the attempt-specific PBS stdout/stderr under outputs/.
+# Inputs: ATTEMPT (output stem), OMP_NT (thread count), and optional OMP_PLACES /
+# OMP_PROC_BIND. OMP_PLACES/OMP_PROC_BIND are omitted when unset. NOTE: PBS
+# forces OMP_NUM_THREADS to the allocated core count (96) at job start and
+# ignores a qsub -v override, so the requested thread count must be passed under
+# a different name (OMP_NT) and re-exported here after `module purge`.
+# Fixed matrix size N=491520, block size NB=3072, 2x4 row grid, gpu-affinity
+# 0:1:2:3:4:5:6:7, no --cpu-affinity / --mem-affinity (the current best from
+# 2026-08-24). Outputs: attempt-specific PBS stdout and stderr under outputs/.
+# Assumptions: the approved container and required modules exist on GAAS; one GPU
+# per MPI process (8 processes, 8 GPUs); OMP env vars are forwarded to each MPI
+# rank via `mpirun -x`.
 
 #PBS -N hpl_mxp_omp_sweep
 #PBS -q gpu_as
@@ -31,9 +34,6 @@ echo "nprow=2"
 echo "npcol=4"
 echo "nporder=row"
 echo "gpu_affinity=0:1:2:3:4:5:6:7"
-echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
-echo "omp_places=${OMP_PLACES:-unset}"
-echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
 echo "pbs_job_id=${PBS_JOBID:-unknown}"
 echo "submitted_workdir=$PWD"
 date --iso-8601=seconds
@@ -46,12 +46,23 @@ module load nvhpc/26.3
 module load squashfuse/0.5.2
 module load gocryptfs/2.5.0
 
+# PBS clobbers OMP_NUM_THREADS with the allocated core count (96), so re-export
+# the requested thread count from OMP_NT after `module purge` (which clears any
+# module-set value). OMP_PLACES / OMP_PROC_BIND pass through qsub -v unchanged.
+if [[ -n "${OMP_NT:-}" ]]; then
+    export OMP_NUM_THREADS="${OMP_NT}"
+fi
+
+echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
+echo "omp_places=${OMP_PLACES:-unset}"
+echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
+
 # Record the allocated GPU topology before launching the container workload.
 nvidia-smi topo -m
 
-# Build the OMP forwarding flags for mpirun. Each OMP env var set by qsub -v is
-# already in this shell's environment; mpirun needs explicit `-x` to propagate
-# it to the launched ranks (apptainer exec inherits the host env by default).
+# Build the OMP forwarding flags for mpirun. mpirun needs explicit `-x` to
+# propagate each env var to the launched ranks (apptainer exec inherits the
+# host env by default).
 OMP_X=()
 [[ -n "${OMP_NUM_THREADS:-}" ]] && OMP_X+=(-x OMP_NUM_THREADS)
 [[ -n "${OMP_PLACES:-}" ]]     && OMP_X+=(-x OMP_PLACES)

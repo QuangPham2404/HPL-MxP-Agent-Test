@@ -42,15 +42,18 @@ is reached at 12 threads/rank, beyond which the node is oversubscribed.
 
 ## Run script
 
-`run_omp_sweep.pbs` is parametrized by `ATTEMPT`, `OMP_NUM_THREADS`, and optional
-`OMP_PLACES` / `OMP_PROC_BIND`. An env var is omitted when unset.
+`run_omp_sweep.pbs` is parametrized by `ATTEMPT`, `OMP_NT` (thread count), and
+optional `OMP_PLACES` / `OMP_PROC_BIND`. The thread count is passed under `OMP_NT`
+because PBS forces `OMP_NUM_THREADS` to the allocated core count (96) and ignores
+a `qsub -v` override; the script re-exports `OMP_NUM_THREADS` from `OMP_NT` after
+`module purge`.
 
 ```text
-qsub -v "ATTEMPT=omp_t2,OMP_NUM_THREADS=2" \
+qsub -v "ATTEMPT=omp_t2,OMP_NT=2" \
      -o outputs/omp_t2.o -e outputs/omp_t2.e \
      run_omp_sweep.pbs
 
-qsub -v "ATTEMPT=omp_t12_cores_spread,OMP_NUM_THREADS=12,OMP_PLACES=cores,OMP_PROC_BIND=SPREAD" \
+qsub -v "ATTEMPT=omp_t12_cores_spread,OMP_NT=12,OMP_PLACES=cores,OMP_PROC_BIND=SPREAD" \
      -o outputs/omp_t12_cores_spread.o -e outputs/omp_t12_cores_spread.e \
      run_omp_sweep.pbs
 ```
@@ -79,4 +82,10 @@ and a finite HPL-MxP `GFLOPS` performance value is present.
 
 ## Runtime error-patching history
 
-(to be recorded)
+- First sweep (jobs 52360–52381) was invalid: `OMP_NUM_THREADS` was forced to 96
+  by PBS at job start (a `qsub -v "OMP_NUM_THREADS=..."` override is silently
+  ignored), so every "phase 1" run actually ran at 96 threads/rank and the
+  observed variation was node noise, not a thread-count effect. The script now
+  accepts the thread count as `OMP_NT` and re-exports `OMP_NUM_THREADS` after
+  `module purge`. The invalid `.o`/`.e` evidence was removed and the sweep
+  re-run.
