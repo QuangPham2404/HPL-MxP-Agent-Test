@@ -40,8 +40,19 @@ qsub -v "N=488448,ATTEMPT=N-nb-resweep_488448" \
 
 ## Sweep points
 
-To be filled as runs complete; N is stepped +3072 from 488448 until two
-consecutive GFLOP/s degradations or an OOM failure.
+N is stepped +3072 from 488448 until two consecutive degradations or OOM. The
+sweep hit the OOM wall at 506880 / 509952.
+
+| Attempt | N | GFLOP/s |
+|---|---:|---:|
+| N-nb-resweep_488448 | 488448 | 2.1675e+06 PASSED |
+| N-nb-resweep_491520 | 491520 | 2.1974e+06 PASSED (peak) |
+| N-nb-resweep_494592 | 494592 | 2.1867e+06 PASSED |
+| N-nb-resweep_497664 | 497664 | 2.1520e+06 PASSED |
+| N-nb-resweep_500736 | 500736 | 2.1936e+06 PASSED |
+| N-nb-resweep_503808 | 503808 | 2.1708e+06 PASSED |
+| N-nb-resweep_506880 | 506880 | OOM (exit 137) |
+| N-nb-resweep_509952 | 509952 | OOM (exit 137) |
 
 ## Validation
 
@@ -51,4 +62,7 @@ and a finite HPL-MxP `GFLOPS` performance value is present.
 
 ## Runtime error-patching history
 
-None yet.
+- `N-nb-resweep_506880` and `N-nb-resweep_509952`: OOM-killed during matrix
+  generation (`cgroup/OOM`, exit 137) after device memory filled (~134.6 of
+  ~139.8 GB) and the per-process cgroup budget was exceeded. Recorded as
+  `failed`/`unknown`; definitive memory wall at nb = 3072, no patch attempted.

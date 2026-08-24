@@ -4,6 +4,14 @@ This report records validated raw result data only. No optimization analysis or 
 
 | Experiment | Attempt | N | NB | Pgrid | Order | Correctness | GFLOP/s | Stdout |
 |---|---|---|---|---|---|---|---|---|
+| N-nb-resweep | N-nb-resweep_488448 | 488448 | 3072 | 2x4 | row | PASSED | 2.1675e+06 | experiments/N-nb-resweep/outputs/N-nb-resweep_488448.o |
+| N-nb-resweep | N-nb-resweep_491520 | 491520 | 3072 | 2x4 | row | PASSED | 2.1974e+06 | experiments/N-nb-resweep/outputs/N-nb-resweep_491520.o |
+| N-nb-resweep | N-nb-resweep_494592 | 494592 | 3072 | 2x4 | row | PASSED | 2.1867e+06 | experiments/N-nb-resweep/outputs/N-nb-resweep_494592.o |
+| N-nb-resweep | N-nb-resweep_497664 | 497664 | 3072 | 2x4 | row | PASSED | 2.1520e+06 | experiments/N-nb-resweep/outputs/N-nb-resweep_497664.o |
+| N-nb-resweep | N-nb-resweep_500736 | 500736 | 3072 | 2x4 | row | PASSED | 2.1936e+06 | experiments/N-nb-resweep/outputs/N-nb-resweep_500736.o |
+| N-nb-resweep | N-nb-resweep_503808 | 503808 | 3072 | 2x4 | row | PASSED | 2.1708e+06 | experiments/N-nb-resweep/outputs/N-nb-resweep_503808.o |
+| N-nb-resweep | N-nb-resweep_506880 | 506880 | 3072 | 2x4 | row | UNKNOWN | unknown | experiments/N-nb-resweep/outputs/N-nb-resweep_506880.o |
+| N-nb-resweep | N-nb-resweep_509952 | 509952 | 3072 | 2x4 | row | UNKNOWN | unknown | experiments/N-nb-resweep/outputs/N-nb-resweep_509952.o |
 | N-sweep | N-sweep_370000 | 370000 | 1024 | 2x4 | row | PASSED | 1.4747e+06 | experiments/N-sweep/outputs/N-sweep_370000.o |
 | N-sweep | N-sweep_380000 | 380000 | 1024 | 2x4 | row | PASSED | 1.5274e+06 | experiments/N-sweep/outputs/N-sweep_380000.o |
 | N-sweep | N-sweep_390000 | 390000 | 1024 | 2x4 | row | PASSED | 1.2724e+06 | experiments/N-sweep/outputs/N-sweep_390000.o |
