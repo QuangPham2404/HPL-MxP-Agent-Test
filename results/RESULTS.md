@@ -29,6 +29,15 @@ This report records validated raw result data only. No optimization analysis or 
 | N-sweep | N-sweep_490000 | 490000 | 1024 | 2x4 | row | PASSED | 1.8293e+06 | experiments/N-sweep/outputs/N-sweep_490000.o |
 | N-sweep | N-sweep_500000 | 500000 | 1024 | 2x4 | row | PASSED | 1.8152e+06 | experiments/N-sweep/outputs/N-sweep_500000.o |
 | N-sweep | N-sweep_510000 | 510000 | 1024 | 2x4 | row | UNKNOWN | unknown | experiments/N-sweep/outputs/N-sweep_510000.o |
+| affinity-sweep | cpu_4cores_491k | 491520 | 3072 | 2x4 | row | PASSED | 1.7972e+06 | experiments/affinity-sweep/outputs/cpu_4cores_491k.o |
+| affinity-sweep | cpu_8cores_491k | 491520 | 3072 | 2x4 | row | PASSED | 2.1778e+06 | experiments/affinity-sweep/outputs/cpu_8cores_491k.o |
+| affinity-sweep | cpu_slice12_491k | 491520 | 3072 | 2x4 | row | UNKNOWN | unknown | experiments/affinity-sweep/outputs/cpu_slice12_491k.o |
+| affinity-sweep | cpu_slice12_491k_r1 | 491520 | 3072 | 2x4 | row | PASSED | 2.1919e+06 | experiments/affinity-sweep/outputs/cpu_slice12_491k_r1.o |
+| affinity-sweep | cpu_socket_491k | 491520 | 3072 | 2x4 | row | UNKNOWN | unknown | experiments/affinity-sweep/outputs/cpu_socket_491k.o |
+| affinity-sweep | cpu_socket_491k_r1 | 491520 | 3072 | 2x4 | row | PASSED | 2.1746e+06 | experiments/affinity-sweep/outputs/cpu_socket_491k_r1.o |
+| affinity-sweep | cpu_strict2_491k | 491520 | 3072 | 2x4 | row | PASSED | 2.7974e+05 | experiments/affinity-sweep/outputs/cpu_strict2_491k.o |
+| affinity-sweep | mem_aff_491k | 491520 | 3072 | 2x4 | row | PASSED | 2.1662e+06 | experiments/affinity-sweep/outputs/mem_aff_491k.o |
+| affinity-sweep | mem_off_491k | 491520 | 3072 | 2x4 | row | PASSED | 2.1980e+06 | experiments/affinity-sweep/outputs/mem_off_491k.o |
 | nb-sweep | nb-sweep_1024_490k | 490000 | 1024 | 2x4 | row | PASSED | 1.8387e+06 | experiments/nb-sweep/outputs/nb-sweep_1024_490k.o |
 | nb-sweep | nb-sweep_2048_490k | 490000 | 2048 | 2x4 | row | PASSED | 2.1435e+06 | experiments/nb-sweep/outputs/nb-sweep_2048_490k.o |
 | nb-sweep | nb-sweep_3072_490k | 490000 | 3072 | 2x4 | row | PASSED | 2.1726e+06 | experiments/nb-sweep/outputs/nb-sweep_3072_490k.o |

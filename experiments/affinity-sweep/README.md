@@ -57,6 +57,24 @@ A run is valid only when all of: PBS completes; expected raw outputs exist;
 HPL-MxP reports `PASSED`; the reported residual is finite and within tolerance;
 and a finite HPL-MxP `GFLOPS` performance value is present.
 
+## Result
+
+`--mem-affinity` was −1.45% vs none, so it was dropped; `--cpu-affinity` was
+neutral to negative. No affinity is best.
+
+| Attempt | cpu cores/rank | mem | GFLOP/s |
+|---|---|---:|---:|
+| `mem_off_491k` | none | none | 2.1980e+06 PASSED (best) |
+| `mem_aff_491k` | none | `0:0:0:0:1:1:1:1` | 2.1662e+06 PASSED |
+| `cpu_strict2_491k` | 2 | none | 2.7974e+05 PASSED |
+| `cpu_4cores_491k` | 4 | none | 1.7972e+06 PASSED |
+| `cpu_8cores_491k` | 8 | none | 2.1778e+06 PASSED |
+| `cpu_slice12_491k_r1` | 12 | none | 2.1919e+06 PASSED |
+| `cpu_socket_491k_r1` | full socket | none | 2.1746e+06 PASSED |
+
 ## Runtime error-patching history
 
-None yet.
+- `cpu_slice12_491k` and `cpu_socket_491k` (jobs 52310/52311) failed at launch:
+  `numactl` rejected CPU ranges reaching `92-103` / `0-55` because the container
+  cpuset only exposes `0-49` and `56-101` (96 CPUs). Corrected the ranges and
+  re-ran as `cpu_slice12_491k_r1` / `cpu_socket_491k_r1` (jobs 52315/52316).

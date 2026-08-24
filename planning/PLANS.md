@@ -18,6 +18,7 @@
 | NB sweep (fixed N=490000, 2x4 row) | `planning/analysis/nb-sweep.md` | 2026-08-24 | `nb-sweep` 1024–8192 in 1024 steps at N=490000 | Analyzed | Peak at nb=3072: 2.1726e+06 (+50.54% over baseline); two straight degradations at 7168/8192; nb=1024 reproduces N-sweep 490k to +0.51% | Combine nb=3072 + N=490000 on 4x2 column/placement tuning; repeat 3072/4096 to pin the broad plateau |
 | N-NB resweep (N aligned to nb=3072, 2x4 row) | `planning/analysis/N-NB-resweep.md` | 2026-08-24 | `N-nb-resweep` 488448–509952 in 3072 steps | Analyzed | No meaningful gain from N%NB==0: aligned points scatter ±~1% around 490000/nb3072; peak 491520 = 2.1974e+06 (+52.26%); OOM at 506880/509952 | Drop alignment as a lever; combine N≈491520 + nb=3072 on 4x2 column + placement, and repeat peak candidates |
 | Process grid/order sweep (N=491520, nb=3072) | `planning/analysis/np-sweep.md` | 2026-08-24 | `np-sweep` 2x4/4x2 × row/column | Analyzed | 2x4 row best: 2.2067e+06 (+52.90%); 2x4 > 4x2 by ~1.1–1.8%; optimal grid is N-dependent (4x2 col was best at N=399360) | Adopt 2x4 row + N=491520 + nb=3072 as shipping config; optionally test placement levers at N=491520 |
+| CPU/memory affinity re-sweep (N=491520, nb=3072) | `planning/analysis/affinity-491k.md` | 2026-08-24 | `affinity-sweep` mem off/on + cpu free/2/4/8/12/socket cores | Analyzed | No affinity is best: no cpu/mem binding = 2.1980e+06 (+52.30%); <8 cores/rank collapses (2c −87%, 4c −18%); mem-affinity −1.45%; container cpuset is 0-49/56-101 | Keep no-affinity config as shipping; revisit matrix-placement levers at N=491520 |
 
 ## Next direction
 
@@ -55,6 +56,15 @@ ahead of `column`. This reverses the earlier N = 399360 result (4x2 column best)
 so the optimal grid is N-dependent. 2x4 row + N = 491520 + nb = 3072 is the
 recommended shipping configuration; any remaining gain would come from layering
 the matrix-placement levers onto this N.
+
+The affinity re-sweep (2026-08-24) shows neither `--cpu-affinity` nor
+`--mem-affinity` helps at N = 491520: the plain no-affinity default is best
+(2.1980e+06, and cpu binding with <8 cores/rank is catastrophic). Affinity is
+now closed for this workload. The recommended shipping configuration is
+N = 491520 + nb = 3072 + 2x4 row with no CPU/memory affinity, and the only
+remaining untested lever at this N is the matrix-placement controls
+(`--fill-device-buffer-size` / register step) that previously reached ~2.20e+06
+at smaller N.
 
 Affinity analysis additionally recommends matched affinity and OpenMP-control
 repetitions before selecting a placement/thread configuration. The
