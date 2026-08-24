@@ -1,0 +1,62 @@
+#!/bin/bash
+# Parametrized HPL-MxP process-grid (nprow/npcol/nporder) sweep on GAAS.
+# Expected working directory: this experiment directory (experiments/np-sweep/)
+# on GAAS. Submit with qsub -v 'NPROW=<p>,NPCOL=<q>,NPORDER=<order>,ATTEMPT=<label>'
+# plus -o/-e for the attempt-specific PBS stdout/stderr under outputs/.
+# Inputs: NPROW, NPCOL, NPORDER, and ATTEMPT via environment; fixed matrix size
+# N=491520 and block size NB=3072 (the 2026-08-24 N-NB resweep peak) and all
+# other tuning identical to the prior sweeps, isolating the process grid/order.
+# Outputs: attempt-specific PBS stdout and stderr under outputs/. Assumptions:
+# the approved container and required modules exist on GAAS; one GPU per MPI
+# process (8 processes, 8 GPUs).
+
+#PBS -N hpl_mxp_np_sweep
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+
+# Enter the experiment directory and print reproducibility metadata.
+cd "$PBS_O_WORKDIR"
+echo "experiment_id=np-sweep"
+echo "attempt=${ATTEMPT:-unknown}"
+echo "n=491520"
+echo "nb=3072"
+echo "nprow=${NPROW:-unknown}"
+echo "npcol=${NPCOL:-unknown}"
+echo "nporder=${NPORDER:-unknown}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "submitted_workdir=$PWD"
+date --iso-8601=seconds
+hostname
+
+# Load the exact minimal module environment validated for GAAS.
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# Record the allocated GPU topology before launching the container workload.
+nvidia-smi topo -m
+
+# Execute HPL-MxP with fixed N=491520, NB=3072 and the requested process grid.
+# --skip-tests is set per project convention; GPU monitoring flags are included
+# for bottleneck evidence.
+apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif" \
+  mpirun -np 8 \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity 0:1:2:3:4:5:6:7 \
+      --nprow "${NPROW}" \
+      --npcol "${NPCOL}" \
+      --nporder "${NPORDER}" \
+      --n 491520 \
+      --nb 3072 \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
