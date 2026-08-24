@@ -17,6 +17,7 @@
 | N sweep (baseline nb=1024, 2x4 row) | `planning/analysis/n-sweep-370k-510k.md` | 2026-08-21 | `N-sweep` 370000–510000 in 10k steps | Analyzed | Monotonic +26.75% to peak at N=490000 (1.8293e+06); hard memory wall just above N=500000, OOM at 510000; no gradual rolloff | Repeat N sweep at nb=3072 4x2 column; re-run 490k/500k to confirm peak; guard against g13 node noise |
 | NB sweep (fixed N=490000, 2x4 row) | `planning/analysis/nb-sweep.md` | 2026-08-24 | `nb-sweep` 1024–8192 in 1024 steps at N=490000 | Analyzed | Peak at nb=3072: 2.1726e+06 (+50.54% over baseline); two straight degradations at 7168/8192; nb=1024 reproduces N-sweep 490k to +0.51% | Combine nb=3072 + N=490000 on 4x2 column/placement tuning; repeat 3072/4096 to pin the broad plateau |
 | N-NB resweep (N aligned to nb=3072, 2x4 row) | `planning/analysis/N-NB-resweep.md` | 2026-08-24 | `N-nb-resweep` 488448–509952 in 3072 steps | Analyzed | No meaningful gain from N%NB==0: aligned points scatter ±~1% around 490000/nb3072; peak 491520 = 2.1974e+06 (+52.26%); OOM at 506880/509952 | Drop alignment as a lever; combine N≈491520 + nb=3072 on 4x2 column + placement, and repeat peak candidates |
+| Process grid/order sweep (N=491520, nb=3072) | `planning/analysis/np-sweep.md` | 2026-08-24 | `np-sweep` 2x4/4x2 × row/column | Analyzed | 2x4 row best: 2.2067e+06 (+52.90%); 2x4 > 4x2 by ~1.1–1.8%; optimal grid is N-dependent (4x2 col was best at N=399360) | Adopt 2x4 row + N=491520 + nb=3072 as shipping config; optionally test placement levers at N=491520 |
 
 ## Next direction
 
@@ -46,6 +47,14 @@ grid to date, and confirms the memory wall just above N ≈ 504k (OOM at
 506880/509952). Alignment should be dropped as a lever; the next step is to
 combine N ≈ 491520 + nb = 3072 with the 4x2 column grid and matrix-placement
 tuning, with repetitions to bound node noise.
+
+The process-grid sweep (2026-08-24) at N = 491520 / nb = 3072 confirms 2x4 row
+as the best grid (2.2067e+06, +52.90% over baseline, the highest single result
+in this workload family), with 2x4 > 4x2 by ~1.1–1.8% and `row` very slightly
+ahead of `column`. This reverses the earlier N = 399360 result (4x2 column best),
+so the optimal grid is N-dependent. 2x4 row + N = 491520 + nb = 3072 is the
+recommended shipping configuration; any remaining gain would come from layering
+the matrix-placement levers onto this N.
 
 Affinity analysis additionally recommends matched affinity and OpenMP-control
 repetitions before selecting a placement/thread configuration. The

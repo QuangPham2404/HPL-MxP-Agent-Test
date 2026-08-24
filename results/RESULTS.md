@@ -37,6 +37,10 @@ This report records validated raw result data only. No optimization analysis or 
 | nb-sweep | nb-sweep_6144_490k | 490000 | 6144 | 2x4 | row | PASSED | 2.1303e+06 | experiments/nb-sweep/outputs/nb-sweep_6144_490k.o |
 | nb-sweep | nb-sweep_7168_490k | 490000 | 7168 | 2x4 | row | PASSED | 2.0536e+06 | experiments/nb-sweep/outputs/nb-sweep_7168_490k.o |
 | nb-sweep | nb-sweep_8192_490k | 490000 | 8192 | 2x4 | row | PASSED | 1.9785e+06 | experiments/nb-sweep/outputs/nb-sweep_8192_490k.o |
+| np-sweep | 2x4_col_491k | 491520 | 3072 | 2x4 | column | PASSED | 2.1865e+06 | experiments/np-sweep/outputs/2x4_col_491k.o |
+| np-sweep | 2x4_row_491k | 491520 | 3072 | 2x4 | row | PASSED | 2.2067e+06 | experiments/np-sweep/outputs/2x4_row_491k.o |
+| np-sweep | 4x2_col_491k | 491520 | 3072 | 4x2 | column | PASSED | 2.1732e+06 | experiments/np-sweep/outputs/4x2_col_491k.o |
+| np-sweep | 4x2_row_491k | 491520 | 3072 | 4x2 | row | PASSED | 2.1683e+06 | experiments/np-sweep/outputs/4x2_row_491k.o |
 | N-sweep | N-resweep_402k | 402423 | 1024 | 2x4 | row | PASSED | 7.6521e+05 | experiments/N-sweep/outputs/N-resweep_402k.o |
 | N-sweep | N-sweep_399k | 399360 | 1024 | 2x4 | row | PASSED | 1.4918e+06 | experiments/N-sweep/outputs/N-sweep_399k.o |
 | N-sweep | N-sweep_400k | 400384 | 1024 | 2x4 | row | PASSED | 1.5751e+06 | experiments/N-sweep/outputs/N-sweep_400k.o |

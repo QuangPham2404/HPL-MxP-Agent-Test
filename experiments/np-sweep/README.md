@@ -54,6 +54,15 @@ A run is valid only when all of: PBS completes; expected raw outputs exist;
 HPL-MxP reports `PASSED`; the reported residual is finite and within tolerance;
 and a finite HPL-MxP `GFLOPS` performance value is present.
 
+## Results
+
+| Attempt | Grid | Order | GFLOP/s |
+|---|---|---|---:|
+| 2x4_row_491k | 2x4 | row | 2.2067e+06 PASSED (best) |
+| 2x4_col_491k | 2x4 | column | 2.1865e+06 PASSED |
+| 4x2_col_491k | 4x2 | column | 2.1732e+06 PASSED |
+| 4x2_row_491k | 4x2 | row | 2.1683e+06 PASSED |
+
 ## Runtime error-patching history
 
-None yet.
+None.
