@@ -54,7 +54,7 @@ the `--mem-affinity` flag is **not** carried into the CPU sweep.
 ### 3.2 CPU affinity (no memory affinity)
 
 | Attempt | cores/rank | Node | GFLOP/s | % vs baseline (1.4432e6) | % vs `cpu_free` |
-|---|---|---:|---:|---:|---:|---:|
+|---|---|---|---:|---:|---:|
 | `cpu_free` (`mem_off_491k`) | (no binding) | g15 | 2.1980e+06 | **+52.30%** | 0.00% |
 | `cpu_slice12_491k_r1` | 12 | g15 | 2.1919e+06 | +51.88% | −0.28% |
 | `cpu_8cores_491k` | 8 | g17 | 2.1778e+06 | +50.90% | −0.92% |
