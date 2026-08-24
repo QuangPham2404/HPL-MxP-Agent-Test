@@ -53,14 +53,14 @@ the `--mem-affinity` flag is **not** carried into the CPU sweep.
 
 ### 3.2 CPU affinity (no memory affinity)
 
-| Attempt | cores/rank | Node | GFLOP/s | % vs baseline (1.4432e6) | % vs `cpu_free` |
-|---|---|---|---:|---:|---:|
-| `cpu_free` (`mem_off_491k`) | (no binding) | g15 | 2.1980e+06 | **+52.30%** | 0.00% |
-| `cpu_slice12_491k_r1` | 12 | g15 | 2.1919e+06 | +51.88% | −0.28% |
-| `cpu_8cores_491k` | 8 | g17 | 2.1778e+06 | +50.90% | −0.92% |
-| `cpu_socket_491k_r1` | full socket | g16 | 2.1746e+06 | +50.68% | −1.06% |
-| `cpu_4cores_491k` | 4 | g16 | 1.7972e+06 | +24.53% | −18.23% |
-| `cpu_strict2_491k` | 2 | g15 | 2.7974e+05 | −80.62% | −87.27% |
+| Attempt | `--cpu-affinity` | cores/rank | Node | GFLOP/s | % vs baseline (1.4432e6) | % vs `cpu_free` |
+|---|---|---|---|---|---:|---:|---:|
+| `cpu_free` (`mem_off_491k`) | *(none)* | (no binding) | g15 | 2.1980e+06 | **+52.30%** | 0.00% |
+| `cpu_slice12_491k_r1` | `0-11:12-23:24-35:36-49:56-66:67-77:78-89:90-101` | 12 | g15 | 2.1919e+06 | +51.88% | −0.28% |
+| `cpu_8cores_491k` | `0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87` | 8 | g17 | 2.1778e+06 | +50.90% | −0.92% |
+| `cpu_socket_491k_r1` | `0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101` | full socket | g16 | 2.1746e+06 | +50.68% | −1.06% |
+| `cpu_4cores_491k` | `0-3:4-7:8-11:12-15:56-59:60-63:64-67:68-71` | 4 | g16 | 1.7972e+06 | +24.53% | −18.23% |
+| `cpu_strict2_491k` | `0-1:2-3:4-5:6-7:56-57:58-59:60-61:62-63` | 2 | g15 | 2.7974e+05 | −80.62% | −87.27% |
 
 The "free" (unbound) configuration is the best. 12 and 8 cores/rank are within
 ~1% of free, the full-socket spread is ~1% below, and anything below 8 cores is
