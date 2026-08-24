@@ -43,8 +43,19 @@ collide with the earlier NB sweep recorded at N = 401408.
 
 ## Sweep points
 
-To be filled as runs complete; NB is stepped +1024 from 1024 until two
-consecutive GFLOP/s degradations are observed.
+NB is stepped +1024 from 1024. The sweep stops after two consecutive GFLOP/s
+degradations, observed at 7168 → 8192.
+
+| Attempt | NB | GFLOP/s |
+|---|---:|---:|
+| nb-sweep_1024_490k | 1024 | 1.8387e+06 PASSED |
+| nb-sweep_2048_490k | 2048 | 2.1435e+06 PASSED |
+| nb-sweep_3072_490k | 3072 | 2.1726e+06 PASSED (peak) |
+| nb-sweep_4096_490k | 4096 | 2.1150e+06 PASSED |
+| nb-sweep_5120_490k | 5120 | 2.1297e+06 PASSED |
+| nb-sweep_6144_490k | 6144 | 2.1303e+06 PASSED |
+| nb-sweep_7168_490k | 7168 | 2.0536e+06 PASSED (degradation #1) |
+| nb-sweep_8192_490k | 8192 | 1.9785e+06 PASSED (degradation #2, stop) |
 
 ## Validation
 
@@ -54,4 +65,8 @@ and a finite HPL-MxP `GFLOPS` performance value is present.
 
 ## Runtime error-patching history
 
-None yet.
+- Initial submission (jobs 52237–52244) produced no captured stdout/stderr
+  because the `outputs/` directory did not yet exist on GAAS (the empty
+  directory was not tracked in Git). Fixed by adding `outputs/.gitkeep`,
+  committing/pushing, and pulling on GAAS (Track 1). Re-submitted as jobs
+  52247–52254, which captured all evidence.

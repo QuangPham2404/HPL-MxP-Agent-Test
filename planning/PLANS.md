@@ -15,6 +15,7 @@
 | Affinity and OpenMP thread flags | `planning/analysis/affinity.md` | 2026-08-20 | five `affinity-sweep` attempts; CPU/memory affinity and `OMP_NUM_THREADS=10` | Analyzed | Memory affinity matches the 4x2-column control within 0.07%; CPU-affinity results range from -8.25% to +0.84%; the single 10-thread run is -52.80% | Repeat matched memory/CPU affinity controls and add an explicit OpenMP default-thread control before a small thread-count sweep |
 | FP64 matrix memory placement | `planning/analysis/fp64-matrix-mem-placement.md` | 2026-08-20 | fourteen `matrix-placement-control` attempts; default fill, buffer sweep, and register-step sweeps at buffers 32768 and 3048 | Analyzed | Buffer 3048 register resweep peaks at step 512 with 2.2002e+06 (+1.10% vs its control); buffer 32768 peaks at step 1024; no stable step winner yet | Repeat both register-step/buffer controls on comparable nodes before selecting settings |
 | N sweep (baseline nb=1024, 2x4 row) | `planning/analysis/n-sweep-370k-510k.md` | 2026-08-21 | `N-sweep` 370000–510000 in 10k steps | Analyzed | Monotonic +26.75% to peak at N=490000 (1.8293e+06); hard memory wall just above N=500000, OOM at 510000; no gradual rolloff | Repeat N sweep at nb=3072 4x2 column; re-run 490k/500k to confirm peak; guard against g13 node noise |
+| NB sweep (fixed N=490000, 2x4 row) | `planning/analysis/nb-sweep.md` | 2026-08-24 | `nb-sweep` 1024–8192 in 1024 steps at N=490000 | Analyzed | Peak at nb=3072: 2.1726e+06 (+50.54% over baseline); two straight degradations at 7168/8192; nb=1024 reproduces N-sweep 490k to +0.51% | Combine nb=3072 + N=490000 on 4x2 column/placement tuning; repeat 3072/4096 to pin the broad plateau |
 
 ## Next direction
 
@@ -28,6 +29,13 @@ baseline to N=490000 for a +26.75% gain before hitting the system-memory wall
 the stronger grid/block size: re-run the N sweep at `--nb 3072`, `4x2` column
 order, and re-run N=490000/N=500000 to pin the peak boundary. Guard every
 boundary run against node-level memory noise (notably `hpc-gaas-g13`).
+
+The NB sweep (2026-08-24) at fixed N = 490000 confirms `nb = 3072` as the
+best block size (2.1726e+06, +50.54% over baseline), with a broad 3072–6144
+plateau and two straight degradations at 7168/8192. The natural next step is to
+combine the two strongest levers — N = 490000 and `nb = 3072` — with the `4x2`
+column grid and the best matrix-placement settings, then repeat `nb = 3072` /
+`4096` to pin the plateau.
 
 Affinity analysis additionally recommends matched affinity and OpenMP-control
 repetitions before selecting a placement/thread configuration. The
