@@ -78,7 +78,14 @@ and a finite HPL-MxP `GFLOPS` performance value is present.
 
 ## Result
 
-(to be recorded after the sweep)
+Phase 1 (`OMP_NUM_THREADS` 1 → 20): peak at **8 threads = 2.2859e+06**
+(+3.6% over no-OMP); 1–4 threads starve host threads, 10–20 are a noise plateau;
+stopped on two consecutive declines (t18, t20).
+
+Phase 2 (`OMP_PLACES × OMP_PROC_BIND` at 8 threads): `sockets` is the best
+family; `cores` + TRUE/CLOSE/SPREAD collapse to ~0.9e+06 (oversubscription of
+low cores). Best single result: **`sockets` + `TRUE` = 2.3204e+06** (+60.79%
+over the 1.4432e+06 baseline).
 
 ## Runtime error-patching history
 

@@ -19,6 +19,7 @@
 | N-NB resweep (N aligned to nb=3072, 2x4 row) | `planning/analysis/N-NB-resweep.md` | 2026-08-24 | `N-nb-resweep` 488448–509952 in 3072 steps | Analyzed | No meaningful gain from N%NB==0: aligned points scatter ±~1% around 490000/nb3072; peak 491520 = 2.1974e+06 (+52.26%); OOM at 506880/509952 | Drop alignment as a lever; combine N≈491520 + nb=3072 on 4x2 column + placement, and repeat peak candidates |
 | Process grid/order sweep (N=491520, nb=3072) | `planning/analysis/np-sweep.md` | 2026-08-24 | `np-sweep` 2x4/4x2 × row/column | Analyzed | 2x4 row best: 2.2067e+06 (+52.90%); 2x4 > 4x2 by ~1.1–1.8%; optimal grid is N-dependent (4x2 col was best at N=399360) | Adopt 2x4 row + N=491520 + nb=3072 as shipping config; optionally test placement levers at N=491520 |
 | CPU/memory affinity re-sweep (N=491520, nb=3072) | `planning/analysis/affinity-491k.md` | 2026-08-24 | `affinity-sweep` mem off/on + cpu free/2/4/8/12/socket cores | Analyzed | No affinity is best: no cpu/mem binding = 2.1980e+06 (+52.30%); <8 cores/rank collapses (2c −87%, 4c −18%); mem-affinity −1.45%; container cpuset is 0-49/56-101 | Keep no-affinity config as shipping; revisit matrix-placement levers at N=491520 |
+| OpenMP thread/placement sweep (N=491520, nb=3072) | `planning/analysis/omp-sweep.md` | 2026-08-26 | `omp-sweep` `OMP_NUM_THREADS` 1–20 + `OMP_PLACES`×`OMP_PROC_BIND` at 8 threads | Analyzed | `OMP_NUM_THREADS=8` + `OMP_PLACES=sockets` + `OMP_PROC_BIND=TRUE` = 2.3204e+06 (+60.79%), highest result yet; `cores`+bind oversubscribes low cores and collapses (~0.9e+06) | Repeat top sockets candidates to separate ~1% ordering from node noise; then revisit matrix-placement levers at N=491520 |
 
 ## Next direction
 
@@ -71,5 +72,16 @@ repetitions before selecting a placement/thread configuration. The
 matrix-placement analysis additionally recommends repeating fill-device 3048
 against the matched control before testing buffer refinements or register
 steps.
+
+The OpenMP sweep (2026-08-26) established the host-thread configuration for
+this workload: `OMP_NUM_THREADS = 8` (+3.6% over no-OMP), with
+`OMP_PLACES = sockets` adding a further ~1.5% and `OMP_PROC_BIND = TRUE` reaching
+2.3204e+06 (+60.79% over the 1.4432e+06 baseline) — the highest single result
+recorded for this workload family. `OMP_PLACES=cores` with any bind mode is
+catastrophic (~0.9e+06) and must be avoided. The recommended next step is to
+repeat the top `sockets` candidates (`TRUE`, `SPREAD`, `FALSE`) on comparable
+nodes to separate their ~1% ordering from node noise, then layer the remaining
+untested matrix-placement lever (`--fill-device-buffer-size` / register step)
+onto the finalized OpenMP setting at N = 491520.
 
 Awaiting user confirmation before preparing the next experiment.

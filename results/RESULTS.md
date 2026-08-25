@@ -50,6 +50,24 @@ This report records validated raw result data only. No optimization analysis or 
 | np-sweep | 2x4_row_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.2067e+06 | experiments/np-sweep/outputs/2x4_row_491k.o |
 | np-sweep | 4x2_col_491k | 491520 | 3072 | 4x2 | column | unset | unset | unset | PASSED | 2.1732e+06 | experiments/np-sweep/outputs/4x2_col_491k.o |
 | np-sweep | 4x2_row_491k | 491520 | 3072 | 4x2 | row | unset | unset | unset | PASSED | 2.1683e+06 | experiments/np-sweep/outputs/4x2_row_491k.o |
+| omp-sweep | omp_t1 | 491520 | 3072 | 2x4 | row | 1 | unset | unset | PASSED | 1.1606e+06 | experiments/omp-sweep/outputs/omp_t1.o |
+| omp-sweep | omp_t10 | 491520 | 3072 | 2x4 | row | 10 | unset | unset | PASSED | 2.2455e+06 | experiments/omp-sweep/outputs/omp_t10.o |
+| omp-sweep | omp_t12 | 491520 | 3072 | 2x4 | row | 12 | unset | unset | PASSED | 2.2529e+06 | experiments/omp-sweep/outputs/omp_t12.o |
+| omp-sweep | omp_t14 | 491520 | 3072 | 2x4 | row | 14 | unset | unset | PASSED | 2.2754e+06 | experiments/omp-sweep/outputs/omp_t14.o |
+| omp-sweep | omp_t16 | 491520 | 3072 | 2x4 | row | 16 | unset | unset | PASSED | 2.2840e+06 | experiments/omp-sweep/outputs/omp_t16.o |
+| omp-sweep | omp_t18 | 491520 | 3072 | 2x4 | row | 18 | unset | unset | PASSED | 2.2671e+06 | experiments/omp-sweep/outputs/omp_t18.o |
+| omp-sweep | omp_t2 | 491520 | 3072 | 2x4 | row | 2 | unset | unset | PASSED | 1.7369e+06 | experiments/omp-sweep/outputs/omp_t2.o |
+| omp-sweep | omp_t20 | 491520 | 3072 | 2x4 | row | 20 | unset | unset | PASSED | 2.2624e+06 | experiments/omp-sweep/outputs/omp_t20.o |
+| omp-sweep | omp_t4 | 491520 | 3072 | 2x4 | row | 4 | unset | unset | PASSED | 2.1323e+06 | experiments/omp-sweep/outputs/omp_t4.o |
+| omp-sweep | omp_t8 | 491520 | 3072 | 2x4 | row | 8 | unset | unset | PASSED | 2.2859e+06 | experiments/omp-sweep/outputs/omp_t8.o |
+| omp-sweep | omp_t8_cores_close | 491520 | 3072 | 2x4 | row | 8 | cores | close | PASSED | 9.0139e+05 | experiments/omp-sweep/outputs/omp_t8_cores_close.o |
+| omp-sweep | omp_t8_cores_false | 491520 | 3072 | 2x4 | row | 8 | cores | false | PASSED | 2.3032e+06 | experiments/omp-sweep/outputs/omp_t8_cores_false.o |
+| omp-sweep | omp_t8_cores_spread | 491520 | 3072 | 2x4 | row | 8 | cores | spread | PASSED | 8.1662e+05 | experiments/omp-sweep/outputs/omp_t8_cores_spread.o |
+| omp-sweep | omp_t8_cores_true | 491520 | 3072 | 2x4 | row | 8 | cores | true | PASSED | 9.1505e+05 | experiments/omp-sweep/outputs/omp_t8_cores_true.o |
+| omp-sweep | omp_t8_sockets_close | 491520 | 3072 | 2x4 | row | 8 | sockets | close | PASSED | 2.2987e+06 | experiments/omp-sweep/outputs/omp_t8_sockets_close.o |
+| omp-sweep | omp_t8_sockets_false | 491520 | 3072 | 2x4 | row | 8 | sockets | false | PASSED | 2.3026e+06 | experiments/omp-sweep/outputs/omp_t8_sockets_false.o |
+| omp-sweep | omp_t8_sockets_spread | 491520 | 3072 | 2x4 | row | 8 | sockets | spread | PASSED | 2.3152e+06 | experiments/omp-sweep/outputs/omp_t8_sockets_spread.o |
+| omp-sweep | omp_t8_sockets_true | 491520 | 3072 | 2x4 | row | 8 | sockets | true | PASSED | 2.3204e+06 | experiments/omp-sweep/outputs/omp_t8_sockets_true.o |
 | N-sweep | N-resweep_402k | 402423 | 1024 | 2x4 | row |  |  |  | PASSED | 7.6521e+05 | experiments/N-sweep/outputs/N-resweep_402k.o |
 | N-sweep | N-sweep_399k | 399360 | 1024 | 2x4 | row |  |  |  | PASSED | 1.4918e+06 | experiments/N-sweep/outputs/N-sweep_399k.o |
 | N-sweep | N-sweep_400k | 400384 | 1024 | 2x4 | row |  |  |  | PASSED | 1.5751e+06 | experiments/N-sweep/outputs/N-sweep_400k.o |
