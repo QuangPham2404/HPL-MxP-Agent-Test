@@ -295,6 +295,8 @@ Controls how many FP64-matrix columns are CUDA-host-registered at a time; defaul
 
 Host registration pins pages so the GPU can access or transfer them efficiently. Registering too little at a time may increase registration overhead; registering too much can increase pinned-memory pressure and startup latency. This matters most when the FP64 matrix is host-resident or partially staged. It is usually not a first-line knob for a fully in-GPU, in-core configuration.
 
+*Note: `cuda-host-register` is not hardware, its software (i.e. a CUDA API). Normally, when memory is allocated for gpu normally, it is pageable (i.e. the OS is allowed to move it around). However, when you use `cuda-host-register`, the memory staged in RAM for GPU usage is pinned and cannot be move, thus it can be directly moved to the GPU without needing to fetch, and pin, and then move like normal. This is faster access, but the organization overhead + the OS less-flexibility is the trade-off. Too large of a register step cause significant latency that overpowers the reduced data movement time. Too small means too many organizational calls and also reduce performance*
+
 ## 8. GPU monitoring parameters
 
 Monitoring does not improve the algorithm; it helps explain bad results. All warning thresholds default to `0`, which means no warning threshold is configured.
