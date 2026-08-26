@@ -1,0 +1,105 @@
+#!/bin/bash
+# Parametrized HPL-MxP matrix-placement sweep at N=491520 on GAAS.
+# Expected working directory: this experiment directory
+# (experiments/matrix-placement-control/) on GAAS. Submit with qsub -v
+# 'ATTEMPT=<label>[,N=<n>][,FILL=1][,BUF=<mb>][,REG=<step>]' plus -o/-e for the
+# attempt-specific PBS stdout/stderr under outputs/.
+#
+# Inputs:
+#   ATTEMPT  output stem (required); encodes the swept flag value (see README).
+#   N        matrix size (default 491520). Used for the OOM fallback path.
+#   FILL     when "1", append --fill-device 1 (default: unset -> fill-device 0).
+#   BUF      --fill-device-buffer-size in MB; only meaningful when FILL=1
+#            (default 3048 when FILL=1).
+#   REG      --cuda-host-register-step; only appended when set. Default
+#            (unset) leaves the launcher default of 2048.
+#
+# Fixed config (the shipped best from omp-sweep, 2026-08-26):
+#   N=491520, NB=3072, 2x4 row grid, gpu-affinity 0:1:2:3:4:5:6:7,
+#   no --cpu-affinity / --mem-affinity,
+#   OMP_NUM_THREADS=8, OMP_PLACES=sockets, OMP_PROC_BIND=TRUE.
+# Outputs: attempt-specific PBS stdout and stderr under outputs/.
+# Assumptions: the approved container and required modules exist on GAAS; one
+# GPU per MPI process (8 processes, 8 GPUs); OMP env vars forwarded via `mpirun -x`.
+
+#PBS -N hpl_mxp_matrix_place
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+
+N="${N:-491520}"
+FILL="${FILL:-0}"
+BUF="${BUF:-3048}"
+REG="${REG:-}"
+
+# Enter the experiment directory and print reproducibility metadata.
+cd "$PBS_O_WORKDIR"
+echo "experiment_id=matrix-placement-control"
+echo "attempt=${ATTEMPT:-unknown}"
+echo "n=${N}"
+echo "nb=3072"
+echo "nprow=2"
+echo "npcol=4"
+echo "nporder=row"
+echo "gpu_affinity=0:1:2:3:4:5:6:7"
+echo "fill_device=${FILL}"
+echo "fill_device_buffer_size=${BUF}"
+echo "cuda_host_register_step=${REG:-default}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "submitted_workdir=$PWD"
+date --iso-8601=seconds
+hostname
+
+# Load the exact minimal module environment validated for GAAS.
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# PBS clobbers OMP_NUM_THREADS with the allocated core count (96), so re-export
+# the fixed host-thread configuration after `module purge`.
+export OMP_NUM_THREADS=8
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=TRUE
+
+echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
+echo "omp_places=${OMP_PLACES:-unset}"
+echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
+
+# Record the allocated GPU topology before launching the container workload.
+nvidia-smi topo -m
+
+# Build the HPL-MxP argument list for this attempt.
+ARGS=(
+  --gpu-affinity 0:1:2:3:4:5:6:7
+  --nprow 2
+  --npcol 4
+  --nporder row
+  --n "${N}"
+  --nb 3072
+  --skip-tests 1
+  --monitor-gpu 1
+  --monitor-gpu-interval 10
+  --monitor-gpu-pcie-width-warning 16
+  --monitor-gpu-pcie-gen-warning 5
+)
+if [[ "${FILL}" == "1" ]]; then
+  ARGS+=(--fill-device 1 --fill-device-buffer-size "${BUF}")
+fi
+if [[ -n "${REG}" ]]; then
+  ARGS+=(--cuda-host-register-step "${REG}")
+fi
+
+# Execute HPL-MxP with fixed workload and the requested placement environment.
+apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif" \
+  mpirun -np 8 \
+    --bind-to none \
+    -x OMP_NUM_THREADS \
+    -x OMP_PLACES \
+    -x OMP_PROC_BIND \
+    /workspace/hpl-mxp.sh \
+      "${ARGS[@]}"

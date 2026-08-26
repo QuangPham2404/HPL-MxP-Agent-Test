@@ -48,3 +48,59 @@ listed in the preceding table.
 | `reg_sweep_3072_b3048` | `3072` | `50548.gaas` | `hpc-gaas-g15` | PASSED (`3.711735E-04`) | `2.1518e+06` | `outputs/reg_sweep_3072_b3048.{o,e}` |
 | `reg_sweep_4096_b3048` | `4096` | `50550.gaas` | `hpc-gaas-g16` | PASSED (`4.018509E-04`) | `2.1335e+06` | `outputs/reg_sweep_4096_b3048.{o,e}` |
 | `reg_sweep_5012_b3048` | `5012` | `50551.gaas` | `hpc-gaas-g11` | PASSED (`4.025842E-04`) | `2.1634e+06` | `outputs/reg_sweep_5012_b3048.{o,e}` |
+
+## Re-run at N=491520 (2026-08-26)
+
+The original experiment above ran at N=399360 (4x2 column), before the
+N/NB/grid/OpenMP sweeps moved the shipping workload to N=491520 (2x4 row,
+`OMP_NUM_THREADS=8`, `OMP_PLACES=sockets`, `OMP_PROC_BIND=TRUE`, peak
+2.3204e+06). This section re-opens the matrix-placement levers — `--fill-device`,
+`--fill-device-buffer-size`, and `--cuda-host-register-step` — on that final
+workload, keeping all other settings fixed. The old N=399360 rows remain in
+`results/metrics.csv`; accounts in this section use the `491k_*` attempt prefix
+so they do not collide.
+
+Workload (fixed): `--n 491520 --nb 3072 --nprow 2 --npcol 4 --nporder row`,
+`--gpu-affinity 0:1:2:3:4:5:6:7`, no CPU/memory affinity,
+`OMP_NUM_THREADS=8 OMP_PLACES=sockets OMP_PROC_BIND=TRUE`, `--skip-tests 1` and
+GPU monitoring flags.
+
+Run script: `run_matrix_placement.pbs`, parametrized via `qsub -v`:
+
+```text
+qsub -v "ATTEMPT=491k_fill_off" \
+     -o outputs/491k_fill_off.o -e outputs/491k_fill_off.e \
+     run_matrix_placement.pbs
+
+qsub -v "ATTEMPT=491k_fill_on,FILL=1,BUF=3048" \
+     -o outputs/491k_fill_on.o -e outputs/491k_fill_on.e \
+     run_matrix_placement.pbs
+
+qsub -v "ATTEMPT=491k_buf_512,FILL=1,BUF=512" \
+     -o outputs/491k_buf_512.o -e outputs/491k_buf_512.e \
+     run_matrix_placement.pbs
+
+qsub -v "ATTEMPT=491k_reg_1024,FILL=1,BUF=<best>,REG=1024" \
+     -o outputs/491k_reg_1024.o -e outputs/491k_reg_1024.e \
+     run_matrix_placement.pbs
+```
+
+### Method
+
+1. **Task 1 — `--fill-device 1` go/no-go.** Run a node-matched control
+   (`491k_fill_off`, fill-device=0) and `491k_fill_on` (`--fill-device 1`,
+   default buffer 3048). Proceed only if fill-on improves or differs within
+   ~1-2% of fill-off.
+2. **Task 2 — `--fill-device-buffer-size`** (default 3048, lower = more VRAM
+   filled). Sweep downward `2048,1024,512,256` and upward `4096,6144,8192`,
+   stopping a direction after two consecutive GFLOP/s declines.
+3. **Task 3 — `--cuda-host-register-step`** (default 2048, multiples of 512),
+   at the best buffer from Task 2. Sweep downward `1536,1024,512` and upward
+   `2560,3072,3584,4096,4608,5120`, stopping each direction after two
+   consecutive declines.
+
+### OOM fallback
+
+If `--fill-device 1` OOMs at N=491520 (491520 is already 480x1024), step the
+matrix down in multiples of 1024 (`490496`, `489472`, ...) until the run
+completes, and record the changed N explicitly in this README and the analysis.
