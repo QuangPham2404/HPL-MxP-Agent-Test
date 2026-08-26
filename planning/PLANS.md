@@ -21,24 +21,24 @@
 | CPU/memory affinity re-sweep (N=491520, nb=3072) | `planning/analysis/affinity-491k.md` | 2026-08-24 | `affinity-sweep` mem off/on + cpu free/2/4/8/12/socket cores | Analyzed | No affinity is best: no cpu/mem binding = 2.1980e+06 (+52.30%); <8 cores/rank collapses (2c −87%, 4c −18%); mem-affinity −1.45%; container cpuset is 0-49/56-101 | Keep no-affinity config as shipping; revisit matrix-placement levers at N=491520 |
 | OpenMP thread/placement sweep (N=491520, nb=3072) | `planning/analysis/omp-sweep.md` | 2026-08-26 | `omp-sweep` `OMP_NUM_THREADS` 1–20 + `OMP_PLACES`×`OMP_PROC_BIND` at 8 threads | Analyzed | `OMP_NUM_THREADS=8` + `OMP_PLACES=sockets` + `OMP_PROC_BIND=TRUE` = 2.3204e+06 (+60.79%), highest result yet; `cores`+bind oversubscribes low cores and collapses (~0.9e+06) | Repeat top sockets candidates to separate ~1% ordering from node noise; then revisit matrix-placement levers at N=491520 |
 | Matrix-placement re-run (N=491520, nb=3072) | `planning/analysis/matrix-placement-491k.md` | 2026-08-26 | `matrix-placement-control` `491k_*` fill-device / buffer / register-step | Analyzed | `--fill-device 1` is a ~+2.3% win over the fill-off shipping config; buffer has flat optimum 1024–2048 and a VRAM cliff at ≤512 (FAILED); register-step is sub-noise | Adopt fill-device 1 + buffer 1024 (reg-step default); pin buffer/reg-step ties with node-matched repetition; next orthogonal levers are gemm-kernel/precision and scheduling/panel-broadcast |
+| Matrix-placement N re-sweep (fill-device=1, N down) | `planning/analysis/matrix-placement-N-resweep.md` | 2026-08-26 | `matrix-placement-N-resweep` N ∈ {491520,460800,430080,399360,368640} | Analyzed | Solver time falls 13.07→4.09 s (share 39%→29%) but LU efficiency loss cancels it; GFLOP/s flat, no peak below 491520 — hypothesis rejected as net gain | Keep N=491520; no refine; next orthogonal levers: gemm-kernel/precision, LU scheduling, panel-broadcast |
 
 ## Next direction
 
-The matrix-placement re-run (2026-08-26) at N=491520 confirms `--fill-device 1`
-as a ~+2.3% win over the fill-off shipping config and bounds the
-`--fill-device-buffer-size` optimum to 1024–2048 (flat), with a hard VRAM cliff
-at ≤512 (verification FAILED); `--cuda-host-register-step` is sub-noise and can
-be left at its 2048 default. The recommended config is N=491520 + NB=3072 +
-2x4 row + no affinity + OMP 8/sockets/TRUE + `--fill-device 1
---fill-device-buffer-size 1024`, reaching ~2.39e+06 (+66% over the original
-1.4432e+06 baseline). Because the top buffer (1024 vs 2048) and register-step
-candidates differ by <1% (within ±3–7% node noise), the immediate next step is a
-small node-matched repetition to pin those ties. Remaining orthogonal,
-untested-at-this-N levers for separate experiments: the compute/precision group
-(`--preset-gemm-kernel`, `--sloppy-type`, and `--Anq-device` as a partial-residency
-fallback), the LU-scheduling group (`--use-separate-stream-for-gemm`,
-`--prioritize-trsm`, `--prioritize-factorization`, `--u-panel-chunk-nbs`), and the
-panel-broadcast/transport group (`--use-mpi-panel-broadcast`).
+The matrix-placement N re-sweep (2026-08-26) tested lowering N under
+`--fill-device 1` to reach full FP64 residency. The iterative-solver time fell
+13.07 → 4.09 s (its runtime share 39.2% → 29.1%) as N dropped 491520 → 368640,
+confirming the mechanism, but the net GFLOP/s stayed flat because declining LU
+efficiency at smaller N cancelled the solver gain; there is no peak below
+491520. N=491520 + `--fill-device 1` therefore remains the recommended array
+size. The matrix-placement levers are now closed for this workload: keep
+`--fill-device 1` (buffer 1024–2048, register-step default), ~2.37–2.39e+06
+(+66% over the original 1.4432e+06 baseline). The remaining orthogonal,
+untested-at-this-N directions for separate experiments are: compute/precision
+(`--preset-gemm-kernel`, `--sloppy-type`, `--Anq-device`), LU scheduling
+(`--use-separate-stream-for-gemm`, `--prioritize-trsm`,
+`--prioritize-factorization`, `--u-panel-chunk-nbs`), and panel-broadcast
+(`--use-mpi-panel-broadcast`).
 
 The new baseline N sweep (2026-08-21) shows N can be pushed from the 370000
 baseline to N=490000 for a +26.75% gain before hitting the system-memory wall

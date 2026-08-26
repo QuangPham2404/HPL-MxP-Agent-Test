@@ -38,6 +38,11 @@ This report records validated raw result data only. No optimization analysis or 
 | affinity-sweep | cpu_strict2_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.7974e+05 | experiments/affinity-sweep/outputs/cpu_strict2_491k.o |
 | affinity-sweep | mem_aff_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1662e+06 | experiments/affinity-sweep/outputs/mem_aff_491k.o |
 | affinity-sweep | mem_off_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1980e+06 | experiments/affinity-sweep/outputs/mem_off_491k.o |
+| matrix-placement-N-resweep | n_368640 | 368640 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3792e+06 | experiments/matrix-placement-N-resweep/outputs/n_368640.o |
+| matrix-placement-N-resweep | n_399360 | 399360 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3023e+06 | experiments/matrix-placement-N-resweep/outputs/n_399360.o |
+| matrix-placement-N-resweep | n_430080 | 430080 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.2828e+06 | experiments/matrix-placement-N-resweep/outputs/n_430080.o |
+| matrix-placement-N-resweep | n_460800 | 460800 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3373e+06 | experiments/matrix-placement-N-resweep/outputs/n_460800.o |
+| matrix-placement-N-resweep | n_491520 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3731e+06 | experiments/matrix-placement-N-resweep/outputs/n_491520.o |
 | matrix-placement-control | 491k_buf_1024 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3902e+06 | experiments/matrix-placement-control/outputs/491k_buf_1024.o |
 | matrix-placement-control | 491k_buf_2048 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3920e+06 | experiments/matrix-placement-control/outputs/491k_buf_2048.o |
 | matrix-placement-control | 491k_buf_256 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | FAILED | 1.2268e+06 | experiments/matrix-placement-control/outputs/491k_buf_256.o |

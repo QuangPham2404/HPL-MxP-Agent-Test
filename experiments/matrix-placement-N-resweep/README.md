@@ -35,8 +35,8 @@ Container: `hpc-benchmarks_26.02.sif`; `apptainer exec --nv`; `mpirun -np 8
 `run_N_resweep.pbs`, parametrized via `qsub -v "ATTEMPT=<label>,N=<n>"`:
 
 ```text
-qsub -v "ATTEMPT=n_491520_ctrl,N=491520" \
-     -o outputs/n_491520_ctrl.o -e outputs/n_491520_ctrl.e \
+qsub -v "ATTEMPT=n_491520,N=491520" \
+     -o outputs/n_491520.o -e outputs/n_491520.e \
      run_N_resweep.pbs
 ```
 
@@ -50,8 +50,16 @@ finite HPL-MxP `GFLOPS` value is present.
 
 | Attempt | N | PBS job | Node | Residual check | GFLOP/s | Evidence |
 |---|---|---:|---|---|---:|---|
-| `n_491520_ctrl` | 491520 | (pending) | — | — | — | `outputs/n_491520_ctrl.{o,e}` |
-| `n_460800` | 460800 | (pending) | — | — | — | `outputs/n_460800.{o,e}` |
-| `n_430080` | 430080 | (pending) | — | — | — | `outputs/n_430080.{o,e}` |
-| `n_399360` | 399360 | (pending) | — | — | — | `outputs/n_399360.{o,e}` |
-| `n_368640` | 368640 | (pending) | — | — | — | `outputs/n_368640.{o,e}` |
+| `n_491520` | 491520 | 53190 | g16 | PASSED | 2.3731e+06 | `outputs/n_491520.{o,e}` |
+| `n_460800` | 460800 | 53191 | g17 | PASSED | 2.3373e+06 | `outputs/n_460800.{o,e}` |
+| `n_430080` | 430080 | 53192 | g18 | PASSED | 2.2828e+06 | `outputs/n_430080.{o,e}` |
+| `n_399360` | 399360 | 53193 | g19 | PASSED | 2.3023e+06 | `outputs/n_399360.{o,e}` |
+| `n_368640` | 368640 | 53194 | g19 | PASSED | 2.3792e+06 | `outputs/n_368640.{o,e}` |
+
+## Result
+
+The solver mechanism is confirmed (iterative-solver time 13.07 s → 4.09 s, its
+runtime share 39.2% → 29.1% as N drops 491520 → 368640), but the net GFLOP/s is
+flat within node noise because LU efficiency degrades at smaller N. No peak
+below 491520; the hypothesis is rejected as a net gain. N=491520 + `--fill-device
+1` remains the recommended config.
