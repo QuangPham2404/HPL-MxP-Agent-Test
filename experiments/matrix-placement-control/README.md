@@ -104,3 +104,44 @@ qsub -v "ATTEMPT=491k_reg_1024,FILL=1,BUF=<best>,REG=1024" \
 If `--fill-device 1` OOMs at N=491520 (491520 is already 480x1024), step the
 matrix down in multiples of 1024 (`490496`, `489472`, ...) until the run
 completes, and record the changed N explicitly in this README and the analysis.
+
+### Results (N=491520)
+
+**Task 1 — fill-device go/no-go**
+
+| Attempt | fill-device | GFLOP/s | Node | Verification |
+|---|---|---:|---|---|
+| `491k_fill_off` | 0 | 2.1512e+06 | g10 | PASSED |
+| `491k_fill_on`  | 1 (buf 3048) | 2.3745e+06 | g16 | PASSED |
+
+**Task 2 — buffer sweep (fill-device=1)**
+
+| Buffer (MB) | GFLOP/s | Node | Verification |
+|---:|---:|---|---|
+| 256  | 1.2268e+06 | g18 | FAILED |
+| 512  | 1.0488e+06 | g17 | FAILED |
+| 1024 | 2.3902e+06 | g16 | PASSED |
+| 2048 | 2.3920e+06 | g10 | PASSED |
+| 3048 | 2.3745e+06 | g16 | PASSED |
+| 4096 | 2.3663e+06 | g10 | PASSED |
+| 6144 | 2.3722e+06 | g16 | PASSED |
+| 8192 | 2.3420e+06 | g17 | PASSED |
+
+**Task 3 — register-step sweep (buffer 1024)**
+
+| Register step | GFLOP/s | Node | Verification |
+|---:|---:|---|---|
+| 512  | 2.3656e+06 | g17 | PASSED |
+| 1024 | 2.3912e+06 | g16 | PASSED |
+| 1536 | 2.3974e+06 | g10 | PASSED |
+| 2048 | 2.3902e+06 | g16 | PASSED |
+| 2560 | 2.3886e+06 | g18 | PASSED |
+| 3072 | 2.3722e+06 | g17 | PASSED |
+| 3584 | 2.3691e+06 | g16 | PASSED |
+| 4096 | 2.3742e+06 | g10 | PASSED |
+| 4608 | 2.3549e+06 | g18 | PASSED |
+| 5120 | 2.3536e+06 | g17 | PASSED |
+
+No OOM fallback was needed: `--fill-device 1` completed at N=491520 (only the
+`buffer <= 512` cells failed verification, a VRAM-overflow effect, not an
+allocation failure).
