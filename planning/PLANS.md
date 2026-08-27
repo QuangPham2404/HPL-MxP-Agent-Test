@@ -26,6 +26,23 @@
 
 ## Next direction
 
+### Updated direction after consolidated raw-output review (2026-08-27)
+
+The nine recent reports and their raw artifacts establish the current control
+as `N=491520`, `NB=3072`, `2x4` row, no explicit HPL CPU/memory affinity,
+`OMP_NUM_THREADS=8`, `OMP_PLACES=sockets`, `OMP_PROC_BIND=TRUE`,
+`--fill-device 1`, and a 1024–2048 MB fill buffer. The register-step 1536
+result is not a confirmed improvement because it is within cross-node noise.
+
+The N, alignment, affinity, and fine register-step directions should remain
+closed for this workload. The next analysis direction should target the
+remaining end-to-end bottlenecks in this order: sloppy precision (FP4/FP8), LU
+scheduling/overlap, panel communication mix, GEMM-kernel selection appropriate
+for H200/SM90, and conditional `--Anq-device` residency with fill-device off.
+Each candidate must be evaluated with LU and iterative-solver timings, device
+headroom, finite residuals, and `PASSED` verification; a phase-level speedup is
+not sufficient if total GFLOP/s does not improve.
+
 A node-matched fine N sweep (2026-08-27, `matrix-placement-N-fine`) ruled out a
 narrow peak below N=491520: eight 1024-step values span a ~1% noise band
 (2.357–2.382e+06) and none beats the same-node 491520 control beyond intra-node
