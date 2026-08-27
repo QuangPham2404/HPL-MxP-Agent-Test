@@ -23,8 +23,25 @@
 | Matrix-placement re-run (N=491520, nb=3072) | `planning/analysis/matrix-placement-491k.md` | 2026-08-26 | `matrix-placement-control` `491k_*` fill-device / buffer / register-step | Analyzed | `--fill-device 1` is a ~+2.3% win over the fill-off shipping config; buffer has flat optimum 1024–2048 and a VRAM cliff at ≤512 (FAILED); register-step is sub-noise | Adopt fill-device 1 + buffer 1024 (reg-step default); pin buffer/reg-step ties with node-matched repetition; next orthogonal levers are gemm-kernel/precision and scheduling/panel-broadcast |
 | Matrix-placement N re-sweep (fill-device=1, N down) | `planning/analysis/matrix-placement-N-resweep.md` | 2026-08-26 | `matrix-placement-N-resweep` N ∈ {491520,460800,430080,399360,368640} | Analyzed | Solver time falls 13.07→4.09 s (share 39%→29%) but LU efficiency loss cancels it; GFLOP/s flat, no peak below 491520 — hypothesis rejected as net gain | Keep N=491520; no refine; next orthogonal levers: gemm-kernel/precision, LU scheduling, panel-broadcast |
 | N fine re-sweep (1024-step below 491520, node-matched) | `planning/analysis/matrix-placement-N-resweep.md` (follow-up section) | 2026-08-27 | `matrix-placement-N-fine` 8 × 1024-step N below 491520 + same-node controls | Analyzed | No fine peak: fine points are a ~1% noise band (2.357–2.382e+06); none beats 491520 beyond intra-node drift (max +0.12% vs −0.36% control drift); N dimension closed | Keep N=491520; N fully closed; next orthogonal levers only |
+| MPI/NCCL panel-broadcast + U-panel chunk study | `planning/analysis/mpi-nccl-coms-sweep.md` | 2026-08-27 | `mpi-nccl-coms-sweep` broadcast 0/25/50/75/100 then chunk 4/8/16 at 75 and 50 (N=491520, buffer+register 2048) | Analyzed | Both levers flat: full 15-run spread ~2.6% equals same-node control drift; broadcast moves only LU by ≤2.3% (0→75), chunk has no effect; solver indifferent to both | Leave these two at defaults (50/8); move to dependency-priority (`--prioritize-trsm`/`--prioritize-factorization`) |
 
 ## Next direction
+
+### Communication study result (2026-08-27)
+
+The `mpi-nccl-coms-sweep` study (see
+[`planning/analysis/mpi-nccl-coms-sweep.md`](analysis/mpi-nccl-coms-sweep.md))
+swept the two panel-traffic levers at the fixed best config (N=491520, NB=3072,
+buffer+register 2048): `--use-mpi-panel-broadcast` 0/25/50/75/100, then
+`--u-panel-chunk-nbs` 4/8/16 at the two Phase-1 winners (75, 50). Both are
+effectively flat: the 15-run spread (~2.6%) is the same as the same-node
+`50/8` control drift, the broadcast mix moves only the LU phase by ≤2.3%
+(NCCL-only `0` is slightly worst, `75` a soft peak), and the chunk size has no
+resolvable effect. The MPI↔NCCL transport mix is therefore not a first-order
+lever on this NVSwitch-connected single node. Next orthogonal direction:
+dependency priorities (`--prioritize-trsm`, `--prioritize-factorization`),
+which target the panel-readiness stalls seen in the Nsight trace rather than
+the transport mix.
 
 ### Updated direction after consolidated raw-output review (2026-08-27)
 
