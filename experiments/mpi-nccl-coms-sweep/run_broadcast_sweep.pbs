@@ -1,0 +1,112 @@
+# MPI/NCCL panel-broadcast policy sweep at N=491520 (Phase 1 of
+# mpi-nccl-coms-sweep). Expected working directory: this experiment directory
+# (experiments/mpi-nccl-coms-sweep/) on GAAS. Submit with
+# `qsub run_broadcast_sweep.pbs` (no -v args needed).
+#
+# A single node-matched job loops over the full broadcast-policy sequence so
+# every point is measured against an interleaved same-node baseline control.
+#
+# Study objective: observe how MPI vs NCCL responds to a changing panel
+# broadcast mix (NOT a search for the optimum).
+#
+# Swept variable: --use-mpi-panel-broadcast = 0, 25, 50, 75, 100
+#   with --u-panel-chunk-nbs held at 8.
+# Fixed config (previous best, register-step + buffer 2048):
+#   N=491520, NB=3072, 2x4 row grid, gpu-affinity 0:1:2:3:4:5:6:7,
+#   no --cpu-affinity / --mem-affinity,
+#   OMP_NUM_THREADS=8, OMP_PLACES=sockets, OMP_PROC_BIND=TRUE,
+#   --fill-device 1 --fill-device-buffer-size 2048 --cuda-host-register-step 2048,
+#   --skip-tests 1 + GPU monitoring flags.
+# Outputs: attempt-specific stdout/stderr under outputs/.
+# Assumptions: the approved container and required modules exist on GAAS; one
+# GPU per MPI process (8 processes, 8 GPUs); OMP env vars forwarded via
+# `mpirun -x`.
+
+#PBS -N hpl_mxp_bc_sweep
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=02:00:00
+
+set -euo pipefail
+
+cd "$PBS_O_WORKDIR"
+
+# Load the exact minimal module environment validated for GAAS.
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# PBS clobbers OMP_NUM_THREADS with the allocated core count (96), so re-export
+# the fixed host-thread configuration after `module purge`.
+export OMP_NUM_THREADS=8
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=TRUE
+
+mkdir -p outputs
+
+# Sweep sequence: a baseline (broadcast 50, chunk 8) brackets the five
+# broadcast-policy points (chunk held at 8).
+SWEEP_BC=(50 0 25 50 75 100 50)
+SWEEP_CHUNK=(8 8 8 8 8 8 8)
+SWEEP_LABEL=(baseline_a bc_0 bc_25 bc_50 bc_75 bc_100 baseline_b)
+
+run_one() {
+  local bc="$1" chunk="$2" label="$3"
+  local out="outputs/${label}.o" err="outputs/${label}.e"
+  {
+    echo "experiment_id=mpi-nccl-coms-sweep"
+    echo "attempt=${label}"
+    echo "n=491520"
+    echo "nb=3072"
+    echo "nprow=2"
+    echo "npcol=4"
+    echo "nporder=row"
+    echo "gpu_affinity=0:1:2:3:4:5:6:7"
+    echo "fill_device=1"
+    echo "fill_device_buffer_size=2048"
+    echo "cuda_host_register_step=2048"
+    echo "use_mpi_panel_broadcast=${bc}"
+    echo "u_panel_chunk_nbs=${chunk}"
+    echo "pbs_job_id=${PBS_JOBID:-unknown}"
+    echo "submitted_workdir=$PWD"
+    date --iso-8601=seconds
+    hostname
+    echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
+    echo "omp_places=${OMP_PLACES:-unset}"
+    echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
+    nvidia-smi topo -m
+    apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif" \
+      mpirun -np 8 \
+        --bind-to none \
+        -x OMP_NUM_THREADS \
+        -x OMP_PLACES \
+        -x OMP_PROC_BIND \
+        /workspace/hpl-mxp.sh \
+          --gpu-affinity 0:1:2:3:4:5:6:7 \
+          --nprow 2 \
+          --npcol 4 \
+          --nporder row \
+          --n 491520 \
+          --nb 3072 \
+          --fill-device 1 \
+          --fill-device-buffer-size 2048 \
+          --cuda-host-register-step 2048 \
+          --use-mpi-panel-broadcast "${bc}" \
+          --u-panel-chunk-nbs "${chunk}" \
+          --skip-tests 1 \
+          --monitor-gpu 1 \
+          --monitor-gpu-interval 10 \
+          --monitor-gpu-pcie-width-warning 16 \
+          --monitor-gpu-pcie-gen-warning 5
+  } > "${out}" 2> "${err}"
+}
+
+for i in "${!SWEEP_BC[@]}"; do
+  echo "[$(date --iso-8601=seconds)] running ${SWEEP_LABEL[$i]} bc=${SWEEP_BC[$i]} chunk=${SWEEP_CHUNK[$i]}"
+  run_one "${SWEEP_BC[$i]}" "${SWEEP_CHUNK[$i]}" "${SWEEP_LABEL[$i]}"
+done
+
+echo "mpi-nccl-coms-sweep Phase 1 (broadcast) complete."

@@ -1,0 +1,116 @@
+# U-panel chunk granularity sweep at N=491520 (Phase 2 of mpi-nccl-coms-sweep).
+# Expected working directory: this experiment directory
+# (experiments/mpi-nccl-coms-sweep/) on GAAS. Submit with
+# `qsub run_chunk_sweep.pbs` (no -v args needed).
+#
+# A single node-matched job loops over the chunk sweep for the two broadcast
+# policies selected as best in Phase 1, bracketed by a baseline control.
+#
+# Study objective: observe how the U-panel chunk granularity changes the panel
+# traffic / readiness at the two best broadcast policies (NOT an optimum search).
+#
+# Swept variable: --u-panel-chunk-nbs = 4, 8, 16 at each Phase-1 winner.
+# Fixed config (previous best, register-step + buffer 2048):
+#   N=491520, NB=3072, 2x4 row grid, gpu-affinity 0:1:2:3:4:5:6:7,
+#   no --cpu-affinity / --mem-affinity,
+#   OMP_NUM_THREADS=8, OMP_PLACES=sockets, OMP_PROC_BIND=TRUE,
+#   --fill-device 1 --fill-device-buffer-size 2048 --cuda-host-register-step 2048,
+#   --skip-tests 1 + GPU monitoring flags.
+# Outputs: attempt-specific stdout/stderr under outputs/.
+# Assumptions: the approved container and required modules exist on GAAS; one
+# GPU per MPI process (8 processes, 8 GPUs); OMP env vars forwarded via
+# `mpirun -x`.
+
+#PBS -N hpl_mxp_chunk_sweep
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=02:00:00
+
+set -euo pipefail
+
+cd "$PBS_O_WORKDIR"
+
+# Load the exact minimal module environment validated for GAAS.
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# PBS clobbers OMP_NUM_THREADS with the allocated core count (96), so re-export
+# the fixed host-thread configuration after `module purge`.
+export OMP_NUM_THREADS=8
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=TRUE
+
+mkdir -p outputs
+
+# The two broadcast values chosen from Phase 1 (top-2 by GFLOP/s). EDIT these
+# before submitting Phase 2 based on the retrieved Phase 1 results.
+PHASE2_BC_A=__A__
+PHASE2_BC_B=__B__
+
+# Chunk sweep sequence: baseline (50/8) -> A x {4,8,16} -> B x {4,8,16}
+# -> baseline (50/8).
+SWEEP_BC=(50 "${PHASE2_BC_A}" "${PHASE2_BC_A}" "${PHASE2_BC_A}" "${PHASE2_BC_B}" "${PHASE2_BC_B}" "${PHASE2_BC_B}" 50)
+SWEEP_CHUNK=(8 4 8 16 4 8 16 8)
+SWEEP_LABEL=(baseline_a chunk4_a chunk8_a chunk16_a chunk4_b chunk8_b chunk16_b baseline_b)
+
+run_one() {
+  local bc="$1" chunk="$2" label="$3"
+  local out="outputs/${label}.o" err="outputs/${label}.e"
+  {
+    echo "experiment_id=mpi-nccl-coms-sweep"
+    echo "attempt=${label}"
+    echo "n=491520"
+    echo "nb=3072"
+    echo "nprow=2"
+    echo "npcol=4"
+    echo "nporder=row"
+    echo "gpu_affinity=0:1:2:3:4:5:6:7"
+    echo "fill_device=1"
+    echo "fill_device_buffer_size=2048"
+    echo "cuda_host_register_step=2048"
+    echo "use_mpi_panel_broadcast=${bc}"
+    echo "u_panel_chunk_nbs=${chunk}"
+    echo "pbs_job_id=${PBS_JOBID:-unknown}"
+    echo "submitted_workdir=$PWD"
+    date --iso-8601=seconds
+    hostname
+    echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
+    echo "omp_places=${OMP_PLACES:-unset}"
+    echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
+    nvidia-smi topo -m
+    apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif" \
+      mpirun -np 8 \
+        --bind-to none \
+        -x OMP_NUM_THREADS \
+        -x OMP_PLACES \
+        -x OMP_PROC_BIND \
+        /workspace/hpl-mxp.sh \
+          --gpu-affinity 0:1:2:3:4:5:6:7 \
+          --nprow 2 \
+          --npcol 4 \
+          --nporder row \
+          --n 491520 \
+          --nb 3072 \
+          --fill-device 1 \
+          --fill-device-buffer-size 2048 \
+          --cuda-host-register-step 2048 \
+          --use-mpi-panel-broadcast "${bc}" \
+          --u-panel-chunk-nbs "${chunk}" \
+          --skip-tests 1 \
+          --monitor-gpu 1 \
+          --monitor-gpu-interval 10 \
+          --monitor-gpu-pcie-width-warning 16 \
+          --monitor-gpu-pcie-gen-warning 5
+  } > "${out}" 2> "${err}"
+}
+
+for i in "${!SWEEP_BC[@]}"; do
+  echo "[$(date --iso-8601=seconds)] running ${SWEEP_LABEL[$i]} bc=${SWEEP_BC[$i]} chunk=${SWEEP_CHUNK[$i]}"
+  run_one "${SWEEP_BC[$i]}" "${SWEEP_CHUNK[$i]}" "${SWEEP_LABEL[$i]}"
+done
+
+echo "mpi-nccl-coms-sweep Phase 2 (chunk) complete."

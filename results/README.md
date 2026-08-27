@@ -38,6 +38,12 @@ Columns and semantics for the HPL-MxP sweeps:
 - `nporder`: grid ordering (`row` or `column`), parsed from the run settings.
 - `n`: matrix size.
 - `nb`: panel size.
+- `use_mpi_panel_broadcast`: `--use-mpi-panel-broadcast <int>` value parsed from
+  the HPL-MxP settings block (`unknown` for experiments that predate the column
+  or do not set the flag). 0 selects NCCL; positive values select an MPI
+  percentage policy.
+- `u_panel_chunk_nbs`: `--u-panel-chunk-nbs <int>` value parsed from the
+  settings block (`unknown` when absent).
 - `gpu_affinity`: GPU affinity string.
 - `omp_num_threads`, `omp_places`, `omp_proc_bind`: OpenMP thread-count and
   placement/binding environment values (`OMP_NUM_THREADS`, `OMP_PLACES`,
