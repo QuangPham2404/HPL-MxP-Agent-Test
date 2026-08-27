@@ -1,0 +1,68 @@
+# Nsight Systems Profiling — Best Run Configuration
+
+## Purpose
+
+Capture an Nsight Systems (nsys) profile of the current best HPL-MxP run
+configuration on GAAS, with the fill-device buffer and CUDA host-register step
+both set to 2048. The profile is the input for analyzing the compute and
+scheduling behavior of the HPL-MxP kernels (GEMM/kernel selection, LU
+scheduling/overlap, panel communication mix) before the next optimization
+direction.
+
+This is a profiling run, not a performance sweep: the goal is the trace, not a
+new GFLOP/s data point. No `results/metrics.csv` row is added for this run.
+
+## Fixed config (the current best configuration)
+
+- `--n 491520 --nb 3072 --nprow 2 --npcol 4 --nporder row`.
+- `--gpu-affinity 0:1:2:3:4:5:6:7`, no `--cpu-affinity` / `--mem-affinity`.
+- `OMP_NUM_THREADS=8`, `OMP_PLACES=sockets`, `OMP_PROC_BIND=TRUE`.
+- `--fill-device 1`.
+- `--fill-device-buffer-size 2048` (buffer = 2048).
+- `--cuda-host-register-step 2048` (register step = 2048).
+- `--skip-tests 1`. GPU monitoring flags are omitted so the trace is not
+  perturbed by monitor-induced sampling.
+
+## Container and Nsight Systems
+
+- Container: `/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif`.
+- Launcher: `/workspace/hpl-mxp.sh` inside the container.
+- Nsight Systems binary (inside the container):
+  `/usr/local/cuda-13.1/NsightSystems-cli-2025.6.1/target-linux-x64/nsys`
+  (version 2025.6.1).
+- Trace options: `--trace=cuda,nvtx,osrt,mpi --sample=cpu`.
+- One `.qdrep` per MPI rank (8 ranks), emitted via
+  `-o .../hpl_mxp_rank_%q{OMPI_COMM_WORLD_RANK}`.
+
+## Run script
+
+`run_nsight_systems.pbs` runs the profile in a single PBS job:
+
+```text
+cd experiments/nsight-systems
+qsub run_nsight_systems.pbs
+```
+
+## Output layout
+
+Raw evidence lives under `outputs/`:
+
+- `outputs/nsys-trace/hpl_mxp_rank_0.qdrep` … `hpl_mxp_rank_7.qdrep` — one
+  profile per MPI rank (kept as-is, no sqlite export).
+- `outputs/nsys-trace/hpl_stdout.log` — the HPL-MxP stdout (PASSED / GFLOP/s).
+- PBS `.o`/`.e` job-level files.
+
+The `.qdrep` traces are gitignored (`*.qdrep`) and remain on GAAS only. Analysis
+is performed over SSH against the remote traces.
+
+## Validation
+
+A run is valid only when all of: PBS completes; the 8 `.qdrep` files and
+`hpl_stdout.log` exist; and the HPL-MxP stdout reports `PASSED` with a finite
+residual. The `.qdrep` files must be non-zero length and openable by `nsys stats`.
+
+## Logged attempts
+
+| Attempt | PBS job | Node | Residual | .qdrep files | Evidence |
+|---|---|---|---|---|---|
+| `nsight_systems_v1` | (pending) | (pending) | (pending) | (pending) | `outputs/nsys-trace/` |
