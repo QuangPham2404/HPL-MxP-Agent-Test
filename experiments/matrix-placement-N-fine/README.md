@@ -66,4 +66,23 @@ finite HPL-MxP `GFLOPS` value is present.
 
 ## Logged attempts
 
-Populated after retrieval and extraction.
+| Attempt | N | PBS job | Node | Residual check | GFLOP/s | Evidence |
+|---|---:|---|---:|---|---|---:|---|
+| `ctrl_491520_a` | 491520 | 53334 | g18 | PASSED | 2.3792e+06 | `outputs/ctrl_491520_a.{o,e}` |
+| `n_490496` | 490496 | 53334 | g18 | PASSED | 2.3737e+06 | `outputs/n_490496.{o,e}` |
+| `n_489472` | 489472 | 53334 | g18 | PASSED | 2.3763e+06 | `outputs/n_489472.{o,e}` |
+| `n_488448` | 488448 | 53334 | g18 | PASSED | 2.3645e+06 | `outputs/n_488448.{o,e}` |
+| `n_487424` | 487424 | 53334 | g18 | PASSED | 2.3711e+06 | `outputs/n_487424.{o,e}` |
+| `n_486400` | 486400 | 53334 | g18 | PASSED | 2.3573e+06 | `outputs/n_486400.{o,e}` |
+| `n_485376` | 485376 | 53334 | g18 | PASSED | 2.3721e+06 | `outputs/n_485376.{o,e}` |
+| `n_484352` | 484352 | 53334 | g18 | PASSED | 2.3820e+06 | `outputs/n_484352.{o,e}` |
+| `n_483328` | 483328 | 53334 | g18 | PASSED | 2.3604e+06 | `outputs/n_483328.{o,e}` |
+| `ctrl_491520_b` | 491520 | 53334 | g18 | PASSED | 2.3706e+06 | `outputs/ctrl_491520_b.{o,e}` |
+
+## Result
+
+No fine peak below 491520. The eight fine points are a ~1% noise band
+(2.3573e+06 … 2.3820e+06) with no trend; none beats the same-node 491520 control
+beyond intra-node drift (start control 2.3792e+06 → end control 2.3706e+06,
+−0.36% over the job). N=491520 + `--fill-device 1` remains the recommended
+config; the N dimension is closed.

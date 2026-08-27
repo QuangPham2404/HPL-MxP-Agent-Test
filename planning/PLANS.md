@@ -22,8 +22,14 @@
 | OpenMP thread/placement sweep (N=491520, nb=3072) | `planning/analysis/omp-sweep.md` | 2026-08-26 | `omp-sweep` `OMP_NUM_THREADS` 1–20 + `OMP_PLACES`×`OMP_PROC_BIND` at 8 threads | Analyzed | `OMP_NUM_THREADS=8` + `OMP_PLACES=sockets` + `OMP_PROC_BIND=TRUE` = 2.3204e+06 (+60.79%), highest result yet; `cores`+bind oversubscribes low cores and collapses (~0.9e+06) | Repeat top sockets candidates to separate ~1% ordering from node noise; then revisit matrix-placement levers at N=491520 |
 | Matrix-placement re-run (N=491520, nb=3072) | `planning/analysis/matrix-placement-491k.md` | 2026-08-26 | `matrix-placement-control` `491k_*` fill-device / buffer / register-step | Analyzed | `--fill-device 1` is a ~+2.3% win over the fill-off shipping config; buffer has flat optimum 1024–2048 and a VRAM cliff at ≤512 (FAILED); register-step is sub-noise | Adopt fill-device 1 + buffer 1024 (reg-step default); pin buffer/reg-step ties with node-matched repetition; next orthogonal levers are gemm-kernel/precision and scheduling/panel-broadcast |
 | Matrix-placement N re-sweep (fill-device=1, N down) | `planning/analysis/matrix-placement-N-resweep.md` | 2026-08-26 | `matrix-placement-N-resweep` N ∈ {491520,460800,430080,399360,368640} | Analyzed | Solver time falls 13.07→4.09 s (share 39%→29%) but LU efficiency loss cancels it; GFLOP/s flat, no peak below 491520 — hypothesis rejected as net gain | Keep N=491520; no refine; next orthogonal levers: gemm-kernel/precision, LU scheduling, panel-broadcast |
+| N fine re-sweep (1024-step below 491520, node-matched) | `planning/analysis/matrix-placement-N-resweep.md` (follow-up section) | 2026-08-27 | `matrix-placement-N-fine` 8 × 1024-step N below 491520 + same-node controls | Analyzed | No fine peak: fine points are a ~1% noise band (2.357–2.382e+06); none beats 491520 beyond intra-node drift (max +0.12% vs −0.36% control drift); N dimension closed | Keep N=491520; N fully closed; next orthogonal levers only |
 
 ## Next direction
+
+A node-matched fine N sweep (2026-08-27, `matrix-placement-N-fine`) ruled out a
+narrow peak below N=491520: eight 1024-step values span a ~1% noise band
+(2.357–2.382e+06) and none beats the same-node 491520 control beyond intra-node
+drift. The N dimension is now fully closed at N=491520 for this workload.
 
 The matrix-placement N re-sweep (2026-08-26) tested lowering N under
 `--fill-device 1` to reach full FP64 residency. The iterative-solver time fell

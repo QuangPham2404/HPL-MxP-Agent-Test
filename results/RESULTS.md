@@ -38,6 +38,16 @@ This report records validated raw result data only. No optimization analysis or 
 | affinity-sweep | cpu_strict2_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.7974e+05 | experiments/affinity-sweep/outputs/cpu_strict2_491k.o |
 | affinity-sweep | mem_aff_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1662e+06 | experiments/affinity-sweep/outputs/mem_aff_491k.o |
 | affinity-sweep | mem_off_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1980e+06 | experiments/affinity-sweep/outputs/mem_off_491k.o |
+| matrix-placement-N-fine | ctrl_491520_a | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3792e+06 | experiments/matrix-placement-N-fine/outputs/ctrl_491520_a.o |
+| matrix-placement-N-fine | ctrl_491520_b | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3706e+06 | experiments/matrix-placement-N-fine/outputs/ctrl_491520_b.o |
+| matrix-placement-N-fine | n_483328 | 483328 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3604e+06 | experiments/matrix-placement-N-fine/outputs/n_483328.o |
+| matrix-placement-N-fine | n_484352 | 484352 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3820e+06 | experiments/matrix-placement-N-fine/outputs/n_484352.o |
+| matrix-placement-N-fine | n_485376 | 485376 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3721e+06 | experiments/matrix-placement-N-fine/outputs/n_485376.o |
+| matrix-placement-N-fine | n_486400 | 486400 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3573e+06 | experiments/matrix-placement-N-fine/outputs/n_486400.o |
+| matrix-placement-N-fine | n_487424 | 487424 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3711e+06 | experiments/matrix-placement-N-fine/outputs/n_487424.o |
+| matrix-placement-N-fine | n_488448 | 488448 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3645e+06 | experiments/matrix-placement-N-fine/outputs/n_488448.o |
+| matrix-placement-N-fine | n_489472 | 489472 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3763e+06 | experiments/matrix-placement-N-fine/outputs/n_489472.o |
+| matrix-placement-N-fine | n_490496 | 490496 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3737e+06 | experiments/matrix-placement-N-fine/outputs/n_490496.o |
 | matrix-placement-N-resweep | n_368640 | 368640 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3792e+06 | experiments/matrix-placement-N-resweep/outputs/n_368640.o |
 | matrix-placement-N-resweep | n_399360 | 399360 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3023e+06 | experiments/matrix-placement-N-resweep/outputs/n_399360.o |
 | matrix-placement-N-resweep | n_430080 | 430080 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.2828e+06 | experiments/matrix-placement-N-resweep/outputs/n_430080.o |

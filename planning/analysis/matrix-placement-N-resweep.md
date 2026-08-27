@@ -100,3 +100,102 @@ This suggestion does not authorize a new experiment.
 - Raw evidence: `experiments/matrix-placement-N-resweep/outputs/n_*.{o,e}` (5 attempts).
 - PBS jobs: 53190–53194.
 - Analysis date: 2026-08-26.
+
+---
+
+# Follow-up analysis (2026-08-27): fine 1024-step N sweep below 491520
+
+## F1. Concise summary
+
+The prior coarse sweep (30720 steps) could in principle have jumped over a
+narrow peak in the immediate vicinity below N=491520. To rule that out we ran a
+**node-matched fine sweep** (`matrix-placement-N-fine`) of eight N values in
+1024 steps below 491520, each bracketed by a same-node 491520 control. All ten
+runs landed on `hpc-gaas-g18`. The fine points scatter within a ~1% band
+(2.3573e+06 … 2.3820e+06) and none beats 491520 beyond intra-node drift. The
+hypothesis of a missed fine peak is **rejected**; the N dimension at
+`--fill-device 1` is now closed.
+
+## F2. Scope and evaluation criteria
+
+- Analysis ID: `matrix-placement-N-resweep` (follow-up section; no new analysis
+  file, per user instruction).
+- Analysis date: 2026-08-27.
+- Source: [`results/metrics.csv`](../../results/metrics.csv).
+- Fixed config: identical to the parent experiment —
+  `--fill-device 1` (buffer 3048 + register-step 2048 launcher defaults),
+  `--nb 3072`, `--nprow 2 --npcol 4 --nporder row`,
+  `--gpu-affinity 0:1:2:3:4:5:6:7`, no CPU/memory affinity,
+  `OMP_NUM_THREADS=8` + `OMP_PLACES=sockets` + `OMP_PROC_BIND=TRUE`,
+  `--skip-tests 1` + GPU monitoring.
+- Swept variable: `N` ∈ {490496, 489472, 488448, 487424, 486400, 485376, 484352,
+  483328} (1024 steps), plus same-node 491520 controls at start (`ctrl_491520_a`)
+  and end (`ctrl_491520_b`) of the single node-matched job.
+- References:
+  - Original project baseline `baseline-sweep_v1` = **1.4432e+06**.
+  - Parent pre-fine reference `491k_fill_on` = **2.3745e+06**.
+- Correctness: all ten runs `PASSED` with finite residuals.
+- Metric: reported HPL-MxP GFLOP/s.
+
+## F3. Data and analysis
+
+### F3.1 Node-matched fine-N trace (all on hpc-gaas-g18)
+
+| N | GFLOP/s | vs baseline (1.4432e6) | vs ctrl_491520_a (2.3792e6) |
+|---:|---:|---:|---:|
+| 491520 (ctrl a) | 2.3792e+06 | +64.86% | 0.00% |
+| 490496 | 2.3737e+06 | +64.48% | −0.23% |
+| 489472 | 2.3763e+06 | +64.66% | −0.12% |
+| 488448 | 2.3645e+06 | +63.84% | −0.62% |
+| 487424 | 2.3711e+06 | +64.30% | −0.34% |
+| 486400 | 2.3573e+06 | +63.34% | −0.92% |
+| 485376 | 2.3721e+06 | +64.37% | −0.30% |
+| 484352 | 2.3820e+06 | +65.05% | +0.12% |
+| 483328 | 2.3604e+06 | +63.56% | −0.79% |
+| 491520 (ctrl b) | 2.3706e+06 | +64.27% | −0.36% |
+
+### F3.2 Reading the curve
+
+The eight fine points span a ~1% band (2.3573e+06 … 2.3820e+06) with no
+monotonic trend — the sequence 490496→483328 is non-monotonic noise. The single
+point nominally above the start control (484352 = 2.3820e+06, +0.12%) is inside
+the measured **intra-node drift**: the start control (2.3792e+06) fell to the
+end control (2.3706e+06), a −0.36% co-tenant drift over the ~24 min job on the
+same node. A single +0.12% excursion is therefore not a peak.
+
+### F3.3 Conclusion
+
+No fine N below 491520 beats 491520 by more than node drift. Combined with the
+parent result (coarse sweep flat/declining-to-parity), the N dimension under
+`--fill-device 1` is now closed at **N=491520**.
+
+## F4. Insights gained
+
+1. **Hypothesis rejected:** no narrow 1024-step peak exists below 491520; the
+   fine values are a ~1% noise band with no trend.
+2. **Node-matching matters:** the intra-node control drift (−0.36% over ~24 min)
+   is comparable to the fine-point spread, so single-run, cross-node comparisons
+   would have been uninterpretable. The node-matched design is what lets us
+   rule out a peak.
+3. **N=491520 + `--fill-device 1` stands** as the recommended config
+   (~2.37–2.38e+06, +64–65% over the 1.4432e+06 baseline).
+
+## F5. Suggested next section
+
+Do not refine N further. The remaining orthogonal, untested-at-this-N directions
+for separate experiments are unchanged from the parent analysis:
+compute/precision (`--preset-gemm-kernel`, `--sloppy-type`, `--Anq-device`),
+LU scheduling (`--use-separate-stream-for-gemm`, `--prioritize-trsm`,
+`--prioritize-factorization`, `--u-panel-chunk-nbs`), and panel-broadcast
+(`--use-mpi-panel-broadcast`).
+
+This suggestion does not authorize a new experiment.
+
+## F6. Provenance
+
+- Structured source: [`results/metrics.csv`](../../results/metrics.csv)
+- Experiment metadata: [`experiments/matrix-placement-N-fine/README.md`](../../experiments/matrix-placement-N-fine/README.md)
+- Run script: [`experiments/matrix-placement-N-fine/run_N_fine.pbs`](../../experiments/matrix-placement-N-fine/run_N_fine.pbs)
+- Raw evidence: `experiments/matrix-placement-N-fine/outputs/ctrl_491520_{a,b}.{o,e}` + `n_<N>.{o,e}` (10 attempts).
+- PBS job: 53334 (all ten attempts run within a single node-matched job on `hpc-gaas-g18`).
+- Analysis date: 2026-08-27.
