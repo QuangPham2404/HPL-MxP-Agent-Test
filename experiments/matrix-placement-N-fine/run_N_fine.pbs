@@ -1,0 +1,101 @@
+# Parametrized fine (1024-step) N sweep below 491520 with --fill-device 1,
+# node-matched. Expected working directory: this experiment directory
+# (experiments/matrix-placement-N-fine/) on GAAS. Submit with `qsub
+# run_N_fine.pbs` (no -v args needed). A single job loops over the full
+# sequence on one allocated node so every fine point is measured against an
+# interleaved same-node 491520 control.
+#
+# Hypothesis: the coarse matrix-placement-N-resweep (30720 steps) may have
+# jumped over a narrow peak just below N=491520. Map the 1024-step vicinity
+# below 491520 with matched controls.
+#
+# Fixed config (from matrix-placement-N-resweep):
+#   --fill-device 1, buffer + register-step at launcher defaults (3048 / 2048),
+#   NB=3072, 2x4 row grid, gpu-affinity 0:1:2:3:4:5:6:7,
+#   no --cpu-affinity / --mem-affinity,
+#   OMP_NUM_THREADS=8, OMP_PLACES=sockets, OMP_PROC_BIND=TRUE.
+# Swept variable: N (multiples of 1024 below 491520, plus 491520 controls).
+# Outputs: attempt-specific stdout/stderr under outputs/.
+# Assumptions: the approved container and required modules exist on GAAS; one
+# GPU per MPI process (8 processes, 8 GPUs); OMP env vars forwarded via `mpirun -x`.
+
+#PBS -N hpl_mxp_N_fine
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=02:00:00
+
+set -euo pipefail
+
+cd "$PBS_O_WORKDIR"
+
+# Load the exact minimal module environment validated for GAAS.
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# PBS clobbers OMP_NUM_THREADS with the allocated core count (96), so re-export
+# the fixed host-thread configuration after `module purge`.
+export OMP_NUM_THREADS=8
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=TRUE
+
+mkdir -p outputs
+
+# Interleaved sweep sequence: a 491520 control brackets the 8 fine points.
+SWEEP_N=(491520 490496 489472 488448 487424 486400 485376 484352 483328 491520)
+SWEEP_LABEL=(ctrl_491520_a n_490496 n_489472 n_488448 n_487424 n_486400 n_485376 n_484352 n_483328 ctrl_491520_b)
+
+run_one() {
+  local N="$1" label="$2"
+  local out="outputs/${label}.o" err="outputs/${label}.e"
+  {
+    echo "experiment_id=matrix-placement-N-fine"
+    echo "attempt=${label}"
+    echo "n=${N}"
+    echo "nb=3072"
+    echo "nprow=2"
+    echo "npcol=4"
+    echo "nporder=row"
+    echo "gpu_affinity=0:1:2:3:4:5:6:7"
+    echo "fill_device=1"
+    echo "fill_device_buffer_size=3048"
+    echo "cuda_host_register_step=default"
+    echo "pbs_job_id=${PBS_JOBID:-unknown}"
+    echo "submitted_workdir=$PWD"
+    date --iso-8601=seconds
+    hostname
+    echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
+    echo "omp_places=${OMP_PLACES:-unset}"
+    echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
+    nvidia-smi topo -m
+    apptainer exec --nv "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif" \
+      mpirun -np 8 \
+        --bind-to none \
+        -x OMP_NUM_THREADS \
+        -x OMP_PLACES \
+        -x OMP_PROC_BIND \
+        /workspace/hpl-mxp.sh \
+          --gpu-affinity 0:1:2:3:4:5:6:7 \
+          --nprow 2 \
+          --npcol 4 \
+          --nporder row \
+          --n "${N}" \
+          --nb 3072 \
+          --fill-device 1 \
+          --skip-tests 1 \
+          --monitor-gpu 1 \
+          --monitor-gpu-interval 10 \
+          --monitor-gpu-pcie-width-warning 16 \
+          --monitor-gpu-pcie-gen-warning 5
+  } > "${out}" 2> "${err}"
+}
+
+for i in "${!SWEEP_N[@]}"; do
+  echo "[$(date --iso-8601=seconds)] running ${SWEEP_LABEL[$i]} N=${SWEEP_N[$i]}"
+  run_one "${SWEEP_N[$i]}" "${SWEEP_LABEL[$i]}"
+done
+
+echo "matrix-placement-N-fine sweep complete."
