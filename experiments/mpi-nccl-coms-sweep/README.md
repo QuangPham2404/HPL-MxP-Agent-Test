@@ -61,6 +61,9 @@ is the same config tagged as the in-sweep 50 point.
 broadcast values selected as best from Phase 1 (top-2 by end-to-end GFLOP/s),
 bracketed by a `baseline_*` control.
 
+Phase 1 selected `--use-mpi-panel-broadcast = 75` (2.3570e+06) and `50`
+(2.3291e+06) as the top-2 broadcast values.
+
 ## Run scripts
 
 ```text
@@ -81,4 +84,23 @@ solver time, and residual are also recorded per attempt.
 
 ## Logged attempts
 
-Filled in after each phase.
+### Phase 1 — broadcast policy (node hpc-gaas-g13, job 53508)
+
+| Attempt | broadcast | chunk | GFLOP/s | LU s | Solver s | Residual check | Evidence |
+|---|---:|---:|---:|---:|---:|---|---|
+| `baseline_a` | 50 | 8 | 2.2771e+06 | 20.43 | 14.33 | PASSED | `outputs/baseline_a.{o,e}` |
+| `bc_0` | 0 | 8 | 2.3045e+06 | 21.05 | 13.30 | PASSED | `outputs/bc_0.{o,e}` |
+| `bc_25` | 25 | 8 | 2.3179e+06 | 20.63 | 13.53 | PASSED | `outputs/bc_25.{o,e}` |
+| `bc_50` | 50 | 8 | 2.3291e+06 | 20.60 | 13.39 | PASSED | `outputs/bc_50.{o,e}` |
+| `bc_75` | 75 | 8 | 2.3570e+06 | 20.35 | 13.23 | PASSED | `outputs/bc_75.{o,e}` |
+| `bc_100` | 100 | 8 | 2.3251e+06 | 20.57 | 13.48 | PASSED | `outputs/bc_100.{o,e}` |
+| `baseline_b` | 50 | 8 | 2.3372e+06 | 20.50 | 13.37 | PASSED | `outputs/baseline_b.{o,e}` |
+
+All seven runs passed; residual `1.609604E-04` throughout. The two baselines
+(`2.2771e+06` → `2.3372e+06`) show ~2.6% same-node drift across the job, so
+differences below that scale are not separable. Phase-1 top-2 by GFLOP/s: `75`
+and `50`.
+
+### Phase 2 — U-panel chunk sweep
+
+Filled in after Phase 2 completes.
