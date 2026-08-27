@@ -31,8 +31,9 @@ new GFLOP/s data point. No `results/metrics.csv` row is added for this run.
   `/usr/local/cuda-13.1/NsightSystems-cli-2025.6.1/target-linux-x64/nsys`
   (version 2025.6.1).
 - Trace options: `--trace=cuda,nvtx,osrt,mpi --sample=cpu`.
-- One `.qdrep` per MPI rank (8 ranks), emitted via
-  `-o .../hpl_mxp_rank_%q{OMPI_COMM_WORLD_RANK}`.
+- One profile per MPI rank (8 ranks), emitted via
+  `-o .../hpl_mxp_rank_%q{OMPI_COMM_WORLD_RANK}`. Nsight Systems 2025.6.1
+  writes native `.nsys-rep` report files.
 
 ## Run script
 
@@ -47,22 +48,23 @@ qsub run_nsight_systems.pbs
 
 Raw evidence lives under `outputs/`:
 
-- `outputs/nsys-trace/hpl_mxp_rank_0.qdrep` … `hpl_mxp_rank_7.qdrep` — one
-  profile per MPI rank (kept as-is, no sqlite export).
+- `outputs/nsys-trace/hpl_mxp_rank_0.nsys-rep` … `hpl_mxp_rank_7.nsys-rep` —
+  one profile per MPI rank (kept as-is, no sqlite export).
 - `outputs/nsys-trace/hpl_stdout.log` — the HPL-MxP stdout (PASSED / GFLOP/s).
 - PBS `.o`/`.e` job-level files.
 
-The `.qdrep` traces are gitignored (`*.qdrep`) and remain on GAAS only. Analysis
-is performed over SSH against the remote traces.
+The `.nsys-rep` traces are gitignored (`*.nsys-rep`) and remain on GAAS only.
+Analysis is performed over SSH against the remote traces.
 
 ## Validation
 
-A run is valid only when all of: PBS completes; the 8 `.qdrep` files and
+A run is valid only when all of: PBS completes; the 8 `.nsys-rep` files and
 `hpl_stdout.log` exist; and the HPL-MxP stdout reports `PASSED` with a finite
-residual. The `.qdrep` files must be non-zero length and openable by `nsys stats`.
+residual. The `.nsys-rep` files must be non-zero length and openable by
+`nsys stats`.
 
 ## Logged attempts
 
-| Attempt | PBS job | Node | Residual | .qdrep files | Evidence |
+| Attempt | PBS job | Node | Residual | .nsys-rep files | Evidence |
 |---|---|---|---|---|---|
-| `nsight_systems_v1` | (pending) | (pending) | (pending) | (pending) | `outputs/nsys-trace/` |
+| `nsight_systems_v1` | 53452 | hpc-gaas-g13 | PASSED (GFLOP/s 1.9668e+06) | 8 files | `outputs/nsys-trace/` |
