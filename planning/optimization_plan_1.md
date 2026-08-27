@@ -176,6 +176,10 @@ bad.” It is that the current `50` policy may not match this H200/NVSwitch
 topology and this process-grid schedule. The direct experiment is
 `--use-mpi-panel-broadcast`, holding all other controls fixed.
 
+*Note: NCCL is designed for high-throughput communications while MPI can better support smaller and more latency sensitive communcation. And why they allow to mix is because as the factorization is because there are some drawbacks for NCCL: (1) If the communication is small, the latency due to set up >> communication, and also NCCL takes up GPU resource to organize. Also recall that as GEMM goes on, the matrix gets smaller, meaning that the comms gets smaller (meaning MPI is more and more prefereable)*
+
+*Note: Furthermore, from the data, it shows that the comms are a lot of small and short burst with high latency (delay due to syncing), there for MPI may be more prefereable. We should sweep this.*
+
 ### 1.4 Rank asymmetry indicates arrival skew, not just average bandwidth
 
 Four ranks (`0`, `2`, `5`, and `7`) show roughly `12.7–13.2 s` of cumulative
@@ -216,6 +220,8 @@ accounts for approximately `5.5–9.1 s` per rank in the local main window,
 with `11–19` calls over `100 ms` per rank. These durations are not additive to
 MPI waits—the events can nest or overlap—but they justify testing the stream
 policy and priority flags together in a controlled sequence.
+
+*Note: This rank assymetry is worth exploring to improve algorithm (point 1.4 and point 1.5)*
 
 ### 1.6 DGEMV is visible but not a first-order target
 

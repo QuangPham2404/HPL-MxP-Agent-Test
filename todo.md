@@ -15,6 +15,12 @@ This is for user's use. Agents do not need to execute these todos unless specifi
 - Analyse key steps with NVIDIA NSIGHT
 - **POSSIBLE BOTTLENECK: System RAM is filled but VRAM is NOT**
 
+4. communciation: `--use-mpi-panel-broadcast <int>` and `--u-panel-chunk-nbs <int>` only (as u panel chunk may increase-decrease load, which can affect choice for MPI vs NCCL. sweep, then nsys the best run to see if the rank assymetry and delay improve.
+
+5. rank assymetry and delay: Sweep: --prioritize-trsm <int>, --prioritize-factorization <int>,
+
+6. Remaining: --use-separate-stream-for-gemm <int> (this is separate to the rest, combining and separating may or may not cause delay but can be tested when other are fixed)
+
 ## Notes
 
 **Baseline results**
@@ -350,3 +356,4 @@ fi
 
 ${NUMCMD} ${CPUBIND} ${MEMBIND} ${XHPL} ${HPL_MXP_PARAMS}
 ```
+

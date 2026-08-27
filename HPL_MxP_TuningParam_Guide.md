@@ -187,6 +187,8 @@ Selects a preset GEMM kernel. NVIDIA documents `0` as none and `80` as the SM80 
 
 The important caution is architectural: an SM80 preset is associated with the Ampere-generation kernel path. H200 is Hopper (SM90), so do not assume that selecting `80` is appropriate or faster. Start with `0` on H200 and only test another value if the installed release explicitly documents it for your GPU. Compare achieved GEMM throughput and end-to-end HPL-MxP time, not a microbenchmark alone.
 
+*Note: The output of runs already show that they are using `SM90`, which is the right one for H200. We can change this if we find some custom/other kernel that is better - but the involves changing the code.*
+
 ### `--u-panel-chunk-nbs <int>`
 
 Sets the U-panel chunk size in units of `NB` blocks; default `8`.
