@@ -27,8 +27,22 @@
 | Nsight mechanism study: broadcast 100 | `planning/mpi_panel_broadcast_effect.md` | 2026-08-31 | Nsight 50 control vs `--use-mpi-panel-broadcast 100`; 8 ranks; fixed N/NB/grid/placement | Analyzed | MPI-heavy policy cuts NCCL broadcast-kernel time ~43% but raises cumulative MPI waits ~23% and stream waits ~19%; dominant `nvjet` time is unchanged; profiled score difference is confounded by solver time and node mismatch | Keep 50; target dependency-priority controls with repeated clean runs |
 | Dependency priorities (trsm/factorization) | `planning/analysis/factorization-priority.md` | 2026-08-31 | `factorization-priority-test` four 0/1 combinations at fixed best config | Analyzed | `--prioritize-factorization 1` gives LU +6.6%, end-to-end +3.5%, new best 2.4203e+06 (+67.70% over baseline); `--prioritize-trsm 1` neutral | Adopt factorization 1; repeat `fp_0_1` to confirm, then compute/precision levers (gemm-kernel, sloppy-type) |
 | Separate GEMM stream | `planning/analysis/separate-stream-for-gemm.md` | 2026-08-31 | `separate-stream-for-gemm` toggle 0/1 at current best (factorization 1) | Analyzed | `--use-separate-stream-for-gemm 0` loses -1.89% end-to-end / -3.73% LU vs default 1; default correct | Keep 1; LU-scheduling axis closed, move to compute/precision levers |
+| dgemv multi-threading | `planning/analysis/dgemv-with-multiple-threads.md` | 2026-09-01 | `dgemv-with-multiple-threads` sweep 0/128/256/384/512/640 at current best | Analyzed | `--call-dgemv-with-multiple-threads 0` (default) optimal; any non-zero hurts -3.4% to -12.7% (solver phase only, LU flat) | Keep 0; host-threading axis closed, move to compute/precision levers |
 
 ## Next direction
+
+### dgemv multi-threading result (2026-09-01)
+
+The `dgemv-with-multiple-threads` experiment swept
+`--call-dgemv-with-multiple-threads` over `0, 128, 256, 384, 512, 640` at the
+current best config. The default `0` is strictly optimal: every non-zero value
+regresses `-3.4%` to `-12.7%` end-to-end, driven entirely by a slower iterative
+solver (up to `+4.7 s`), with the LU phase flat. The host-threading axis is
+now closed. See
+[`planning/analysis/dgemv-with-multiple-threads.md`](analysis/dgemv-with-multiple-threads.md).
+Remaining orthogonal direction: the compute/precision path — `--preset-gemm-kernel`,
+`--sloppy-type` (`FP4`/`FP8` vs `FP16`), and conditional `--Anq-device`
+residency — which targets the unchanged dominant `nvjet` kernel.
 
 ### Separate-stream result (2026-08-31)
 

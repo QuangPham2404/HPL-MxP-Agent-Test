@@ -38,6 +38,12 @@ This report records validated raw result data only. No optimization analysis or 
 | affinity-sweep | cpu_strict2_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.7974e+05 | experiments/affinity-sweep/outputs/cpu_strict2_491k.o |
 | affinity-sweep | mem_aff_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1662e+06 | experiments/affinity-sweep/outputs/mem_aff_491k.o |
 | affinity-sweep | mem_off_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1980e+06 | experiments/affinity-sweep/outputs/mem_off_491k.o |
+| dgemv-with-multiple-threads | dgemv_0 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.4252e+06 | experiments/dgemv-with-multiple-threads/outputs/dgemv_0.o |
+| dgemv-with-multiple-threads | dgemv_128 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.1552e+06 | experiments/dgemv-with-multiple-threads/outputs/dgemv_128.o |
+| dgemv-with-multiple-threads | dgemv_256 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.1166e+06 | experiments/dgemv-with-multiple-threads/outputs/dgemv_256.o |
+| dgemv-with-multiple-threads | dgemv_384 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.1940e+06 | experiments/dgemv-with-multiple-threads/outputs/dgemv_384.o |
+| dgemv-with-multiple-threads | dgemv_512 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3435e+06 | experiments/dgemv-with-multiple-threads/outputs/dgemv_512.o |
+| dgemv-with-multiple-threads | dgemv_640 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.2940e+06 | experiments/dgemv-with-multiple-threads/outputs/dgemv_640.o |
 | factorization-priority-test | fp_0_0 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3375e+06 | experiments/factorization-priority-test/outputs/fp_0_0.o |
 | factorization-priority-test | fp_0_1 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.4203e+06 | experiments/factorization-priority-test/outputs/fp_0_1.o |
 | factorization-priority-test | fp_1_0 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3352e+06 | experiments/factorization-priority-test/outputs/fp_1_0.o |

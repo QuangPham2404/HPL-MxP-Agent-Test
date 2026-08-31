@@ -42,7 +42,13 @@ writes `outputs/<label>.{o,e}`.
 
 | Attempt | dgemv-mt | PBS job | Node | Residual check | GFLOP/s | Evidence |
 |---|---:|---|---|---|---|---|
+| `dgemv_0` (control) | 0 | `55643.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.4252e+06` | `outputs/dgemv_0.{o,e}` |
+| `dgemv_128` | 128 | `55643.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.1552e+06` | `outputs/dgemv_128.{o,e}` |
+| `dgemv_256` | 256 | `55643.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.1166e+06` | `outputs/dgemv_256.{o,e}` |
+| `dgemv_384` | 384 | `55643.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.1940e+06` | `outputs/dgemv_384.{o,e}` |
+| `dgemv_512` | 512 | `55643.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.3435e+06` | `outputs/dgemv_512.{o,e}` |
+| `dgemv_640` | 640 | `55643.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.2940e+06` | `outputs/dgemv_640.{o,e}` |
 
-(completed at runtime; see `results/metrics.csv` for extracted values)
+The default `0` is optimal; every non-zero value regresses `-3.4%` to `-12.7%`.
 
 All raw PBS stdout/stderr files under `outputs/` are authoritative evidence.
