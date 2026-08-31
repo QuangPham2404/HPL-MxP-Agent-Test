@@ -49,6 +49,9 @@ Columns and semantics for the HPL-MxP sweeps:
 - `prioritize_factorization`: `--prioritize-factorization <int>` value parsed
   from the settings block (`unknown` when absent/for experiments that predate
   the column).
+- `use_separate_stream_for_gemm`: `--use-separate-stream-for-gemm <int>` value
+  parsed from the settings block (`unknown` when absent/for experiments that
+  predate the column).
 - `gpu_affinity`: GPU affinity string.
 - `omp_num_threads`, `omp_places`, `omp_proc_bind`: OpenMP thread-count and
   placement/binding environment values (`OMP_NUM_THREADS`, `OMP_PLACES`,

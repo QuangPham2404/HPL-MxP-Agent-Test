@@ -26,8 +26,22 @@
 | MPI/NCCL panel-broadcast + U-panel chunk study | `planning/analysis/mpi-nccl-coms-sweep.md`; [`planning/panel_u_chunk_effect.md`](panel_u_chunk_effect.md) | 2026-08-31 | Clean sweep plus Nsight profiles: broadcast 0/25/50/75/100; chunk 4/8/16; profiled chunk-4 trace | Analyzed | Chunk 4 changes scheduling granularity (many more kernel launches and less recorded collective wait) but leaves dominant kernel time and clean GFLOP/s within noise; no repeatable end-to-end gain | Keep chunk 8 and broadcast 50; move to dependency-priority (`--prioritize-trsm`/`--prioritize-factorization`) |
 | Nsight mechanism study: broadcast 100 | `planning/mpi_panel_broadcast_effect.md` | 2026-08-31 | Nsight 50 control vs `--use-mpi-panel-broadcast 100`; 8 ranks; fixed N/NB/grid/placement | Analyzed | MPI-heavy policy cuts NCCL broadcast-kernel time ~43% but raises cumulative MPI waits ~23% and stream waits ~19%; dominant `nvjet` time is unchanged; profiled score difference is confounded by solver time and node mismatch | Keep 50; target dependency-priority controls with repeated clean runs |
 | Dependency priorities (trsm/factorization) | `planning/analysis/factorization-priority.md` | 2026-08-31 | `factorization-priority-test` four 0/1 combinations at fixed best config | Analyzed | `--prioritize-factorization 1` gives LU +6.6%, end-to-end +3.5%, new best 2.4203e+06 (+67.70% over baseline); `--prioritize-trsm 1` neutral | Adopt factorization 1; repeat `fp_0_1` to confirm, then compute/precision levers (gemm-kernel, sloppy-type) |
+| Separate GEMM stream | `planning/analysis/separate-stream-for-gemm.md` | 2026-08-31 | `separate-stream-for-gemm` toggle 0/1 at current best (factorization 1) | Analyzed | `--use-separate-stream-for-gemm 0` loses -1.89% end-to-end / -3.73% LU vs default 1; default correct | Keep 1; LU-scheduling axis closed, move to compute/precision levers |
 
 ## Next direction
+
+### Separate-stream result (2026-08-31)
+
+The `separate-stream-for-gemm` experiment toggled
+`--use-separate-stream-for-gemm` (0/1) at the current best config
+(`--prioritize-factorization 1`). Turning the separate GEMM stream off costs
+`-1.89%` end-to-end and `-3.73%` in the LU phase, confirming the package
+default `1` is correct. The LU-scheduling axis (panel-broadcast, chunk size,
+dependency priorities, separate-stream) is now effectively closed. See
+[`planning/analysis/separate-stream-for-gemm.md`](analysis/separate-stream-for-gemm.md).
+Next orthogonal direction: the compute/precision path — `--preset-gemm-kernel`,
+`--sloppy-type` (`FP4`/`FP8` vs `FP16`), and conditional `--Anq-device`
+residency — which targets the unchanged dominant `nvjet` kernel.
 
 ### Dependency-priority result (2026-08-31)
 

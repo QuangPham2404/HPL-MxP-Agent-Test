@@ -35,7 +35,10 @@ each writes `outputs/<label>.{o,e}`.
 
 | Attempt | separate-stream | PBS job | Node | Residual check | GFLOP/s | Evidence |
 |---|---:|---|---|---|---|---|
+| `ss_1` (control = current best) | 1 | `55620.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.4162e+06` | `outputs/ss_1.{o,e}` |
+| `ss_0` | 0 | `55620.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.3705e+06` | `outputs/ss_0.{o,e}` |
 
-(completed at runtime; see `results/metrics.csv` for extracted values)
+Keeping the separate GEMM stream enabled (default `1`) is better: `ss_0`
+(`--use-separate-stream-for-gemm 0`) loses `-1.89%` end-to-end.
 
 All raw PBS stdout/stderr files under `outputs/` are authoritative evidence.

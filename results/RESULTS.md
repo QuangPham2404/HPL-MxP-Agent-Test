@@ -123,6 +123,8 @@ This report records validated raw result data only. No optimization analysis or 
 | omp-sweep | omp_t8_sockets_false | 491520 | 3072 | 2x4 | row | 8 | sockets | false | PASSED | 2.3026e+06 | experiments/omp-sweep/outputs/omp_t8_sockets_false.o |
 | omp-sweep | omp_t8_sockets_spread | 491520 | 3072 | 2x4 | row | 8 | sockets | spread | PASSED | 2.3152e+06 | experiments/omp-sweep/outputs/omp_t8_sockets_spread.o |
 | omp-sweep | omp_t8_sockets_true | 491520 | 3072 | 2x4 | row | 8 | sockets | true | PASSED | 2.3204e+06 | experiments/omp-sweep/outputs/omp_t8_sockets_true.o |
+| separate-stream-for-gemm | ss_0 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3705e+06 | experiments/separate-stream-for-gemm/outputs/ss_0.o |
+| separate-stream-for-gemm | ss_1 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.4162e+06 | experiments/separate-stream-for-gemm/outputs/ss_1.o |
 | N-sweep | N-resweep_402k | 402423 | 1024 | 2x4 | row |  |  |  | PASSED | 7.6521e+05 | experiments/N-sweep/outputs/N-resweep_402k.o |
 | N-sweep | N-sweep_399k | 399360 | 1024 | 2x4 | row |  |  |  | PASSED | 1.4918e+06 | experiments/N-sweep/outputs/N-sweep_399k.o |
 | N-sweep | N-sweep_400k | 400384 | 1024 | 2x4 | row |  |  |  | PASSED | 1.5751e+06 | experiments/N-sweep/outputs/N-sweep_400k.o |
