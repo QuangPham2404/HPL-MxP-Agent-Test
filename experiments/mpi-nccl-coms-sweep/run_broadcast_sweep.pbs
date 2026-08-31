@@ -27,6 +27,8 @@
 #PBS -P hpc_admin
 #PBS -l select=1:ngpus=8
 #PBS -l walltime=02:00:00
+#PBS -o outputs/hpl_mxp_bc_sweep_reRun.o
+#PBS -e outputs/hpl_mxp_bc_sweep_reRun.e
 
 set -euo pipefail
 
@@ -55,7 +57,7 @@ SWEEP_LABEL=(bc_baseline_a bc_0 bc_25 bc_50 bc_75 bc_100 bc_baseline_b)
 
 run_one() {
   local bc="$1" chunk="$2" label="$3"
-  local out="outputs/${label}.o" err="outputs/${label}.e"
+  local out="outputs/${label}_reRun.o" err="outputs/${label}_reRun.e"
   {
     echo "experiment_id=mpi-nccl-coms-sweep"
     echo "attempt=${label}"
