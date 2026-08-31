@@ -25,8 +25,25 @@
 | N fine re-sweep (1024-step below 491520, node-matched) | `planning/analysis/matrix-placement-N-resweep.md` (follow-up section) | 2026-08-27 | `matrix-placement-N-fine` 8 × 1024-step N below 491520 + same-node controls | Analyzed | No fine peak: fine points are a ~1% noise band (2.357–2.382e+06); none beats 491520 beyond intra-node drift (max +0.12% vs −0.36% control drift); N dimension closed | Keep N=491520; N fully closed; next orthogonal levers only |
 | MPI/NCCL panel-broadcast + U-panel chunk study | `planning/analysis/mpi-nccl-coms-sweep.md`; [`planning/panel_u_chunk_effect.md`](panel_u_chunk_effect.md) | 2026-08-31 | Clean sweep plus Nsight profiles: broadcast 0/25/50/75/100; chunk 4/8/16; profiled chunk-4 trace | Analyzed | Chunk 4 changes scheduling granularity (many more kernel launches and less recorded collective wait) but leaves dominant kernel time and clean GFLOP/s within noise; no repeatable end-to-end gain | Keep chunk 8 and broadcast 50; move to dependency-priority (`--prioritize-trsm`/`--prioritize-factorization`) |
 | Nsight mechanism study: broadcast 100 | `planning/mpi_panel_broadcast_effect.md` | 2026-08-31 | Nsight 50 control vs `--use-mpi-panel-broadcast 100`; 8 ranks; fixed N/NB/grid/placement | Analyzed | MPI-heavy policy cuts NCCL broadcast-kernel time ~43% but raises cumulative MPI waits ~23% and stream waits ~19%; dominant `nvjet` time is unchanged; profiled score difference is confounded by solver time and node mismatch | Keep 50; target dependency-priority controls with repeated clean runs |
+| Dependency priorities (trsm/factorization) | `planning/analysis/factorization-priority.md` | 2026-08-31 | `factorization-priority-test` four 0/1 combinations at fixed best config | Analyzed | `--prioritize-factorization 1` gives LU +6.6%, end-to-end +3.5%, new best 2.4203e+06 (+67.70% over baseline); `--prioritize-trsm 1` neutral | Adopt factorization 1; repeat `fp_0_1` to confirm, then compute/precision levers (gemm-kernel, sloppy-type) |
 
 ## Next direction
+
+### Dependency-priority result (2026-08-31)
+
+The `factorization-priority-test` experiment swept the two LU-scheduling flags
+at the fixed best config (N=491520, NB=3072, 2x4 row, `--fill-device 1`,
+buffer 2048, register-step 2048): `--prioritize-trsm` and
+`--prioritize-factorization` each at 0/1. `--prioritize-factorization 1` is a
+clear win — LU phase `+6.6%`, end-to-end `+3.5%`, and a new best result
+`2.4203e+06` (`+67.70%` over the original `1.4432e+06` baseline, `+0.96%` over
+the previous master best `2.3974e+06`). `--prioritize-trsm 1` is neutral
+(`-0.10%`), and combining both adds nothing over factorization-only. All four
+runs used one node (`hpc-gaas-g16`) and passed verification. See
+[`planning/analysis/factorization-priority.md`](analysis/factorization-priority.md).
+Next step: repeat `fp_0_1` once to pin the `+3.5%` margin, then move to the
+compute/precision levers (`--preset-gemm-kernel`, `--sloppy-type`) that target
+the unchanged `nvjet` kernel.
 
 ### Communication study result (2026-08-27)
 

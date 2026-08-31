@@ -44,6 +44,11 @@ Columns and semantics for the HPL-MxP sweeps:
   percentage policy.
 - `u_panel_chunk_nbs`: `--u-panel-chunk-nbs <int>` value parsed from the
   settings block (`unknown` when absent).
+- `prioritize_trsm`: `--prioritize-trsm <int>` value parsed from the settings
+  block (`unknown` when absent/for experiments that predate the column).
+- `prioritize_factorization`: `--prioritize-factorization <int>` value parsed
+  from the settings block (`unknown` when absent/for experiments that predate
+  the column).
 - `gpu_affinity`: GPU affinity string.
 - `omp_num_threads`, `omp_places`, `omp_proc_bind`: OpenMP thread-count and
   placement/binding environment values (`OMP_NUM_THREADS`, `OMP_PLACES`,

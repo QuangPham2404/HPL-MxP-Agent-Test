@@ -38,6 +38,10 @@ This report records validated raw result data only. No optimization analysis or 
 | affinity-sweep | cpu_strict2_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.7974e+05 | experiments/affinity-sweep/outputs/cpu_strict2_491k.o |
 | affinity-sweep | mem_aff_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1662e+06 | experiments/affinity-sweep/outputs/mem_aff_491k.o |
 | affinity-sweep | mem_off_491k | 491520 | 3072 | 2x4 | row | unset | unset | unset | PASSED | 2.1980e+06 | experiments/affinity-sweep/outputs/mem_off_491k.o |
+| factorization-priority-test | fp_0_0 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3375e+06 | experiments/factorization-priority-test/outputs/fp_0_0.o |
+| factorization-priority-test | fp_0_1 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.4203e+06 | experiments/factorization-priority-test/outputs/fp_0_1.o |
+| factorization-priority-test | fp_1_0 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3352e+06 | experiments/factorization-priority-test/outputs/fp_1_0.o |
+| factorization-priority-test | fp_1_1 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.4121e+06 | experiments/factorization-priority-test/outputs/fp_1_1.o |
 | matrix-placement-N-fine | ctrl_491520_a | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3792e+06 | experiments/matrix-placement-N-fine/outputs/ctrl_491520_a.o |
 | matrix-placement-N-fine | ctrl_491520_b | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3706e+06 | experiments/matrix-placement-N-fine/outputs/ctrl_491520_b.o |
 | matrix-placement-N-fine | n_483328 | 483328 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.3604e+06 | experiments/matrix-placement-N-fine/outputs/n_483328.o |
@@ -99,6 +103,8 @@ This report records validated raw result data only. No optimization analysis or 
 | np-sweep | 4x2_col_491k | 491520 | 3072 | 4x2 | column | unset | unset | unset | PASSED | 2.1732e+06 | experiments/np-sweep/outputs/4x2_col_491k.o |
 | np-sweep | 4x2_row_491k | 491520 | 3072 | 4x2 | row | unset | unset | unset | PASSED | 2.1683e+06 | experiments/np-sweep/outputs/4x2_row_491k.o |
 | nsight-systems | nsight_systems_v1 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 1.9668e+06 | experiments/nsight-systems/outputs/nsight_systems_v1.o |
+| nsight-systems | nsight_systems_v2 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.1585e+06 | experiments/nsight-systems/outputs/nsight_systems_v2.o |
+| nsight-systems | nsight_systems_v3 | 491520 | 3072 | 2x4 | row | 8 | sockets | TRUE | PASSED | 2.1824e+06 | experiments/nsight-systems/outputs/nsight_systems_v3.o |
 | omp-sweep | omp_t1 | 491520 | 3072 | 2x4 | row | 1 | unset | unset | PASSED | 1.1606e+06 | experiments/omp-sweep/outputs/omp_t1.o |
 | omp-sweep | omp_t10 | 491520 | 3072 | 2x4 | row | 10 | unset | unset | PASSED | 2.2455e+06 | experiments/omp-sweep/outputs/omp_t10.o |
 | omp-sweep | omp_t12 | 491520 | 3072 | 2x4 | row | 12 | unset | unset | PASSED | 2.2529e+06 | experiments/omp-sweep/outputs/omp_t12.o |

@@ -42,7 +42,12 @@ combinations; each writes `outputs/<label>.{o,e}`.
 
 | Attempt | trsm | fact | PBS job | Node | Residual check | GFLOP/s | Evidence |
 |---|---:|---:|---|---|---|---|---|
+| `fp_0_0` (control) | 0 | 0 | `55591.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.3375e+06` | `outputs/fp_0_0.{o,e}` |
+| `fp_0_1` | 0 | 1 | `55591.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.4203e+06` | `outputs/fp_0_1.{o,e}` |
+| `fp_1_0` | 1 | 0 | `55591.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.3352e+06` | `outputs/fp_1_0.{o,e}` |
+| `fp_1_1` | 1 | 1 | `55591.gaas` | `hpc-gaas-g16` | PASSED (`1.609604E-04`) | `2.4121e+06` | `outputs/fp_1_1.{o,e}` |
 
-(completed at runtime; see `results/metrics.csv` for extracted values)
+`--prioritize-factorization 1` is the winning lever (`fp_0_1`, +3.54% over
+control); `--prioritize-trsm 1` is neutral.
 
 All raw PBS stdout/stderr files under `outputs/` are authoritative evidence.

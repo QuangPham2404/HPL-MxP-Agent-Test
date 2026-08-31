@@ -42,6 +42,8 @@ FIELDS = [
     "nb",
     "use_mpi_panel_broadcast",
     "u_panel_chunk_nbs",
+    "prioritize_trsm",
+    "prioritize_factorization",
     "gpu_affinity",
     "omp_num_threads",
     "omp_places",
@@ -140,6 +142,8 @@ def build_rows() -> list[dict]:
     for stdout in sorted(OUTPUTS.glob("*/outputs/*.o")):
         experiment = stdout.parents[1].name
         attempt = stdout.stem
+        if attempt.startswith("hpl_mxp_"):
+            continue
         stderr = stderr_for(stdout)
         data = parse_stdout(stdout.read_text(encoding="utf-8"))
         row = {
@@ -164,6 +168,8 @@ def build_rows() -> list[dict]:
             "nb": data.get("nb", "unknown"),
             "use_mpi_panel_broadcast": data.get("use-mpi-panel-broadcast", "unknown"),
             "u_panel_chunk_nbs": data.get("u-panel-chunk-nbs", "unknown"),
+            "prioritize_trsm": data.get("prioritize-trsm", "unknown"),
+            "prioritize_factorization": data.get("prioritize-factorization", "unknown"),
             "gpu_affinity": GPU_AFFINITY,
             "omp_num_threads": data.get("omp_num_threads", "unset"),
             "omp_places": data.get("omp_places", "unset"),
