@@ -1,0 +1,116 @@
+# Nsight Systems profile of the current best HPL-MxP configuration on GAAS,
+# with `--u-panel-chunk-nbs 4` added (U-panel chunk size = 4).
+# Expected working directory: this experiment directory
+# (experiments/nsight-systems/) on GAAS.
+# Submit with `qsub run_nsight_systems_chunk4.pbs`.
+#
+# Profiles one HPL-MxP run (best config + chunk 4) under `nsys profile` with
+# `--export=sqlite`, producing one `.sqlite` per MPI rank (8 ranks) plus the
+# captured HPL-MxP stdout.
+#
+# Fixed config (current best, 2026-08-27):
+#   --n 491520, --nb 3072, 2x4 row grid, --gpu-affinity 0:1:2:3:4:5:6:7,
+#   no --cpu-affinity / --mem-affinity,
+#   OMP_NUM_THREADS=8, OMP_PLACES=sockets, OMP_PROC_BIND=TRUE,
+#   --fill-device 1, --fill-device-buffer-size 2048,
+#   --cuda-host-register-step 2048, --skip-tests 1.
+#   Added lever: --u-panel-chunk-nbs 4.
+#   GPU monitoring flags are omitted so the trace is not perturbed.
+# Outputs: outputs/nsys-trace-chunk-4/{hpl_mxp_rank_<0..7>.sqlite,
+#   hpl_stdout.log}.
+# Assumptions: the approved container and required modules exist on GAAS; one
+# GPU per MPI process (8 processes, 8 GPUs); OMP env vars forwarded via
+# `mpirun -x`; the Nsight Systems CLI is present inside the container.
+# .sqlite traces are gitignored and kept on GAAS only (analysis via SSH).
+
+#PBS -N hpl_mxp_nsys_chunk4
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=01:00:00
+#PBS -o outputs/nsight_systems_v3.o
+#PBS -e outputs/nsight_systems_v3.e
+
+set -euo pipefail
+
+cd "$PBS_O_WORKDIR"
+
+CONTAINER="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+NSYS="/usr/local/cuda-13.1/NsightSystems-cli-2025.6.1/target-linux-x64/nsys"
+TRACE_DIR="outputs/nsys-trace-chunk-4"
+
+# Load the exact minimal module environment validated for GAAS.
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# PBS clobbers OMP_NUM_THREADS with the allocated core count, so re-export the
+# fixed host-thread configuration after `module purge`.
+export OMP_NUM_THREADS=8
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=TRUE
+
+mkdir -p "${TRACE_DIR}"
+
+# Print reproducibility metadata.
+echo "experiment_id=nsight-systems"
+echo "attempt=nsight_systems_v3"
+echo "n=491520"
+echo "nb=3072"
+echo "nprow=2"
+echo "npcol=4"
+echo "nporder=row"
+echo "gpu_affinity=0:1:2:3:4:5:6:7"
+echo "fill_device=1"
+echo "fill_device_buffer_size=2048"
+echo "cuda_host_register_step=2048"
+echo "u_panel_chunk_nbs=4"
+echo "skip_tests=1"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "submitted_workdir=$PWD"
+echo "container=${CONTAINER}"
+echo "nsys=${NSYS}"
+echo "trace_dir=${TRACE_DIR}"
+echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
+echo "omp_places=${OMP_PLACES:-unset}"
+echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
+date --iso-8601=seconds
+hostname
+nvidia-smi
+nvidia-smi topo -m
+
+# Execute HPL-MxP under Nsight Systems, one `.sqlite` profile per MPI rank. The
+# HPL-MxP stdout (PASSED / GFLOP/s markers) is captured to hpl_stdout.log via
+# tee while also flowing to the PBS stdout file.
+apptainer exec --nv "${CONTAINER}" \
+  mpirun -np 8 \
+    --bind-to none \
+    -x OMP_NUM_THREADS \
+    -x OMP_PLACES \
+    -x OMP_PROC_BIND \
+    "${NSYS}" profile \
+      -o "${TRACE_DIR}/hpl_mxp_rank_%q{OMPI_COMM_WORLD_RANK}" \
+      --export=sqlite \
+      --trace=cuda,nvtx,osrt,mpi \
+      --sample=cpu \
+      --force-overwrite=true \
+      /workspace/hpl-mxp.sh \
+        --gpu-affinity 0:1:2:3:4:5:6:7 \
+        --nprow 2 \
+        --npcol 4 \
+        --nporder row \
+        --n 491520 \
+        --nb 3072 \
+        --fill-device 1 \
+        --fill-device-buffer-size 2048 \
+        --cuda-host-register-step 2048 \
+        --u-panel-chunk-nbs 4 \
+        --skip-tests 1 \
+  2>&1 | tee "${TRACE_DIR}/hpl_stdout.log"
+
+echo
+echo "Nsight Systems run complete."
+echo "Trace files:"
+ls -lh "${TRACE_DIR}"

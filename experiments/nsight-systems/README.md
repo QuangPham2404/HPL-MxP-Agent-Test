@@ -35,13 +35,23 @@ new GFLOP/s data point. No `results/metrics.csv` row is added for this run.
   `-o .../hpl_mxp_rank_%q{OMPI_COMM_WORLD_RANK}`. Nsight Systems 2025.6.1
   writes native `.nsys-rep` report files.
 
-## Run script
+## Run scripts
 
-`run_nsight_systems.pbs` runs the profile in a single PBS job:
+`run_nsight_systems.pbs` runs the profile of the fixed best config in a single
+PBS job. Two lever variants add a single HPL-MxP flag on top of the best config
+and export `.sqlite` traces (`--export=sqlite`) instead of `.nsys-rep`:
+
+| Script | Variant | Output directory |
+|---|---|---|
+| `run_nsight_systems.pbs` | best config (baseline profile) | `outputs/nsys-trace/` |
+| `run_nsight_systems_broadcast100.pbs` | `--use-mpi-panel-broadcast 100` | `outputs/nsys-trace-broadcast-100/` |
+| `run_nsight_systems_chunk4.pbs` | `--u-panel-chunk-nbs 4` | `outputs/nsys-trace-chunk-4/` |
 
 ```text
 cd experiments/nsight-systems
 qsub run_nsight_systems.pbs
+qsub run_nsight_systems_broadcast100.pbs
+qsub run_nsight_systems_chunk4.pbs
 ```
 
 ## Output layout
@@ -65,6 +75,8 @@ residual. The `.nsys-rep` files must be non-zero length and openable by
 
 ## Logged attempts
 
-| Attempt | PBS job | Node | Residual | .nsys-rep files | Evidence |
+| Attempt | PBS job | Node | Residual | files | Evidence |
 |---|---|---|---|---|---|
-| `nsight_systems_v1` | 53452 | hpc-gaas-g13 | PASSED (GFLOP/s 1.9668e+06) | 8 files | `outputs/nsys-trace/` |
+| `nsight_systems_v1` | 53452 | hpc-gaas-g13 | PASSED (GFLOP/s 1.9668e+06) | 8 `.nsys-rep` | `outputs/nsys-trace/` |
+| `nsight_systems_v2` (broadcast 100) | — | — | — | 8 `.sqlite` | `outputs/nsys-trace-broadcast-100/` |
+| `nsight_systems_v3` (chunk 4) | — | — | — | 8 `.sqlite` | `outputs/nsys-trace-chunk-4/` |
