@@ -78,5 +78,5 @@ residual. The `.nsys-rep` files must be non-zero length and openable by
 | Attempt | PBS job | Node | Residual | files | Evidence |
 |---|---|---|---|---|---|
 | `nsight_systems_v1` | 53452 | hpc-gaas-g13 | PASSED (GFLOP/s 1.9668e+06) | 8 `.nsys-rep` | `outputs/nsys-trace/` |
-| `nsight_systems_v2` (broadcast 100) | — | — | — | 8 `.sqlite` | `outputs/nsys-trace-broadcast-100/` |
-| `nsight_systems_v3` (chunk 4) | — | — | — | 8 `.sqlite` | `outputs/nsys-trace-chunk-4/` |
+| `nsight_systems_v2` (broadcast 100) | 55233 | hpc-gaas-g12 | PASSED (GFLOP/s 2.1585e+06) | 8 `.sqlite` | `outputs/nsys-trace-broadcast-100/` |
+| `nsight_systems_v3` (chunk 4) | 55234 | hpc-gaas-g15 | PASSED (GFLOP/s 2.1824e+06) | 8 `.sqlite` | `outputs/nsys-trace-chunk-4/` |
