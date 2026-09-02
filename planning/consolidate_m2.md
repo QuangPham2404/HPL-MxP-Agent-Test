@@ -165,6 +165,10 @@ node, neither side wins decisively. This conclusion must not be generalized to
 multi-node runs, where network topology, NIC affinity, MPI progress, and
 inter-node NCCL behavior can change the balance.
 
+### Personal notes
+
+*The ineffectiveness of the MPI-NCCL coms flag and the U-chunk granularity flag also indicates that it is not only the communication that acts as a bottleneck - it is also dependency of TRSM --> factorization --> GEMM. The results from the NSIGHT trace of the first phase's optimized run support this.*
+
 ### Remaining questions
 
 - A repeated, interleaved 50-versus-75 test could resolve whether the small LU
@@ -227,6 +231,10 @@ The smaller chunks therefore create more pieces of approximately the same
 total compute. They may expose theoretical concurrency, but the existing
 pipeline and H200 resources do not turn it into a shorter critical path. Chunk
 4 is useful as a scheduling diagnostic, not as a measured optimization.
+
+### Personal notes
+
+A trade-off is seen here: smaller chunks allow more compute kernel calls, however it is hindered by the added time for organization, communication, and syncronization.
 
 ### Remaining questions
 
