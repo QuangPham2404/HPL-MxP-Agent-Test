@@ -1,0 +1,94 @@
+# HPL-MxP 3-node x 4-GPU baseline run using the validated multinode launch
+# (container mpirun + rsh_pbsdsh_container.sh bridge), adapted from the
+# multi-node-test/HPL-MxP/run_hplmxp_baseline.pbs model script.
+#
+# Expected working directory: this experiment directory
+# (experiments/3x4-baseline/) on GAAS. Submit with:
+#   qsub run_3x4_baseline.pbs
+#
+# Objective: establish the new-system original baseline for the 3x4 topology.
+# Fixed provisional geometry: N=480000, NB=1024, nprow=3 x npcol=4 (12 ranks),
+# row order, identity per-node GPU affinity. Not a tuning run.
+#
+# Outputs: PBS stdout/stderr under outputs/.
+
+#PBS -N HPL_MXP_3x4_BASELINE
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=3:ngpus=4
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+#PBS -o outputs/3x4-baseline_v1.o
+#PBS -e outputs/3x4-baseline_v1.e
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+
+GPUS=4                                   # GPUs (and ranks) per node
+NPROW=3
+NPCOL=4
+NPORDER=row
+N=480000
+NB=1024
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+if [ "$((NPROW * NPCOL))" -ne "$NPROCS" ]; then
+  echo "ERROR: grid ${NPROW}x${NPCOL}=$((NPROW * NPCOL)) != ${NPROCS} ranks" >&2
+  exit 1
+fi
+
+GPU_AFFINITY=$(seq -s: 0 $((GPUS - 1)))
+
+# De-duplicated hostfile with explicit per-node slot count.
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+
+echo "experiment_id=3x4-baseline"
+echo "attempt=3x4-baseline_v1"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} order=${NPORDER}"
+echo "n=${N} nb=${NB}"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity "$GPU_AFFINITY" \
+      --nprow "$NPROW" \
+      --npcol "$NPCOL" \
+      --nporder "$NPORDER" \
+      --n "$N" \
+      --nb "$NB" \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
+
+echo "=== HPL-MxP 3x4 baseline complete: 3x4-baseline_v1 ==="
