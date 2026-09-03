@@ -1,0 +1,150 @@
+probe_id=comm_transport_probe_v2
+2026-09-03T15:42:56+08:00
+hpc-gaas-g15
+=== HOST loaded modules (GPU/RDMA/gdr) ===
+
+### lsmod gpu/rdma/gdr
++ bash -c lsmod | grep -iE "nvidia_peermem|nv_peer_mem|nvidia|gdrdrv|gdr|rdma_ucm|ib_uverbs|ib_core|mlx5_core|mlx5_ib|nv_rdma|ib_cm" ; true
+rdma_ucm               36864  12
+rdma_cm               163840  1 rdma_ucm
+ib_cm                 155648  2 rdma_cm,ib_ipoib
+nvidia_peermem         20480  0
+nvidia_uvm           3932160  8
+nvidia_drm            151552  0
+nvidia_modeset       1646592  1 nvidia_drm
+nvidia              104202240  260 nvidia_uvm,nvidia_peermem,nvidia_modeset
+drm_ttm_helper         16384  1 nvidia_drm
+drm_client_lib         16384  2 mgag200,nvidia_drm
+video                  77824  2 dell_wmi,nvidia_modeset
+drm_kms_helper        266240  5 drm_shmem_helper,mgag200,drm_ttm_helper,nvidia_drm,drm_client_lib
+drm                   843776  9 drm_kms_helper,drm_shmem_helper,nvidia,mgag200,drm_ttm_helper,nvidia_drm,drm_client_lib,ttm
+mlx5_ib               614400  12
+macsec                 73728  1 mlx5_ib
+ib_uverbs             225280  75 nvidia_peermem,rdma_ucm,mlx5_ib
+ib_core               598016  20 rdma_cm,ib_ipoib,iw_cm,ib_umad,rdma_ucm,ib_uverbs,mlx5_ib,ib_cm
+mlx5_core            3600384  2 mlx5_fwctl,mlx5_ib
+mlxdevm              1417216  1 mlx5_core
+mlxfw                  49152  1 mlx5_core
+mlx_compat             16384  13 rdma_cm,ib_ipoib,mlxdevm,mlxfw,mlx5_fwctl,iw_cm,ib_umad,ib_core,rdma_ucm,ib_uverbs,mlx5_ib,ib_cm,mlx5_core
+psample                20480  1 mlx5_core
+tls                   159744  2 bonding,mlx5_core
+pci_hyperv_intf        12288  1 mlx5_core
+[exit_status=0]
+=== HOST module dirs: which exists ===
+
+### nvidia_peermem /sys dir
++ ls -d /sys/module/nvidia_peermem
+/sys/module/nvidia_peermem
+[exit_status=0]
+
+### nv_peer_mem /sys dir
++ ls -d /sys/module/nv_peer_mem
+ls: cannot access '/sys/module/nv_peer_mem': No such file or directory
+[exit_status=2]
+
+### gdrdrv /sys dir
++ ls -d /sys/module/gdrdrv
+ls: cannot access '/sys/module/gdrdrv': No such file or directory
+[exit_status=2]
+
+### nv_rdma /sys dir
++ ls -d /sys/module/nv_rdma
+ls: cannot access '/sys/module/nv_rdma': No such file or directory
+[exit_status=2]
+=== HOST gdrcopy driver nodes ===
+
+### gdrdrv char device
++ bash -c ls -la /dev/gdrdrv 2>&1; ls -la /proc/driver/gdrdrv 2>&1; ls -la /proc/driver/nvidia 2>&1
+ls: cannot access '/dev/gdrdrv': No such file or directory
+ls: cannot access '/proc/driver/gdrdrv': No such file or directory
+total 0
+dr-xr-xr-x 11 root root 0 Aug 13 09:42 .
+dr-xr-xr-x 11 root root 0 Aug 13 09:42 ..
+dr-xr-xr-x 12 root root 0 Aug 13 09:42 capabilities
+dr-xr-xr-x 10 root root 0 Aug 22 15:00 gpus
+-r--r--r--  1 root root 0 Aug 22 15:00 params
+dr-xr-xr-x  3 root root 0 Sep  3 15:37 patches
+-rw-r--r--  1 root root 0 Sep  3 15:42 registry
+-rw-r--r--  1 root root 0 Sep  3 15:42 suspend
+-rw-r--r--  1 root root 0 Sep  3 15:42 suspend_depth
+-r--r--r--  1 root root 0 Aug 24 16:24 version
+dr-xr-xr-x  3 root root 0 Sep  3 15:37 warnings
+[exit_status=0]
+
+### nvidia peermem proc entry
++ bash -c ls -la /proc/driver/nvidia/peermem 2>&1; cat /proc/driver/nvidia/peermem/version 2>&1
+ls: cannot access '/proc/driver/nvidia/peermem': No such file or directory
+cat: /proc/driver/nvidia/peermem/version: No such file or directory
+[exit_status=1]
+=== HOST nvidia_peermem / nv_peer_mem version files ===
+
+### nvidia_peermem version
++ bash -c cat /sys/module/nvidia_peermem/version 2>&1; echo "---parameters---"; cat /sys/module/nvidia_peermem/parameters/* 2>&1
+580.126.20
+---parameters---
+0
+1
+[exit_status=0]
+
+### nv_peer_mem version
++ bash -c cat /sys/module/nv_peer_mem/version 2>&1
+cat: /sys/module/nv_peer_mem/version: No such file or directory
+[exit_status=1]
+=== CONTAINER gdrcopy availability ===
+
+### container gdrcopy libs
++ bash -c export PATH=/usr/local/apptainer/1.4.1/bin:/usr/local/squashfuse/0.5.2/bin:/usr/local/gocryptfs/2.5.0/bin:$PATH; export LD_LIBRARY_PATH=/usr/local/squashfuse/0.5.2/lib:$LD_LIBRARY_PATH; /usr/local/apptainer/1.4.1/bin/apptainer exec --nv /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif sh -c 'find / -name "libgdrapi*" -o -name "*gdrcopy*" 2>/dev/null | head -20'
+/opt/hpcx/sharp/lib/libsharp_coll_gdrcopy_wrapper.so
+/opt/hpcx/ucx/lib/ucx/libuct_cuda_gdrcopy.so
+/opt/hpcx/ucx/lib/ucx/libuct_cuda_gdrcopy.so.0
+/opt/hpcx/ucx/lib/ucx/libuct_cuda_gdrcopy.so.0.0.0
+/usr/lib/x86_64-linux-gnu/libgdrapi.so
+/usr/lib/x86_64-linux-gnu/libgdrapi.so.2
+/usr/lib/x86_64-linux-gnu/libgdrapi.so.2.5
+/usr/share/doc/libgdrapi
+/var/lib/dpkg/info/libgdrapi:amd64.list
+/var/lib/dpkg/info/libgdrapi:amd64.md5sums
+/var/lib/dpkg/info/libgdrapi:amd64.shlibs
+/var/lib/dpkg/info/libgdrapi:amd64.triggers
+[exit_status=0]
+
+### container /dev/gdrdrv visible?
++ bash -c export PATH=/usr/local/apptainer/1.4.1/bin:/usr/local/squashfuse/0.5.2/bin:/usr/local/gocryptfs/2.5.0/bin:$PATH; export LD_LIBRARY_PATH=/usr/local/squashfuse/0.5.2/lib:$LD_LIBRARY_PATH; /usr/local/apptainer/1.4.1/bin/apptainer exec --nv -B /dev:/dev /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif sh -c 'ls -la /dev/gdrdrv 2>&1; ls -la /dev/nvidia-caps/ 2>&1'
+ls: cannot access '/dev/gdrdrv': No such file or directory
+total 0
+drwxr-xr-x  2 nobody nogroup    100 Aug 13 09:42 .
+drwxr-xr-x 23 nobody nogroup   4940 Aug 13 09:43 ..
+cr--------  1 nobody nogroup 507, 0 Aug 13 09:42 nvidia-cap0
+cr--------  1 nobody nogroup 507, 1 Aug 13 09:42 nvidia-cap1
+cr--r--r--  1 nobody nogroup 507, 2 Aug 13 09:42 nvidia-cap2
+[exit_status=0]
+=== CONTAINER UCX: is GDR (cuda/rdma) enabled runtime? ===
+
+### container ucx_info -f cuda/gdr mem
++ bash -c export PATH=/usr/local/apptainer/1.4.1/bin:/usr/local/squashfuse/0.5.2/bin:/usr/local/gocryptfs/2.5.0/bin:$PATH; export LD_LIBRARY_PATH=/usr/local/squashfuse/0.5.2/lib:$LD_LIBRARY_PATH; /usr/local/apptainer/1.4.1/bin/apptainer exec --nv /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif sh -c 'ucx_info -f 2>/dev/null | grep -iE "UCX_TLS|UCX_NET_DEVICES|gdr|cuda_copy_enable_fabric|cuda_copy_dmabuf" '
+UCX_NET_DEVICES=all
+UCX_TLS=all
+UCX_CUDA_COPY_DMABUF=try
+UCX_CUDA_COPY_ENABLE_FABRIC=try
+# GDR-copy memory domain configuration
+UCX_GDR_COPY_SHARED_MD=y
+UCX_GDR_COPY_RCACHE=y
+UCX_GDR_COPY_MEM_REG_OVERHEAD=16.00us
+UCX_GDR_COPY_MEM_REG_GROWTH=0.00us
+UCX_GDR_COPY_RCACHE_MEM_PRIO=1000
+UCX_GDR_COPY_RCACHE_OVERHEAD=auto
+UCX_GDR_COPY_RCACHE_MAX_REGIONS=inf
+UCX_GDR_COPY_RCACHE_MAX_SIZE=inf
+UCX_GDR_COPY_RCACHE_MAX_UNRELEASED=inf
+UCX_GDR_COPY_RCACHE_PURGE_ON_FORK=n
+# gdr_copy transport configuration
+UCX_GDR_COPY_ALLOC=huge,thp,md,mmap,heap
+UCX_GDR_COPY_FAILURE=DIAG
+UCX_GDR_COPY_MAX_NUM_EPS=inf
+UCX_GDR_COPY_BW=get_dedicated:250.00MBps,get_shared:0.00Bps,put_dedicated:0.00Bps,put_shared:6911.00MBps
+UCX_GDR_COPY_LAT=get:1.40us,put:0.40us
+[exit_status=0]
+
+=== section complete ===
+probe_end_time=2026-09-03T15:43:20+08:00
+probe_status=completed_read_only_observation

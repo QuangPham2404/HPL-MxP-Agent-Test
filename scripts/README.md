@@ -13,3 +13,13 @@ builds, experiments, or results. Read-only probe output belongs in `outputs/`.
   names; PBS job `50474.gaas` completed successfully on `hpc-gaas-g11`. The
   report is in [`probing_report.md`](probing_report.md), with raw stdout and
   stderr in `outputs/compute_node_hardware_probe_v1.1.{o,e}`.
+
+## Communication-transport probe attempts
+
+- `comm_transport_probe_v1`: read-only host + container probe of the CUDA/IB/UCX
+  communication stack. PBS job `57431.gaas` on `hpc-gaas-g11`. Raw evidence in
+  `outputs/comm_transport_probe_v1.{o,e}`.
+- `comm_transport_probe_v2`: focused follow-up pinning down GPUDirect-RDMA /
+  peer-memory / gdrcopy status. PBS job `57456.gaas` on `hpc-gaas-g15`. Raw
+  evidence in `outputs/comm_transport_probe_v2.{o,e}`.
+- Report (with admin-facing findings): [`comm_transport_probe_report.md`](comm_transport_probe_report.md).
