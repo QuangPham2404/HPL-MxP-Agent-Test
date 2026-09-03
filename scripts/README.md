@@ -23,3 +23,6 @@ builds, experiments, or results. Read-only probe output belongs in `outputs/`.
   peer-memory / gdrcopy status. PBS job `57456.gaas` on `hpc-gaas-g15`. Raw
   evidence in `outputs/comm_transport_probe_v2.{o,e}`.
 - Report (with admin-facing findings): [`comm_transport_probe_report.md`](comm_transport_probe_report.md).
+
+## Directory for debugging inter-node communication set up on GAAS
+- The directory for this is `gaas-internode-coms-debug`, all of the scripts and results and notes for this process will be stored here.
