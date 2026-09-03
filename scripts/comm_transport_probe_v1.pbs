@@ -1,0 +1,169 @@
+#!/bin/bash
+# Read-only GAAS compute-node communication-transport probe.
+#
+# Purpose: characterize what inter-node communication stack is actually
+# available for HPL-MxP on GAAS, and what is missing, to explain the observed
+# inter-node communication bottleneck (LU 1634 s, GPU util 0-26%).
+#
+# Expected working directory: scripts/ in the project repository on GAAS.
+# Inputs: one PBS allocation (2 nodes to observe cross-node fabric, though this
+#   probe is read-only and only inspects the local node + container).
+# Outputs: outputs/comm_transport_probe_v1.o and .e.
+# Assumptions: PBS provides PBS_O_WORKDIR; the benchmark container SIF exists at
+#   the path used by the validated launch recipe; apptainer/squashfuse/gocryptfs
+#   and nvhpc modules are available.
+#
+# Sections:
+#   1. job/host/kernel/OS
+#   2. loaded modules + relevant available modules
+#   3. host kernel modules (GPU peer memory, RDMA, mlx5)
+#   4. InfiniBand / RDMA devices (host)
+#   5. host MPI (nvhpc HPC-X) build and component summary
+#   6. host UCX info (devices / transports)
+#   7. container-side CUDA + driver
+#   8. container MPI build and component summary (CUDA-aware? pml/btl/ucx?)
+#   9. container UCX info (does UCX see the mlx5 / IB devices?)
+#   10. NCCL presence/version inside container
+#   11. GPUDirect RDMA / peer-memory availability (host + container)
+
+#PBS -N comm_transport_probe_v1
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=00:30:00
+#PBS -o outputs/comm_transport_probe_v1.o
+#PBS -e outputs/comm_transport_probe_v1.e
+
+set -uo pipefail
+
+run_optional() {
+    local label="$1"
+    shift
+    echo
+    echo "### ${label}"
+    if command -v "$1" >/dev/null 2>&1; then
+        echo "+ $*"
+        "$@"
+        local rc=$?
+        echo "[exit_status=${rc}]"
+    else
+        echo "[unavailable: command '$1' was not found]"
+    fi
+}
+
+echo "probe_id=comm_transport_probe_v1"
+echo "probe_scope=read-only communication-transport characterization (host + container)"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "submitted_workdir=${PBS_O_WORKDIR:-unknown}"
+date --iso-8601=seconds
+hostname
+
+if [[ -n "${PBS_O_WORKDIR:-}" ]]; then
+    cd "$PBS_O_WORKDIR"
+fi
+
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+APPT="/usr/local/apptainer/1.4.1/bin/apptainer"
+PRE_PKG_PATH="/usr/local/apptainer/1.4.1/bin:/usr/local/squashfuse/0.5.2/bin:/usr/local/gocryptfs/2.5.0/bin"
+PRE_LD="/usr/local/squashfuse/0.5.2/lib"
+
+echo
+echo "============================================================"
+echo "SECTION 1: JOB, HOST, KERNEL, OS"
+echo "============================================================"
+run_optional "Kernel and architecture" uname -a
+run_optional "OS release" cat /etc/os-release
+run_optional "PBS allocation env" bash -c 'env | sort | grep "^PBS_"'
+
+echo
+echo "============================================================"
+echo "SECTION 2: MODULES"
+echo "============================================================"
+module purge 2>/dev/null
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0 2>&1
+run_optional "Loaded modules" module list
+run_optional "Relevant available modules" bash -c 'module avail 2>&1 | grep -iE "ucx|nvhpc|hpcx|openmpi|apptainer|squashfuse|gocryptfs|cuda|nccl"'
+
+echo
+echo "============================================================"
+echo "SECTION 3: HOST KERNEL MODULES (GDR + RDMA)"
+echo "============================================================"
+run_optional "GPU/RDMA kernel modules loaded" bash -c 'lsmod | grep -iE "nvidia_peermem|nv_peer_mem|nvidia|rdma_ucm|ib_uverbs|ib_core|mlx5_core|mlx5_ib|nv_rdma|ib_cm|rdma_cm" || echo "(none of the greped modules found)'
+run_optional "nvidia_peermem device" bash -c 'ls -la /sys/kernel/debug/nvidia_peermem 2>/dev/null; ls -la /proc/driver/nvidia/peermem 2>/dev/null; echo done'
+run_optional "fuse modules" bash -c 'lsmod | grep -iE "fuse|squashfuse|gocryptfs" || echo "(no fuse module listed)"'
+
+echo
+echo "============================================================"
+echo "SECTION 4: INFINIBAND / RDMA DEVICES (host)"
+echo "============================================================"
+run_optional "IB device->netdev mapping" ibdev2netdev
+run_optional "IB status" ibstat
+run_optional "RDMA links" rdma link
+run_optional "ibv_devinfo" ibv_devinfo
+run_optional "mlx5 verbs devices" bash -c 'ls -la /sys/class/infiniband/ 2>/dev/null || echo "(no /sys/class/infiniband)"'
+run_optional "network interfaces" ip -br link
+
+echo
+echo "============================================================"
+echo "SECTION 5: HOST MPI (HPC-X) BUILD + COMPONENTS"
+echo "============================================================"
+run_optional "Host mpirun version" mpirun --version
+run_optional "Host ompi_info (launch components)" ompi_info --parsable | grep -E "^(mca:)?(plm|ras|btl|pml|mtl|coll|osc):" 
+run_optional "Host ompi_info CUDA-aware?" bash -c 'ompi_info --all 2>/dev/null | grep -iE "cuda|CUDA-aware" || echo "(no cuda reference found)"'
+
+echo
+echo "============================================================"
+echo "SECTION 6: HOST UCX"
+echo "============================================================"
+run_optional "Host ucx_info version" ucx_info -v
+run_optional "Host ucx_info devices" ucx_info -d
+run_optional "Host ucx_info transports" ucx_info -t
+run_optional "Host ucx_info features (cuda/gdr)" bash -c 'ucx_info -f 2>/dev/null | grep -iE "cuda|gdr|rc|dc|ud" || echo "(no ucx_info -f)"'
+
+echo
+echo "============================================================"
+echo "SECTION 7: CONTAINER CUDA + DRIVER"
+echo "============================================================"
+run_optional "Container nvidia-smi -L" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} nvidia-smi -L"
+run_optional "Container nvidia-smi driver/cuda" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} nvidia-smi --query-gpu=name,driver_version --format=csv,noheader"
+run_optional "Container nvcc version" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} sh -c 'nvcc --version 2>/dev/null || echo no-nvcc'"
+
+echo
+echo "============================================================"
+echo "SECTION 8: CONTAINER MPI BUILD + COMPONENTS"
+echo "============================================================"
+run_optional "Container mpirun version" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} /usr/local/mpi/bin/mpirun --version"
+run_optional "Container ompi_info components" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} /usr/local/mpi/bin/ompi_info | grep -E 'plm:|btl:|pml:|mtl:|ras:|coll:|osc:'"
+run_optional "Container ompi_info CUDA-aware?" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} /usr/local/mpi/bin/ompi_info --all | grep -iE 'cuda|CUDA-aware|gds|gdr'"
+
+echo
+echo "============================================================"
+echo "SECTION 9: CONTAINER UCX (does it see IB?)"
+echo "============================================================"
+run_optional "Container ucx_info version" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} ucx_info -v"
+run_optional "Container ucx_info devices" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} ucx_info -d"
+run_optional "Container ucx_info transports" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} ucx_info -t"
+run_optional "Container ucx_info features (cuda/gdr)" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} sh -c 'ucx_info -f 2>/dev/null | grep -iE \"cuda|gdr|rc|dc|ud\" || echo none'"
+run_optional "Container /dev/infiniband present?" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} sh -c 'ls -la /dev/infiniband/ 2>/dev/null || echo no-/dev/infiniband'"
+
+echo
+echo "============================================================"
+echo "SECTION 10: NCCL PRESENCE/VERSION (container)"
+echo "============================================================"
+run_optional "NCCL shared libraries" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} sh -c 'find / -name \"libnccl*.so*\" 2>/dev/null | head -20 || echo none'"
+run_optional "nccl-tests binaries" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} sh -c 'find / -name \"all_reduce_perf\" -o -name \"nccl-tests*\" 2>/dev/null | head -20 || echo none'"
+
+echo
+echo "============================================================"
+echo "SECTION 11: GPUDIRECT RDMA / PEER MEMORY"
+echo "============================================================"
+run_optional "Host nvidia peermem module params" bash -c 'ls -la /sys/module/nvidia_peermem/ 2>/dev/null; ls -la /sys/module/nv_peer_mem/ 2>/dev/null; echo done'
+run_optional "Host NVIDIA driver RDMA proc" bash -c 'cat /proc/driver/nvidia/gpus/*/information 2>/dev/null | grep -iE "rdma|peer" || echo "(no rdma/peer in gpu info)"'
+run_optional "Container nvidia peermem visibility" bash -c "export PATH=${PRE_PKG_PATH}:\$PATH; export LD_LIBRARY_PATH=${PRE_LD}:\$LD_LIBRARY_PATH; ${APPT} exec --nv ${SIF} sh -c 'ls -la /dev/nvidia* 2>/dev/null; lsmod 2>/dev/null | grep -i peer || echo no-lsmod-in-container'"
+
+echo
+echo "============================================================"
+echo "SECTION 12: PROBE COMPLETION"
+echo "============================================================"
+echo "probe_end_time=$(date --iso-8601=seconds)"
+echo "probe_status=completed_read_only_observation"
