@@ -1,0 +1,59 @@
+#!/bin/bash
+# Read-only GAAS follow-up probe: pin down GPUDirect-RDMA / peer-memory status.
+# Purpose: resolve the ambiguity left by comm_transport_probe_v1 (which
+#   peer-memory module is actually loaded; whether the gdrcopy gdrdrv driver is
+#   present; whether the container UCX actually advertises GDR vs copy-only).
+# Expected working directory: scripts/
+# Outputs: outputs/comm_transport_probe_v2.o and .e
+
+#PBS -N comm_transport_probe_v2
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=00:20:00
+#PBS -o outputs/comm_transport_probe_v2.o
+#PBS -e outputs/comm_transport_probe_v2.e
+
+set -uo pipefail
+
+run() {
+    local label="$1"; shift
+    echo; echo "### ${label}"
+    echo "+ $*"
+    "$@"; echo "[exit_status=$?]"
+}
+
+echo "probe_id=comm_transport_probe_v2"; date --iso-8601=seconds; hostname
+cd "${PBS_O_WORKDIR:-$PWD}" 2>/dev/null || true
+
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+APPT="/usr/local/apptainer/1.4.1/bin/apptainer"
+PKG="/usr/local/apptainer/1.4.1/bin:/usr/local/squashfuse/0.5.2/bin:/usr/local/gocryptfs/2.5.0/bin"
+LD="/usr/local/squashfuse/0.5.2/lib"
+
+echo "=== HOST loaded modules (GPU/RDMA/gdr) ==="
+run "lsmod gpu/rdma/gdr" bash -c 'lsmod | grep -iE "nvidia_peermem|nv_peer_mem|nvidia|gdrdrv|gdr|rdma_ucm|ib_uverbs|ib_core|mlx5_core|mlx5_ib|nv_rdma|ib_cm" ; true'
+
+echo "=== HOST module dirs: which exists ==="
+run "nvidia_peermem /sys dir" ls -d /sys/module/nvidia_peermem 2>&1
+run "nv_peer_mem /sys dir" ls -d /sys/module/nv_peer_mem 2>&1
+run "gdrdrv /sys dir" ls -d /sys/module/gdrdrv 2>&1
+run "nv_rdma /sys dir" ls -d /sys/module/nv_rdma 2>&1
+
+echo "=== HOST gdrcopy driver nodes ==="
+run "gdrdrv char device" bash -c 'ls -la /dev/gdrdrv 2>&1; ls -la /proc/driver/gdrdrv 2>&1; ls -la /proc/driver/nvidia 2>&1'
+run "nvidia peermem proc entry" bash -c 'ls -la /proc/driver/nvidia/peermem 2>&1; cat /proc/driver/nvidia/peermem/version 2>&1'
+
+echo "=== HOST nvidia_peermem / nv_peer_mem version files ==="
+run "nvidia_peermem version" bash -c 'cat /sys/module/nvidia_peermem/version 2>&1; echo "---parameters---"; cat /sys/module/nvidia_peermem/parameters/* 2>&1'
+run "nv_peer_mem version" bash -c 'cat /sys/module/nv_peer_mem/version 2>&1'
+
+echo "=== CONTAINER gdrcopy availability ==="
+run "container gdrcopy libs" bash -c "export PATH=$PKG:\$PATH; export LD_LIBRARY_PATH=$LD:\$LD_LIBRARY_PATH; $APPT exec --nv $SIF sh -c 'find / -name \"libgdrapi*\" -o -name \"*gdrcopy*\" 2>/dev/null | head -20'"
+run "container /dev/gdrdrv visible?" bash -c "export PATH=$PKG:\$PATH; export LD_LIBRARY_PATH=$LD:\$LD_LIBRARY_PATH; $APPT exec --nv -B /dev:/dev $SIF sh -c 'ls -la /dev/gdrdrv 2>&1; ls -la /dev/nvidia-caps/ 2>&1'"
+
+echo "=== CONTAINER UCX: is GDR (cuda/rdma) enabled runtime? ==="
+run "container ucx_info -f cuda/gdr mem" bash -c "export PATH=$PKG:\$PATH; export LD_LIBRARY_PATH=$LD:\$LD_LIBRARY_PATH; $APPT exec --nv $SIF sh -c 'ucx_info -f 2>/dev/null | grep -iE \"UCX_TLS|UCX_NET_DEVICES|gdr|cuda_copy_enable_fabric|cuda_copy_dmabuf\" '"
+
+echo; echo "=== section complete ==="
+echo "probe_end_time=$(date --iso-8601=seconds)"; echo "probe_status=completed_read_only_observation"
