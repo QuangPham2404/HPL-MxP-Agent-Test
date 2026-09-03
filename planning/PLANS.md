@@ -2,8 +2,12 @@
 
 ## Current baseline
 
-- Baseline run: `baseline-sweep_v1` — n=370000, nb=1024, 2x4 row,
-  1.4432e+06 GFLOPS, PASSED.
+- 8×H200 (single-node) historical baseline: `baseline-sweep_v1` — n=370000,
+  nb=1024, 2x4 row, 1.4432e+06 GFLOPS, PASSED. Historical evidence only for the
+  3×4 campaign; not the ranking denominator.
+- 3×4 (3-node × 4-GPU) new-system original baseline: `3x4-baseline_v1` —
+  n=480000, nb=1024, 3x4 row, 12 ranks, 4.0092e+04 GFLOPS, PASSED (residual
+  3.402630E-04). See `planning/analysis/3Nodes-4GPUs/3x4-baseline.md`.
 
 ## Optimization directions
 
@@ -28,8 +32,23 @@
 | Dependency priorities (trsm/factorization) | `planning/analysis/factorization-priority.md` | 2026-08-31 | `factorization-priority-test` four 0/1 combinations at fixed best config | Analyzed | `--prioritize-factorization 1` gives LU +6.6%, end-to-end +3.5%, new best 2.4203e+06 (+67.70% over baseline); `--prioritize-trsm 1` neutral | Adopt factorization 1; repeat `fp_0_1` to confirm, then compute/precision levers (gemm-kernel, sloppy-type) |
 | Separate GEMM stream | `planning/analysis/separate-stream-for-gemm.md` | 2026-08-31 | `separate-stream-for-gemm` toggle 0/1 at current best (factorization 1) | Analyzed | `--use-separate-stream-for-gemm 0` loses -1.89% end-to-end / -3.73% LU vs default 1; default correct | Keep 1; LU-scheduling axis closed, move to compute/precision levers |
 | dgemv multi-threading | `planning/analysis/dgemv-with-multiple-threads.md` | 2026-09-01 | `dgemv-with-multiple-threads` sweep 0/128/256/384/512/640 at current best | Analyzed | `--call-dgemv-with-multiple-threads 0` (default) optimal; any non-zero hurts -3.4% to -12.7% (solver phase only, LU flat) | Keep 0; host-threading axis closed, move to compute/precision levers |
+| 3×4 baseline characterization | `planning/analysis/3Nodes-4GPUs/3x4-baseline.md` | 2026-09-03 | `3x4-baseline_v1` (N=480000, NB=1024, 3x4 row, 12 ranks) | Baseline established | PASSED but ~44× slower than 8×H200 at comparable N/NB; LU = 1634 s dominates (~40 min total); low GPU utilization (0–26%) ⇒ inter-node communication bottleneck | Investigate multinode communication path (Phase 4) — transport, GPU-direct, per-rank imbalance — before any tuning |
 
 ## Next direction
+
+### 3×4 baseline result (2026-09-03)
+
+The first valid 3-node × 4-GPU run (`3x4-baseline_v1`, N=480000, NB=1024, 3x4
+row, 12 ranks) passed verification (residual 3.40e-04) at `4.0092e+04`
+GFLOPS — but is **~44× slower** than the single-node 8×H200 at comparable
+`N`/`NB`. The LU phase is the dominant cost (1634 s) with GPU utilization only
+0–26%, pointing to an inter-node communication bottleneck on the current
+container `mpirun` + pbsdsh bridge. Before any tuning, the multinode
+communication path must be characterized (Phase 4): confirm the actual
+inter-node transport (UCX/NIC, CUDA-aware MPI / GPU-direct), measure per-rank
+imbalance and panel/collective time, and test whether a faster site-supported
+transport is available. See
+[`planning/analysis/3Nodes-4GPUs/3x4-baseline.md`](analysis/3Nodes-4GPUs/3x4-baseline.md).
 
 ### dgemv multi-threading result (2026-09-01)
 
