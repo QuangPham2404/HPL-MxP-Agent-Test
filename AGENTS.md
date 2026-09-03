@@ -89,3 +89,9 @@ For optimization runs, use the flag `--skip-tests 1` to skip test and save time.
 ```
 
 For analysis step in the workflow, always include: (1) the baseline from the baseline run (the original baseline), and (2) the data tables must have a column to show the percentage increase compared to that baseline run
+
+Update on some new directories that might not be mention in the workflow package and structural changes on the project repo
+- `multi-node-test/` contains working model scripts for multinode launch of HPL, HPL-MxP, and HPCG. `multi-node-test/HPL-MxP` contains the script for launching multinode HPL-MxP
+- `experiments/3Nodes-4GPUs` and `planning/analysis/3Nodes-4GPUs` are directories dedicated to run and analyse HPL-MxP on 3 Nodes - 4 GPUs topology. Use this 2 directories whenever the experiements are ran on 3 nodes - 4 GPUs.
+- `planning/blueprint` is the directory for the general sweeping methodology for HPL-MxP on any hardware topology.
+- `planning/dependency-graph` details the dependency of flags with each other to help structure experiments and determine if resweeps are needed.
