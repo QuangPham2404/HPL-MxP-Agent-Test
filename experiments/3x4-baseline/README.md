@@ -31,4 +31,4 @@ qsub run_3x4_baseline.pbs
 
 | Attempt | PBS job | Result | GFLOP/s | Evidence |
 |---|---|---|---|---|
-| _pending_ | | | | |
+| `3x4-baseline_v1` | `57232.gaas` | PASSED (`3.402630E-04`) | `4.0092e+04` | `outputs/3x4-baseline_v1.{o,e}` |

@@ -188,5 +188,6 @@ This report records validated raw result data only. No optimization analysis or 
 | matrix-placement-control | reg_sweep_3072_b3048 | 399360 | 3072 | 4x2 | column |  |  |  | PASSED | 2.1518e+06 | experiments/matrix-placement-control/outputs/reg_sweep_3072_b3048.o |
 | matrix-placement-control | reg_sweep_4096_b3048 | 399360 | 3072 | 4x2 | column |  |  |  | PASSED | 2.1335e+06 | experiments/matrix-placement-control/outputs/reg_sweep_4096_b3048.o |
 | matrix-placement-control | reg_sweep_5012_b3048 | 399360 | 3072 | 4x2 | column |  |  |  | PASSED | 2.1634e+06 | experiments/matrix-placement-control/outputs/reg_sweep_5012_b3048.o |
+| 3x4-baseline | 3x4-baseline_v1 | 480000 | 1024 | 3x4 | row | unset | unset | unset | PASSED | 4.0092e+04 | experiments/3x4-baseline/outputs/3x4-baseline_v1.o |
 
 Source: `results/metrics.csv`.
