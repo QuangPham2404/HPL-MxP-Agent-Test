@@ -1,0 +1,88 @@
+# HPL-MxP 3-node x 4-GPU smoketest using the validated multinode launch
+# (container mpirun + rsh_pbsdsh_container.sh bridge), adapted from the
+# multi-node-test/HPL-MxP/run_hplmxp_baseline.pbs model script.
+#
+# Expected working directory: this experiment directory
+# (experiments/3x4-smoketest/) on GAAS. Submit with:
+#   qsub run_3x4_smoketest.pbs
+#
+# Objective: confirm the 3x4 multinode launch works end-to-end. Uses a small
+# N=200000 to keep the run fast. Not a performance measurement.
+#
+# Outputs: PBS stdout/stderr under outputs/.
+
+#PBS -N HPL_MXP_3x4_SMOKETEST
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=3:ngpus=4
+#PBS -l place=scatter
+#PBS -l walltime=00:30:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+
+GPUS=4                                   # GPUs (and ranks) per node
+N=200000
+NB=1024
+NPORDER=row
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+
+# Process grid nprow x npcol = NPROCS, npcol >= nprow (square-ish).
+NPCOL=$(awk -v r="$NPROCS" 'BEGIN { n=int(sqrt(r)); if (n*n<r) n++; for (c=n; c<=r; c++) if (r%c==0) { print c; exit } }')
+NPROW=$((NPROCS / NPCOL))
+
+GPU_AFFINITY=$(seq -s: 0 $((GPUS - 1)))
+
+# De-duplicated hostfile with explicit per-node slot count.
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+
+echo "experiment_id=3x4-smoketest"
+echo "attempt=smoketest_v1"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} order=${NPORDER}"
+echo "n=${N} nb=${NB}"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity "$GPU_AFFINITY" \
+      --nprow "$NPROW" \
+      --npcol "$NPCOL" \
+      --nporder "$NPORDER" \
+      --n "$N" \
+      --nb "$NB" \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
+
+echo "=== HPL-MxP 3x4 smoketest complete: smoketest_v1 ==="
