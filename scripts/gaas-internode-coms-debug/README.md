@@ -17,7 +17,7 @@ Debug plan overview is as follows:
     - Host works, container fails → likely container/userspace ↔ host-driver integration problem.   
     - Host works, container works → communication infrastructure is fundamentally healthy, so move upward into HPL-MxP/NCCL/MPI behavior.
 5. If both host and container GDRDMA are healthy, investigate application/configuration causes next:
-    - First: launch script / MPI / NCCL / UCX settings.
+    - First: launch script / MPI / NCCL / UCX settings AND CPU/MEM/NUMA binding issues (4/8 H200s are allocated randomly, cross numa node can lead to a very bad results)
     - Second: GPU↔NIC / NUMA / rank affinity and multi-rail usage.
     - Then: synchronization / HPL-MxP-specific communication behavior.
 
@@ -134,3 +134,30 @@ Start simple:
 | Fail | Fail | Go down the host RDMA/GPU-memory stack            |
 | Pass | Fail | Investigate NCCL path                             |
 | Fail | Pass | Investigate MPI/UCX path                          |
+
+---
+
+### Phase 1 — Step 1: GPUDirect RDMA verification design (agreed 2026-09-07)
+
+Executed in two phases, P2P first.
+
+#### Phase A — P2P at 2 nodes × 1 GPU (single job, both runs on the same nodes)
+
+Tests per run:
+
+* `osu_bw` with all four buffer combos: `D D` (full GDR path, both ends — the HPL-MxP app pattern), `D H` (sender-side GDR only), `H D` (receiver-side GDR only), `H H` (fabric/CPU ceiling, no GPU involvement)
+* `osu_latency` with `D D` and `H H`
+* `ucx_perftest -m cuda` vs `-m host` cross-check (control run only)
+
+Run conditions:
+
+* Control run (default UCX) vs GDR-off run (`UCX_IB_GPU_DIRECT_RDMA=n`) in the same job on the same nodes and placement
+* UCX tracing in both runs (`UCX_LOG_LEVEL=info`, `UCX_PROTO_INFO=y`); UCX_* variables explicitly forwarded with `-x` so both nodes provably see them
+* No CPU binding (`--bind-to none`, matching real HPL-MxP runs); `nvidia-smi topo -m`, rank affinity, and `ucx_info -t` recorded as evidence only
+
+Interpretation: healthy GDR ⇒ all four `osu_bw` combos near line rate; staged ⇒ `D D` < `D H`/`H D` < `H H`; one-sided fault ⇒ `D H` and `H D` diverge. `H H` is also the negative control: it must not change between the two runs.
+
+#### Phase B — collectives (deferred until instructed)
+
+`osu_bcast` and `osu_allreduce` with CUDA buffers (`-d cuda`, verified in-job with `H H` fallback) at 2x1 → 2x2 → 3x1 → 3x4, one job per topology, same control/GDR-off structure. With GDR off, only inter-node GPU-RDMA is disabled (intra-node NVLink IPC still works), so the A/B delta isolates the inter-node GPU path.
+

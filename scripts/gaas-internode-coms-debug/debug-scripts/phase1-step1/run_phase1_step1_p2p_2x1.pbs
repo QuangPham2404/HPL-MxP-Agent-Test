@@ -1,0 +1,166 @@
+#!/bin/bash
+# Phase 1 Step 1, Phase A (p2p): host GPUDirect RDMA verification via OSU CUDA-aware
+# MPI point-to-point benchmarks on 2 nodes x 1 GPU.
+#
+# Expected working directory: scripts/gaas-internode-coms-debug/debug-scripts/phase1-step1/ on GAAS.
+# Submit with: qsub run_phase1_step1_p2p_2x1.pbs
+# Inputs: PBS select=2:ngpus=1 (place=scatter); host HPC-X 2.25.1 via module nvhpc/26.3.
+# Outputs: ../../outputs/phase1-step1/step1_p2p_2x1_v1.{o,e} plus per-rank ucx/nvtopo
+#          evidence logs and perftest logs in that directory; hostfile in this directory.
+# Design: A/B in one job on the same nodes and placement: control run (default UCX) vs
+#         GDR-off run (UCX_IB_GPU_DIRECT_RDMA=n). Tests per run: osu_bw D D / D H / H D / H H,
+#         osu_latency D D / H H. UCX transport/protocol logging in both runs. No CPU
+#         binding (--bind-to none, matching real HPL-MxP runs); topology and affinity
+#         are recorded, not controlled. ucx_perftest -m cuda / -m host cross-check in
+#         the control run only.
+# Assumptions: multi-node-test/rsh_pbsdsh.sh at repo root; launch flags follow
+#         multi-node-test/GAAS_MULTINODE_SETUP.md section 1.2.
+
+#PBS -N P1S1_P2P_2X1
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=2:ngpus=1
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+#PBS -o ../../outputs/phase1-step1/step1_p2p_2x1_v1.o
+#PBS -e ../../outputs/phase1-step1/step1_p2p_2x1_v1.e
+
+# Multi-run A/B diagnostic: attempt every test in both runs, capture each exit status,
+# then summarize. -e is intentionally omitted so one failed test does not hide the rest.
+set -uo pipefail
+
+cd "$PBS_O_WORKDIR"
+OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase1-step1"
+mkdir -p "$OUTDIR"
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
+
+module purge
+module load nvhpc/26.3
+chmod +x "$BRIDGE"
+
+HPCX="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1"
+OSU_DIR="$HPCX/ompi/tests/osu-micro-benchmarks-cuda"
+export UCXBIN="$HPCX/ucx/bin"
+
+GPUS=1
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+
+# De-duplicated hostfile with explicit per-node slot count (Blocker 8 pattern).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+
+echo "=== Phase 1 Step 1 (Phase A: p2p) metadata ==="
+echo "debug_dir=scripts/gaas-internode-coms-debug"
+echo "attempt=step1_p2p_2x1_v1"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} GPU = ${NPROCS} ranks"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "mpirun=$(command -v mpirun)"
+echo "osu_dir=$OSU_DIR"
+echo "bridge=$BRIDGE"
+echo "binding=none (record-only evidence; matches HPL-MxP run conditions)"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# Canonical host-native launch base (GAAS_MULTINODE_SETUP.md 1.2). UCX_* variables are
+# additionally forwarded with -x so both nodes provably see them (required for a valid A/B).
+MPICMD_BASE=(mpirun -np "$NPROCS"
+  --hostfile "$PWD/hostfile"
+  --mca plm_rsh_agent "$BRIDGE"
+  --mca plm_rsh_no_tree_spawn 1
+  --mca plm_rsh_num_concurrent 1
+  --mca routed direct
+  --bind-to none)
+
+export UCX_LOG_LEVEL=info
+export UCX_PROTO_INFO=y
+
+# --- Evidence: rank placement + GPU, per-node UCX transports + NV topology ---
+echo "=== Evidence: rank affinity + GPU ==="
+"${MPICMD_BASE[@]}" bash -c 'echo "rank=$OMPI_COMM_WORLD_RANK/$OMPI_COMM_WORLD_SIZE host=$(hostname) cpus_allowed=$(grep Cpus_allowed_list /proc/self/status | cut -f2) gpu=$(nvidia-smi -L 2>/dev/null | head -1)"'
+EVID_RC=$?
+
+export OUTDIR
+echo "=== Evidence: ucx_info -t + nvidia-smi topo -m per node (to log files) ==="
+"${MPICMD_BASE[@]}" -x OUTDIR -x UCXBIN bash -c '"$UCXBIN/ucx_info" -t > "$OUTDIR/step1_p2p_2x1_v1_ucxtrans_r$OMPI_COMM_WORLD_RANK.log" 2>&1; nvidia-smi topo -m > "$OUTDIR/step1_p2p_2x1_v1_nvtopo_r$OMPI_COMM_WORLD_RANK.log" 2>&1; echo "evidence_written rank=$OMPI_COMM_WORLD_RANK host=$(hostname)"'
+EVID_RC2=$?
+
+# --- A/B suite: control run vs GDR-off run, same nodes and placement ---
+FAILS=0
+TOTAL=0
+
+run_suite() {
+  # run_suite <mode: ctrl|gdroff> — runs the p2p test matrix with the mode's UCX env.
+  local mode="$1"
+  local -a xflags=()
+  local combo rc
+  if [ "$mode" = "gdroff" ]; then
+    export UCX_IB_GPU_DIRECT_RDMA=n
+    xflags=(-x UCX_IB_GPU_DIRECT_RDMA)
+  else
+    unset UCX_IB_GPU_DIRECT_RDMA
+  fi
+  echo ""
+  echo "########## RUN: $mode (UCX_IB_GPU_DIRECT_RDMA=${UCX_IB_GPU_DIRECT_RDMA:-unset}) ##########"
+  date --iso-8601=seconds
+
+  for combo in "D D" "D H" "H D" "H H"; do
+    echo "=== [$mode] osu_bw $combo ==="
+    "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO "${xflags[@]}" \
+      "$OSU_DIR/osu_bw" $combo
+    rc=$?
+    TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+    echo "rc_${mode}_osu_bw_$(echo "$combo" | tr -d ' ')=$rc"
+  done
+  for combo in "D D" "H H"; do
+    echo "=== [$mode] osu_latency $combo ==="
+    "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO "${xflags[@]}" \
+      "$OSU_DIR/osu_latency" $combo
+    rc=$?
+    TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+    echo "rc_${mode}_osu_latency_$(echo "$combo" | tr -d ' ')=$rc"
+  done
+  return 0
+}
+
+run_suite ctrl
+run_suite gdroff
+
+# --- Cross-check (control only): ucx_perftest client/server across the 2 nodes ---
+echo ""
+echo "########## ucx_perftest cross-check (ctrl only) ##########"
+NODE0="$(awk 'NR==1{print $1}' "$PWD/hostfile")"
+export NODE0
+"${MPICMD_BASE[@]}" -x NODE0 -x UCXBIN -x OUTDIR -x UCX_LOG_LEVEL bash -c '
+  if [ "$OMPI_COMM_WORLD_RANK" = "0" ]; then
+    timeout 240 "$UCXBIN/ucx_perftest" -t ucp_put_bw -m cuda -s 4194304 -n 200 -w 20 \
+      > "$OUTDIR/step1_p2p_2x1_v1_perftest_cuda_server.log" 2>&1
+    echo "rc_perftest_cuda_server=$?"
+    timeout 240 "$UCXBIN/ucx_perftest" -t ucp_put_bw -m host -s 4194304 -n 200 -w 20 \
+      > "$OUTDIR/step1_p2p_2x1_v1_perftest_host_server.log" 2>&1
+    echo "rc_perftest_host_server=$?"
+  else
+    timeout 220 "$UCXBIN/ucx_perftest" "$NODE0" -t ucp_put_bw -m cuda -s 4194304 -n 200 -w 20
+    echo "rc_perftest_cuda_client=$?"
+    timeout 220 "$UCXBIN/ucx_perftest" "$NODE0" -t ucp_put_bw -m host -s 4194304 -n 200 -w 20
+    echo "rc_perftest_host_client=$?"
+  fi'
+PT_RC=$?
+
+echo ""
+echo "=== Phase A summary ==="
+echo "evidence_rank_gpu_rc=$EVID_RC"
+echo "evidence_node_logs_rc=$EVID_RC2"
+echo "perftest_block_rc=$PT_RC"
+echo "total_ab_tests=$TOTAL"
+echo "failed_ab_tests=$FAILS"
+if [ "$FAILS" -eq 0 ]; then
+  echo "PHASE_A_RESULT=ALL_TESTS_COMPLETED"
+else
+  echo "PHASE_A_RESULT=SOME_TESTS_FAILED"
+fi
+echo "=== step1_p2p_2x1_v1 complete ==="
