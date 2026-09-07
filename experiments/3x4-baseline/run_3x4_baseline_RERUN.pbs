@@ -1,0 +1,140 @@
+# HPL-MxP 3-node x 4-GPU RERUN of the 3x4 baseline with explicit NUMA/CPU and
+# UCX NIC binding, using the validated multinode launch (container mpirun +
+# rsh_pbsdsh_container.sh bridge). Copied from run_3x4_baseline.pbs.
+#
+# Test-only run (not a logged experiment). Adds, based on the probes in
+# scripts/ (probing_report.md, comm_transport_probe_report.md):
+#   --mem-affinity 0:0:0:0
+#     GPUs 0-3, NICs mlx5_0-3, and CPUs 0-49 all sit on NUMA node 0.
+#   --cpu-affinity 0-49:0-49:0-49:0-49
+#     Relaxed binding: every rank may schedule across the full GPU-local CPU
+#     range 0-49 (NUMA node 0; container cpuset exposes only 0-49 and 56-101).
+#   UCX_NET_DEVICES=mlx5_0:1,mlx5_1:1,mlx5_2:1,mlx5_3:1
+#     The four 400G IB rails PIX/NODE-local to GPUs 0-3, multi-rail; excludes
+#     the cross-socket rails mlx5_4/5/8/9.
+#   UCX_TLS=self,sm,rc,dc,cuda_copy,cuda_ipc
+#     Keep shared memory and intra-node GPU P2P, force IB rc/dc for the wire,
+#     drop tcp/ud fallback; gdr_copy excluded because host gdrdrv is absent
+#     (probe shows degraded ~250 MB/s).
+#
+# Workload identical to baseline v1: N=480000, NB=1024, nprow=3 x npcol=4
+# (12 ranks), row order, identity per-node GPU affinity.
+#
+# Expected working directory: this experiment directory
+# (experiments/3x4-baseline/) on GAAS. Submit with:
+#   qsub run_3x4_baseline_RERUN.pbs
+#
+# Outputs: PBS stdout/stderr under outputs/.
+
+#PBS -N HPL_MXP_3x4_RERUN
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=3:ngpus=4
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+#PBS -o outputs/3x4-baseline_RERUN_v1.o
+#PBS -e outputs/3x4-baseline_RERUN_v1.e
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+
+GPUS=4                                   # GPUs (and ranks) per node
+NPROW=3
+NPCOL=4
+NPORDER=row
+N=480000
+NB=1024
+
+# Affinity and UCX binding derived from the hardware probes (see header).
+MEM_AFFINITY=0:0:0:0
+CPU_AFFINITY=0-49:0-49:0-49:0-49
+UCX_NET_DEVICES=mlx5_0:1,mlx5_1:1,mlx5_2:1,mlx5_3:1
+UCX_TLS=self,sm,rc,dc,cuda_copy,cuda_ipc
+export UCX_NET_DEVICES UCX_TLS
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+if [ "$((NPROW * NPCOL))" -ne "$NPROCS" ]; then
+  echo "ERROR: grid ${NPROW}x${NPCOL}=$((NPROW * NPCOL)) != ${NPROCS} ranks" >&2
+  exit 1
+fi
+
+GPU_AFFINITY=$(seq -s: 0 $((GPUS - 1)))
+
+# De-duplicated hostfile with explicit per-node slot count.
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+
+# Abort early if the job cpuset does not fully contain CPUs 0-49 (the range
+# CPU_AFFINITY and the GPUs 0-3 NUMA-0 locality depend on).
+CPUS_ALLOWED_LIST=$(awk '/Cpus_allowed_list/ {print $2}' /proc/self/status)
+if ! awk -v allowed="$CPUS_ALLOWED_LIST" 'BEGIN {
+  n = split(allowed, parts, ",")
+  for (i = 1; i <= n; i++) {
+    if (split(parts[i], r, "-") == 2) { for (c = r[1]; c <= r[2]; c++) ok[c] = 1 }
+    else { ok[parts[i]] = 1 }
+  }
+  for (c = 0; c <= 49; c++) if (!(c in ok)) exit 1
+}'; then
+  echo "ERROR: job cpuset (${CPUS_ALLOWED_LIST}) does not contain all of CPUs 0-49; adjust CPU_AFFINITY" >&2
+  exit 1
+fi
+
+echo "experiment_id=3x4-baseline"
+echo "attempt=3x4-baseline_RERUN_v1"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} order=${NPORDER}"
+echo "n=${N} nb=${NB}"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "mem_affinity=${MEM_AFFINITY}"
+echo "cpu_affinity=${CPU_AFFINITY}"
+echo "cpus_allowed_list=${CPUS_ALLOWED_LIST}"
+echo "ucx_net_devices=${UCX_NET_DEVICES}"
+echo "ucx_tls=${UCX_TLS}"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+echo "=== nvidia-smi topo -m ==="
+nvidia-smi topo -m || true
+
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    -x UCX_NET_DEVICES -x UCX_TLS \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity "$GPU_AFFINITY" \
+      --mem-affinity "$MEM_AFFINITY" \
+      --cpu-affinity "$CPU_AFFINITY" \
+      --nprow "$NPROW" \
+      --npcol "$NPCOL" \
+      --nporder "$NPORDER" \
+      --n "$N" \
+      --nb "$NB" \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
+
+echo "=== HPL-MxP 3x4 baseline RERUN complete: 3x4-baseline_RERUN_v1 ==="
