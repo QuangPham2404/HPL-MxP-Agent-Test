@@ -168,6 +168,25 @@ bcast @ 64 MiB, allreduce @ 1 MiB):**
 | 2x2 | 91,185 | 2,522 | **36×** | 1,545 | 138 | **11×** |
 | 3x1 | 120,941 | 2,772 | **44×** | 4,311 | 146 | **30×** |
 | 3x4 | 29,671 | 2,286 | **13×** | 591 | 154 | **3.8×** |
+| 2x1 @ 32 MiB | 1,018 | 1,009 | 1.0× | — | — | — |
+| 2x1 @ 8 MiB | 279 | 277 | 1.0× | — | — | — |
+| 2x1 @ 1 MiB | 66 | 66 | 1.0× | — | — | — |
+| 2x2 @ 32 MiB | 45,821 | 1,288 | **35.6×** | — | — | — |
+| 2x2 @ 8 MiB | 10,040 | 406 | **24.7×** | — | — | — |
+| 2x2 @ 1 MiB | 1,276 | 100 | **12.7×** | — | — | — |
+| 3x1 @ 32 MiB | 59,209 | 1,420 | **41.7×** | — | — | — |
+| 3x1 @ 8 MiB | 13,927 | 412 | **33.8×** | — | — | — |
+| 3x1 @ 1 MiB | 1,751 | 106 | **16.6×** | — | — | — |
+| 3x4 @ 32 MiB | 14,134 | 1,181 | **12.0×** | — | — | — |
+| 3x4 @ 8 MiB | 3,579 | 336 | **10.7×** | — | — | — |
+| 3x4 @ 1 MiB | 508 | 105 | **4.8×** | — | — | — |
+
+Rows appended 2026-09-08 to show the bcast `-d cuda` size progression behind
+the linear-degradation claim (finding 2): the GDR-off latency is nearly flat
+in size (staged, ~25-30 GB/s effective) while the control grows linearly with
+bytes, so the slowdown itself grows with message size (3x1: 16.6× @ 1 MiB →
+33.8× @ 8 MiB → 41.7× @ 32 MiB → 44× @ 64 MiB; 2x2: 12.7× → 24.7× → 35.6× →
+36×; 3x4: 4.8× → 10.7× → 12.0× → 13×; 2x1 stays 1.0× at every size).
 
 **Negative controls (H H) are clean everywhere** — bcast @ 64 MiB ctrl/GDR-off:
 797/800 (2x1), 2768/3175 (2x2), 2622/2554 (3x1), 4512/4428 (3x4); allreduce
