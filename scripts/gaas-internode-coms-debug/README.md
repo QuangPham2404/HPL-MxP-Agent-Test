@@ -157,9 +157,25 @@ Run conditions:
 
 Interpretation: healthy GDR ⇒ all four `osu_bw` combos near line rate; staged ⇒ `D D` < `D H`/`H D` < `H H`; one-sided fault ⇒ `D H` and `H D` diverge. `H H` is also the negative control: it must not change between the two runs.
 
-#### Phase B — collectives (deferred until instructed)
+#### Phase B — collectives at 2x1 → 2x2 → 3x1 → 3x4 (one job per topology, both runs per job)
 
-`osu_bcast` and `osu_allreduce` with CUDA buffers (`-d cuda`, verified in-job with `H H` fallback) at 2x1 → 2x2 → 3x1 → 3x4, one job per topology, same control/GDR-off structure. With GDR off, only inter-node GPU-RDMA is disabled (intra-node NVLink IPC still works), so the A/B delta isolates the inter-node GPU path.
+Collective ladder, one job per rung, submitted one at a time: 2x1 (minimal inter-node pair) → 2x2 (first intra-node GPU mix: NVLink/IPC locally + IB across nodes) → 3x1 (pure inter-node at the baseline node count) → 3x4 (the actual HPL-MxP baseline topology). Cross-rung diffs separate the intra-node (NVLink) from inter-node (IB/GDR) contributions.
+
+Tests per run:
+
+* `osu_bcast` with host buffers (`H H`) and CUDA buffers (`-d cuda`), both with `-m 67108864` (up to 64 MiB — HPL-MxP panel-scale traffic)
+* `osu_allreduce` with host buffers (`H H`) and CUDA buffers (`-d cuda`), default sizes (max 1 MiB)
+* `H H` variants = collective fabric baseline + negative control; `-d cuda` variants = the HPL-MxP panel-broadcast / reduction analogs
+
+Run conditions:
+
+* Control run (default UCX) vs GDR-off run (`UCX_IB_GPU_DIRECT_RDMA=n`) in the same job on the same nodes and placement; GDR-off disables only inter-node GPU-RDMA (intra-node NVLink IPC still works), so the A/B delta isolates the inter-node GPU path inside the collective
+* GPU per rank = `CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK`
+* No CPU binding (`--bind-to none`, matching real HPL-MxP runs); rank affinity + visible GPUs, per-node `ucx_info -d` and `nvidia-smi topo -m` recorded as evidence only
+* UCX tracing in both runs (`UCX_LOG_LEVEL=info`, `UCX_PROTO_INFO=y`); UCX_* variables explicitly forwarded with `-x` so all nodes provably see them
+* No `ucx_perftest` (dropped after the Phase A cross-check proved void and redundant)
+
+Interpretation (as designed): healthy collective GDR ⇒ `-d cuda` close to `H H` and clearly above the GDR-off run; `H H` must not change between the two runs. Actual outcome: the opposite for CUDA buffers at ≥3 ranks — GDR-enabled CUDA collectives ran 13-44× *slower* than staging while all `H H` negative controls stayed clean (critical finding; full tables and protocol evidence in `DEBUG_PROGRESS.md`, Phase B section).
 
 ---
 
