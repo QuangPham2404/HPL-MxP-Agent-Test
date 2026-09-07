@@ -145,4 +145,81 @@ debugging (e.g. the 74/26 rail split) awaits user instruction.
 - Per the debug plan, host GDR working means Track 2.2 (test the same
   capability inside the HPL-MxP container) remains the eventual branch.
 
+## Phase 1 — Step 1, Phase B: collective GDR A/B ladder (2026-09-07/08) — CRITICAL FINDING: GDR-enabled CUDA collectives pathological at ≥3 ranks
+
+**Attempts:** `step1_coll_2x1_v1` (job `59931.gaas`, g08+g09), `step1_coll_2x2_v1`
+(job `59933.gaas`, g08+g10), `step1_coll_3x1_v1` (job `59934.gaas`, g08+g10+g15),
+`step1_coll_3x4_v1` (job `59935.gaas`, g09+g15+g16). Host HPC-X 2.25.1 OMPI
+v4.1.9a1 + UCX 1.20.0, `rsh_pbsdsh.sh` bridge, `--bind-to none` (record-only),
+control run (default UCX) vs GDR-off run (`UCX_IB_GPU_DIRECT_RDMA=n`) per job,
+same nodes/placement. Per run: `osu_bcast` H H + `-d cuda` (up to 64 MiB) and
+`osu_allreduce` H H + `-d cuda` (default sizes, max 1 MiB). GPU per rank =
+local rank. **All 32 tests completed (rc=0).**
+**Evidence:** `outputs/phase1-step1/step1_coll_{2x1,2x2,3x1,3x4}_v1.{o,e}` +
+per-node nvtopo/ucxdev logs; scripts
+`debug-scripts/phase1-step1/run_phase1_step1_coll_*.pbs`.
+
+**Results — CUDA-buffer collectives, control vs GDR-off (µs, max-size row;
+bcast @ 64 MiB, allreduce @ 1 MiB):**
+
+| Topo | bcast cuda ctrl | bcast cuda GDR-off | slowdown | allreduce cuda ctrl | allreduce cuda GDR-off | slowdown |
+|---|---|---|---|---|---|---|
+| 2x1 | 2,003 | 1,988 | 1.0× | 129 | 129 | 1.0× |
+| 2x2 | 91,185 | 2,522 | **36×** | 1,545 | 138 | **11×** |
+| 3x1 | 120,941 | 2,772 | **44×** | 4,311 | 146 | **30×** |
+| 3x4 | 29,671 | 2,286 | **13×** | 591 | 154 | **3.8×** |
+
+**Negative controls (H H) are clean everywhere** — bcast @ 64 MiB ctrl/GDR-off:
+797/800 (2x1), 2768/3175 (2x2), 2622/2554 (3x1), 4512/4428 (3x4); allreduce
+@ 1 MiB: 98/105, 135/141, 104/103, 193/222. The A/B is valid; the pathology
+is specific to CUDA buffers + GDR enabled + ≥3 ranks.
+
+**Findings:**
+
+1. **With default UCX (GDR enabled), CUDA-aware MPI collectives with ≥3 ranks
+   are pathologically slow — 13× to 44× slower than staging.** Effective bcast
+   rate at 3x1: control 0.55 GB/s vs GDR-off 24.2 GB/s (≈ H H 25.6 GB/s). The
+   2-rank case (2x1) is unaffected (33.5 GB/s).
+2. **The degradation is linear in message size** (~1.9 µs/KB from ~32-64 KiB
+   onset; e.g. 3x1 ctrl bcast: 1 MiB → 1,751 µs, 64 MiB → 120,941 µs) — a
+   per-fragment/per-page fixed cost dominates, consistent with either uncached
+   GPU-memory re-registration per message or fenced GDR writes with
+   per-fragment synchronization. Exact internal mechanism is a follow-up; the
+   empirical conclusion stands regardless.
+3. **Protocol evidence**: control-run logs show a mix of staged
+   (`cuda_copy, frag host`, 50/50 rails) and zero-copy GDR (74/26 rails)
+   selections across UCC/UCP contexts; the exercised ≥3-rank collective path
+   pays the ~1.9 µs/KB cost while the GDR-off run's staged path runs at
+   ~0.04 µs/KB. Phase A showed the same zero-copy GDR path is *fast* for pure
+   2-rank p2p (50 GB/s) — so this is a collective-path interaction, not broken
+   GDR per se.
+4. **Rail/affinity (3x4 nvtopo, 4 GPUs visible)**: each GPU has its own
+   PIX-paired NIC (g15: GPU0↔`mlx5_3`, GPU1↔`mlx5_4`, GPU2↔`mlx5_8`,
+   GPU3↔`mlx5_9`; NV18 between all GPUs) — the platform is rail-optimized
+   1:1 GPU:NIC. Phase A's 74/26 imbalance was the 1-GPU-per-node artifact;
+   balanced rails are architecturally available at 3x4 (UCX's per-rank rail
+   choice still unverified — kept with the Phase A follow-up).
+
+**Implication for the HPL-MxP debug**: a 3×4 CUDA-aware-MPI collective with
+default GDR-enabled UCX runs at ~2 GB/s instead of ~25 GB/s — if any of the
+app's inter-node traffic rides this path, it fully explains an "extremely
+slow" baseline. Caveat: HPL-MxP runs in the container and primarily uses NCCL
+for collectives, and the 2026-09-03 comm-transport probe found a gdrdrv/GDR
+gap *inside* the container — so whether the container stack (its own
+UCX/NCCL) hits this pathology or a different one is exactly what Track 2.2
+must decide. **This is the strongest root-cause lead so far.**
+
+**Suggested follow-ups (not executed, user decision):**
+
+1. **Track 2.2 (decisive)**: minimal in-container test on 3x4 — default vs
+   `UCX_IB_GPU_DIRECT_RDMA=n` (exported into the container) — plus an NCCL
+   transport check (`NCCL_DEBUG=INFO`). If the baseline's slowness tracks this
+   knob, root cause confirmed + mitigation found.
+2. **Mitigation trade-off note**: disabling GDR loses the Phase A p2p gain
+   (50→40 GB/s) but avoids the 13-44× collective catastrophe — clearly
+   favorable for collective-heavy workloads on this stack.
+3. **Mechanism follow-up (optional)**: registration-cache / fenced-write
+   investigation (e.g., `UCX_MEMTYPE_CACHE`, rndv thresholds, newer UCX).
+
+
 

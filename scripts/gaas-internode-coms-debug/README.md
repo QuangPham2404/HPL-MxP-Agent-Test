@@ -163,39 +163,48 @@ Interpretation: healthy GDR ⇒ all four `osu_bw` combos near line rate; staged 
 
 ---
 
-### Phase 1 — status and resume point (2026-09-07)
+### Phase 1 — status and resume point (updated 2026-09-08)
 
 **Completed:**
 
 - **Step 0 (sanity): PASS** — host launch path (`mpirun` + `rsh_pbsdsh.sh` bridge)
   and CUDA-aware host MPI verified (`phase1_step0_sanity_v1`, job `59640.gaas`).
-- **Step 1 Phase A (p2p GDR A/B at 2x1): PASS** — host GPUDirect RDMA works:
-  UCX selects zero-copy GDR for CUDA memory; GDR-off measurably degrades `D D`
-  bandwidth and latency; `H H` negative control unchanged
-  (`step1_p2p_2x1_v1`, job `59671.gaas`).
-  - New finding: CUDA inter-node traffic uses an uneven **74/26** multi-rail
-    split (vs 50/50 for host memory), capping GPU traffic at ~57% of the fabric
-    ceiling (50.4 vs 87.9 GB/s @ 4 MiB). GPU0 has PIX PCIe affinity only to
-    `mlx5_2`; other HCAs are NODE distance.
+- **Step 1 Phase A (p2p GDR A/B at 2x1): PASS** — host GPUDirect RDMA works for
+  p2p (zero-copy selected, clear A/B deltas, negative control clean)
+  (`step1_p2p_2x1_v1`, job `59671.gaas`). CUDA p2p reaches ~57% of the fabric
+  ceiling due to a 74/26 multi-rail split in the 1-GPU-per-node case.
+- **Step 1 Phase B (collective GDR A/B ladder): COMPLETE — critical finding.**
+  With default UCX (GDR enabled), CUDA collectives with ≥3 ranks are
+  **pathologically slow (13-44× slower than staging**; e.g. 3x1 bcast @ 64 MiB:
+  0.55 GB/s vs 24.2 GB/s staged). 2-rank collectives unaffected; H H negative
+  controls clean. See `DEBUG_PROGRESS.md` Phase B section for full tables,
+  protocol evidence, and analysis. Jobs `59931/59933/59934/59935.gaas`.
+  - Rail/affinity resolved for 3x4: each GPU has its own PIX-paired NIC
+    (rail-optimized 1:1 GPU:NIC) — Phase A's 74/26 was the 1-GPU-per-node
+    artifact.
 
-**Pending (in plan order):**
+**Pending (user decision required):**
 
-1. **Step 1 Phase B — collective ladder** (awaiting user go-ahead):
-   `osu_bcast -d cuda` + `osu_allreduce -d cuda` (in-job `-d cuda` verification,
-   `H H` fallback), control vs GDR-off per topology, one job at a time:
-   2x1 → 2x2 → 3x1 → 3x4. Scripts to be written in
-   `debug-scripts/phase1-step1/`, outputs in `outputs/phase1-step1/`.
-2. **Optional (user decision): investigate the CUDA 74/26 rail split** —
-   potential ~40% more inter-node GPU bandwidth; check whether other GPUs and
-   the 3x4 topology show the same imbalance.
-3. **Phase 1 test 2 — `nccl-tests` (NCCL path)**: still blocked on the missing
-   host `libnccl.so.2` (recorded 2026-09-03). NCCL GDR path unverified.
-4. **After Phase 1 completes**: branch per the Phase 1 decision matrix — host
-   GDR working ⇒ **Track 2.2** (test the same capability inside the HPL-MxP
-   container).
+1. **Track 2.2 (decisive next step)**: minimal in-container HPL-MxP test on
+   3x4 — default vs `UCX_IB_GPU_DIRECT_RDMA=n` exported into the container —
+   plus an NCCL transport check (`NCCL_DEBUG=INFO`). Determines whether the
+   app's slowness rides the host-side GDR-collective pathology found in
+   Phase B or a separate container/NCCL issue (note: the 2026-09-03 probe
+   found a gdrdrv/GDR gap inside the container).
+2. **Optional mechanism follow-up**: registration-cache / fenced-write
+   investigation of the ≥3-rank GDR collective pathology
+   (`UCX_MEMTYPE_CACHE`, rndv thresholds, newer UCX).
+3. **Optional**: verify UCX per-rank rail balance at 3x4 (each GPU now has a
+   PIX NIC; the 74/26 question may be moot with the real 4-GPU mapping).
+4. **Phase 1 test 2 — `nccl-tests` (NCCL path)**: still blocked on the missing
+   host `libnccl.so.2` (recorded 2026-09-03); NCCL path verification may
+   happen via Track 2.2 in-container instead.
 
-**Resume point:** awaiting user instruction on pending item 1 vs item 2. All
-results, analysis, and evidence pointers are in `DEBUG_PROGRESS.md`;
-raw evidence in `outputs/phase1-step0/` and `outputs/phase1-step1/`.
+**Resume point:** Phase 1 CUDA-aware-MPI GDR status is consolidated
+(p2p works; collectives pathological at ≥3 ranks with GDR on). Awaiting user
+instruction on pending item 1 (Track 2.2) and optional items 2-3. All results,
+analysis, and evidence pointers are in `DEBUG_PROGRESS.md`; raw evidence in
+`outputs/phase1-step0/` and `outputs/phase1-step1/`.
+
 
 
