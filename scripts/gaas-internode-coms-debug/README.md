@@ -23,11 +23,7 @@ Debug plan overview is as follows:
 
 ## Debug plan details
 
-### Phase 1: Test GPUDirect RDMA on the host first.
-
-HPL-MxP uses 2 communcation MPI: CUDA-aware MPI and NCCL. We need 2 tests to test if GPUDirect RDMA works for BOTH API. The chosen tests are:
-- `osu-cuda` for CUDA-aware MPI
-- `nccl-test` for NCCL
+### Phase 1: Test GPUDirect RDMA on the host first
 
 HPL-MxP uses both **CUDA-aware MPI** and **NCCL**, so test GPUDirect RDMA through both paths.
 
