@@ -1,0 +1,116 @@
+# HPL-MxP 3x4 allocation-variance probe — resource-alloc experiment 1
+# (see resource-alloc/README.md).
+#
+# Five sequential attempts with identical requests sample how PBS's per-node
+# GPU/CPU/NUMA allocation for non-full-node jobs correlates with HPL-MxP
+# performance. Launch flags are identical to the 3x4 baseline v1
+# (experiments/3x4-baseline/run_3x4_baseline.pbs) except N=250000; no binding
+# flags. Adds per-node allocation capture (debug-scripts/capture_node_alloc.sh
+# via pbsdsh, once per node through a shared-FS lock) and UCX rail/transport
+# logging (UCX_LOG_LEVEL=info).
+#
+# Expected working directory: the resource-alloc directory on GAAS. Submit
+# each attempt (from that directory) with:
+#   qsub -v "ATTEMPT=alloc250k_vN" \
+#        -o outputs/alloc250k_vN.o -e outputs/alloc250k_vN.e \
+#        debug-scripts/run_3x4_alloc_variance.pbs
+# Raw PBS stdout/stderr land in outputs/ under attempt-specific names.
+
+#PBS -N hpl_mxp_alloc_var
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=3:ngpus=4
+#PBS -l place=scatter
+#PBS -l walltime=00:30:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+
+: "${ATTEMPT:?submit with -v ATTEMPT=<attempt label, e.g. alloc250k_v1>}"
+
+GPUS=4                                   # GPUs (and ranks) per node
+NPROW=3
+NPCOL=4
+NPORDER=row
+N=250000
+NB=1024
+
+UCX_LOG_LEVEL=info
+export UCX_LOG_LEVEL
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+CAPTURE="$PBS_O_WORKDIR/debug-scripts/capture_node_alloc.sh"
+LOCK_BASE="$PWD/outputs/.capture_locks"
+
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+if [ "$((NPROW * NPCOL))" -ne "$NPROCS" ]; then
+  echo "ERROR: grid ${NPROW}x${NPCOL}=$((NPROW * NPCOL)) != ${NPROCS} ranks" >&2
+  exit 1
+fi
+
+GPU_AFFINITY=$(seq -s: 0 $((GPUS - 1)))
+
+# De-duplicated hostfile with explicit per-node slot count.
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+
+echo "experiment_id=resource-alloc-exp1"
+echo "attempt=${ATTEMPT}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} order=${NPORDER}"
+echo "n=${N} nb=${NB}"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "ucx_log_level=${UCX_LOG_LEVEL}"
+echo "=== PBS_NODEFILE (raw) ==="
+cat "$PBS_NODEFILE"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# Per-node allocation capture: best-effort instrumentation, must not block.
+# The lock dir on the shared filesystem deduplicates pbsdsh invocations so the
+# capture body runs exactly once per node.
+echo "=== per-node allocation capture (pbsdsh, once per node) ==="
+rm -rf "$LOCK_BASE"
+mkdir -p "$LOCK_BASE"
+/opt/pbs/bin/pbsdsh -- /bin/bash "$CAPTURE" "$LOCK_BASE" \
+  || echo "WARN: pbsdsh capture returned nonzero; continuing"
+
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    -x UCX_LOG_LEVEL \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity "$GPU_AFFINITY" \
+      --nprow "$NPROW" \
+      --npcol "$NPCOL" \
+      --nporder "$NPORDER" \
+      --n "$N" \
+      --nb "$NB" \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
+
+echo "=== resource-alloc exp1 attempt ${ATTEMPT} complete ==="
