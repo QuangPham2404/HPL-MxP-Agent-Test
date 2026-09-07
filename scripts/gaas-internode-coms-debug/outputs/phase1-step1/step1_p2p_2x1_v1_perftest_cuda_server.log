@@ -1,0 +1,36 @@
+[1788761089.659564] [hpc-gaas-g06:1384844:f]        vfs_sock.c:64   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788761089.659578] [hpc-gaas-g06:1384844:f]        vfs_fuse.c:441  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788761089.668981] [hpc-gaas-g06:1384844:0]        perftest.c:826  UCX  WARN  CPU affinity is not set (bound to 12 cpus). Performance may be impacted.
+Waiting for connection...
+Accepted connection from 192.168.230.16:40250
++----------------------------------------------------------------------------------------------------------+
+| API:          protocol layer                                                                             |
+| Test:         put bandwidth                                                                              |
+| Data layout:  (automatic)                                                                                |
+| Send memory:  host                                                                                       |
+| Recv memory:  host                                                                                       |
+| Message size: 4194304                                                                                    |
+| Window size:  32                                                                                         |
++----------------------------------------------------------------------------------------------------------+
+[1788761089.719270] [hpc-gaas-g06:1384844:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ucx/mt/lib/libucp.so.0)
+[1788761090.916652] [hpc-gaas-g06:1384844:0]          parser.c:2370 UCX  INFO  UCX_* env variables: UCX_PROTO_INFO=y UCX_CUDA_IPC_ENABLE_MNNVL=no UCX_IB_GPU_DIRECT_RDMA=n UCX_LOG_LEVEL=info
+[1788761090.920852] [hpc-gaas-g06:1384844:0]      ucp_worker.c:1912 UCX  INFO    perftest inter-node cfg#1 rma(rc_mlx5/mlx5_4:1)
+[1788761090.975689] [hpc-gaas-g06:1384844:0]   +---------------------------+-------------------------------------------------------------+
+[1788761090.975690] [hpc-gaas-g06:1384844:0]   | perftest inter-node cfg#1 | remote memory write by ucp_put* from host memory to host    |
+[1788761090.975691] [hpc-gaas-g06:1384844:0]   +---------------------------+------------------------------------+------------------------+
+[1788761090.975691] [hpc-gaas-g06:1384844:0]   |                     0..2K | short                              | rc_mlx5/mlx5_4:1/path0 |
+[1788761090.975692] [hpc-gaas-g06:1384844:0]   |                 2049..inf | zero-copy                          | rc_mlx5/mlx5_4:1/path0 |
+[1788761090.975692] [hpc-gaas-g06:1384844:0]   +---------------------------+------------------------------------+------------------------+
+[1788761090.975806] [hpc-gaas-g06:1384844:0]   +---------------------------+------------------------------------------------------------------------------+
+[1788761090.975806] [hpc-gaas-g06:1384844:0]   | perftest inter-node cfg#1 | remote memory write by ucp_put*(fast-completion) from host memory to host    |
+[1788761090.975806] [hpc-gaas-g06:1384844:0]   +---------------------------+-----------------------------------------------------+------------------------+
+[1788761090.975807] [hpc-gaas-g06:1384844:0]   |                     0..2K | short                                               | rc_mlx5/mlx5_4:1/path0 |
+[1788761090.975807] [hpc-gaas-g06:1384844:0]   |                2049..8794 | copy-in                                             | rc_mlx5/mlx5_4:1/path0 |
+[1788761090.975807] [hpc-gaas-g06:1384844:0]   |                 8795..inf | zero-copy                                           | rc_mlx5/mlx5_4:1/path0 |
+[1788761090.975807] [hpc-gaas-g06:1384844:0]   +---------------------------+-----------------------------------------------------+------------------------+
+[1788761090.975920] [hpc-gaas-g06:1384844:0]   +---------------------------+--------------------------------------------------------------------+
+[1788761090.975934] [hpc-gaas-g06:1384844:0]   | perftest inter-node cfg#1 | remote memory write by ucp_put*(multi) from host memory to host    |
+[1788761090.975935] [hpc-gaas-g06:1384844:0]   +---------------------------+-------------------------------------------+------------------------+
+[1788761090.975935] [hpc-gaas-g06:1384844:0]   |                    0..587 | short                                     | rc_mlx5/mlx5_4:1/path0 |
+[1788761090.975935] [hpc-gaas-g06:1384844:0]   |                  588..inf | zero-copy                                 | rc_mlx5/mlx5_4:1/path0 |
+[1788761090.975935] [hpc-gaas-g06:1384844:0]   +---------------------------+-------------------------------------------+------------------------+
