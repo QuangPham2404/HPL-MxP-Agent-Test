@@ -59,31 +59,68 @@ logs); script `debug-scripts/phase1-step1/run_phase1_step1_p2p_2x1.pbs`.
 `D D` @ 4 MiB: 107.8 µs vs 173.2 µs. `H H` identical in both runs (2.37 µs @ 8 B,
 58.7 µs @ 4 MiB) — negative control clean, A/B valid.
 
-**Transport evidence (UCX_PROTO_INFO in job log):**
+**Analysis — why the evidence proves host GPUDirect RDMA works (4 layers):**
 
-- Control `D D`: `rendezvous zero-copy read from remote — 74% on
-  rc_mlx5/mlx5_2:1 + 26% on rc_mlx5/mlx5_0:1` (from `cuda/GPU0`) → **GDR
-  zero-copy, multi-rail, but unevenly split 74/26**.
-- GDR-off `D D`: `rendezvous cuda_copy, fenced write to remote, frag host` on
-  50%/50% rails → **host staging**, as designed.
-- Control `H H`: zero-copy, **50%/50%** on two rails → 87.9 GB/s ≈ 2×400G
-  NDR rails = the fabric ceiling.
-- Topology evidence: 8× mlx5 HCAs (+1 bond) per node; GPU0 has PIX (single
-  PCIe bridge) affinity only to `mlx5_2`; all other HCAs are NODE distance.
+1. **Direct proof — protocol selection logs.** The control run selects
+   `rendezvous zero-copy read from remote` from `cuda/GPU0` over `rc_mlx5`
+   (real InfiniBand RDMA, not TCP). "Zero-copy" means the payload is never
+   staged through host memory — the NIC reads/writes GPU memory directly, which
+   *is* GPUDirect RDMA by definition. The GDR-off run selects
+   `rendezvous cuda_copy, fenced write to remote, frag host` — explicit host
+   staging. The knob flipped the data path exactly as designed.
+2. **Consequence proof — A/B performance deltas.** `D D` bandwidth @ 4 MiB:
+   50.4 → 40.2 GB/s (−20% with GDR off); `D D` latency @ 8 B: 10.2 → 20.0 µs
+   (staging pays a GPU→host→wire→host→GPU copy chain on every small message);
+   `H D`: 51.5 → 37.7 GB/s (receiver-side GPU-direct works). If GDR were
+   broken, control ≈ GDR-off everywhere; they clearly separate.
+3. **Validity proof — negative controls.** `H H` identical in both runs
+   (87,874 vs 88,158 MB/s, 0.3% noise) → the knob only touched the GPU-memory
+   path and nothing else drifted (same job, nodes, placement). Step 0 already
+   established the instrument is sound (launch path + CUDA-aware MPI), so a
+   good result here means the GDR path is good, not that the tool is broken.
+4. **The combo matrix reads "working on both ends".** `H D` +37% shows
+   receiver-side GPU registration works; `D D` +25% shows the full GPU→GPU
+   chain; no combo collapses to its GDR-off twin — which is the signature of a
+   total or one-sided GDR failure.
+   - *Nuance — `D H` shows no gain (37.9 vs 41.4 GB/s):* not evidence against
+     GDR (the logs still show zero-copy on that path). Two different
+     bottlenecks coincidentally land at the same number: the control's
+     sender-side GDR is rail-limited (~40-50 GB/s, see below) while the staged
+     pipeline also runs ~40 GB/s. Same speed, different mechanism — which is
+     why protocol logs, not just deltas, were captured.
 
-**Findings:**
+**Analysis — the CUDA multi-rail imbalance (74/26):**
 
-1. **Host GPUDirect RDMA works.** Control run selects zero-copy GDR paths for
-   CUDA memory; the GDR-off run measurably degrades `D D` bandwidth (−20%) and
-   latency (+60% @ 4 MiB) and its logs switch to `cuda_copy` host staging.
-2. **GPU traffic reaches only ~57% of the fabric ceiling** (50.4 vs 87.9 GB/s).
-   Root cause visible in the logs: **uneven multi-rail split for CUDA memory
-   (74/26) vs even (50/50) for host memory** — consistent with GPU0↔NIC PCIe
-   proximity (PIX `mlx5_2` gets 74%) driving UCX lane scoring. A 50/50 cuda
-   split would plausibly recover most of the gap.
-3. `D H` shows no GDR benefit (37.9 ≈ 41.4 GB/s) — same 74/26 rail split
-   limits it; direction asymmetry noted.
-4. `H H` unchanged between runs — the A/B comparison was clean.
+- **Hardware context** (`nvidia-smi topo -m` evidence): each node has 8 IB
+  HCAs (rails) plus an Ethernet bond. GPU0 has **PIX** affinity (single PCIe
+  bridge — the closest possible relationship) to exactly one NIC, `mlx5_2`;
+  every other HCA is **NODE** distance (reachable, but crossing PCIe host
+  bridges).
+- **UCX multi-rail behavior**: host memory → clean **50/50** across two rails
+  → 87.9 GB/s ≈ 2×400G NDR at ~88% efficiency ⇒ each rail carries ~44 GB/s.
+  CUDA memory → **74% `mlx5_2` / 26% `mlx5_0`** → 50.4 GB/s.
+- **Why the split is uneven for CUDA**: UCX scores each lane by estimated
+  cost. Host memory looks symmetric from the process → tie → 50/50. GPU memory
+  is asymmetric: `mlx5_2` sits on GPU0's own PCIe switch (PIX), `mlx5_0`
+  needs extra hops (NODE) → the far rail is scored worse and gets less
+  traffic.
+- **The arithmetic of the gap**: with a 74/26 split, both rails run in
+  parallel but the 74%-loaded rail finishes last — it must carry 74% of the
+  bytes at ~44 GB/s, bounding the transfer at ~44/0.74 ≈ 59 GB/s theoretical;
+  50.4 GB/s observed. A balanced 50/50 would approach ~87 GB/s (the host
+  ceiling). So the imbalance — not a broken GDR path — caps GPU traffic at 57%
+  of the fabric.
+- **Relevance to HPL-MxP**: the app's inter-node traffic is GPU-resident; if
+  the container's stack (UCX, or NCCL — which selects NICs independently)
+  makes a similar-or-worse rail choice, inter-node comms could run at roughly
+  half the available bandwidth — a plausible contributor to the slow 3x4
+  baseline.
+- **Caveat — do not over-infer**: this test had only **1 GPU visible per
+  node** (PBS cgroup), so all traffic funneled through GPU0's viewpoint. In
+  the real 3x4 topology, each rank/GPU would plausibly prefer its own
+  PIX-paired NIC, and the rail picture may look different (better, or
+  differently bad). NCCL inside the container is a separate rail
+  decision-maker (Track 2.2). **Kept for further investigation.**
 
 **Void items (recorded, not rerun):** (a) `ucx_perftest` cross-check is void —
 a script bug let it inherit `UCX_IB_GPU_DIRECT_RDMA=n` from the GDR-off suite,
@@ -99,9 +136,13 @@ debugging (e.g. the 74/26 rail split) awaits user instruction.
 
 **Suggested follow-ups (not executed):**
 
-- Investigate the CUDA 74/26 rail split — potential ~40% more inter-node GPU
-  bandwidth at 2x1; check whether other GPUs/topologies (3x4) show the same.
+- **Rail-split investigation** (with the 1-GPU-per-node caveat above): force a
+  single rail (e.g. `UCX_TLS=rc_mlx5_2`) to confirm ~44 GB/s per rail; check
+  rail-count/selection knobs (e.g. `UCX_MAX_RNDV_RAILS`, to be verified
+  against `ucx_info -c` before use); check whether the 3x4 per-GPU mapping
+  naturally produces balanced rails.
 - Phase B collective ladder as planned (2x1 → 2x2 → 3x1 → 3x4).
 - Per the debug plan, host GDR working means Track 2.2 (test the same
   capability inside the HPL-MxP container) remains the eventual branch.
+
 
