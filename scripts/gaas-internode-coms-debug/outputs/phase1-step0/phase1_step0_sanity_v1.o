@@ -1,0 +1,69 @@
+=== Phase 1 Step 0 sanity metadata ===
+debug_dir=scripts/gaas-internode-coms-debug
+attempt=phase1_step0_sanity_v1
+pbs_job_id=59640.gaas
+2026-09-07T12:36:34+08:00
+layout=2 nodes x 1 GPU = 2 ranks
+nodes=hpc-gaas-g06 hpc-gaas-g07
+mpirun=/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/bin/mpirun
+osu_dir=/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/tests/osu-micro-benchmarks-cuda
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/multi-node-test/rsh_pbsdsh.sh
+=== hostfile ===
+hpc-gaas-g06 slots=1
+hpc-gaas-g07 slots=1
+=== Check A: host OpenMPI CUDA support (ompi_info) ===
+  Configure command line: 'CC=gcc' 'CXX=g++' 'FC=nvfortran' 'LDFLAGS=-Wl,-rpath-link=/proj/nv/libraries/Linux_x86_64/26.3/hpcx-13/293877-rel-1/comm_libs/13.1/hpcx/hpcx-2.25.1/ucx/lib -Wl,-rpath-link=/proj/nv/libraries/Linux_x86_64/26.3/hpcx-13/293877-rel-1/comm_libs/13.1/hpcx/hpcx-2.25.1/hcoll/lib' '--with-platform=../contrib/platform/nvhpc/optimized' '--enable-mpi1-compatibility' '--with-libevent=internal' '--without-xpmem' '--without-cray-xpmem' '--with-slurm' '--with-cuda=/proj/cuda/13.0/Linux_x86_64' '--with-hcoll=/proj/nv/libraries/Linux_x86_64/26.3/hpcx-13/293877-rel-1/comm_libs/13.1/hpcx/hpcx-2.25.1/hcoll' '--with-ucc=/proj/nv/libraries/Linux_x86_64/26.3/hpcx-13/293877-rel-1/comm_libs/13.1/hpcx/hpcx-2.25.1/ucc' '--with-ucx=/proj/nv/libraries/Linux_x86_64/26.3/hpcx-13/293877-rel-1/comm_libs/13.1/hpcx/hpcx-2.25.1/ucx' '--prefix=/proj/nv/libraries/Linux_x86_64/26.3/hpcx-13/293877-rel-1/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi'
+          MPI extensions: affinity, cuda, pcollreq
+                 MCA btl: smcuda (MCA v2.1.0, API v3.1.0, Component v4.1.9)
+                MCA coll: cuda (MCA v2.1.0, API v2.0.0, Component v4.1.9)
+           MCA opal base: informational "opal_built_with_cuda_support" (current value: "true", data source: default, level: 4 tuner/basic, type: bool, synonyms: mpi_built_with_cuda_support)
+                          Whether CUDA GPU buffer support is built into library or not
+           MCA opal base: parameter "opal_cuda_support" (current value: "true", data source: default, level: 3 user/all, type: bool, synonyms: mpi_cuda_support)
+                          Whether CUDA GPU buffer support is enabled or not
+           MCA opal base: parameter "opal_warn_on_missing_libcuda" (current value: "false", data source: file (/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/etc/openmpi-mca-params.conf:83), level: 3 user/all, type: bool)
+                          Whether to print a message when CUDA support is enabled but libcuda is not found
+      MCA (-) btl smcuda: ---------------------------------------------------
+      MCA (-) btl smcuda: parameter "btl_smcuda_min_size" (current value: "134217728", data source: default, level: 9 dev/all, type: unsigned_long)
+      MCA (-) btl smcuda: parameter "btl_smcuda_free_list_num" (current value: "8", data source: default, level: 5 tuner/detail, type: int)
+      MCA (-) btl smcuda: parameter "btl_smcuda_free_list_max" (current value: "-1", data source: default, level: 5 tuner/detail, type: int)
+      MCA (-) btl smcuda: parameter "btl_smcuda_free_list_inc" (current value: "64", data source: default, level: 5 tuner/detail, type: int)
+cuda_support_lines=74
+=== Check B: per-rank host + GPU visibility ===
+rank=1/2 host=hpc-gaas-g07 localrank=0
+rank=0/2 host=hpc-gaas-g06 localrank=0
+GPU 0: NVIDIA H200 (UUID: GPU-35515223-516d-0e6c-1227-4de321c27d4c)
+GPU 0: NVIDIA H200 (UUID: GPU-02da5f4b-640f-269e-32b6-dda1a82bd314)
+=== Check C: osu_hello (host-native, cross-node) ===
+# OSU MPI Hello World Test v7.4
+This is a test with 2 processes
+=== Check D: osu_allreduce (host buffers, default sizes) ===
+
+# OSU MPI Allreduce Latency Test v7.4
+# Datatype: MPI_FLOAT.
+# Size       Avg Latency(us)
+4                       2.87
+8                       2.87
+16                      2.86
+32                      2.89
+64                      3.36
+128                     3.38
+256                     3.64
+512                     3.70
+1024                    3.88
+2048                    6.04
+4096                   12.23
+8192                   11.77
+16384                  12.60
+32768                  16.02
+65536                  28.94
+131072                 35.75
+262144                 45.78
+524288                 63.62
+1048576               104.72
+=== Step 0 summary ===
+check_A_ompi_cuda=0
+check_B_rank_gpu_info=0
+check_C_osu_hello=0
+check_D_osu_allreduce=0
+STEP0_RESULT=PASS
+=== phase1_step0_sanity_v1 complete ===
