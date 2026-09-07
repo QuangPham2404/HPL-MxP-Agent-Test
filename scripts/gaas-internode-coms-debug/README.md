@@ -28,3 +28,95 @@ Debug plan overview is as follows:
 HPL-MxP uses 2 communcation MPI: CUDA-aware MPI and NCCL. We need 2 tests to test if GPUDirect RDMA works for BOTH API. The chosen tests are:
 - `osu-cuda` for CUDA-aware MPI
 - `nccl-test` for NCCL
+
+HPL-MxP uses both **CUDA-aware MPI** and **NCCL**, so test GPUDirect RDMA through both paths.
+
+Start simple:
+
+```text id="h11vwe"
+2 nodes × 1 GPU per node
+```
+
+---
+
+#### 1. `osu-cuda` — CUDA-aware MPI
+
+**Goal:** Check whether MPI/UCX can move GPU buffers directly over InfiniBand using GPUDirect RDMA.
+
+**Test:**
+
+* Run OSU GPU-to-GPU bandwidth test across 2 nodes.
+* Enable UCX debug logging.
+* Compare:
+
+  * normal/default run
+  * GPUDirect RDMA deliberately disabled
+
+**Record:**
+
+* Bandwidth
+* UCX-selected transport/HCA
+* GPU-memory/GDR-related log messages
+* Difference between default and GDR-disabled runs
+
+**GDRDMA likely working if:**
+
+* UCX uses mlx5/InfiniBand RDMA
+* logs indicate GPU memory is used through the RDMA path
+* bandwidth is high
+* disabling GDR causes a clear path/performance change
+
+**GDRDMA likely not working if:**
+
+* GPU buffers are staged through host memory
+* UCX falls back from the GPU-RDMA path
+* disabling GDR causes little/no difference
+
+---
+
+#### 2. `nccl-tests` — NCCL
+
+**Goal:** Check whether NCCL uses GPUDirect RDMA for inter-node GPU communication.
+
+**Test:**
+
+* Run `sendrecv` first on 2 nodes × 1 GPU.
+* Optionally test broadcast afterward because HPL-MxP uses panel broadcasts.
+* Enable NCCL network/topology debug logs.
+* Compare:
+
+  * normal/default run
+  * GDR deliberately disabled
+
+**Record:**
+
+* Bandwidth
+* NCCL network backend
+* selected HCA
+* GDR-related log messages
+* Difference between default and GDR-disabled runs
+
+**GDRDMA likely working if:**
+
+* NCCL uses InfiniBand
+* logs show a GPU↔NIC GDR path
+* bandwidth is high
+* disabling GDR causes a clear degradation/change
+
+**GDRDMA likely not working if:**
+
+* NCCL falls back to Socket/TCP
+* InfiniBand is used but GPU data is host-staged
+* NCCL reports GDR unavailable/disabled
+* disabling GDR makes little/no difference
+
+---
+
+#### Phase 1 decision
+
+| OSU  | NCCL | Conclusion                                        |
+| ---- | ---- | ------------------------------------------------- |
+| Pass | Pass | Host GDRDMA works → test inside HPL-MxP container |
+| Fail | Fail | Go down the host RDMA/GPU-memory stack            |
+| Pass | Fail | Investigate NCCL path                             |
+| Fail | Pass | Investigate MPI/UCX path                          |
