@@ -1,0 +1,161 @@
+#!/bin/bash
+# Phase 1 Step 1, Phase B (collectives): host GPUDirect RDMA verification via OSU
+# CUDA-aware MPI collective benchmarks on 2 nodes x 1 GPU.
+#
+# Expected working directory: scripts/gaas-internode-coms-debug/debug-scripts/phase1-step1/ on GAAS.
+# Submit with: qsub run_phase1_step1_coll_2x1.pbs
+# Inputs: PBS select=2:ngpus=1 (place=scatter); host HPC-X 2.25.1 via module nvhpc/26.3.
+# Outputs: ../../outputs/phase1-step1/step1_coll_2x1_v1.{o,e} plus per-node ucx/nvtopo
+#          evidence logs; hostfile_coll_2x1 in this directory.
+# Design: A/B in one job on the same nodes and placement: control run (default UCX) vs
+#         GDR-off run (UCX_IB_GPU_DIRECT_RDMA=n; disables only inter-node GPU-RDMA,
+#         intra-node NVLink IPC still works, so the A/B delta isolates the inter-node
+#         GPU path inside the collective). Tests per run: osu_bcast and osu_allreduce,
+#         each with host buffers (H H: collective fabric baseline + negative control)
+#         and CUDA buffers (-d cuda: HPL-MxP panel-broadcast / reduction analogs).
+#         bcast uses -m 67108864 (up to 64 MiB, HPL-MxP panel-scale); allreduce uses
+#         default sizes. GPU per rank = CUDA_VISIBLE_DEVICES=local rank. No CPU binding
+#         (--bind-to none, matching real HPL-MxP runs); topology and affinity are
+#         recorded, not controlled.
+# Assumptions: multi-node-test/rsh_pbsdsh.sh at repo root; launch flags follow
+#         multi-node-test/GAAS_MULTINODE_SETUP.md section 1.2.
+
+#PBS -N P1S1_C2X1
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=2:ngpus=1
+#PBS -l place=scatter
+#PBS -l walltime=00:30:00
+#PBS -o ../../outputs/phase1-step1/step1_coll_2x1_v1.o
+#PBS -e ../../outputs/phase1-step1/step1_coll_2x1_v1.e
+
+# Multi-run A/B diagnostic: attempt every test in both runs, capture each exit status,
+# then summarize. -e is intentionally omitted so one failed test does not hide the rest.
+set -uo pipefail
+
+cd "$PBS_O_WORKDIR"
+OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase1-step1"
+mkdir -p "$OUTDIR"
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
+
+module purge
+module load nvhpc/26.3
+chmod +x "$BRIDGE"
+
+HPCX="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1"
+export OSU_DIR="$HPCX/ompi/tests/osu-micro-benchmarks-cuda"
+export UCXBIN="$HPCX/ucx/bin"
+export LABEL="step1_coll_2x1_v1"
+
+GPUS=1
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+
+# De-duplicated hostfile with explicit per-node slot count (Blocker 8 pattern).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile_coll_2x1"
+
+echo "=== Phase 1 Step 1 (Phase B: collectives 2x1) metadata ==="
+echo "debug_dir=scripts/gaas-internode-coms-debug"
+echo "attempt=$LABEL"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "mpirun=$(command -v mpirun)"
+echo "osu_dir=$OSU_DIR"
+echo "bridge=$BRIDGE"
+echo "binding=none (record-only evidence; matches HPL-MxP run conditions)"
+echo "=== hostfile ==="
+cat "$PWD/hostfile_coll_2x1"
+
+# Canonical host-native launch base (GAAS_MULTINODE_SETUP.md 1.2). UCX_* variables are
+# additionally forwarded with -x so all nodes provably see them (required for a valid A/B).
+MPICMD_BASE=(mpirun -np "$NPROCS"
+  --hostfile "$PWD/hostfile_coll_2x1"
+  --mca plm_rsh_agent "$BRIDGE"
+  --mca plm_rsh_no_tree_spawn 1
+  --mca plm_rsh_num_concurrent 1
+  --mca routed direct
+  --bind-to none)
+
+export UCX_LOG_LEVEL=info
+export UCX_PROTO_INFO=y
+
+# --- Evidence: rank placement + GPUs, per-node UCX devices + NV topology ---
+echo "=== Evidence: rank affinity + GPUs ==="
+"${MPICMD_BASE[@]}" bash -c 'echo "rank=$OMPI_COMM_WORLD_RANK/$OMPI_COMM_WORLD_SIZE host=$(hostname) localrank=$OMPI_COMM_WORLD_LOCAL_RANK cpus_allowed=$(grep Cpus_allowed_list /proc/self/status | cut -f2) gpus=[$(nvidia-smi -L 2>/dev/null | tr "\n" ";")]"; true'
+EVID_RC=$?
+
+export OUTDIR
+echo "=== Evidence: ucx_info -d + nvidia-smi topo -m per node (to log files) ==="
+"${MPICMD_BASE[@]}" -x OUTDIR -x UCXBIN -x LABEL bash -c '
+  if [ "$OMPI_COMM_WORLD_LOCAL_RANK" = "0" ]; then
+    "$UCXBIN/ucx_info" -d > "$OUTDIR/${LABEL}_ucxdev_$(hostname).log" 2>&1
+    nvidia-smi topo -m > "$OUTDIR/${LABEL}_nvtopo_$(hostname).log" 2>&1
+    echo "evidence_written host=$(hostname)"
+  fi; true'
+EVID_RC2=$?
+
+# --- A/B suite: control run vs GDR-off run, same nodes and placement ---
+FAILS=0
+TOTAL=0
+
+run_suite() {
+  # run_suite <mode: ctrl|gdroff> — runs the collective test matrix with the mode's UCX env.
+  local mode="$1"
+  local -a xflags=()
+  local rc
+  if [ "$mode" = "gdroff" ]; then
+    export UCX_IB_GPU_DIRECT_RDMA=n
+    xflags=(-x UCX_IB_GPU_DIRECT_RDMA)
+  else
+    unset UCX_IB_GPU_DIRECT_RDMA
+  fi
+  echo ""
+  echo "########## RUN: $mode (UCX_IB_GPU_DIRECT_RDMA=${UCX_IB_GPU_DIRECT_RDMA:-unset}) ##########"
+  date --iso-8601=seconds
+
+  echo "=== [$mode] osu_bcast H H (up to 64 MiB) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO "${xflags[@]}" \
+    "$OSU_DIR/osu_bcast" -m 67108864
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_bcast_HH=$rc"
+
+  echo "=== [$mode] osu_bcast -d cuda (up to 64 MiB) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO "${xflags[@]}" -x OSU_DIR \
+    bash -c 'export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK; exec "$OSU_DIR/osu_bcast" -d cuda -m 67108864'
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_bcast_cuda=$rc"
+
+  echo "=== [$mode] osu_allreduce H H (default sizes) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO "${xflags[@]}" \
+    "$OSU_DIR/osu_allreduce"
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_allreduce_HH=$rc"
+
+  echo "=== [$mode] osu_allreduce -d cuda (default sizes) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO "${xflags[@]}" -x OSU_DIR \
+    bash -c 'export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK; exec "$OSU_DIR/osu_allreduce" -d cuda'
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_allreduce_cuda=$rc"
+  return 0
+}
+
+run_suite ctrl
+run_suite gdroff
+
+echo ""
+echo "=== Phase B (2x1) summary ==="
+echo "evidence_rank_gpu_rc=$EVID_RC"
+echo "evidence_node_logs_rc=$EVID_RC2"
+echo "total_ab_tests=$TOTAL"
+echo "failed_ab_tests=$FAILS"
+if [ "$FAILS" -eq 0 ]; then
+  echo "COLL_2X1_RESULT=ALL_TESTS_COMPLETED"
+else
+  echo "COLL_2X1_RESULT=SOME_TESTS_FAILED"
+fi
+echo "=== step1_coll_2x1_v1 complete ==="
