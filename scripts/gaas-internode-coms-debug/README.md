@@ -161,3 +161,41 @@ Interpretation: healthy GDR ⇒ all four `osu_bw` combos near line rate; staged 
 
 `osu_bcast` and `osu_allreduce` with CUDA buffers (`-d cuda`, verified in-job with `H H` fallback) at 2x1 → 2x2 → 3x1 → 3x4, one job per topology, same control/GDR-off structure. With GDR off, only inter-node GPU-RDMA is disabled (intra-node NVLink IPC still works), so the A/B delta isolates the inter-node GPU path.
 
+---
+
+### Phase 1 — status and resume point (2026-09-07)
+
+**Completed:**
+
+- **Step 0 (sanity): PASS** — host launch path (`mpirun` + `rsh_pbsdsh.sh` bridge)
+  and CUDA-aware host MPI verified (`phase1_step0_sanity_v1`, job `59640.gaas`).
+- **Step 1 Phase A (p2p GDR A/B at 2x1): PASS** — host GPUDirect RDMA works:
+  UCX selects zero-copy GDR for CUDA memory; GDR-off measurably degrades `D D`
+  bandwidth and latency; `H H` negative control unchanged
+  (`step1_p2p_2x1_v1`, job `59671.gaas`).
+  - New finding: CUDA inter-node traffic uses an uneven **74/26** multi-rail
+    split (vs 50/50 for host memory), capping GPU traffic at ~57% of the fabric
+    ceiling (50.4 vs 87.9 GB/s @ 4 MiB). GPU0 has PIX PCIe affinity only to
+    `mlx5_2`; other HCAs are NODE distance.
+
+**Pending (in plan order):**
+
+1. **Step 1 Phase B — collective ladder** (awaiting user go-ahead):
+   `osu_bcast -d cuda` + `osu_allreduce -d cuda` (in-job `-d cuda` verification,
+   `H H` fallback), control vs GDR-off per topology, one job at a time:
+   2x1 → 2x2 → 3x1 → 3x4. Scripts to be written in
+   `debug-scripts/phase1-step1/`, outputs in `outputs/phase1-step1/`.
+2. **Optional (user decision): investigate the CUDA 74/26 rail split** —
+   potential ~40% more inter-node GPU bandwidth; check whether other GPUs and
+   the 3x4 topology show the same imbalance.
+3. **Phase 1 test 2 — `nccl-tests` (NCCL path)**: still blocked on the missing
+   host `libnccl.so.2` (recorded 2026-09-03). NCCL GDR path unverified.
+4. **After Phase 1 completes**: branch per the Phase 1 decision matrix — host
+   GDR working ⇒ **Track 2.2** (test the same capability inside the HPL-MxP
+   container).
+
+**Resume point:** awaiting user instruction on pending item 1 vs item 2. All
+results, analysis, and evidence pointers are in `DEBUG_PROGRESS.md`;
+raw evidence in `outputs/phase1-step0/` and `outputs/phase1-step1/`.
+
+
