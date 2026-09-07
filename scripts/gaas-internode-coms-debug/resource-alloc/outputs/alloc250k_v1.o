@@ -1,0 +1,940 @@
+experiment_id=resource-alloc-exp1
+attempt=alloc250k_v1
+pbs_job_id=59932.gaas
+2026-09-07T23:45:07+08:00
+layout=3 nodes x 4 GPUs = 12 ranks
+grid=nprow=3 npcol=4 order=row
+n=250000 nb=1024
+nodes=hpc-gaas-g09 hpc-gaas-g15 hpc-gaas-g16
+gpu_affinity=0:1:2:3
+ucx_log_level=info
+=== PBS_NODEFILE (raw) ===
+hpc-gaas-g09
+hpc-gaas-g15
+hpc-gaas-g16
+=== hostfile ===
+hpc-gaas-g09 slots=4
+hpc-gaas-g15 slots=4
+hpc-gaas-g16 slots=4
+=== per-node allocation capture (pbsdsh, once per node) ===
+=== NODE-CAPTURE BEGIN hpc-gaas-g09 ===
+2026-09-07T23:45:08+08:00
+--- job cpuset / mems (this node) ---
+Cpus_allowed_list:	48-49,56-101
+Mems_allowed_list:	0-1
+--- numa node cpulists ---
+node0 cpus=0-55
+node1 cpus=56-111
+--- host GPU inventory (all GPUs, PCI bus ids) ---
+GPU 0: NVIDIA H200 (UUID: GPU-2b8d68cb-aace-3293-9a74-63cbabad8584)
+GPU 1: NVIDIA H200 (UUID: GPU-613513ed-ed89-1810-bb69-41c0f4b3a999)
+GPU 2: NVIDIA H200 (UUID: GPU-c8a90321-8a11-86bc-699f-64da9e6fbf4c)
+GPU 3: NVIDIA H200 (UUID: GPU-cc705670-c11c-47d7-e404-d63249ab5939)
+--- host per-GPU memory used (co-tenancy hint) ---
+=== NODE-CAPTURE BEGIN hpc-gaas-g15 ===
+index, pci.bus_id, memory.used [MiB]
+2026-09-07T23:45:09+08:00
+--- job cpuset / mems (this node) ---
+Cpus_allowed_list:	0-23,36-49,56-65
+Mems_allowed_list:	0-1
+--- numa node cpulists ---
+=== NODE-CAPTURE BEGIN hpc-gaas-g16 ===
+node0 cpus=0-55
+2026-09-07T23:45:09+08:00
+--- job cpuset / mems (this node) ---
+Cpus_allowed_list:	0-47
+Mems_allowed_list:	0-1
+--- numa node cpulists ---
+0, 00000000:1B:00.0, 0 MiB
+node1 cpus=56-111
+--- host GPU inventory (all GPUs, PCI bus ids) ---
+node0 cpus=0-55
+node1 cpus=56-111
+--- host GPU inventory (all GPUs, PCI bus ids) ---
+1, 00000000:3C:00.0, 0 MiB
+2, 00000000:4B:00.0, 0 MiB
+3, 00000000:5C:00.0, 0 MiB
+--- GPU/NIC/NUMA topology matrix ---
+GPU 0: NVIDIA H200 (UUID: GPU-b01111e3-0bd1-bd1c-520b-bc7b09205288)
+GPU 1: NVIDIA H200 (UUID: GPU-705e42e4-4b5b-3a6f-3593-ad7c97fca505)
+GPU 2: NVIDIA H200 (UUID: GPU-f350d419-daf6-84ac-b0bd-5f8cee4fa7cb)
+GPU 3: NVIDIA H200 (UUID: GPU-7d4d924f-234d-14af-b15e-245e4403ea77)
+GPU 0: NVIDIA H200 (UUID: GPU-0890a8d9-0976-ce8f-fa3d-9418fa0f0052)
+GPU 1: NVIDIA H200 (UUID: GPU-71f4f87a-77fc-55f7-0a0a-77f6c1f6a048)
+GPU 2: NVIDIA H200 (UUID: GPU-b276c969-93ae-a0ef-0a76-679316a88be5)
+GPU 3: NVIDIA H200 (UUID: GPU-3c85f98f-fb33-9bcf-4ef2-39ce8b1ae802)
+--- host per-GPU memory used (co-tenancy hint) ---
+--- host per-GPU memory used (co-tenancy hint) ---
+index, pci.bus_id, memory.used [MiB]
+index, pci.bus_id, memory.used [MiB]
+0, 00000000:5C:00.0, 0 MiB
+0, 00000000:9A:00.0, 0 MiB
+1, 00000000:9A:00.0, 0 MiB
+1, 00000000:BB:00.0, 0 MiB
+2, 00000000:CD:00.0, 0 MiB
+2, 00000000:CD:00.0, 0 MiB
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+3, 00000000:DC:00.0, 0 MiB
+3, 00000000:DC:00.0, 0 MiB
+--- GPU/NIC/NUMA topology matrix ---
+--- GPU/NIC/NUMA topology matrix ---
+GPU0	 X 	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	48-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	48-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	48-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	48-49	0		N/A
+NIC0	PIX	NODE	NODE	NODE	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+--- ibdev2netdev ---
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+mlx5_0 port 1 ==> ibp24s0 (Up)
+GPU0	 X 	NV18	NV18	NV18	NODE	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE		1		N/A
+GPU1	NV18	 X 	NV18	NV18	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	PIX		1		N/A
+GPU2	NV18	NV18	 X 	NV18	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE		1		N/A
+GPU3	NV18	NV18	NV18	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE		1		N/A
+NIC0	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC1	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC2	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC3	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE				
+NIC4	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE				
+NIC5	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	PIX				
+NIC6	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE				
+NIC7	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE				
+NIC8	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+GPU0	 X 	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-23,36-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-65	1		N/A
+GPU2	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-65	1		N/A
+GPU3	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-65	1		N/A
+NIC0	NODE	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	PIX	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	PIX	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	NODE	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	NODE	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+--- ibdev2netdev ---
+--- ibdev2netdev ---
+mlx5_1 port 1 ==> ibp58s0 (Up)
+mlx5_2 port 1 ==> ibp77s0 (Up)
+mlx5_3 port 1 ==> ibp93s0 (Up)
+mlx5_4 port 1 ==> ibp155s0 (Up)
+mlx5_5 port 1 ==> ibp186s0 (Up)
+mlx5_0 port 1 ==> ibp24s0 (Up)
+mlx5_0 port 1 ==> ibp24s0 (Up)
+mlx5_8 port 1 ==> ibp204s0 (Up)
+mlx5_1 port 1 ==> ibp58s0 (Up)
+mlx5_1 port 1 ==> ibp58s0 (Up)
+mlx5_9 port 1 ==> ibp219s0 (Up)
+mlx5_2 port 1 ==> ibp77s0 (Up)
+mlx5_2 port 1 ==> ibp77s0 (Up)
+mlx5_bond_0 port 1 ==> bond0 (Up)
+--- per-NIC numa node ---
+mlx5_3 port 1 ==> ibp93s0 (Up)
+mlx5_0 numa_node=0
+mlx5_3 port 1 ==> ibp93s0 (Up)
+mlx5_1 numa_node=0
+mlx5_2 numa_node=0
+mlx5_4 port 1 ==> ibp155s0 (Up)
+mlx5_3 numa_node=0
+mlx5_4 port 1 ==> ibp155s0 (Up)
+mlx5_4 numa_node=1
+mlx5_5 numa_node=1
+mlx5_5 port 1 ==> ibp186s0 (Up)
+mlx5_8 numa_node=1
+mlx5_5 port 1 ==> ibp186s0 (Up)
+mlx5_9 numa_node=1
+mlx5_bond_0 numa_node=1
+--- container GPU view (renumbered; what the run uses) ---
+mlx5_8 port 1 ==> ibp204s0 (Up)
+mlx5_8 port 1 ==> ibp204s0 (Up)
+mlx5_9 port 1 ==> ibp219s0 (Up)
+mlx5_9 port 1 ==> ibp219s0 (Up)
+mlx5_bond_0 port 1 ==> bond0 (Up)
+mlx5_bond_0 port 1 ==> bond0 (Up)
+--- per-NIC numa node ---
+--- per-NIC numa node ---
+mlx5_0 numa_node=0
+mlx5_0 numa_node=0
+mlx5_1 numa_node=0
+mlx5_1 numa_node=0
+mlx5_2 numa_node=0
+mlx5_2 numa_node=0
+mlx5_3 numa_node=0
+mlx5_3 numa_node=0
+mlx5_4 numa_node=1
+mlx5_4 numa_node=1
+mlx5_5 numa_node=1
+mlx5_5 numa_node=1
+mlx5_8 numa_node=1
+mlx5_8 numa_node=1
+mlx5_9 numa_node=1
+mlx5_9 numa_node=1
+mlx5_bond_0 numa_node=1
+--- container GPU view (renumbered; what the run uses) ---
+mlx5_bond_0 numa_node=1
+--- container GPU view (renumbered; what the run uses) ---
+GPU 0: NVIDIA H200 (UUID: GPU-0890a8d9-0976-ce8f-fa3d-9418fa0f0052)
+GPU 1: NVIDIA H200 (UUID: GPU-71f4f87a-77fc-55f7-0a0a-77f6c1f6a048)
+GPU 2: NVIDIA H200 (UUID: GPU-b276c969-93ae-a0ef-0a76-679316a88be5)
+GPU 3: NVIDIA H200 (UUID: GPU-3c85f98f-fb33-9bcf-4ef2-39ce8b1ae802)
+=== NODE-CAPTURE END hpc-gaas-g16 ===
+GPU 0: NVIDIA H200 (UUID: GPU-b01111e3-0bd1-bd1c-520b-bc7b09205288)
+GPU 1: NVIDIA H200 (UUID: GPU-705e42e4-4b5b-3a6f-3593-ad7c97fca505)
+GPU 2: NVIDIA H200 (UUID: GPU-f350d419-daf6-84ac-b0bd-5f8cee4fa7cb)
+GPU 3: NVIDIA H200 (UUID: GPU-7d4d924f-234d-14af-b15e-245e4403ea77)
+=== NODE-CAPTURE END hpc-gaas-g15 ===
+GPU 0: NVIDIA H200 (UUID: GPU-2b8d68cb-aace-3293-9a74-63cbabad8584)
+GPU 1: NVIDIA H200 (UUID: GPU-613513ed-ed89-1810-bb69-41c0f4b3a999)
+GPU 2: NVIDIA H200 (UUID: GPU-c8a90321-8a11-86bc-699f-64da9e6fbf4c)
+GPU 3: NVIDIA H200 (UUID: GPU-cc705670-c11c-47d7-e404-d63249ab5939)
+=== NODE-CAPTURE END hpc-gaas-g09 ===
+[1788795927.399965] [hpc-gaas-g16:3865153:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.399983] [hpc-gaas-g16:3865153:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.399964] [hpc-gaas-g16:3865137:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.399983] [hpc-gaas-g16:3865137:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.399963] [hpc-gaas-g16:3865194:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.399983] [hpc-gaas-g16:3865194:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.399998] [hpc-gaas-g16:3865123:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.400015] [hpc-gaas-g16:3865123:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.402171] [hpc-gaas-g16:3865194:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795927.402171] [hpc-gaas-g16:3865153:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795927.402172] [hpc-gaas-g16:3865123:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795927.402179] [hpc-gaas-g16:3865137:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795927.992693] [hpc-gaas-g09:3697763:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.992712] [hpc-gaas-g09:3697763:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.992694] [hpc-gaas-g09:3697780:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.992713] [hpc-gaas-g09:3697780:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.992696] [hpc-gaas-g09:3697821:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.992713] [hpc-gaas-g09:3697821:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.992703] [hpc-gaas-g09:3697749:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795927.992721] [hpc-gaas-g09:3697749:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795927.993673] [hpc-gaas-g09:3697780:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795927.993676] [hpc-gaas-g09:3697763:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795927.993678] [hpc-gaas-g09:3697749:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795927.993680] [hpc-gaas-g09:3697821:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795928.082445] [hpc-gaas-g15:1348590:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795928.082465] [hpc-gaas-g15:1348590:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795928.082449] [hpc-gaas-g15:1348658:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795928.082467] [hpc-gaas-g15:1348658:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795928.082452] [hpc-gaas-g15:1348605:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795928.082475] [hpc-gaas-g15:1348605:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795928.082474] [hpc-gaas-g15:1348619:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788795928.082497] [hpc-gaas-g15:1348619:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788795928.083521] [hpc-gaas-g15:1348590:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795928.083524] [hpc-gaas-g15:1348658:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795928.083524] [hpc-gaas-g15:1348619:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795928.083525] [hpc-gaas-g15:1348605:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795928.839120] [hpc-gaas-g16:3865123:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795928.996498] [hpc-gaas-g16:3865153:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795929.245790] [hpc-gaas-g16:3865194:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795929.439420] [hpc-gaas-g16:3865137:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795929.543882] [hpc-gaas-g09:3697749:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795929.610356] [hpc-gaas-g15:1348619:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795929.829462] [hpc-gaas-g15:1348658:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795929.847883] [hpc-gaas-g09:3697780:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795930.123238] [hpc-gaas-g09:3697763:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795930.326074] [hpc-gaas-g15:1348605:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795930.379739] [hpc-gaas-g09:3697821:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795930.405944] [hpc-gaas-g15:1348590:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788795930.406326] [hpc-gaas-g09:3697749:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.406339] [hpc-gaas-g09:3697780:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.406343] [hpc-gaas-g09:3697763:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.406370] [hpc-gaas-g09:3697821:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.408141] [hpc-gaas-g15:1348605:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.408152] [hpc-gaas-g15:1348619:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.406790] [hpc-gaas-g16:3865137:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.406790] [hpc-gaas-g16:3865194:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.406789] [hpc-gaas-g16:3865153:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.406843] [hpc-gaas-g16:3865123:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.408977] [hpc-gaas-g15:1348658:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.408991] [hpc-gaas-g15:1348590:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795930.608931] [hpc-gaas-g15:1348658:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.621416] [hpc-gaas-g09:3697763:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788795930.622918] [hpc-gaas-g09:3697780:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788795930.625495] [hpc-gaas-g09:3697821:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788795930.626097] [hpc-gaas-g09:3697749:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788795930.629240] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.631526] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.632054] [hpc-gaas-g15:1348619:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.633456] [hpc-gaas-g16:3865194:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.633456] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.633501] [hpc-gaas-g16:3865123:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.633538] [hpc-gaas-g16:3865137:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788795930.683055] [hpc-gaas-g09:3697763:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788795930.683532] [hpc-gaas-g09:3697780:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788795930.684988] [hpc-gaas-g09:3697821:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788795930.686851] [hpc-gaas-g09:3697749:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788795930.692267] [hpc-gaas-g15:1348619:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795930.692498] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795930.696631] [hpc-gaas-g16:3865194:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795930.696726] [hpc-gaas-g16:3865123:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795930.696792] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795930.696802] [hpc-gaas-g16:3865137:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795930.713324] [hpc-gaas-g09:3697749:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788795931.256703] [hpc-gaas-g15:1348658:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795931.268318] [hpc-gaas-g15:1348658:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795931.375675] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795931.387178] [hpc-gaas-g15:1348590:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788795931.769825] [hpc-gaas-g16:3865123:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.769828] [hpc-gaas-g16:3865194:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.769829] [hpc-gaas-g16:3865153:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.769834] [hpc-gaas-g16:3865137:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.787765] [hpc-gaas-g09:3697763:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.787765] [hpc-gaas-g09:3697780:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.787765] [hpc-gaas-g09:3697821:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.787769] [hpc-gaas-g09:3697749:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.811848] [hpc-gaas-g15:1348619:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.811848] [hpc-gaas-g15:1348605:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.811865] [hpc-gaas-g15:1348590:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795931.811909] [hpc-gaas-g15:1348658:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788795932.671140] [hpc-gaas-g09:3697780:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788795932.676424] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795932.687308] [hpc-gaas-g15:1348619:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795932.690909] [hpc-gaas-g09:3697749:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788795934.442274] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795934.457717] [hpc-gaas-g16:3865123:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795934.559375] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.559174] [hpc-gaas-g09:3697763:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788795934.559178] [hpc-gaas-g09:3697821:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788795934.559185] [hpc-gaas-g09:3697749:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788795934.559193] [hpc-gaas-g09:3697780:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788795934.559401] [hpc-gaas-g16:3865194:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.559414] [hpc-gaas-g16:3865137:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.560779] [hpc-gaas-g15:1348658:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.560791] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.560916] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.559580] [hpc-gaas-g16:3865123:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.561001] [hpc-gaas-g15:1348619:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.622343] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.622373] [hpc-gaas-g16:3865123:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.622542] [hpc-gaas-g16:3865194:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.626188] [hpc-gaas-g09:3697749:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788795934.626230] [hpc-gaas-g09:3697821:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788795934.626243] [hpc-gaas-g09:3697780:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788795934.628757] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.638801] [hpc-gaas-g16:3865137:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795934.643752] [hpc-gaas-g09:3697763:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+
+================================================================================
+HPL-MxP-NVIDIA 26.2.0  -- NVIDIA accelerated HPL-MxP benchmark benchmark -- NVIDIA
+================================================================================
+
+ ****** HPL MxP Settings ****** 
+
+   --nprow =  3 
+   --npcol =  4 
+   --order = row 
+   --n     = 250000 
+   --nb    = 1024 
+   --tolerance                        = 1.000000e-12 
+   --test-loop                        = 1 
+   --preset-gemm-kernel               = 90 
+   --u-panel-chunk-nbs                = 8 
+   --call-dgemv-with-multiple-threads = 0 
+   --prioritize-trsm                  = 0 
+   --prioritize-factorization         = 0 
+   --use-separate-stream-for-gemm     = 1 
+   --use-mpi-panel-broadcast          = 50 
+   --mpi-use-host-threads             = 1 
+   --sloppy-type                      = FP16 
+   --Anq-device                       = 0 
+   --cuda-host-register-step          = 2048 
+   --mpi-use-mpi                      = 0 
+   --use-host-mpi                     = 0 
+   --fill-device                      = 0 
+   --fill-device-buffer-size          = 3048 
+   --fp4-scaling-factor-a             = 1.000000e-05 
+   --skip-tests                       = 1 
+   --gemm-iterations                  = 100 
+
+
+
+ ****** Monitor GPU Settings ****** 
+
+   --monitor-gpu                      = 1 
+   --monitor-gpu-interval             = 10 
+   --monitor-gpu-clock-warning        = 0 
+   --monitor-gpu-power-warning        = 0 
+   --monitor-gpu-temp-warning         = 0 
+   --monitor-gpu-pcie-width-warning   = 16 
+   --monitor-gpu-pcie-gen-warning     = 5 
+
+
+[1788795935.104881] [hpc-gaas-g09:3697749:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788795935.110500] [hpc-gaas-g09:3697821:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788795935.110684] [hpc-gaas-g09:3697763:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788795935.114598] [hpc-gaas-g09:3697780:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788795935.120686] [hpc-gaas-g16:3865137:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.120724] [hpc-gaas-g16:3865123:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.125654] [hpc-gaas-g16:3865194:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.125723] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.137861] [hpc-gaas-g15:1348619:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#2 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.138487] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.148814] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.148867] [hpc-gaas-g16:3865194:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.149442] [hpc-gaas-g16:3865137:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.149497] [hpc-gaas-g16:3865123:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.173225] [hpc-gaas-g15:1348619:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795935.173252] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795938.023880] [hpc-gaas-g15:1348619:a]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#4 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795938.023889] [hpc-gaas-g15:1348658:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795938.023890] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788795938.042611] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795938.042645] [hpc-gaas-g15:1348658:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795938.059432] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788795938.059439] [hpc-gaas-g15:1348658:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+
+ ****** test 1 of 1 starts ****** 
+
+   n      = 250000
+   nb     = 1024
+   nprow  = 3
+   npcol  = 4
+
+Device info:
+	Peak clock frequency 1980 MHz
+	SM 90
+	Number of SMs 132
+	Total memory available 139.80 GB
+
+---------------------------------------------------------------------------------------------
+[34m Per process host memory consumption MAX = 39.171 GB, available MIN = 2.525 GB[0m
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+[34m Per process device memory consumption MAX = 21.877 GB, available MIN = 138.843 GB[0m
+---------------------------------------------------------------------------------------------
+
+[1788795939.922438] [hpc-gaas-g16:3865153:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795939.922442] [hpc-gaas-g16:3865194:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795939.922466] [hpc-gaas-g16:3865123:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795939.922472] [hpc-gaas-g16:3865137:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795939.930247] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795939.930564] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795939.949934] [hpc-gaas-g09:3697780:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788795939.950043] [hpc-gaas-g09:3697763:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788795939.951604] [hpc-gaas-g15:1348590:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#6 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788795939.951773] [hpc-gaas-g15:1348605:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+Constructor seconds: AVG = 0.35, MAX = 0.39 (0->hpc-gaas-g09), MIN = 0.33 (9->hpc-gaas-g16)
+
+
+ ****** Matrix Generation ****** 
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 2.530 GB, device = 116.804 GB[0m
+---------------------------------------------------------------------------------------------
+
+RNG seconds: AVG = 41.10, MAX = 88.82 (1->hpc-gaas-g09), MIN = 13.85 (11->hpc-gaas-g16)
+
+Set Diagonal seconds: AVG = 0.03, MAX = 0.09 (2->hpc-gaas-g09), MIN = 0.01 (4->hpc-gaas-g15)
+
+Get Anorm seconds: AVG = 0.23, MAX = 0.36 (7->hpc-gaas-g15), MIN = 0.14 (1->hpc-gaas-g09)
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 7.124 GB, device = 116.804 GB[0m
+---------------------------------------------------------------------------------------------
+
+Sp seconds: AVG = 50.48, MAX = 50.49 (3->hpc-gaas-g09), MIN = 50.45 (0->hpc-gaas-g09)
+
+matgen seconds: AVG = 140.38, MAX = 140.40 (1->hpc-gaas-g09), MIN = 140.38 (0->hpc-gaas-g09)
+
+
+ ****** test loop 1 of 1 starts ****** 
+
+2026-09-07 23:48:00.757
+[1788796082.502960] [hpc-gaas-g09:3697749:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788796082.667689] [hpc-gaas-g15:1348619:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788796082.998305] [hpc-gaas-g15:1348605:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788796083.022135] [hpc-gaas-g09:3697821:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788796083.028349] [hpc-gaas-g16:3865137:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788796083.064161] [hpc-gaas-g15:1348658:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788796083.151709] [hpc-gaas-g15:1348658:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788796083.180163] [hpc-gaas-g16:3865194:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 129 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 134 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 145 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 132 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 137 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 131 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 114 W [0m	PCIe  gen 5 	 x16 
+[1788796086.417968] [hpc-gaas-g16:3865194:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788796086.456515] [hpc-gaas-g09:3697821:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 144 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=   3.64% N_left=   246928 Time=    16.02 Time_left=     424.06 iTF=      23.67 TF=    23.67 iTF_per=     1.97 TF_per=     1.97[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 136 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 143 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 152 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 137 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 133 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=   4.84% N_left=   245904 Time=    17.21 Time_left=     338.77 iTF=     104.75 TF=    29.26 iTF_per=     8.73 TF_per=     2.44[0m
+[0;31m Prog=   6.02% N_left=   244880 Time=    20.34 Time_left=     317.59 iTF=      39.43 TF=    30.83 iTF_per=     3.29 TF_per=     2.57[0m
+[0;31m Prog=   7.19% N_left=   243856 Time=    23.72 Time_left=     306.03 iTF=      36.19 TF=    31.59 iTF_per=     3.02 TF_per=     2.63[0m
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 137 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=   9.51% N_left=   241808 Time=    28.40 Time_left=     270.16 iTF=      51.62 TF=    34.89 iTF_per=     4.30 TF_per=     2.91[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 133 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 131 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 134 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 130 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  10.66% N_left=   240784 Time=    31.35 Time_left=     262.87 iTF=      40.34 TF=    35.40 iTF_per=     3.36 TF_per=     2.95[0m
+[0;31m Prog=  11.79% N_left=   239760 Time=    32.71 Time_left=     244.67 iTF=      87.42 TF=    37.55 iTF_per=     7.28 TF_per=     3.13[0m
+[0;31m Prog=  12.92% N_left=   238736 Time=    35.89 Time_left=     241.93 iTF=      36.88 TF=    37.49 iTF_per=     3.07 TF_per=     3.12[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 148 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 146 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  15.14% N_left=   236688 Time=    39.92 Time_left=     223.75 iTF=      57.41 TF=    39.51 iTF_per=     4.78 TF_per=     3.29[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 143 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 30 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  16.24% N_left=   235664 Time=    43.29 Time_left=     223.36 iTF=      33.84 TF=    39.06 iTF_per=     2.82 TF_per=     3.26[0m
+[0;31m Prog=  17.32% N_left=   234640 Time=    46.07 Time_left=     219.89 iTF=      40.76 TF=    39.17 iTF_per=     3.40 TF_per=     3.26[0m
+[0;31m Prog=  18.40% N_left=   233616 Time=    47.49 Time_left=     210.59 iTF=      79.31 TF=    40.36 iTF_per=     6.61 TF_per=     3.36[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 140 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 137 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 139 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 136 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  19.47% N_left=   232592 Time=    51.17 Time_left=     211.67 iTF=      30.20 TF=    39.63 iTF_per=     2.52 TF_per=     3.30[0m
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  21.58% N_left=   230544 Time=    55.46 Time_left=     201.55 iTF=      51.28 TF=    40.53 iTF_per=     4.27 TF_per=     3.38[0m
+[0;31m Prog=  22.62% N_left=   229520 Time=    58.10 Time_left=     198.78 iTF=      40.99 TF=    40.55 iTF_per=     3.42 TF_per=     3.38[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  23.65% N_left=   228496 Time=    61.09 Time_left=     197.23 iTF=      35.94 TF=    40.33 iTF_per=     2.99 TF_per=     3.36[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 155 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 143 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 147 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 147 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  24.67% N_left=   227472 Time=    62.31 Time_left=     190.25 iTF=      87.39 TF=    41.25 iTF_per=     7.28 TF_per=     3.44[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 131 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 133 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  26.69% N_left=   225424 Time=    67.93 Time_left=     186.61 iTF=      37.35 TF=    40.92 iTF_per=     3.11 TF_per=     3.41[0m
+[0;31m Prog=  27.68% N_left=   224400 Time=    69.46 Time_left=     181.46 iTF=      67.75 TF=    41.51 iTF_per=     5.65 TF_per=     3.46[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 142 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  28.67% N_left=   223376 Time=    72.43 Time_left=     180.22 iTF=      34.59 TF=    41.23 iTF_per=     2.88 TF_per=     3.44[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 129 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  29.64% N_left=   222352 Time=    74.71 Time_left=     177.31 iTF=      44.58 TF=    41.33 iTF_per=     3.71 TF_per=     3.44[0m
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 30 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 147 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  30.61% N_left=   221328 Time=    76.12 Time_left=     172.54 iTF=      71.53 TF=    41.89 iTF_per=     5.96 TF_per=     3.49[0m
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 130 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  32.52% N_left=   219280 Time=    81.43 Time_left=     168.97 iTF=      37.42 TF=    41.60 iTF_per=     3.12 TF_per=     3.47[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 143 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 147 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  33.46% N_left=   218256 Time=    82.69 Time_left=     164.43 iTF=      78.11 TF=    42.15 iTF_per=     6.51 TF_per=     3.51[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 148 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  34.39% N_left=   217232 Time=    85.75 Time_left=     163.57 iTF=      31.69 TF=    41.78 iTF_per=     2.64 TF_per=     3.48[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 134 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  35.32% N_left=   216208 Time=    88.17 Time_left=     161.49 iTF=      39.74 TF=    41.72 iTF_per=     3.31 TF_per=     3.48[0m
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 115 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  37.14% N_left=   214160 Time=    91.83 Time_left=     155.44 iTF=      51.86 TF=    42.13 iTF_per=     4.32 TF_per=     3.51[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 141 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  38.03% N_left=   213136 Time=    94.27 Time_left=     153.58 iTF=      38.28 TF=    42.03 iTF_per=     3.19 TF_per=     3.50[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 148 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 150 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  38.92% N_left=   212112 Time=    95.79 Time_left=     150.32 iTF=      60.69 TF=    42.32 iTF_per=     5.06 TF_per=     3.53[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 129 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 136 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  39.80% N_left=   211088 Time=    98.49 Time_left=     148.95 iTF=      34.05 TF=    42.10 iTF_per=     2.84 TF_per=     3.51[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 116 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  40.68% N_left=   210064 Time=   100.48 Time_left=     146.55 iTF=      45.55 TF=    42.17 iTF_per=     3.80 TF_per=     3.51[0m
+[0;31m Prog=  42.39% N_left=   208016 Time=   103.98 Time_left=     141.29 iTF=      51.21 TF=    42.47 iTF_per=     4.27 TF_per=     3.54[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 144 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 147 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  43.24% N_left=   206992 Time=   106.24 Time_left=     139.45 iTF=      39.00 TF=    42.40 iTF_per=     3.25 TF_per=     3.53[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 147 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  44.08% N_left=   205968 Time=   107.58 Time_left=     136.48 iTF=      65.25 TF=    42.68 iTF_per=     5.44 TF_per=     3.56[0m
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 129 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  44.91% N_left=   204944 Time=   109.69 Time_left=     134.57 iTF=      40.86 TF=    42.65 iTF_per=     3.41 TF_per=     3.55[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 145 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  46.54% N_left=   202896 Time=   113.29 Time_left=     130.11 iTF=      47.37 TF=    42.80 iTF_per=     3.95 TF_per=     3.57[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  47.35% N_left=   201872 Time=   115.78 Time_left=     128.75 iTF=      33.66 TF=    42.60 iTF_per=     2.81 TF_per=     3.55[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 140 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  48.15% N_left=   200848 Time=   118.51 Time_left=     127.64 iTF=      30.40 TF=    42.32 iTF_per=     2.53 TF_per=     3.53[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 135 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  48.94% N_left=   199824 Time=   119.51 Time_left=     124.72 iTF=      81.98 TF=    42.65 iTF_per=     6.83 TF_per=     3.55[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 141 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  50.49% N_left=   197776 Time=   123.92 Time_left=     121.52 iTF=      36.72 TF=    42.44 iTF_per=     3.06 TF_per=     3.54[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  51.25% N_left=   196752 Time=   125.15 Time_left=     119.03 iTF=      64.84 TF=    42.66 iTF_per=     5.40 TF_per=     3.56[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  52.01% N_left=   195728 Time=   127.49 Time_left=     117.63 iTF=      33.68 TF=    42.50 iTF_per=     2.81 TF_per=     3.54[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 145 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  52.76% N_left=   194704 Time=   129.63 Time_left=     116.07 iTF=      36.48 TF=    42.40 iTF_per=     3.04 TF_per=     3.53[0m
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 149 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 150 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  53.50% N_left=   193680 Time=   130.80 Time_left=     113.67 iTF=      66.40 TF=    42.61 iTF_per=     5.53 TF_per=     3.55[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 141 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  54.96% N_left=   191632 Time=   135.18 Time_left=     110.77 iTF=      34.70 TF=    42.35 iTF_per=     2.89 TF_per=     3.53[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  55.68% N_left=   190608 Time=   136.18 Time_left=     108.40 iTF=      74.73 TF=    42.59 iTF_per=     6.23 TF_per=     3.55[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  56.39% N_left=   189584 Time=   138.62 Time_left=     107.20 iTF=      30.29 TF=    42.37 iTF_per=     2.52 TF_per=     3.53[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 130 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 150 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  57.09% N_left=   188560 Time=   141.01 Time_left=     105.97 iTF=      30.66 TF=    42.18 iTF_per=     2.56 TF_per=     3.51[0m
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 139 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 153 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 141 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  58.48% N_left=   186512 Time=   144.37 Time_left=     102.52 iTF=      42.79 TF=    42.19 iTF_per=     3.57 TF_per=     3.52[0m
+[0;31m Prog=  59.16% N_left=   185488 Time=   146.71 Time_left=     101.30 iTF=      30.28 TF=    42.00 iTF_per=     2.52 TF_per=     3.50[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  59.83% N_left=   184464 Time=   147.80 Time_left=      99.24 iTF=      64.58 TF=    42.17 iTF_per=     5.38 TF_per=     3.51[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  60.49% N_left=   183440 Time=   150.58 Time_left=      98.34 iTF=      24.92 TF=    41.85 iTF_per=     2.08 TF_per=     3.49[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 144 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 146 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  61.15% N_left=   182416 Time=   152.64 Time_left=      96.96 iTF=      33.36 TF=    41.73 iTF_per=     2.78 TF_per=     3.48[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 144 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 133 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  62.45% N_left=   180368 Time=   156.31 Time_left=      94.00 iTF=      36.70 TF=    41.62 iTF_per=     3.06 TF_per=     3.47[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  63.08% N_left=   179344 Time=   158.25 Time_left=      92.62 iTF=      34.09 TF=    41.52 iTF_per=     2.84 TF_per=     3.46[0m
+[0;31m Prog=  63.71% N_left=   178320 Time=   159.06 Time_left=      90.60 iTF=      81.37 TF=    41.72 iTF_per=     6.78 TF_per=     3.48[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  64.33% N_left=   177296 Time=   160.71 Time_left=      89.10 iTF=      39.21 TF=    41.70 iTF_per=     3.27 TF_per=     3.47[0m
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 143 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  65.55% N_left=   175248 Time=   163.23 Time_left=      85.77 iTF=      50.45 TF=    41.83 iTF_per=     4.20 TF_per=     3.49[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 137 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  66.15% N_left=   174224 Time=   165.45 Time_left=      84.65 iTF=      28.22 TF=    41.65 iTF_per=     2.35 TF_per=     3.47[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 115 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  66.75% N_left=   173200 Time=   167.75 Time_left=      83.57 iTF=      26.80 TF=    41.45 iTF_per=     2.23 TF_per=     3.45[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  67.33% N_left=   172176 Time=   168.57 Time_left=      81.78 iTF=      74.66 TF=    41.61 iTF_per=     6.22 TF_per=     3.47[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  67.91% N_left=   171152 Time=   170.76 Time_left=      80.68 iTF=      27.58 TF=    41.43 iTF_per=     2.30 TF_per=     3.45[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 148 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 152 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  69.05% N_left=   169104 Time=   173.58 Time_left=      77.80 iTF=      41.94 TF=    41.44 iTF_per=     3.49 TF_per=     3.45[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 149 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  69.61% N_left=   168080 Time=   175.85 Time_left=      76.77 iTF=      25.68 TF=    41.23 iTF_per=     2.14 TF_per=     3.44[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 142 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  70.16% N_left=   167056 Time=   177.93 Time_left=      75.67 iTF=      27.68 TF=    41.08 iTF_per=     2.31 TF_per=     3.42[0m
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  70.71% N_left=   166032 Time=   178.68 Time_left=      74.02 iTF=      75.47 TF=    41.22 iTF_per=     6.29 TF_per=     3.44[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  71.78% N_left=   163984 Time=   182.86 Time_left=      71.90 iTF=      26.70 TF=    40.89 iTF_per=     2.23 TF_per=     3.41[0m
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 140 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  72.30% N_left=   162960 Time=   183.63 Time_left=      70.34 iTF=      70.57 TF=    41.01 iTF_per=     5.88 TF_per=     3.42[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 148 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  72.82% N_left=   161936 Time=   186.02 Time_left=      69.42 iTF=      22.69 TF=    40.78 iTF_per=     1.89 TF_per=     3.40[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 143 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  73.33% N_left=   160912 Time=   188.23 Time_left=      68.44 iTF=      24.05 TF=    40.58 iTF_per=     2.00 TF_per=     3.38[0m
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 114 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  73.84% N_left=   159888 Time=   189.01 Time_left=      66.96 iTF=      67.64 TF=    40.69 iTF_per=     5.64 TF_per=     3.39[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  74.83% N_left=   157840 Time=   192.81 Time_left=      64.84 iTF=      27.22 TF=    40.43 iTF_per=     2.27 TF_per=     3.37[0m
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 140 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 141 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  75.32% N_left=   156816 Time=   193.84 Time_left=      63.52 iTF=      49.14 TF=    40.47 iTF_per=     4.09 TF_per=     3.37[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 142 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  75.80% N_left=   155792 Time=   196.03 Time_left=      62.59 iTF=      22.83 TF=    40.28 iTF_per=     1.90 TF_per=     3.36[0m
+[0;31m Prog=  76.27% N_left=   154768 Time=   197.83 Time_left=      61.54 iTF=      27.54 TF=    40.16 iTF_per=     2.29 TF_per=     3.35[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 144 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  77.20% N_left=   152720 Time=   200.72 Time_left=      59.27 iTF=      33.49 TF=    40.07 iTF_per=     2.79 TF_per=     3.34[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 123 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  77.66% N_left=   151696 Time=   202.33 Time_left=      58.21 iTF=      29.43 TF=    39.98 iTF_per=     2.45 TF_per=     3.33[0m
+[0;31m Prog=  78.11% N_left=   150672 Time=   203.04 Time_left=      56.91 iTF=      66.22 TF=    40.07 iTF_per=     5.52 TF_per=     3.34[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 139 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  78.55% N_left=   149648 Time=   204.86 Time_left=      55.94 iTF=      25.36 TF=    39.94 iTF_per=     2.11 TF_per=     3.33[0m
+[0;31m Prog=  79.42% N_left=   147600 Time=   207.62 Time_left=      53.80 iTF=      32.80 TF=    39.85 iTF_per=     2.73 TF_per=     3.32[0m
+[0;31m Prog=  79.85% N_left=   146576 Time=   209.55 Time_left=      52.89 iTF=      22.93 TF=    39.69 iTF_per=     1.91 TF_per=     3.31[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 133 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  80.27% N_left=   145552 Time=   211.45 Time_left=      51.99 iTF=      23.00 TF=    39.54 iTF_per=     1.92 TF_per=     3.30[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  80.68% N_left=   144528 Time=   212.21 Time_left=      50.82 iTF=      56.94 TF=    39.60 iTF_per=     4.74 TF_per=     3.30[0m
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  81.09% N_left=   143504 Time=   214.10 Time_left=      49.94 iTF=      22.45 TF=    39.45 iTF_per=     1.87 TF_per=     3.29[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 145 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 142 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  81.88% N_left=   141456 Time=   216.60 Time_left=      47.92 iTF=      33.18 TF=    39.38 iTF_per=     2.77 TF_per=     3.28[0m
+[0;31m Prog=  82.28% N_left=   140432 Time=   218.53 Time_left=      47.08 iTF=      21.13 TF=    39.22 iTF_per=     1.76 TF_per=     3.27[0m
+[0;31m Prog=  82.66% N_left=   139408 Time=   220.33 Time_left=      46.22 iTF=      22.24 TF=    39.08 iTF_per=     1.85 TF_per=     3.26[0m
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 143 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  83.04% N_left=   138384 Time=   221.36 Time_left=      45.21 iTF=      38.34 TF=    39.08 iTF_per=     3.19 TF_per=     3.26[0m
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  83.78% N_left=   136336 Time=   224.22 Time_left=      43.40 iTF=      27.07 TF=    38.92 iTF_per=     2.26 TF_per=     3.24[0m
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  84.14% N_left=   135312 Time=   225.04 Time_left=      42.41 iTF=      46.01 TF=    38.95 iTF_per=     3.83 TF_per=     3.25[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 138 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 135 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 135 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  84.50% N_left=   134288 Time=   226.82 Time_left=      41.60 iTF=      20.90 TF=    38.81 iTF_per=     1.74 TF_per=     3.23[0m
+[0;31m Prog=  84.85% N_left=   133264 Time=   228.47 Time_left=      40.78 iTF=      22.26 TF=    38.69 iTF_per=     1.86 TF_per=     3.22[0m
+[0;31m Prog=  85.20% N_left=   132240 Time=   229.14 Time_left=      39.80 iTF=      53.75 TF=    38.73 iTF_per=     4.48 TF_per=     3.23[0m
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 133 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  85.88% N_left=   130192 Time=   231.96 Time_left=      38.15 iTF=      24.98 TF=    38.56 iTF_per=     2.08 TF_per=     3.21[0m
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 122 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  86.21% N_left=   129168 Time=   232.46 Time_left=      37.19 iTF=      69.45 TF=    38.63 iTF_per=     5.79 TF_per=     3.22[0m
+[0;31m Prog=  86.53% N_left=   128144 Time=   234.03 Time_left=      36.42 iTF=      21.56 TF=    38.52 iTF_per=     1.80 TF_per=     3.21[0m
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  86.85% N_left=   127120 Time=   235.56 Time_left=      35.66 iTF=      21.81 TF=    38.41 iTF_per=     1.82 TF_per=     3.20[0m
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 131 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:1b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 134 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  87.48% N_left=   125072 Time=   238.14 Time_left=      34.09 iTF=      25.21 TF=    38.26 iTF_per=     2.10 TF_per=     3.19[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 135 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  87.78% N_left=   124048 Time=   241.85 Time_left=      33.66 iTF=       8.56 TF=    37.81 iTF_per=     0.71 TF_per=     3.15[0m
+[0;31m Prog=  89.23% N_left=   118928 Time=   241.94 Time_left=      29.19 iTF=    1825.40 TF=    38.42 iTF_per=   152.12 TF_per=     3.20[0m
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 39 C [0m	[0;31mPower: 149 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  90.57% N_left=   113808 Time=   242.03 Time_left=      25.21 iTF=    1516.31 TF=    38.98 iTF_per=   126.36 TF_per=     3.25[0m
+[0;31m Prog=  91.55% N_left=   109712 Time=   242.08 Time_left=      22.35 iTF=    1893.56 TF=    39.39 iTF_per=   157.80 TF_per=     3.28[0m
+[0;31m Prog=  92.68% N_left=   104592 Time=   242.16 Time_left=      19.13 iTF=    1441.52 TF=    39.86 iTF_per=   120.13 TF_per=     3.32[0m
+[0;31m Prog=  93.70% N_left=    99472 Time=   242.24 Time_left=      16.29 iTF=    1370.32 TF=    40.29 iTF_per=   114.19 TF_per=     3.36[0m
+[0;31m Prog=  94.62% N_left=    94352 Time=   242.31 Time_left=      13.77 iTF=    1530.43 TF=    40.68 iTF_per=   127.54 TF_per=     3.39[0m
+[0;31m Prog=  95.45% N_left=    89232 Time=   242.37 Time_left=      11.55 iTF=    1412.90 TF=    41.02 iTF_per=   117.74 TF_per=     3.42[0m
+[0;31m Prog=  96.19% N_left=    84112 Time=   242.45 Time_left=       9.60 iTF=     954.29 TF=    41.33 iTF_per=    79.52 TF_per=     3.44[0m
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 39 C [0m	[0;31mPower: 230 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 38 C [0m	[0;31mPower: 254 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 40 C [0m	[0;31mPower: 252 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  96.85% N_left=    78992 Time=   242.54 Time_left=       7.90 iTF=     769.87 TF=    41.59 iTF_per=    64.16 TF_per=     3.47[0m
+[0;31m Prog=  97.42% N_left=    73872 Time=   242.60 Time_left=       6.42 iTF=     942.20 TF=    41.83 iTF_per=    78.52 TF_per=     3.49[0m
+[0;31m Prog=  99.23% N_left=    49296 Time=   242.86 Time_left=       1.88 iTF=     730.83 TF=    42.56 iTF_per=    60.90 TF_per=     3.55[0m
+[0;31m Prog=  99.91% N_left=    23696 Time=   243.12 Time_left=       0.21 iTF=     275.03 TF=    42.81 iTF_per=    22.92 TF_per=     3.57[0m
+2026-09-07 23:52:08.297
+LU seconds: AVG = 247.57, MAX = 247.59 (2->hpc-gaas-g09), MIN = 247.54 (0->hpc-gaas-g09)
+
+Solver iteration  0, L-infinite residual = 4.79582867e-04
+Solver iteration  1, L-infinite residual = 6.25513575e-10
+Solver iteration  2, L-infinite residual = 7.13172468e-14
+Iterative Solver seconds: AVG = 56.64, MAX = 56.72 (1->hpc-gaas-g09), MIN = 56.24 (0->hpc-gaas-g09)
+
+2026-09-07 23:53:06.791
+
+ ****** HPL MxP Result    ****** 
+
+    EPS           . . . . . . . . . . . . . . . . .          =    2.000000E-16
+    Threshold     . . . . . . . . . . . . . . . . .          =    1.600000E+01
+  ||Ax-b||_oo     . . . . . . . . . . . . . . . . .          =    7.131725E-14
+  ||A   ||_oo     . . . . . . . . . . . . . . . . .          =    2.513044E+05
+  ||x   ||_oo     . . . . . . . . . . . . . . . . .          =    8.034157E-06
+  ||b   ||_oo     . . . . . . . . . . . . . . . . .          =    9.999990E-01
+  ||Ax-b||_oo / (EPS * (||A||_oo * ||x||_oo + ||b||_oo) * N) =    4.724533E-04 ...... PASSED
+
+    N = 250000, NB = 1024, NPROW = 3, NPCOL = 4, SLOPPY-TYPE = FP16
+[0;31m       GFLOPS = 3.4290e+04, per GPU =    2857.49[0m[0;34m ------ The HPL-MxP performance to report[0m
+    LU GFLOPS = 4.2081e+04, per GPU =    3506.74[0;34m ------ The performance excluding the iterative solver part[0m
+
+ ****** HPL MxP Result    ****** 
+
+
+ ****** test loop 1 of 1 done   ****** 
+
+
+ ****** test 1 of 1 done   ****** 
+
+=== resource-alloc exp1 attempt alloc250k_v1 complete ===

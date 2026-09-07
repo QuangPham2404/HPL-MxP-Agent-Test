@@ -44,10 +44,12 @@ job the same way).
 
 ### Experiment 1 — Allocation-variance baseline series (N=250k, 5 jobs)
 
-- **Status:** in progress (scripts drafted 2026-09-07:
-  `debug-scripts/run_3x4_alloc_variance.pbs` +
-  `debug-scripts/capture_node_alloc.sh`; attempts `alloc250k_v1..v5`
-  submitted sequentially).
+- **Status:** complete (2026-09-08). All 5 attempts ran, `PASSED`, exit 0.
+  Scripts: `debug-scripts/run_3x4_alloc_variance.pbs` +
+  `debug-scripts/capture_node_alloc.sh`. Raw evidence:
+  `outputs/alloc250k_v1..v5.{o,e}` (jobs 59932, 59939, 59943, 59953,
+  59959). All 5 landed on the same nodes (g09/g15/g16) with differing
+  per-node GPU/CPU carve-outs. Results below under "Analysis".
 - **Purpose:** measure run-to-run performance variance under identical job
   requests, and correlate it with the per-job, per-node allocation that PBS
   actually hands out.
@@ -75,5 +77,70 @@ job the same way).
 
 ## Analysis
 
-(To be recorded here after the experiment runs complete; no results or
-analysis yet.)
+### Experiment 1 results (2026-09-08)
+
+**Performance per attempt** (N=250000, NB=1024, 3x4 row grid, 12 ranks; all
+`PASSED`, exit 0):
+
+| Attempt | Job | Walltime | GFLOPS (total) | GFLOPS/GPU | LU s | Solver s | RNG s AVG (MAX node / MIN node) | matgen s |
+|---|---|---|---:|---:|---:|---:|---|---:|
+| v1 | 59932 | 8:23 | 3.4290e+04 | 2857 | 247.6 | 56.6 | 41.1 (g09 88.8 / g16 13.9) | 140.4 |
+| v2 | 59939 | 7:49 | 3.0866e+04 | 2572 | 285.3 | 52.7 | 27.2 (g09 55.8 / g15 7.9) | 85.1 |
+| v3 | 59943 | 7:10 | 3.2840e+04 | 2737 | 265.0 | 52.5 | 27.4 (g09 56.9 / g15 12.5) | 70.4 |
+| v4 | 59953 | 7:07 | 3.3735e+04 | 2811 | 262.3 | 46.8 | 25.9 (g09 54.2 / g15 11.3) | 74.0 |
+| v5 | 59959 | 2:37 | **5.1946e+05** | **43288** | **15.3** | **4.8** | 11.1 (g16 13.3 / g09 9.2) | 18.7 |
+
+v5 was **15.8x faster** overall than the v1-v4 mean (GFLOPS), with comms-bound
+phases improving most (LU 17.3x, solver 11.0x) and host-bound phases 2.5-7.5x.
+
+**Recorded allocation per attempt** (physical GPU sockets from PCI buses:
+`1b/3c/4b/5c` = socket 0, `9a/bb/cd/dc` = socket 1; container renumbers the 4
+allocated GPUs to 0-3):
+
+| Attempt | g09 | g15 | g16 |
+|---|---|---|---|
+| v1 | GPUs 0-3 (s0), cpuset 48-49,56-101 (s1) — mismatch | GPUs 3,4,6,7 (mixed), cpuset 0-23,36-49,56-65 (fragmented, both) — mismatch | GPUs 4-7 (s1), cpuset 0-47 (s0) — mismatch |
+| v2 | same as v1 | same as v1 | same as v1 |
+| v3 | same as v1 | GPUs 4-7 (s1), cpuset 0-47 (s0) — mismatch | GPUs 4-7 (s1), cpuset 0-47 (s0) — mismatch |
+| v4 | same as v1 | same as v3 | same as v3 |
+| v5 | GPUs 1,2,3 (s0) + 5 (s1) mixed, cpuset 24-35,48-49,56-89 (fragmented) | same as v3 | same as v3 |
+
+**Findings:**
+
+1. **Allocation chaos confirmed (5/5 attempts):** PBS never co-located the
+   4-GPU set with same-socket CPUs for `select=3:ngpus=4`; cpusets were
+   fragmented (holes imply co-tenant CPU jobs on the same nodes); GPU sets
+   could even be mixed-socket (v1/v5 g15/g09). The host job environment only
+   sees the 4 allocated GPUs (cgroup), so this is invisible without the PCI
+   bus capture.
+2. **UCX rail selection is identical across attempts:** every rank built
+   multi-rail configs over all 9 devices (`mlx5_0-5,8,9` + `mlx5_bond_0`),
+   with no locality filtering. Not the differentiator between fast/slow runs.
+3. **Performance is bimodal, and the recorded allocation variables do not
+   explain it:** v5's placement was no better than v1-v4's (still mismatched
+   and fragmented), yet comms-bound phases jumped 11-17x. The
+   communication-free RNG phase shows the node-local state flip directly:
+   g09 ranks took 54-89 s in v1-v4 vs 9.2-13.3 s in v5 — pointing to external
+   contention (co-tenant host/fabric load) during v1-v4 rather than our job's
+   own placement.
+4. **GPU monitoring corroborates the slow mode:** v1-v4 GPUs sat at ~125 W
+   median (near-idle) for the whole 8-minute run — comms-starved. Even v5
+   (43.3 TF/GPU) remains ~6x below the single-node 8xH200 per-GPU reference
+   (~275 TF/GPU at N=491520), consistent with the still-unfixed GPUDirect
+   off / `cuda_cpy` staging ceiling.
+5. **Limitations:** co-tenant load was inferred (cpuset holes, RNG flip), not
+   measured — the capture lacks host load and NIC counter snapshots; the
+   in-job host `nvidia-smi` sees only allocated GPUs, so co-tenant GPU state
+   is unobservable from inside the job.
+
+**Implications:** all three factors coexist for non-full-node GPU jobs on
+GAAS: (a) the comms-stack ceiling (GPUDirect off, separate workstream),
+(b) a ~16x catastrophic contention mode that comes and goes with external
+node/fabric load, and (c) pervasive CPU/GPU/NUMA placement mismatch that is
+constant in this series and likely compounds both. A follow-up capture with
+host load + IB counters would separate (b) from (c) directly.
+
+**Suggested next steps (not executed):** add loadavg/IB-counter sampling to
+the capture; enlarge the sample to estimate the slow-mode frequency; re-run
+this series after GPUDirect is fixed to isolate the placement factor.
+

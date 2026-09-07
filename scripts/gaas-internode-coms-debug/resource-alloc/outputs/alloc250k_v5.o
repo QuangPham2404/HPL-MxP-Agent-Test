@@ -1,0 +1,700 @@
+experiment_id=resource-alloc-exp1
+attempt=alloc250k_v5
+pbs_job_id=59959.gaas
+2026-09-08T00:31:52+08:00
+layout=3 nodes x 4 GPUs = 12 ranks
+grid=nprow=3 npcol=4 order=row
+n=250000 nb=1024
+nodes=hpc-gaas-g09 hpc-gaas-g15 hpc-gaas-g16
+gpu_affinity=0:1:2:3
+ucx_log_level=info
+=== PBS_NODEFILE (raw) ===
+hpc-gaas-g09
+hpc-gaas-g15
+hpc-gaas-g16
+=== hostfile ===
+hpc-gaas-g09 slots=4
+hpc-gaas-g15 slots=4
+hpc-gaas-g16 slots=4
+=== per-node allocation capture (pbsdsh, once per node) ===
+=== NODE-CAPTURE BEGIN hpc-gaas-g09 ===
+2026-09-08T00:31:52+08:00
+--- job cpuset / mems (this node) ---
+Cpus_allowed_list:	24-35,48-49,56-89
+Mems_allowed_list:	0-1
+--- numa node cpulists ---
+node0 cpus=0-55
+node1 cpus=56-111
+--- host GPU inventory (all GPUs, PCI bus ids) ---
+GPU 0: NVIDIA H200 (UUID: GPU-613513ed-ed89-1810-bb69-41c0f4b3a999)
+GPU 1: NVIDIA H200 (UUID: GPU-c8a90321-8a11-86bc-699f-64da9e6fbf4c)
+GPU 2: NVIDIA H200 (UUID: GPU-cc705670-c11c-47d7-e404-d63249ab5939)
+GPU 3: NVIDIA H200 (UUID: GPU-184a5cbe-c968-0fa4-5ada-e0758a014faa)
+=== NODE-CAPTURE BEGIN hpc-gaas-g16 ===
+2026-09-08T00:31:53+08:00
+--- job cpuset / mems (this node) ---
+--- host per-GPU memory used (co-tenancy hint) ---
+Cpus_allowed_list:	0-47
+Mems_allowed_list:	0-1
+--- numa node cpulists ---
+node0 cpus=0-55
+node1 cpus=56-111
+--- host GPU inventory (all GPUs, PCI bus ids) ---
+index, pci.bus_id, memory.used [MiB]
+0, 00000000:3C:00.0, 0 MiB
+GPU 0: NVIDIA H200 (UUID: GPU-0890a8d9-0976-ce8f-fa3d-9418fa0f0052)
+GPU 1: NVIDIA H200 (UUID: GPU-71f4f87a-77fc-55f7-0a0a-77f6c1f6a048)
+GPU 2: NVIDIA H200 (UUID: GPU-b276c969-93ae-a0ef-0a76-679316a88be5)
+GPU 3: NVIDIA H200 (UUID: GPU-3c85f98f-fb33-9bcf-4ef2-39ce8b1ae802)
+--- host per-GPU memory used (co-tenancy hint) ---
+1, 00000000:4B:00.0, 0 MiB
+2, 00000000:5C:00.0, 0 MiB
+3, 00000000:BB:00.0, 0 MiB
+--- GPU/NIC/NUMA topology matrix ---
+index, pci.bus_id, memory.used [MiB]
+0, 00000000:9A:00.0, 0 MiB
+1, 00000000:BB:00.0, 0 MiB
+2, 00000000:CD:00.0, 0 MiB
+3, 00000000:DC:00.0, 0 MiB
+--- GPU/NIC/NUMA topology matrix ---
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	24-35,48-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	24-35,48-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	24-35,48-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-89	1		N/A
+NIC0	NODE	NODE	NODE	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	PIX	NODE	NODE	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	PIX	NODE	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	PIX	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	PIX	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	NODE	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	PIX	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+--- ibdev2netdev ---
+GPU0	 X 	NV18	NV18	NV18	NODE	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE		1		N/A
+GPU1	NV18	 X 	NV18	NV18	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	PIX		1		N/A
+GPU2	NV18	NV18	 X 	NV18	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE		1		N/A
+GPU3	NV18	NV18	NV18	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE		1		N/A
+NIC0	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC1	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC2	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC3	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE				
+NIC4	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE				
+NIC5	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	PIX				
+NIC6	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE				
+NIC7	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE				
+NIC8	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+--- ibdev2netdev ---
+mlx5_0 port 1 ==> ibp24s0 (Up)
+mlx5_1 port 1 ==> ibp58s0 (Up)
+mlx5_2 port 1 ==> ibp77s0 (Up)
+mlx5_3 port 1 ==> ibp93s0 (Up)
+mlx5_0 port 1 ==> ibp24s0 (Up)
+mlx5_4 port 1 ==> ibp155s0 (Up)
+mlx5_1 port 1 ==> ibp58s0 (Up)
+mlx5_5 port 1 ==> ibp186s0 (Up)
+mlx5_2 port 1 ==> ibp77s0 (Up)
+mlx5_8 port 1 ==> ibp204s0 (Up)
+mlx5_3 port 1 ==> ibp93s0 (Up)
+mlx5_9 port 1 ==> ibp219s0 (Up)
+mlx5_4 port 1 ==> ibp155s0 (Up)
+mlx5_bond_0 port 1 ==> bond0 (Up)
+--- per-NIC numa node ---
+mlx5_0 numa_node=0
+mlx5_1 numa_node=0
+mlx5_5 port 1 ==> ibp186s0 (Up)
+mlx5_2 numa_node=0
+mlx5_3 numa_node=0
+mlx5_8 port 1 ==> ibp204s0 (Up)
+mlx5_4 numa_node=1
+mlx5_5 numa_node=1
+mlx5_8 numa_node=1
+mlx5_9 port 1 ==> ibp219s0 (Up)
+mlx5_9 numa_node=1
+mlx5_bond_0 numa_node=1
+--- container GPU view (renumbered; what the run uses) ---
+mlx5_bond_0 port 1 ==> bond0 (Up)
+--- per-NIC numa node ---
+mlx5_0 numa_node=0
+mlx5_1 numa_node=0
+mlx5_2 numa_node=0
+mlx5_3 numa_node=0
+mlx5_4 numa_node=1
+mlx5_5 numa_node=1
+mlx5_8 numa_node=1
+mlx5_9 numa_node=1
+mlx5_bond_0 numa_node=1
+--- container GPU view (renumbered; what the run uses) ---
+GPU 0: NVIDIA H200 (UUID: GPU-0890a8d9-0976-ce8f-fa3d-9418fa0f0052)
+GPU 1: NVIDIA H200 (UUID: GPU-71f4f87a-77fc-55f7-0a0a-77f6c1f6a048)
+GPU 2: NVIDIA H200 (UUID: GPU-b276c969-93ae-a0ef-0a76-679316a88be5)
+GPU 3: NVIDIA H200 (UUID: GPU-3c85f98f-fb33-9bcf-4ef2-39ce8b1ae802)
+=== NODE-CAPTURE END hpc-gaas-g16 ===
+GPU 0: NVIDIA H200 (UUID: GPU-613513ed-ed89-1810-bb69-41c0f4b3a999)
+GPU 1: NVIDIA H200 (UUID: GPU-c8a90321-8a11-86bc-699f-64da9e6fbf4c)
+GPU 2: NVIDIA H200 (UUID: GPU-cc705670-c11c-47d7-e404-d63249ab5939)
+GPU 3: NVIDIA H200 (UUID: GPU-184a5cbe-c968-0fa4-5ada-e0758a014faa)
+=== NODE-CAPTURE END hpc-gaas-g09 ===
+=== NODE-CAPTURE BEGIN hpc-gaas-g15 ===
+2026-09-08T00:32:04+08:00
+--- job cpuset / mems (this node) ---
+Cpus_allowed_list:	0-47
+Mems_allowed_list:	0-1
+--- numa node cpulists ---
+node0 cpus=0-55
+node1 cpus=56-111
+--- host GPU inventory (all GPUs, PCI bus ids) ---
+GPU 0: NVIDIA H200 (UUID: GPU-705e42e4-4b5b-3a6f-3593-ad7c97fca505)
+GPU 1: NVIDIA H200 (UUID: GPU-842dcee6-efa9-9854-4b66-4d84afbfef3a)
+GPU 2: NVIDIA H200 (UUID: GPU-f350d419-daf6-84ac-b0bd-5f8cee4fa7cb)
+GPU 3: NVIDIA H200 (UUID: GPU-7d4d924f-234d-14af-b15e-245e4403ea77)
+--- host per-GPU memory used (co-tenancy hint) ---
+index, pci.bus_id, memory.used [MiB]
+0, 00000000:9A:00.0, 0 MiB
+1, 00000000:BB:00.0, 0 MiB
+2, 00000000:CD:00.0, 0 MiB
+3, 00000000:DC:00.0, 0 MiB
+--- GPU/NIC/NUMA topology matrix ---
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NODE	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE		1		N/A
+GPU1	NV18	 X 	NV18	NV18	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	PIX		1		N/A
+GPU2	NV18	NV18	 X 	NV18	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE		1		N/A
+GPU3	NV18	NV18	NV18	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE		1		N/A
+NIC0	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC1	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC2	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC3	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE				
+NIC4	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE				
+NIC5	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	PIX				
+NIC6	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE				
+NIC7	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE				
+NIC8	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+--- ibdev2netdev ---
+mlx5_0 port 1 ==> ibp24s0 (Up)
+mlx5_1 port 1 ==> ibp58s0 (Up)
+mlx5_2 port 1 ==> ibp77s0 (Up)
+mlx5_3 port 1 ==> ibp93s0 (Up)
+mlx5_4 port 1 ==> ibp155s0 (Up)
+mlx5_5 port 1 ==> ibp186s0 (Up)
+mlx5_8 port 1 ==> ibp204s0 (Up)
+mlx5_9 port 1 ==> ibp219s0 (Up)
+mlx5_bond_0 port 1 ==> bond0 (Up)
+--- per-NIC numa node ---
+mlx5_0 numa_node=0
+mlx5_1 numa_node=0
+mlx5_2 numa_node=0
+mlx5_3 numa_node=0
+mlx5_4 numa_node=1
+mlx5_5 numa_node=1
+mlx5_8 numa_node=1
+mlx5_9 numa_node=1
+mlx5_bond_0 numa_node=1
+--- container GPU view (renumbered; what the run uses) ---
+GPU 0: NVIDIA H200 (UUID: GPU-705e42e4-4b5b-3a6f-3593-ad7c97fca505)
+GPU 1: NVIDIA H200 (UUID: GPU-842dcee6-efa9-9854-4b66-4d84afbfef3a)
+GPU 2: NVIDIA H200 (UUID: GPU-f350d419-daf6-84ac-b0bd-5f8cee4fa7cb)
+GPU 3: NVIDIA H200 (UUID: GPU-7d4d924f-234d-14af-b15e-245e4403ea77)
+=== NODE-CAPTURE END hpc-gaas-g15 ===
+[1788798772.737859] [hpc-gaas-g15:1381570:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.737880] [hpc-gaas-g15:1381570:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.737888] [hpc-gaas-g15:1381506:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.737906] [hpc-gaas-g15:1381506:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.740507] [hpc-gaas-g15:1381570:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798772.740522] [hpc-gaas-g15:1381506:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798772.741013] [hpc-gaas-g15:1381525:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.741030] [hpc-gaas-g15:1381525:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.741159] [hpc-gaas-g15:1381525:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798772.746957] [hpc-gaas-g15:1381492:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.746974] [hpc-gaas-g15:1381492:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.747098] [hpc-gaas-g15:1381492:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798772.822680] [hpc-gaas-g16:3895489:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.822700] [hpc-gaas-g16:3895489:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.822682] [hpc-gaas-g16:3895438:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.822700] [hpc-gaas-g16:3895438:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.822697] [hpc-gaas-g16:3895424:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.822718] [hpc-gaas-g16:3895424:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.822805] [hpc-gaas-g16:3895459:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798772.822817] [hpc-gaas-g16:3895459:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798772.823654] [hpc-gaas-g16:3895424:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798772.823656] [hpc-gaas-g16:3895438:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798772.823656] [hpc-gaas-g16:3895459:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798772.823656] [hpc-gaas-g16:3895489:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798773.026073] [hpc-gaas-g09:3727906:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798773.026093] [hpc-gaas-g09:3727906:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798773.026083] [hpc-gaas-g09:3727892:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798773.026100] [hpc-gaas-g09:3727892:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798773.026084] [hpc-gaas-g09:3727924:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798773.026101] [hpc-gaas-g09:3727924:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798773.026092] [hpc-gaas-g09:3727968:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1788798773.026107] [hpc-gaas-g09:3727968:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1788798773.027878] [hpc-gaas-g09:3727892:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798773.027879] [hpc-gaas-g09:3727906:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798773.027880] [hpc-gaas-g09:3727924:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798773.027892] [hpc-gaas-g09:3727968:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798774.296274] [hpc-gaas-g16:3895459:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798774.412312] [hpc-gaas-g15:1381570:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798774.439034] [hpc-gaas-g16:3895438:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798774.691240] [hpc-gaas-g15:1381506:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798774.690558] [hpc-gaas-g16:3895424:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798774.716214] [hpc-gaas-g09:3727906:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798774.864038] [hpc-gaas-g16:3895489:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798775.016828] [hpc-gaas-g09:3727968:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798775.142194] [hpc-gaas-g15:1381525:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798775.281465] [hpc-gaas-g09:3727892:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798775.513044] [hpc-gaas-g15:1381492:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798775.546141] [hpc-gaas-g09:3727924:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1788798775.547921] [hpc-gaas-g09:3727892:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.547945] [hpc-gaas-g09:3727906:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.548103] [hpc-gaas-g09:3727968:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.548119] [hpc-gaas-g09:3727924:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.548366] [hpc-gaas-g16:3895459:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.548386] [hpc-gaas-g16:3895438:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.549962] [hpc-gaas-g15:1381506:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.548390] [hpc-gaas-g16:3895424:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.549969] [hpc-gaas-g15:1381570:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.548408] [hpc-gaas-g16:3895489:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.549993] [hpc-gaas-g15:1381492:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.550034] [hpc-gaas-g15:1381525:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798775.766543] [hpc-gaas-g09:3727906:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788798775.768992] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.769156] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.768634] [hpc-gaas-g09:3727924:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788798775.769164] [hpc-gaas-g09:3727892:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788798775.770926] [hpc-gaas-g09:3727968:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_ml
+[1788798775.772861] [hpc-gaas-g15:1381570:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.773436] [hpc-gaas-g15:1381506:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.772449] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.772456] [hpc-gaas-g16:3895438:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.772458] [hpc-gaas-g16:3895424:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.772468] [hpc-gaas-g16:3895489:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1788798775.828528] [hpc-gaas-g09:3727906:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788798775.831323] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.831469] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.830849] [hpc-gaas-g09:3727924:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788798775.831074] [hpc-gaas-g09:3727892:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788798775.834054] [hpc-gaas-g15:1381570:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.832304] [hpc-gaas-g09:3727968:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788798775.834403] [hpc-gaas-g15:1381506:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.835703] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.835703] [hpc-gaas-g16:3895489:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.835809] [hpc-gaas-g16:3895424:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.835814] [hpc-gaas-g16:3895438:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798775.858457] [hpc-gaas-g09:3727968:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1
+[1788798775.866633] [hpc-gaas-g15:1381506:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1788798776.226838] [hpc-gaas-g16:3895424:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.226840] [hpc-gaas-g16:3895438:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.226842] [hpc-gaas-g16:3895459:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.226844] [hpc-gaas-g16:3895489:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.228951] [hpc-gaas-g15:1381492:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.228953] [hpc-gaas-g15:1381570:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.228957] [hpc-gaas-g15:1381506:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.228961] [hpc-gaas-g15:1381525:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.231061] [hpc-gaas-g09:3727892:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.231066] [hpc-gaas-g09:3727968:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.231070] [hpc-gaas-g09:3727906:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798776.231076] [hpc-gaas-g09:3727924:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1788798777.112413] [hpc-gaas-g09:3727892:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788798777.119181] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798777.121516] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798777.128574] [hpc-gaas-g15:1381506:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798777.133359] [hpc-gaas-g09:3727924:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788798777.134128] [hpc-gaas-g16:3895438:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798777.160667] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.158877] [hpc-gaas-g09:3727968:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.160688] [hpc-gaas-g15:1381570:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.160701] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.158899] [hpc-gaas-g09:3727906:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.158900] [hpc-gaas-g09:3727892:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.160726] [hpc-gaas-g15:1381506:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.158940] [hpc-gaas-g09:3727924:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.159194] [hpc-gaas-g16:3895489:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.159204] [hpc-gaas-g16:3895424:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.159217] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.159243] [hpc-gaas-g16:3895438:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.227223] [hpc-gaas-g09:3727968:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.227281] [hpc-gaas-g09:3727906:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.227374] [hpc-gaas-g09:3727924:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.227864] [hpc-gaas-g16:3895424:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.227876] [hpc-gaas-g16:3895489:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.227986] [hpc-gaas-g16:3895438:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.235736] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.235803] [hpc-gaas-g15:1381570:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.235806] [hpc-gaas-g15:1381506:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.243642] [hpc-gaas-g09:3727892:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_4:1 sysv/memory rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8
+[1788798777.244134] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1788798777.252997] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+
+================================================================================
+HPL-MxP-NVIDIA 26.2.0  -- NVIDIA accelerated HPL-MxP benchmark benchmark -- NVIDIA
+================================================================================
+
+ ****** HPL MxP Settings ****** 
+
+   --nprow =  3 
+   --npcol =  4 
+   --order = row 
+   --n     = 250000 
+   --nb    = 1024 
+   --tolerance                        = 1.000000e-12 
+   --test-loop                        = 1 
+   --preset-gemm-kernel               = 90 
+   --u-panel-chunk-nbs                = 8 
+   --call-dgemv-with-multiple-threads = 0 
+   --prioritize-trsm                  = 0 
+   --prioritize-factorization         = 0 
+   --use-separate-stream-for-gemm     = 1 
+   --use-mpi-panel-broadcast          = 50 
+   --mpi-use-host-threads             = 1 
+   --sloppy-type                      = FP16 
+   --Anq-device                       = 0 
+   --cuda-host-register-step          = 2048 
+   --mpi-use-mpi                      = 0 
+   --use-host-mpi                     = 0 
+   --fill-device                      = 0 
+   --fill-device-buffer-size          = 3048 
+   --fp4-scaling-factor-a             = 1.000000e-05 
+   --skip-tests                       = 1 
+   --gemm-iterations                  = 100 
+
+
+
+ ****** Monitor GPU Settings ****** 
+
+   --monitor-gpu                      = 1 
+   --monitor-gpu-interval             = 10 
+   --monitor-gpu-clock-warning        = 0 
+   --monitor-gpu-power-warning        = 0 
+   --monitor-gpu-temp-warning         = 0 
+   --monitor-gpu-pcie-width-warning   = 16 
+   --monitor-gpu-pcie-gen-warning     = 5 
+
+
+[1788798777.719041] [hpc-gaas-g16:3895438:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.718864] [hpc-gaas-g09:3727906:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788798777.718864] [hpc-gaas-g09:3727892:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788798777.718978] [hpc-gaas-g09:3727924:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788798777.722853] [hpc-gaas-g09:3727968:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/m
+[1788798777.724128] [hpc-gaas-g16:3895424:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.724294] [hpc-gaas-g16:3895489:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.728098] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.746773] [hpc-gaas-g16:3895489:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.746881] [hpc-gaas-g16:3895424:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.748785] [hpc-gaas-g15:1381506:a]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.747443] [hpc-gaas-g16:3895438:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.750331] [hpc-gaas-g15:1381525:a]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.749611] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.766795] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.766846] [hpc-gaas-g15:1381570:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.791382] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.791411] [hpc-gaas-g15:1381570:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.795318] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1788798777.795449] [hpc-gaas-g15:1381506:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+
+ ****** test 1 of 1 starts ****** 
+
+   n      = 250000
+   nb     = 1024
+   nprow  = 3
+   npcol  = 4
+
+Device info:
+	Peak clock frequency 1980 MHz
+	SM 90
+	Number of SMs 132
+	Total memory available 139.80 GB
+
+---------------------------------------------------------------------------------------------
+[34m Per process host memory consumption MAX = 39.171 GB, available MIN = 48.272 GB[0m
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+[34m Per process device memory consumption MAX = 21.877 GB, available MIN = 138.843 GB[0m
+---------------------------------------------------------------------------------------------
+
+[1788798778.599799] [hpc-gaas-g16:3895424:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.599821] [hpc-gaas-g16:3895459:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.599831] [hpc-gaas-g16:3895438:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.599831] [hpc-gaas-g16:3895489:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.602094] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.602112] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.603965] [hpc-gaas-g09:3727906:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788798778.623940] [hpc-gaas-g15:1381492:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.624075] [hpc-gaas-g15:1381525:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798778.625831] [hpc-gaas-g09:3727892:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788798778.625856] [hpc-gaas-g09:3727906:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+Constructor seconds: AVG = 0.04, MAX = 0.05 (0->hpc-gaas-g09), MIN = 0.04 (11->hpc-gaas-g16)
+
+
+ ****** Matrix Generation ****** 
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 48.253 GB, device = 116.804 GB[0m
+---------------------------------------------------------------------------------------------
+
+RNG seconds: AVG = 11.14, MAX = 13.27 (9->hpc-gaas-g16), MIN = 9.20 (2->hpc-gaas-g09)
+
+Set Diagonal seconds: AVG = 0.01, MAX = 0.01 (9->hpc-gaas-g16), MIN = 0.01 (4->hpc-gaas-g15)
+
+Get Anorm seconds: AVG = 0.13, MAX = 0.22 (4->hpc-gaas-g15), MIN = 0.05 (3->hpc-gaas-g09)
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 15.621 GB, device = 116.804 GB[0m
+---------------------------------------------------------------------------------------------
+
+Sp seconds: AVG = 5.20, MAX = 5.20 (2->hpc-gaas-g09), MIN = 5.20 (4->hpc-gaas-g15)
+
+matgen seconds: AVG = 18.73, MAX = 18.73 (3->hpc-gaas-g09), MIN = 18.73 (5->hpc-gaas-g15)
+
+
+ ****** test loop 1 of 1 starts ****** 
+
+2026-09-08 00:33:17.382
+[1788798797.630912] [hpc-gaas-g09:3727924:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788798797.705298] [hpc-gaas-g09:3727968:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[1788798797.722715] [hpc-gaas-g15:1381570:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798797.732517] [hpc-gaas-g15:1381492:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798797.749599] [hpc-gaas-g15:1381506:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798797.764876] [hpc-gaas-g16:3895489:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798797.786392] [hpc-gaas-g15:1381570:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1788798797.815846] [hpc-gaas-g16:3895424:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 126 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 121 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 129 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 137 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 135 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 129 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+[1788798798.145712] [hpc-gaas-g16:3895424:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 31 C [0m	[0;31mPower: 117 W [0m	PCIe  gen 5 	 x16 
+[1788798798.162177] [hpc-gaas-g09:3727968:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx
+[0;31m Prog=   3.64% N_left=   246928 Time=     1.59 Time_left=      42.07 iTF=     238.56 TF=   238.56 iTF_per=    19.88 TF_per=    19.88[0m
+[0;31m Prog=   4.84% N_left=   245904 Time=     1.64 Time_left=      32.20 iTF=    2710.98 TF=   307.89 iTF_per=   225.91 TF_per=    25.66[0m
+[0;31m Prog=   6.02% N_left=   244880 Time=     1.83 Time_left=      28.53 iTF=     644.94 TF=   343.17 iTF_per=    53.75 TF_per=    28.60[0m
+[0;31m Prog=   7.19% N_left=   243856 Time=     2.01 Time_left=      25.96 iTF=     661.91 TF=   372.44 iTF_per=    55.16 TF_per=    31.04[0m
+[0;31m Prog=   9.51% N_left=   241808 Time=     2.24 Time_left=      21.29 iTF=    1068.35 TF=   442.75 iTF_per=    89.03 TF_per=    36.90[0m
+[0;31m Prog=  10.66% N_left=   240784 Time=     2.46 Time_left=      20.59 iTF=     546.28 TF=   451.95 iTF_per=    45.52 TF_per=    37.66[0m
+[0;31m Prog=  11.79% N_left=   239760 Time=     2.49 Time_left=      18.63 iTF=    3437.54 TF=   493.18 iTF_per=   286.46 TF_per=    41.10[0m
+[0;31m Prog=  12.92% N_left=   238736 Time=     2.69 Time_left=      18.13 iTF=     590.84 TF=   500.38 iTF_per=    49.24 TF_per=    41.70[0m
+[0;31m Prog=  15.14% N_left=   236688 Time=     2.92 Time_left=      16.37 iTF=    1000.88 TF=   540.02 iTF_per=    83.41 TF_per=    45.00[0m
+[0;31m Prog=  16.24% N_left=   235664 Time=     3.14 Time_left=      16.22 iTF=     512.72 TF=   538.08 iTF_per=    42.73 TF_per=    44.84[0m
+[0;31m Prog=  17.32% N_left=   234640 Time=     3.32 Time_left=      15.85 iTF=     640.25 TF=   543.53 iTF_per=    53.35 TF_per=    45.29[0m
+[0;31m Prog=  18.40% N_left=   233616 Time=     3.36 Time_left=      14.90 iTF=    2853.44 TF=   570.58 iTF_per=   237.79 TF_per=    47.55[0m
+[0;31m Prog=  19.47% N_left=   232592 Time=     3.54 Time_left=      14.63 iTF=     625.65 TF=   573.35 iTF_per=    52.14 TF_per=    47.78[0m
+[0;31m Prog=  21.58% N_left=   230544 Time=     3.77 Time_left=      13.70 iTF=     943.89 TF=   596.22 iTF_per=    78.66 TF_per=    49.69[0m
+[0;31m Prog=  22.62% N_left=   229520 Time=     3.95 Time_left=      13.51 iTF=     607.62 TF=   596.74 iTF_per=    50.64 TF_per=    49.73[0m
+[0;31m Prog=  23.65% N_left=   228496 Time=     4.13 Time_left=      13.34 iTF=     582.07 TF=   596.08 iTF_per=    48.51 TF_per=    49.67[0m
+[0;31m Prog=  24.67% N_left=   227472 Time=     4.17 Time_left=      12.72 iTF=    3144.50 TF=   616.79 iTF_per=   262.04 TF_per=    51.40[0m
+[0;31m Prog=  26.69% N_left=   225424 Time=     4.52 Time_left=      12.43 iTF=     588.63 TF=   614.57 iTF_per=    49.05 TF_per=    51.21[0m
+[0;31m Prog=  27.68% N_left=   224400 Time=     4.56 Time_left=      11.91 iTF=    2838.76 TF=   632.37 iTF_per=   236.56 TF_per=    52.70[0m
+[0;31m Prog=  28.67% N_left=   223376 Time=     4.73 Time_left=      11.76 iTF=     614.15 TF=   631.72 iTF_per=    51.18 TF_per=    52.64[0m
+[0;31m Prog=  29.64% N_left=   222352 Time=     4.91 Time_left=      11.65 iTF=     562.17 TF=   629.16 iTF_per=    46.85 TF_per=    52.43[0m
+[0;31m Prog=  30.61% N_left=   221328 Time=     4.95 Time_left=      11.22 iTF=    2512.41 TF=   644.43 iTF_per=   209.37 TF_per=    53.70[0m
+[0;31m Prog=  32.52% N_left=   219280 Time=     5.28 Time_left=      10.97 iTF=     590.62 TF=   641.00 iTF_per=    49.22 TF_per=    53.42[0m
+[0;31m Prog=  33.46% N_left=   218256 Time=     5.32 Time_left=      10.58 iTF=    2564.54 TF=   654.81 iTF_per=   213.71 TF_per=    54.57[0m
+[0;31m Prog=  34.39% N_left=   217232 Time=     5.49 Time_left=      10.48 iTF=     576.15 TF=   652.40 iTF_per=    48.01 TF_per=    54.37[0m
+[0;31m Prog=  35.32% N_left=   216208 Time=     5.67 Time_left=      10.38 iTF=     540.75 TF=   648.89 iTF_per=    45.06 TF_per=    54.07[0m
+[0;31m Prog=  37.14% N_left=   214160 Time=     5.86 Time_left=       9.92 iTF=     993.54 TF=   660.12 iTF_per=    82.80 TF_per=    55.01[0m
+[0;31m Prog=  38.03% N_left=   213136 Time=     6.03 Time_left=       9.83 iTF=     538.10 TF=   656.61 iTF_per=    44.84 TF_per=    54.72[0m
+[0;31m Prog=  38.92% N_left=   212112 Time=     6.07 Time_left=       9.52 iTF=    2900.27 TF=   668.42 iTF_per=   241.69 TF_per=    55.70[0m
+[0;31m Prog=  39.80% N_left=   211088 Time=     6.23 Time_left=       9.42 iTF=     569.18 TF=   665.85 iTF_per=    47.43 TF_per=    55.49[0m
+[0;31m Prog=  40.68% N_left=   210064 Time=     6.40 Time_left=       9.33 iTF=     528.80 TF=   662.17 iTF_per=    44.07 TF_per=    55.18[0m
+[0;31m Prog=  42.39% N_left=   208016 Time=     6.60 Time_left=       8.97 iTF=     871.73 TF=   668.69 iTF_per=    72.64 TF_per=    55.72[0m
+[0;31m Prog=  43.24% N_left=   206992 Time=     6.76 Time_left=       8.88 iTF=     559.49 TF=   666.14 iTF_per=    46.62 TF_per=    55.51[0m
+[0;31m Prog=  44.08% N_left=   205968 Time=     6.79 Time_left=       8.62 iTF=    2694.43 TF=   675.82 iTF_per=   224.54 TF_per=    56.32[0m
+[0;31m Prog=  44.91% N_left=   204944 Time=     6.95 Time_left=       8.53 iTF=     548.66 TF=   672.93 iTF_per=    45.72 TF_per=    56.08[0m
+[0;31m Prog=  46.54% N_left=   202896 Time=     7.15 Time_left=       8.21 iTF=     879.57 TF=   678.53 iTF_per=    73.30 TF_per=    56.54[0m
+[0;31m Prog=  47.35% N_left=   201872 Time=     7.30 Time_left=       8.11 iTF=     550.90 TF=   675.87 iTF_per=    45.91 TF_per=    56.32[0m
+[0;31m Prog=  48.15% N_left=   200848 Time=     7.46 Time_left=       8.04 iTF=     508.96 TF=   672.22 iTF_per=    42.41 TF_per=    56.02[0m
+[0;31m Prog=  48.94% N_left=   199824 Time=     7.49 Time_left=       7.82 iTF=    2667.11 TF=   680.43 iTF_per=   222.26 TF_per=    56.70[0m
+[0;31m Prog=  50.49% N_left=   197776 Time=     7.79 Time_left=       7.64 iTF=     533.61 TF=   674.71 iTF_per=    44.47 TF_per=    56.23[0m
+[0;31m Prog=  51.25% N_left=   196752 Time=     7.84 Time_left=       7.45 iTF=    1972.73 TF=   681.41 iTF_per=   164.39 TF_per=    56.78[0m
+[0;31m Prog=  52.01% N_left=   195728 Time=     7.98 Time_left=       7.36 iTF=     538.23 TF=   678.78 iTF_per=    44.85 TF_per=    56.56[0m
+[0;31m Prog=  52.76% N_left=   194704 Time=     8.14 Time_left=       7.29 iTF=     495.60 TF=   675.23 iTF_per=    41.30 TF_per=    56.27[0m
+[0;31m Prog=  53.50% N_left=   193680 Time=     8.17 Time_left=       7.10 iTF=    2620.12 TF=   682.25 iTF_per=   218.34 TF_per=    56.85[0m
+[0;31m Prog=  54.96% N_left=   191632 Time=     8.48 Time_left=       6.95 iTF=     487.67 TF=   675.10 iTF_per=    40.64 TF_per=    56.26[0m
+[0;31m Prog=  55.68% N_left=   190608 Time=     8.51 Time_left=       6.77 iTF=    2737.56 TF=   681.72 iTF_per=   228.13 TF_per=    56.81[0m
+[0;31m Prog=  56.39% N_left=   189584 Time=     8.65 Time_left=       6.69 iTF=     521.99 TF=   679.10 iTF_per=    43.50 TF_per=    56.59[0m
+[0;31m Prog=  57.09% N_left=   188560 Time=     8.80 Time_left=       6.61 iTF=     480.31 TF=   675.66 iTF_per=    40.03 TF_per=    56.31[0m
+[0;31m Prog=  58.48% N_left=   186512 Time=     8.97 Time_left=       6.37 iTF=     842.47 TF=   678.84 iTF_per=    70.21 TF_per=    56.57[0m
+[0;31m Prog=  59.16% N_left=   185488 Time=     9.12 Time_left=       6.30 iTF=     471.30 TF=   675.42 iTF_per=    39.27 TF_per=    56.29[0m
+[0;31m Prog=  59.83% N_left=   184464 Time=     9.15 Time_left=       6.15 iTF=    2247.95 TF=   680.78 iTF_per=   187.33 TF_per=    56.73[0m
+[0;31m Prog=  60.49% N_left=   183440 Time=     9.29 Time_left=       6.07 iTF=     509.74 TF=   678.27 iTF_per=    42.48 TF_per=    56.52[0m
+[0;31m Prog=  61.15% N_left=   182416 Time=     9.44 Time_left=       5.99 iTF=     468.33 TF=   675.02 iTF_per=    39.03 TF_per=    56.25[0m
+[0;31m Prog=  62.45% N_left=   180368 Time=     9.60 Time_left=       5.77 iTF=     819.12 TF=   677.49 iTF_per=    68.26 TF_per=    56.46[0m
+[0;31m Prog=  63.08% N_left=   179344 Time=     9.75 Time_left=       5.70 iTF=     457.27 TF=   674.21 iTF_per=    38.11 TF_per=    56.18[0m
+[0;31m Prog=  63.71% N_left=   178320 Time=     9.76 Time_left=       5.56 iTF=    3715.93 TF=   679.70 iTF_per=   309.66 TF_per=    56.64[0m
+[0;31m Prog=  64.33% N_left=   177296 Time=     9.91 Time_left=       5.49 iTF=     441.35 TF=   676.18 iTF_per=    36.78 TF_per=    56.35[0m
+[0;31m Prog=  65.55% N_left=   175248 Time=    10.09 Time_left=       5.30 iTF=     713.44 TF=   676.83 iTF_per=    59.45 TF_per=    56.40[0m
+[0;31m Prog=  66.15% N_left=   174224 Time=    10.22 Time_left=       5.23 iTF=     473.10 TF=   674.20 iTF_per=    39.43 TF_per=    56.18[0m
+[0;31m Prog=  66.75% N_left=   173200 Time=    10.36 Time_left=       5.16 iTF=     440.80 TF=   671.04 iTF_per=    36.73 TF_per=    55.92[0m
+[0;31m Prog=  67.33% N_left=   172176 Time=    10.40 Time_left=       5.04 iTF=    1776.79 TF=   674.70 iTF_per=   148.07 TF_per=    56.22[0m
+[0;31m Prog=  67.91% N_left=   171152 Time=    10.52 Time_left=       4.97 iTF=     477.78 TF=   672.33 iTF_per=    39.82 TF_per=    56.03[0m
+!!!! WARNING: Rank: 7 : hpc-gaas-g15 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 206 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g16 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 208 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g15 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 206 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g16 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 216 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g16 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 207 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g15 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 211 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g09 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 226 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g09 : GPU 0000:3c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 37 C [0m	[0;31mPower: 233 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 3 : hpc-gaas-g09 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 37 C [0m	[0;31mPower: 226 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  69.05% N_left=   169104 Time=    10.67 Time_left=       4.78 iTF=     791.41 TF=   674.01 iTF_per=    65.95 TF_per=    56.17[0m
+!!!! WARNING: Rank: 9 : hpc-gaas-g16 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 210 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g15 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 220 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  69.61% N_left=   168080 Time=    10.80 Time_left=       4.71 iTF=     466.32 TF=   671.60 iTF_per=    38.86 TF_per=    55.97[0m
+!!!! WARNING: Rank: 1 : hpc-gaas-g09 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 222 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  70.16% N_left=   167056 Time=    10.93 Time_left=       4.65 iTF=     427.34 TF=   668.60 iTF_per=    35.61 TF_per=    55.72[0m
+[0;31m Prog=  70.71% N_left=   166032 Time=    10.96 Time_left=       4.54 iTF=    2382.29 TF=   672.33 iTF_per=   198.52 TF_per=    56.03[0m
+[0;31m Prog=  71.78% N_left=   163984 Time=    11.21 Time_left=       4.41 iTF=     434.29 TF=   666.87 iTF_per=    36.19 TF_per=    55.57[0m
+[0;31m Prog=  72.30% N_left=   162960 Time=    11.24 Time_left=       4.31 iTF=    1887.05 TF=   670.02 iTF_per=   157.25 TF_per=    55.84[0m
+[0;31m Prog=  72.82% N_left=   161936 Time=    11.37 Time_left=       4.24 iTF=     424.56 TF=   667.27 iTF_per=    35.38 TF_per=    55.61[0m
+[0;31m Prog=  73.33% N_left=   160912 Time=    11.49 Time_left=       4.18 iTF=     449.47 TF=   665.02 iTF_per=    37.46 TF_per=    55.42[0m
+[0;31m Prog=  73.84% N_left=   159888 Time=    11.51 Time_left=       4.08 iTF=    2159.30 TF=   668.19 iTF_per=   179.94 TF_per=    55.68[0m
+[0;31m Prog=  74.83% N_left=   157840 Time=    11.75 Time_left=       3.95 iTF=     439.18 TF=   663.60 iTF_per=    36.60 TF_per=    55.30[0m
+[0;31m Prog=  75.32% N_left=   156816 Time=    11.77 Time_left=       3.86 iTF=    2033.11 TF=   666.50 iTF_per=   169.43 TF_per=    55.54[0m
+[0;31m Prog=  75.80% N_left=   155792 Time=    11.89 Time_left=       3.80 iTF=     430.63 TF=   664.20 iTF_per=    35.89 TF_per=    55.35[0m
+[0;31m Prog=  76.27% N_left=   154768 Time=    12.01 Time_left=       3.74 iTF=     399.36 TF=   661.47 iTF_per=    33.28 TF_per=    55.12[0m
+[0;31m Prog=  77.20% N_left=   152720 Time=    12.15 Time_left=       3.59 iTF=     679.31 TF=   661.68 iTF_per=    56.61 TF_per=    55.14[0m
+[0;31m Prog=  77.66% N_left=   151696 Time=    12.27 Time_left=       3.53 iTF=     392.47 TF=   659.03 iTF_per=    32.71 TF_per=    54.92[0m
+[0;31m Prog=  78.11% N_left=   150672 Time=    12.30 Time_left=       3.45 iTF=    1745.03 TF=   661.40 iTF_per=   145.42 TF_per=    55.12[0m
+[0;31m Prog=  78.55% N_left=   149648 Time=    12.41 Time_left=       3.39 iTF=     410.25 TF=   659.12 iTF_per=    34.19 TF_per=    54.93[0m
+[0;31m Prog=  79.42% N_left=   147600 Time=    12.55 Time_left=       3.25 iTF=     661.32 TF=   659.14 iTF_per=    55.11 TF_per=    54.93[0m
+[0;31m Prog=  79.85% N_left=   146576 Time=    12.66 Time_left=       3.20 iTF=     410.92 TF=   657.03 iTF_per=    34.24 TF_per=    54.75[0m
+[0;31m Prog=  80.27% N_left=   145552 Time=    12.78 Time_left=       3.14 iTF=     369.48 TF=   654.37 iTF_per=    30.79 TF_per=    54.53[0m
+[0;31m Prog=  80.68% N_left=   144528 Time=    12.80 Time_left=       3.06 iTF=    2167.03 TF=   656.72 iTF_per=   180.59 TF_per=    54.73[0m
+[0;31m Prog=  81.09% N_left=   143504 Time=    12.91 Time_left=       3.01 iTF=     387.66 TF=   654.43 iTF_per=    32.30 TF_per=    54.54[0m
+[0;31m Prog=  81.88% N_left=   141456 Time=    13.04 Time_left=       2.88 iTF=     640.29 TF=   654.29 iTF_per=    53.36 TF_per=    54.52[0m
+[0;31m Prog=  82.28% N_left=   140432 Time=    13.15 Time_left=       2.83 iTF=     369.17 TF=   651.90 iTF_per=    30.76 TF_per=    54.33[0m
+[0;31m Prog=  82.66% N_left=   139408 Time=    13.26 Time_left=       2.78 iTF=     364.51 TF=   649.52 iTF_per=    30.38 TF_per=    54.13[0m
+[0;31m Prog=  83.04% N_left=   138384 Time=    13.28 Time_left=       2.71 iTF=    1584.94 TF=   651.27 iTF_per=   132.08 TF_per=    54.27[0m
+[0;31m Prog=  83.78% N_left=   136336 Time=    13.48 Time_left=       2.61 iTF=     381.30 TF=   647.22 iTF_per=    31.77 TF_per=    53.93[0m
+[0;31m Prog=  84.14% N_left=   135312 Time=    13.51 Time_left=       2.55 iTF=    1450.34 TF=   648.76 iTF_per=   120.86 TF_per=    54.06[0m
+[0;31m Prog=  84.50% N_left=   134288 Time=    13.61 Time_left=       2.50 iTF=     374.94 TF=   646.77 iTF_per=    31.24 TF_per=    53.90[0m
+[0;31m Prog=  84.85% N_left=   133264 Time=    13.71 Time_left=       2.45 iTF=     350.25 TF=   644.50 iTF_per=    29.19 TF_per=    53.71[0m
+[0;31m Prog=  85.20% N_left=   132240 Time=    13.73 Time_left=       2.39 iTF=    1886.50 TF=   646.23 iTF_per=   157.21 TF_per=    53.85[0m
+[0;31m Prog=  85.88% N_left=   130192 Time=    13.93 Time_left=       2.29 iTF=     350.16 TF=   641.96 iTF_per=    29.18 TF_per=    53.50[0m
+[0;31m Prog=  86.21% N_left=   129168 Time=    13.95 Time_left=       2.23 iTF=    2178.58 TF=   643.70 iTF_per=   181.55 TF_per=    53.64[0m
+[0;31m Prog=  86.53% N_left=   128144 Time=    14.05 Time_left=       2.19 iTF=     351.38 TF=   641.69 iTF_per=    29.28 TF_per=    53.47[0m
+[0;31m Prog=  86.85% N_left=   127120 Time=    14.15 Time_left=       2.14 iTF=     324.75 TF=   639.39 iTF_per=    27.06 TF_per=    53.28[0m
+[0;31m Prog=  87.48% N_left=   125072 Time=    14.26 Time_left=       2.04 iTF=     577.26 TF=   638.90 iTF_per=    48.10 TF_per=    53.24[0m
+[0;31m Prog=  87.78% N_left=   124048 Time=    14.64 Time_left=       2.04 iTF=      83.90 TF=   624.54 iTF_per=     6.99 TF_per=    52.04[0m
+[0;31m Prog=  89.23% N_left=   118928 Time=    14.68 Time_left=       1.77 iTF=    3706.53 TF=   633.10 iTF_per=   308.88 TF_per=    52.76[0m
+[0;31m Prog=  90.57% N_left=   113808 Time=    14.72 Time_left=       1.53 iTF=    3497.01 TF=   640.82 iTF_per=   291.42 TF_per=    53.40[0m
+[0;31m Prog=  91.55% N_left=   109712 Time=    14.76 Time_left=       1.36 iTF=    3075.30 TF=   646.31 iTF_per=   256.27 TF_per=    53.86[0m
+[0;31m Prog=  92.68% N_left=   104592 Time=    14.79 Time_left=       1.17 iTF=    3338.22 TF=   652.72 iTF_per=   278.18 TF_per=    54.39[0m
+[0;31m Prog=  93.70% N_left=    99472 Time=    14.82 Time_left=       1.00 iTF=    3241.68 TF=   658.46 iTF_per=   270.14 TF_per=    54.87[0m
+[0;31m Prog=  94.62% N_left=    94352 Time=    14.85 Time_left=       0.84 iTF=    3129.22 TF=   663.58 iTF_per=   260.77 TF_per=    55.30[0m
+[0;31m Prog=  95.45% N_left=    89232 Time=    14.88 Time_left=       0.71 iTF=    3024.21 TF=   668.10 iTF_per=   252.02 TF_per=    55.68[0m
+[0;31m Prog=  96.19% N_left=    84112 Time=    14.91 Time_left=       0.59 iTF=    2895.73 TF=   672.07 iTF_per=   241.31 TF_per=    56.01[0m
+[0;31m Prog=  96.85% N_left=    78992 Time=    14.94 Time_left=       0.49 iTF=    2285.69 TF=   675.29 iTF_per=   190.47 TF_per=    56.27[0m
+[0;31m Prog=  97.42% N_left=    73872 Time=    14.96 Time_left=       0.40 iTF=    3029.83 TF=   678.40 iTF_per=   252.49 TF_per=    56.53[0m
+[0;31m Prog=  99.23% N_left=    49296 Time=    15.05 Time_left=       0.12 iTF=    2100.24 TF=   686.90 iTF_per=   175.02 TF_per=    57.24[0m
+[0;31m Prog=  99.91% N_left=    23696 Time=    15.11 Time_left=       0.01 iTF=    1141.00 TF=   688.77 iTF_per=    95.08 TF_per=    57.40[0m
+2026-09-08 00:33:32.678
+LU seconds: AVG = 15.30, MAX = 15.30 (5->hpc-gaas-g15), MIN = 15.30 (0->hpc-gaas-g09)
+
+Solver iteration  0, L-infinite residual = 4.79582867e-04
+Solver iteration  1, L-infinite residual = 6.25513575e-10
+Solver iteration  2, L-infinite residual = 7.13172468e-14
+Iterative Solver seconds: AVG = 4.76, MAX = 4.78 (1->hpc-gaas-g09), MIN = 4.76 (0->hpc-gaas-g09)
+
+2026-09-08 00:33:37.602
+
+ ****** HPL MxP Result    ****** 
+
+    EPS           . . . . . . . . . . . . . . . . .          =    2.000000E-16
+    Threshold     . . . . . . . . . . . . . . . . .          =    1.600000E+01
+  ||Ax-b||_oo     . . . . . . . . . . . . . . . . .          =    7.131725E-14
+  ||A   ||_oo     . . . . . . . . . . . . . . . . .          =    2.513044E+05
+  ||x   ||_oo     . . . . . . . . . . . . . . . . .          =    8.034157E-06
+  ||b   ||_oo     . . . . . . . . . . . . . . . . .          =    9.999990E-01
+  ||Ax-b||_oo / (EPS * (||A||_oo * ||x||_oo + ||b||_oo) * N) =    4.724533E-04 ...... PASSED
+
+    N = 250000, NB = 1024, NPROW = 3, NPCOL = 4, SLOPPY-TYPE = FP16
+[0;31m       GFLOPS = 5.1946e+05, per GPU =   43288.44[0m[0;34m ------ The HPL-MxP performance to report[0m
+    LU GFLOPS = 6.8098e+05, per GPU =   56748.52[0;34m ------ The performance excluding the iterative solver part[0m
+
+ ****** HPL MxP Result    ****** 
+
+
+ ****** test loop 1 of 1 done   ****** 
+
+
+ ****** test 1 of 1 done   ****** 
+
+=== resource-alloc exp1 attempt alloc250k_v5 complete ===
