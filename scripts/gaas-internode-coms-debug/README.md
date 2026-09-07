@@ -35,6 +35,24 @@ Start simple:
 
 ---
 
+#### 0. Sanity check — validate the tooling before measuring
+
+**Goal:** Confirm the measurement infrastructure itself works, so that any later GDR-test failure can be attributed to the GDR path rather than to the launch machinery or a non-CUDA-aware MPI build. In short: test the tool before using the tool.
+
+**Test:**
+
+* Run host-native 2-node `osu_hello` / `osu_allreduce` through the exact launch path the later tests use (host `mpirun` + `rsh_pbsdsh.sh` PBS bridge: `plm_rsh_no_tree_spawn 1`, `plm_rsh_num_concurrent 1`, `routed direct`, `--bind-to none`). Only process spawn was validated previously; this confirms real cross-node message flow.
+* Run `ompi_info --all | grep -i cuda` to confirm the host OpenMPI build is CUDA-aware, a prerequisite for the device-buffer (`D D`) OSU tests.
+
+**Pass criteria:**
+
+* Both OSU jobs run to completion across 2 nodes with normal output.
+* `ompi_info` reports CUDA support.
+
+**If it fails:** debug the launcher/bridge or MPI build first; do not trust or interpret later GDR bandwidth results.
+
+---
+
 #### 1. `osu-cuda` — CUDA-aware MPI
 
 **Goal:** Check whether MPI/UCX can move GPU buffers directly over InfiniBand using GPUDirect RDMA.

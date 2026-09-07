@@ -1,0 +1,106 @@
+#!/bin/bash
+# Phase 1 Step 0 sanity check: validate the host-native multi-node MPI launch
+# path and host OpenMPI CUDA-awareness before any GPUDirect RDMA measurement.
+#
+# Expected working directory: scripts/gaas-internode-coms-debug/debug-scripts/phase1-step0/ on GAAS.
+# Submit with: qsub run_phase1_step0_sanity.pbs
+# Inputs: PBS select=2:ngpus=1 (place=scatter); host HPC-X 2.25.1 via module nvhpc/26.3.
+# Outputs: ../../outputs/phase1-step0/phase1_step0_sanity_v1.{o,e}; hostfile in this directory.
+# Assumptions: multi-node-test/rsh_pbsdsh.sh exists at the repo root; launch
+# flags follow multi-node-test/GAAS_MULTINODE_SETUP.md section 1.2 (canonical
+# host-native pattern).
+
+#PBS -N P1S0_SANITY
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l select=2:ngpus=1
+#PBS -l place=scatter
+#PBS -l walltime=00:10:00
+#PBS -o ../../outputs/phase1-step0/phase1_step0_sanity_v1.o
+#PBS -e ../../outputs/phase1-step0/phase1_step0_sanity_v1.e
+
+# Multi-part diagnostic: attempt every check, capture each exit status, then
+# summarize. -e is intentionally omitted so one failed check does not hide the rest.
+set -uo pipefail
+
+cd "$PBS_O_WORKDIR"
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
+
+module purge
+module load nvhpc/26.3
+chmod +x "$BRIDGE"
+
+HPCX="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1"
+OSU_DIR="$HPCX/ompi/tests/osu-micro-benchmarks-cuda"
+
+GPUS=1
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+
+# De-duplicated hostfile with explicit per-node slot count (Blocker 8 pattern).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+
+echo "=== Phase 1 Step 0 sanity metadata ==="
+echo "debug_dir=scripts/gaas-internode-coms-debug"
+echo "attempt=phase1_step0_sanity_v1"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} GPU = ${NPROCS} ranks"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "mpirun=$(command -v mpirun)"
+echo "osu_dir=$OSU_DIR"
+echo "bridge=$BRIDGE"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# Canonical host-native launch flags (GAAS_MULTINODE_SETUP.md 1.2): pbsdsh
+# bridge, no tree spawn, serialized orted launches, direct routing, no binding.
+MPICMD=(mpirun -np "$NPROCS"
+  --hostfile "$PWD/hostfile"
+  --mca plm_rsh_agent "$BRIDGE"
+  --mca plm_rsh_no_tree_spawn 1
+  --mca plm_rsh_num_concurrent 1
+  --mca routed direct
+  --bind-to none)
+
+# --- Check A: host OpenMPI CUDA-awareness (build info, local only) ---
+echo "=== Check A: host OpenMPI CUDA support (ompi_info) ==="
+CUDA_LINES="$(ompi_info --all 2>/dev/null | grep -i cuda || true)"
+if [ -n "$CUDA_LINES" ]; then
+  echo "$CUDA_LINES" | head -15
+  echo "cuda_support_lines=$(echo "$CUDA_LINES" | wc -l)"
+  A_RC=0
+else
+  echo "ERROR: no CUDA-related lines in ompi_info output"
+  A_RC=1
+fi
+
+# --- Check B: per-rank placement + GPU visibility (informational) ---
+echo "=== Check B: per-rank host + GPU visibility ==="
+"${MPICMD[@]}" bash -c 'echo "rank=$OMPI_COMM_WORLD_RANK/$OMPI_COMM_WORLD_SIZE host=$(hostname) localrank=$OMPI_COMM_WORLD_LOCAL_RANK"; nvidia-smi -L 2>/dev/null || echo "nvidia-smi-unavailable"'
+B_RC=$?
+
+# --- Check C: osu_hello through the exact bridge launch path ---
+echo "=== Check C: osu_hello (host-native, cross-node) ==="
+"${MPICMD[@]}" "$OSU_DIR/osu_hello"
+C_RC=$?
+
+# --- Check D: osu_allreduce (real cross-node collective, host buffers) ---
+echo "=== Check D: osu_allreduce (host buffers, default sizes) ==="
+"${MPICMD[@]}" "$OSU_DIR/osu_allreduce"
+D_RC=$?
+
+echo "=== Step 0 summary ==="
+echo "check_A_ompi_cuda=$A_RC"
+echo "check_B_rank_gpu_info=$B_RC"
+echo "check_C_osu_hello=$C_RC"
+echo "check_D_osu_allreduce=$D_RC"
+if [ "$A_RC" -eq 0 ] && [ "$C_RC" -eq 0 ] && [ "$D_RC" -eq 0 ]; then
+  echo "STEP0_RESULT=PASS"
+else
+  echo "STEP0_RESULT=FAIL"
+fi
+echo "=== phase1_step0_sanity_v1 complete ==="
