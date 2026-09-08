@@ -75,6 +75,67 @@ job the same way).
 - **Planned attempts:** `alloc250k_v1` .. `alloc250k_v5`, raw evidence under
   `outputs/` with attempt-specific filenames.
 
+### Experiment 2 — Clean-node vs dirty-node series (N=250k, 3+3 jobs)
+
+- **Status:** in progress (2026-09-08). Scripts written and reviewed; runs
+  pending.
+- **Purpose:** separate the ~16x catastrophic contention mode observed in
+  experiment 1 (attributed to external co-tenant host/fabric load) from the
+  constant CPU/GPU/NUMA placement mismatch, by holding the placement
+  dimension fixed-ish and deliberately varying the co-tenant dimension:
+  run the identical benchmark on nodes that start completely free vs nodes
+  already running other jobs, with in-run host-load and IB-counter sampling
+  to time-stamp any co-tenant arrival or departure.
+- **Method:** 6 sequential host-pinned jobs, config identical to experiment 1
+  (same scheduler chunk shape `select=<host>:ngpus=4` per node, launch path,
+  flags, N=250000, 3x4 row grid, no binding flags). Nodes are pinned
+  explicitly at submission via
+  `qsub -l "select=host=A:ngpus=4+host=B:ngpus=4+host=C:ngpus=4"`
+  (hosts chosen from a live `pbsnodes -aSj` check immediately before each
+  submission; the run script asserts granted == requested nodes).
+  - `clean250k_v1..v3`: nodes completely free at submission (njobs=0, 8/8
+    GPUs and 100/100 CPUs free), preferring the g20-g25 range when free
+    nodes exist there. Nodes are `default_shared`, so co-tenants may still
+    arrive mid-run: the run is completed and the arrival is recorded from
+    the sampler time series (user decision 2026-09-08: no whole-node hold,
+    keep the experiment-1-identical request).
+  - `dirty250k_v1..v3`: nodes already running other jobs, preferring
+    GPU-busy nodes (co-tenant jobs using the other GPUs), requiring >=4
+    free GPUs and >=48 free CPUs so our chunk fits. Co-tenant job IDs and
+    their remaining walltime are recorded at submission, plus an in-job
+    `pbsnodes` listing in the pre-run capture.
+- **New instrumentation vs experiment 1** (per the professor's suggested
+  measurements, all verified available on GAAS):
+  1. In-run per-node sampler (`debug-scripts/sample_node_load.sh`,
+     background pbsdsh, 10 s interval, sentinel stop + tick-cap failsafe):
+     `/proc/loadavg`, `/proc/stat`, meminfo/vmstat subsets, `/proc/pressure`
+     if present, per-NUMA `numastat` (local vs remote memory activity), all
+     mlx5 IB port counters from sysfs (xmit/rcv bytes+packets, discards,
+     wait, error/recovery counters), and per-GPU
+     utilization/power/clocks/memory for the 4 allocated GPUs. The
+     node-global metrics intentionally include co-tenant load — that is the
+     quantity under test. Per-GPU sampling still cannot see co-tenant GPUs
+     (cgroup limitation, same as experiment 1).
+  2. Pre-run and post-run per-node capture v2
+     (`debug-scripts/capture_node_alloc_v2.sh`): the full experiment-1
+     capture (cpuset, Mems_allowed, NUMA cpulists, GPU inventory with PCI
+     buses + UUIDs, topo matrix, ibdev2netdev, per-NIC NUMA, container GPU
+     view) plus a one-shot IB counter baseline, per-port link state/rate,
+     numastat, load/PSI snapshot, and an in-job `pbsnodes` co-tenant
+     listing — written to per-node files instead of interleaved stdout.
+  3. `NCCL_DEBUG=INFO` (full) exported into the container next to
+     `UCX_LOG_LEVEL=info`: UCX logs cover only the MPI side; NCCL is the
+     likely main HPL-MxP communication path and its transport/rail choice
+     is recorded per rank.
+- **Operational decisions (user, 2026-09-08):** dirty = GPU-busy nodes
+  preferred; clean = identical request (no `ngpus=8` hold), record mid-run
+  arrivals; NCCL full INFO; qdel pre-authorized for this experiment's own
+  stuck submissions only (host taken by another job), each recorded with
+  reason.
+- **Planned attempts:** `clean250k_v1..v3`, `dirty250k_v1..v3`; evidence
+  under `outputs/` with attempt-specific names (`.o`/`.e` plus per-node
+  `_pre_`/`_load_`/`_post_` logs, never overwritten).
+
 ## Analysis
 
 ### Experiment 1 results (2026-09-08)
