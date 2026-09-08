@@ -23,8 +23,12 @@
 # Expected working directory: the resource-alloc directory on GAAS. Submit
 # each attempt (from that directory) with — hosts chosen from a live
 # `pbsnodes -aSj` check, REQ_HOSTS plus-separated because PBS -v splits on
-# commas:
-#   qsub -l "select=host=A:ngpus=4+host=B:ngpus=4+host=C:ngpus=4" \
+# commas. Each chunk must mirror experiment 1's actual request shape
+# (ncpus=48, mem=1000GB per chunk — qstat -f of job 59932 records
+# `3:ngpus=4:ncpus=48:mem=1000GB`); omitting ncpus/mem applies the server
+# default and the cgroup OOM killer terminates the app early (job 60453,
+# exit 137, "cgroup/OOM: Killed because of memory limit"):
+#   qsub -l "select=host=A:ngpus=4:ncpus=48:mem=1000GB+host=B:ngpus=4:ncpus=48:mem=1000GB+host=C:ngpus=4:ncpus=48:mem=1000GB" \
 #        -v "ATTEMPT=clean250k_v1,MODE=clean,REQ_HOSTS=A+B+C" \
 #        -o outputs/clean250k_v1.o -e outputs/clean250k_v1.e \
 #        debug-scripts/run_3x4_clean_dirty.pbs

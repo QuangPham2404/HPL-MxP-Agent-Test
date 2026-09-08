@@ -87,10 +87,12 @@ job the same way).
   already running other jobs, with in-run host-load and IB-counter sampling
   to time-stamp any co-tenant arrival or departure.
 - **Method:** 6 sequential host-pinned jobs, config identical to experiment 1
-  (same scheduler chunk shape `select=<host>:ngpus=4` per node, launch path,
-  flags, N=250000, 3x4 row grid, no binding flags). Nodes are pinned
+  (same scheduler chunk shape per node — `select=<host>:ngpus=4:ncpus=48:
+  mem=1000GB`, matching experiment 1's actual recorded request; job 59932
+  shows `3:ngpus=4:ncpus=48:mem=1000GB` — same launch path, flags,
+  N=250000, 3x4 row grid, no binding flags). Nodes are pinned
   explicitly at submission via
-  `qsub -l "select=host=A:ngpus=4+host=B:ngpus=4+host=C:ngpus=4"`
+  `qsub -l "select=host=A:ngpus=4:ncpus=48:mem=1000GB+..."`
   (hosts chosen from a live `pbsnodes -aSj` check immediately before each
   submission; the run script asserts granted == requested nodes).
   - `clean250k_v1..v3`: nodes completely free at submission (njobs=0, 8/8
@@ -155,6 +157,16 @@ job the same way).
 - **Planned attempts:** `clean250k_v1..v3`, `dirty250k_v1..v3`; evidence
   under `outputs/` with attempt-specific names (`.o`/`.e` plus per-node
   `_pre_`/`_load_`/`_post_` logs, never overwritten).
+- **Failed attempt record — `clean250k_v1` (job `60453.gaas`, 2026-09-08,
+  19:12):** exit 137 ~40 s into the run, `cgroup/OOM: Killed because of
+  memory limit` during matgen. Cause: the submission's host-pinned select
+  omitted the per-chunk `ncpus=48:mem=1000GB` that experiment 1 actually
+  used (its script comment documented only `select=3:ngpus=4`), so each
+  chunk received the server-default memory and the job cgroup limit killed
+  the app almost immediately. Deterministic submission-spec defect; retry
+  as `clean250k_v1.1` with the corrected select. Evidence preserved:
+  `outputs/clean250k_v1.{o,e}` + per-node `_pre_/_load_/_post_` logs
+  (pre/post captures and 2 sampler ticks completed; no benchmark result).
 
 ## Analysis
 
