@@ -104,6 +104,26 @@ job the same way).
     free GPUs and >=48 free CPUs so our chunk fits. Co-tenant job IDs and
     their remaining walltime are recorded at submission, plus an in-job
     `pbsnodes` listing in the pre-run capture.
+- **Execution findings and approved design change (2026-09-08):**
+  - GAAS nodes are partitioned by a `Qlist` queue-affinity resource:
+    g06-g17 serve queue `gpu_as`; g01-g05/g20-g22 serve `gpu_ded`;
+    g18/g19/g23/g24 serve `gpu_aisg`; g25 serves `gpu_free`. The `gpu_as`
+    queue forces `default_chunk.Qlist=gpu_as`, so jobs in `gpu_as` can
+    never be pinned to the g20-g25 range — that range looks idle precisely
+    because it belongs to other queues. First submission (job `60449.gaas`,
+    pinned to g22+g16+g14) could never start ("Insufficient amount of
+    resource: Qlist") and was deleted; no run evidence lost.
+  - Within `gpu_as`, only g14 and g16 were completely free (for ~19 h;
+    queued small jobs were not being placed), and no third node would free
+    up soon (co-tenant jobs elsewhere had days of walltime left). User
+    approved a **relaxed clean condition**: clean runs pin g14 + g16
+    (pristine) + g10 (lightest co-tenant available: one 12-cpu/1-GPU job,
+    `down22`, ~88 h remaining), all within queue `gpu_as` for comparability
+    with experiment 1 and the dirty series. The g10 co-tenant is recorded
+    per attempt and visible in the sampler time series.
+  - Dirty-series candidates identified: g11 (co-tenant 60315: 48 cpus + 4
+    GPUs, ~69 h remaining) and g13 (co-tenants 59192/59442/59443: 36 cpus
+    + 3 GPUs, days remaining).
 - **New instrumentation vs experiment 1** (per the professor's suggested
   measurements, all verified available on GAAS):
   1. In-run per-node sampler (`debug-scripts/sample_node_load.sh`,
