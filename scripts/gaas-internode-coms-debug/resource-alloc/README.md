@@ -77,8 +77,10 @@ job the same way).
 
 ### Experiment 2 — Clean-node vs dirty-node series (N=250k, 3+3 jobs)
 
-- **Status:** in progress (2026-09-08). Scripts written and reviewed; runs
-  pending.
+- **Status:** interim (2026-09-08). Clean series complete (3/3 `PASSED`);
+  dirty v1 `PASSED`; dirty v2 queued (waiting for a pinned node's co-tenant
+  job to end); dirty v3 pending. One failed attempt (`clean250k_v1`,
+  submission-spec defect) recorded below.
 - **Purpose:** separate the ~16x catastrophic contention mode observed in
   experiment 1 (attributed to external co-tenant host/fabric load) from the
   constant CPU/GPU/NUMA placement mismatch, by holding the placement
@@ -169,6 +171,75 @@ job the same way).
   (pre/post captures and 2 sampler ticks completed; no benchmark result).
 
 ## Analysis
+
+### Experiment 2 interim results (2026-09-08)
+
+**Runs so far** (N=250000, NB=1024, 3x4 row grid, 12 ranks, host-pinned;
+clean = g14+g16 pristine + g10 light co-tenant; dirty v1 = g11+g13 heavy
+GPU co-tenants + g10; all `PASSED`, exit 0):
+
+| Attempt | Job | Walltime | GFLOPS (total) | GFLOPS/GPU | vs baseline total (4.0092e+04) | vs baseline per GPU (3340.96) | LU s | Solver s | RNG s AVG (MAX node) | matgen s |
+|---|---|---|---:|---:|---:|---:|---:|---:|---|---:|
+| clean250k_v1.1 | 60454 | 1:18 | 8.4396e+05 | 70330 | +2005% | +2005% | 6.67 | 5.67 | 13.85 (g16 16.48) | 21.61 |
+| clean250k_v2 | 60458 | 1:16 | 8.2255e+05 | 68546 | +1952% | +1951% | 7.02 | 5.65 | 13.13 (g16 16.19) | 21.24 |
+| clean250k_v3 | 60459 | 1:19 | 7.3008e+05 | 60840 | +1721% | +1721% | 6.83 | 7.45 | 12.94 (g16 15.89) | 21.06 |
+| dirty250k_v1 | 60461 | 7:19 | 3.3263e+04 | 2772 | −17% | −17% | 269.64 | 43.98 | 20.93 (g11 39.46) | 59.70 |
+
+Baseline-reference caveat: the original 3x4 baseline (job `57232.gaas`)
+ran N=480000; the percentage columns compare GFLOPS/GPU directly and
+understate the clean series' advantage at equal N (per-GPU efficiency
+grows with N, so at N=480k the clean-condition margin would be larger).
+
+**Findings so far:**
+
+1. **The clean condition is fast and reproducible**: 60,840–70,330
+   GFLOPS/GPU with ~1:20 walltimes — 18–21x the original baseline per GPU,
+   and ~1.6x experiment 1's best (v5: 43,288/GPU, which ran on co-tenant
+   nodes). The 3x4 topology itself is healthy.
+2. **The dirty condition reproduces the slow mode deliberately**: 2,772
+   GFLOPS/GPU, LU 269.6 s (40x the clean runs), solver 44.0 s (7x), RNG
+   MAX 39.5 s on the co-tenant node (3x), matgen 59.7 s (2.8x) — matching
+   experiment 1's v1-v4 slow mode (2,572-2,857/GPU) and the original
+   baseline's magnitude. The bimodality is now causally tied to co-tenant
+   node condition, not to our job's own placement.
+3. **The contention is host-side, not fabric-side**: total IB bytes moved
+   by the app are identical (~42.3-42.8 GB per node) in clean and dirty
+   runs, and the dirty nodes' counters show ≈0 extra fabric traffic from
+   co-tenants (g13: +0.27 GB over the app's baseline over 404 s). The app
+   just takes 7.8x longer to move the same bytes. Combined with the
+   parent-track finding that the container's UCX uses the host-staged
+   `cuda_cpy` path (GPUDirect off inside the container), the slow mode is
+   consistent with co-tenants contending for the host-side resources the
+   staged path depends on (DDR bandwidth / PCIe / LLC), not with
+   switch-side IB congestion.
+4. **Co-tenant CPU load alone was modest**: from /proc/stat deltas, our
+   own app uses ~24 busy CPUs per node in fast mode and ~15 in slow mode
+   (ranks wait on comms); g13's three co-tenant jobs added only ~16 busy
+   CPUs and g11's co-tenant (a resource-holding idle session, job 60315)
+   added ≈0 — yet LU still collapsed 40x. CPU-cycle starvation cannot
+   explain the magnitude; memory-bandwidth/PCIe contention remains the
+   leading candidate mechanism (not yet directly measured — see
+   limitations).
+5. **Placement mismatch is definitively not the differentiator**: the
+   pristine clean runs received cross-NUMA allocations (g14/g16: socket-1
+   GPUs `9A/BB/CD/DC` with socket-0 cpuset `0-47`, 76-86% remote-memory
+   fraction in numastat deltas) and were the fastest runs of the series.
+   Dirty v1's allocations were no worse. This confirms experiment 1's
+   finding 3 with the strongest possible contrast.
+6. **GPU starvation signature reproduced**: sampler medians show the
+   allocated GPUs near-idle (~117-131 W, 0% utilization medians) through
+   the 7-minute dirty run — the exp1 monitor observation, now with
+   per-node in-run evidence.
+
+**Limitations (interim):** memory-bandwidth contention is inferred
+(consistent resource arithmetic), not directly measured — no PCM/MBW
+counters were sampled; the dirty series has 1 of 3 replicates; g10
+participates in both conditions (light co-tenant; its clean-series
+behavior bounds its impact — the clean series was fast with g10 in it);
+PSI was unavailable (`/proc/pressure` absent on GAAS compute nodes).
+
+**Pending:** dirty v2 (queued behind co-tenant job `60466` on g13, ETA
+~22:30), dirty v3, final analysis update.
 
 ### Experiment 1 results (2026-09-08)
 

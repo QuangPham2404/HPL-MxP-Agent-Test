@@ -1,0 +1,22 @@
+Loading nvhpc/26.3
+  Loading requirement: gnu/gcc-12.3 cuda/13.1
+WARNING: group: unknown groupid 1304617061
+rsh_pbsdsh_container: HOST=hpc-gaas-g16 idx=1 cmd=[    OPAL_PREFIX=/opt/hpcx/ompi ; export OPAL_PREFIX;    PATH=/usr/local/mpi/bin:$PATH ; export PATH ; LD_LIBRARY_PATH=/usr/local/mpi/lib:${LD_LIBRARY_PATH:-} ; export LD_LIBRARY_PATH ; DYLD_LIBRARY_PATH=/usr/local/mpi/lib:${DYLD_LIBRARY_PATH:-} ; export DYLD_LIBRARY_PATH ;   /usr/local/mpi/bin/orted -mca ess "env" -mca ess_base_jobid "2971992064" -mca ess_base_vpid 1 -mca ess_base_num_procs "3" -mca orte_node_regex "hpc-gaas-g[2:14,16,10]@0(3)" -mca orte_hnp_uri "2971992064.0;tcp://10.20.0.11,192.168.230.20,172.16.2.142,172.17.0.1:59271" --mca plm_rsh_agent "/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/multi-node-test/rsh_pbsdsh_container.sh" --mca plm_rsh_no_tree_spawn "1" --mca plm_rsh_num_concurrent "1" --mca routed "direct" -mca plm "rsh" -mca coll_hcoll_enable "0" -mca pml "ucx" -mca hwloc_base_binding_policy "none" -mca pmix "^s1,s2,cray,isolated"]
+WARNING: group: unknown groupid 1304617061
+rsh_pbsdsh_container: HOST=hpc-gaas-g10 idx=2 cmd=[    OPAL_PREFIX=/opt/hpcx/ompi ; export OPAL_PREFIX;    PATH=/usr/local/mpi/bin:$PATH ; export PATH ; LD_LIBRARY_PATH=/usr/local/mpi/lib:${LD_LIBRARY_PATH:-} ; export LD_LIBRARY_PATH ; DYLD_LIBRARY_PATH=/usr/local/mpi/lib:${DYLD_LIBRARY_PATH:-} ; export DYLD_LIBRARY_PATH ;   /usr/local/mpi/bin/orted -mca ess "env" -mca ess_base_jobid "2971992064" -mca ess_base_vpid 2 -mca ess_base_num_procs "3" -mca orte_node_regex "hpc-gaas-g[2:14,16,10]@0(3)" -mca orte_hnp_uri "2971992064.0;tcp://10.20.0.11,192.168.230.20,172.16.2.142,172.17.0.1:59271" --mca plm_rsh_agent "/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/multi-node-test/rsh_pbsdsh_container.sh" --mca plm_rsh_no_tree_spawn "1" --mca plm_rsh_num_concurrent "1" --mca routed "direct" -mca plm "rsh" -mca coll_hcoll_enable "0" -mca pml "ucx" -mca hwloc_base_binding_policy "none" -mca pmix "^s1,s2,cray,isolated"]
+WARNING: group: unknown groupid 1304617061
+/workspace/hpl-mxp.sh: line 261: 3071328 Killed                  ${NUMCMD} ${CPUBIND} ${MEMBIND} ${XHPL} ${HPL_MXP_PARAMS}
+/workspace/hpl-mxp.sh: line 261: 288006 Killed                  ${NUMCMD} ${CPUBIND} ${MEMBIND} ${XHPL} ${HPL_MXP_PARAMS}
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+/workspace/hpl-mxp.sh: line 261: 287997 Killed                  ${NUMCMD} ${CPUBIND} ${MEMBIND} ${XHPL} ${HPL_MXP_PARAMS}
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[45349,1],6]
+  Exit code:    137
+--------------------------------------------------------------------------
+cgroup/OOM: Killed because of memory limit
