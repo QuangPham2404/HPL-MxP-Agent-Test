@@ -181,6 +181,45 @@ job the same way).
   `outputs/clean250k_v1.{o,e}` + per-node `_pre_/_load_/_post_` logs
   (pre/post captures and 2 sampler ticks completed; no benchmark result).
 
+### Experiment 3 — Allocation resweep on pristine nodes (N=250k, 5 jobs)
+
+- **Status:** in progress (2026-09-09). Scripts written and reviewed; runs
+  pending.
+- **Purpose:** redo experiment 1's allocation-variance series with the
+  co-tenant variable removed. Experiment 2 proved co-tenant host
+  contention dominates the 3x4 degradation (dose-response from ~1.6x on
+  lightly-loaded nodes to ~25x on heavily-shared ones), so experiment 1's
+  "allocation mismatch 5/5" data was confounded: the mismatch never varied
+  independently of co-tenancy. This series measures what the placement
+  dimension looks like on its own: the clean-node run-to-run noise band,
+  PBS carve-out determinism on pristine nodes, and cross-node
+  default-carve-out contrast.
+- **Method:** 5 sequential host-pinned jobs, launch config identical to
+  experiments 1-2 (`select=<host>:ngpus=4:ncpus=48:mem=1000GB` per chunk,
+  N=250000, 3x4 row grid, `--bind-to none`, no affinity flags).
+  - `cleanalloc250k_v1..v3`: fixed pristine trio `g14+g16+g17`
+    (live-verified pristine via `pbsnodes -aSj` before each submission).
+  - `cleanalloc250k_v4..v5`: opportunistically rotated onto other pristine
+    (or nearly-pristine, documented) nodes if available at submission time;
+    otherwise stay on the trio. Rotation samples each node's default
+    carve-out, which differs across nodes (experiment 2 saw socket-1 GPU
+    sets with socket-0 cpusets on g14/g16 but a mixed set on g10).
+- **Expected behavior (from experiment 2's evidence):** PBS's carve-out on
+  a pristine node is deterministic — all three clean-series attempts
+  received byte-identical allocations on g14/g16 — so v1-v3 should confirm
+  determinism and measure the clean noise band rather than natural
+  allocation variance.
+- **Instrumentation:** identical to experiment 2 (capture v2, 10 s
+  host-load/IB/GPU sampler, UCX + NCCL rail logs, `--monitor-gpu`), via
+  the exp3 script `debug-scripts/run_3x4_alloc_resweep_clean.pbs`.
+- **Operational policy (user, 2026-09-09, carried over from exp2):** qdel
+  pre-authorized for this experiment's own stuck submissions only (each
+  recorded with reason); if a pinned node loses pristineness
+  before/during a run, re-pick from other pristine nodes when >=3 exist,
+  otherwise stop and ask.
+- **Planned attempts:** `cleanalloc250k_v1..v5`; evidence under `outputs/`
+  with attempt-specific names, never overwritten.
+
 ## Analysis
 
 ### Experiment 2 results (2026-09-08/09) — final
