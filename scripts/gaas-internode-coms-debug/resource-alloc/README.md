@@ -225,8 +225,9 @@ job the same way).
 
 ### Experiment 4 — N-sweep clean baseline (N=450k..510k, 7 jobs)
 
-- **Status:** in progress (2026-09-09). Script written and reviewed; runs
-  pending.
+- **Status:** complete (2026-09-09). All 7 runs `PASSED` on the pristine
+  trio (verified 3/3 before every submission; no co-tenant arrivals
+  detected).
 - **Purpose:** establish the clean-node baseline performance-vs-N curve
   for the 3x4 topology as the diagnostic reference (not optimization):
   how the pristine-node condition scales with problem size, directly
@@ -252,6 +253,67 @@ job the same way).
   `outputs/` with attempt-specific names, never overwritten.
 
 ## Analysis
+
+### Experiment 4 results (2026-09-09) — final
+
+**All runs** (N as listed, NB=1024, 3x4 row grid, 12 ranks, pristine trio
+g14+g16+g17, all `PASSED`, exit 0). Reference baseline: the original
+contaminated 3x4 run (job `57232.gaas`, N=480000, GFLOPS total
+`4.0092e+04`, 3340.96 per GPU). Host GB/node from PBS `resources_used.mem`
+(/3 nodes); peak GPU MiB/GPU from the sampler's per-GPU `memory.used`:
+
+| Attempt | Job | N | Walltime | GFLOPS (total) | GFLOPS/GPU | vs baseline total (4.0092e+04) | LU s | LU GFLOPS/GPU | Solver s | RNG s AVG | matgen s | host GB/node | peak GPU MiB/GPU |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| nsweep450k | 61050 | 450000 | 3:27 | 1.8593e+06 | 154942 | +4538% | 17.11 | 295888 | 15.57 | 65.26 | 119.30 | 537 | ~70300 |
+| nsweep460k | 61051 | 460000 | 2:43 | 1.9046e+06 | 158714 | +4650% | 17.80 | 303761 | 16.27 | 49.97 | 74.60 | 561 | ~73700 |
+| nsweep470k | 61052 | 470000 | 2:48 | 1.9263e+06 | 160527 | +4705% | 18.73 | 307910 | 17.20 | 50.94 | 76.84 | 585 | ~76400 |
+| nsweep480k | 61055 | 480000 | 2:53 | 1.9842e+06 | 165350 | +4849% | 19.27 | 318875 | 17.89 | 53.77 | 80.09 | 610 | ~79800 |
+| nsweep490k | 61057 | 490000 | 2:53 | 2.0398e+06 | 169981 | +4988% | 20.39 | 320613 | 18.07 | 52.83 | 80.32 | 635 | ~82800 |
+| nsweep500k | 61058 | 500000 | 3:01 | 2.1320e+06 | 177667 | +5218% | 20.87 | 332720 | 18.22 | 53.85 | 86.56 | 661 | ~86000 |
+| nsweep510k | 61063 | 510000 | 3:03 | 2.1633e+06 | 180272 | +5296% | 22.44 | 328403 | 18.44 | 54.73 | 86.75 | 687 | ~89400 |
+
+**Findings:**
+
+1. **The clean 3x4 baseline curve is established**: headline performance
+   rises monotonically 154,942 -> 180,272 GFLOPS/GPU over N=450k..510k
+   (+16%), LU-only rate 296 -> 328 TF/GPU (+11%) — larger N amortizes the
+   inter-node communication overhead, as expected for a comms-bound
+   topology.
+2. **The N=480k head-to-head: 49.5x.** On identical N, topology, and
+   flags, the pristine trio delivers 1.9842e+06 GFLOPS total (165,350/GPU)
+   vs the original contaminated baseline's 4.0092e+04 (3,340.96/GPU). The
+   original baseline's entire deficit at its own operating point is
+   attributable to node condition (experiment 2's co-tenant dose-response
+   riding on the comms ceiling).
+3. **Position vs the single-node reference**: at N~490k our headline
+   (169,981/GPU) is ~62% of the single-node 8xH200 reference level
+   (~275,000/GPU, N=491520, as recorded in the motivation), while the
+   LU-only rate (320,613/GPU) matches or exceeds it — the raw
+   factorization engine is healthy; the headline gap is the comms ceiling
+   (container GPUDirect off / staged path — parent track), not compute or
+   resources.
+4. **Memory model validated point-by-point**: host GB/node = ~10 +
+   2.6e-9 x N^2 predicts all seven measurements within ~1% (537 -> 687
+   GB/node). Peak GPU memory per GPU grows 70.3 -> 89.4 GiB (~2.2x the raw
+   fp16 matrix share). Extrapolated walls: the `mem=1000GB` host cgroup at
+   N~617k and the 141 GiB GPU HBM at N~630k — the user's 510k cap sits
+   ~20% below both, safely validated, and an uncapped sweep would end in
+   that 615-630k band.
+5. **450k first-run warmup anomaly**: the first sweep attempt (then-long-
+   idle trio) shows RNG 65.3 s / matgen 119.3 s vs ~50/~75 s at 460k+
+   despite the smaller N — first-touch/page-fault warmup, not a trend
+   point; 460k-510k are internally consistent (matgen 74.6 -> 86.8 s
+   scales with N as expected).
+6. **Pristine condition held throughout**: pristine check 3/3 before every
+   submission; pre/post captures and the sampler show no co-tenant
+   arrivals during any run.
+
+**Conclusion:** the resource-allocation track is complete. The pristine
+3x4 clean baseline at N=480k is **1.98e+06 GFLOPS (49.5x the original
+baseline)**, the usable range extends through at least N=510k (measured)
+with mapped walls at ~617-630k, and the residual gap to single-node
+performance (~38% of headline at ~490k) belongs to the comms track
+(in-container GPUDirect), not to resources, placement, or affinity.
 
 ### Experiment 3 results (2026-09-09) — final
 
