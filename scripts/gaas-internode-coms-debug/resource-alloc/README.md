@@ -183,8 +183,11 @@ job the same way).
 
 ### Experiment 3 — Allocation resweep on pristine nodes (N=250k, 5 jobs)
 
-- **Status:** in progress (2026-09-09). Scripts written and reviewed; runs
-  pending.
+- **Status:** complete (2026-09-09). 5 runs `PASSED` (4 on the fixed
+  pristine trio g14+g16+g17, 1 rotated onto nearly-pristine g13 after no
+  second pristine node existed). One submission failed before producing
+  evidence (job `61031`, submission-directory error — recorded in the
+  results section).
 - **Purpose:** redo experiment 1's allocation-variance series with the
   co-tenant variable removed. Experiment 2 proved co-tenant host
   contention dominates the 3x4 degradation (dose-response from ~1.6x on
@@ -221,6 +224,97 @@ job the same way).
   with attempt-specific names, never overwritten.
 
 ## Analysis
+
+### Experiment 3 results (2026-09-09) — final
+
+**All runs** (N=250000, NB=1024, 3x4 row grid, 12 ranks, host-pinned, all
+`PASSED`, exit 0; trio = g14+g16+g17 pristine, verified per attempt; v4
+rotated g13 in: nearly pristine, one light co-tenant `59192` at 12 cpus +
+1 GPU, mixed-socket GPU carve-out `5C/9A/BB/CD`, fragmented cpuset
+`12-49,56-65`):
+
+| Attempt | Job | Nodes | Walltime | GFLOPS (total) | GFLOPS/GPU | vs baseline total (4.0092e+04) | LU s | Solver s | RNG s AVG (MAX node) | matgen s |
+|---|---|---|---|---:|---:|---:|---:|---:|---|---:|
+| cleanalloc250k_v1 | 61022 | g14+g16+g17 (trio) | 1:26 | 8.4951e+05 | 70792 | +2019% | 6.90 | 5.37 | 16.90 (g14 21.31) | 27.05 |
+| cleanalloc250k_v2 | 61024 | trio | 1:13 | 8.5640e+05 | 71367 | +2036% | 6.74 | 5.43 | 13.98 (g16 15.73) | 21.75 |
+| cleanalloc250k_v3 | 61026 | trio | 1:17 | 8.5114e+05 | 70929 | +2023% | 6.82 | 5.42 | 13.93 (g16 15.50) | 20.96 |
+| cleanalloc250k_v4 | 61027 | g14+g16+g13 (nearly pristine) | 1:27 | 8.2063e+05 | 68385 | +1947% | 6.64 | 6.06 | 12.62 (g16 15.52) | 21.20 |
+| cleanalloc250k_v5.1 | 61032 | trio | 1:14 | 8.5678e+05 | 71398 | +2037% | 6.72 | 5.44 | 13.77 (g16 15.92) | 21.61 |
+
+**Failed attempt record — `cleanalloc250k_v5` (job `61031.gaas`,
+2026-09-09 20:15):** exit 1 in ~1 s, no evidence produced. Cause: the
+submission was accidentally made from the `outputs/` subdirectory (after
+inspecting v4 evidence), so `PBS_O_WORKDIR` pointed there; the script's
+`REPO_ROOT`/`BRIDGE` resolution then failed (`chmod +x $BRIDGE` on a
+nonexistent path, `set -e`) and the relative `-o/-e` paths landed PBS
+output in a stray `outputs/outputs/` directory. The stray directory
+(0-byte `.o`, 243-byte error `.e`, both containing no benchmark evidence)
+was removed after the cause was identified deterministically from the
+submission context; the `.e` was not read before removal (noted for
+transparency — PBS job record `61031` retains the exit status). Resubmitted
+from the correct directory as `cleanalloc250k_v5.1` (job `61032`).
+
+**Findings:**
+
+1. **PBS's carve-out on pristine nodes is deterministic — 5/5, and uniform
+   across nodes**: every attempt received the byte-identical default
+   allocation on g14/g16/g17: socket-1 GPUs `9A/BB/CD/DC` + socket-0
+   cpuset `0-47` + `Mems_allowed 0-1`. There is no natural allocation
+   variance to sample on clean nodes; experiment 1's varying carve-outs
+   were driven by co-tenant occupancy reshuffling the free-resource sets,
+   not by scheduler randomness.
+2. **The clean noise band is very tight**: trio GFLOPS/GPU
+   70,792–71,398 (0.85% spread over 4 attempts); phase times
+   near-constant (LU 6.72–6.90 s, solver 5.37–5.44 s; matgen 20.96–27.05 s
+   with v1 the cold-start outlier). Per-node IB bytes are identical across
+   attempts (g14 42.50 GB, g16 42.68 GB, g17 42.33 GB — also matching
+   experiment 2's totals).
+3. **Fully pristine nodes give the highest band of the whole
+   investigation**: 70.8–71.4k GFLOPS/GPU vs experiment 2's clean series
+   60.8–70.3k (which included g10's light co-tenant and its mixed-socket
+   carve-out) — the fully-pristine condition adds ~2–15% and halves the
+   spread.
+4. **The "worst" natural allocation shape costs at most a few percent on
+   clean nodes**: v4's g13 combined a mixed-socket GPU set, a fragmented
+   cpuset, and one light co-tenant, and the attempt ran at 68,385
+   GFLOPS/GPU — only −3.8% vs the trio mean. g13 was even the RNG-MIN
+   node (7.61 s), so its co-tenant was not interfering during that phase.
+5. **The affinity-mismatch hypothesis is closed as a major factor**: the
+   fastest runs of the entire investigation all ran on the mismatched
+   default carve-out (socket-1 GPUs + socket-0 CPUs), with per-node
+   remote-memory fractions of 34–36% (g14), 87–89% (g16), and 72–79%
+   (g17) — node-stable, attempt-stable, and with no measurable performance
+   effect. Placement/NUMA mismatch is worth at most ~4% here, versus
+   co-tenancy's 1.6x–25x dose-response from experiment 2.
+6. **Sampler consistency**: our app's own host footprint is ~22–28 busy
+   CPUs/node in fast mode (exp2's number ~24 confirmed); no co-tenant
+   arrivals were detected on the trio during any run (pre/post pbsnodes
+   listings show only our job; loadavg flat).
+
+**Conclusion for the resource-allocation track:** the three experiments
+now give a complete, deconfounded picture of the 3x4 degradation's
+resource dimension. (1) Experiment 1's allocation-variance and bimodality
+observations were co-tenant-confounded. (2) Experiment 2 established the
+co-tenant dose-response continuum (~1.0x pristine → ~1.6x light → ~25x
+heavy GPU co-tenants) as the dominant factor, host-side (not fabric-side),
+with the container's GPUDirect-off staged path as the sensitive element.
+(3) Experiment 3 shows PBS placement on clean nodes is deterministic, its
+default cross-NUMA carve-out is effectively free, and affinity mismatch is
+a minor (<=4%) effect. The original baseline's ~44x deficit therefore
+decomposes into co-tenant contention (up to ~25x) times the comms-stack
+ceiling (container GPUDirect off — parent track). Practical guidance for
+non-full-node GPU jobs on GAAS: choose nodes without active co-tenants
+(node condition, not allocation shape, is what matters); affinity tuning
+is low-yield until the comms ceiling is fixed.
+
+**Suggested next steps (not executed, user decision):** unchanged from
+experiment 2's list (direct DDR/PCIe contention measurement; controlled
+dose-response with our own bounded synthetic co-tenants; report findings +
+Qlist partitioning to GAAS admins; re-run after the in-container
+GPUDirect fix). Additional low-effort option: extract per-rank UCX lane
+distribution from the captured `UCX_LOG_LEVEL=info` logs (evidence is in
+`outputs/*.o`, not yet parsed) to close the parent track's 3x4
+rail-balance question.
 
 ### Experiment 2 results (2026-09-08/09) — final
 
