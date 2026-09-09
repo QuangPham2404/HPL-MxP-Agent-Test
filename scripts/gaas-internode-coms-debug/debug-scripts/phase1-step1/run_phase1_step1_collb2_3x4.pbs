@@ -1,0 +1,251 @@
+#!/bin/bash
+# Phase 1 Step 1, Phase B2 (collectives, diagnostic replication): rerun the
+# Phase B collective GDR A/B ladder (3x4 rung) on pristine host-pinned nodes
+# with added coll/pml/UCC instrumentation.
+#
+# Purpose: (a) replicate Phase B rung 3x4 (job 59935.gaas) exactly — same
+#          tests, same same-job A/B design, same launch path — to check
+#          whether the >=3-rank GDR collective pathology reproduces without
+#          co-tenant contention; (b) record what MPI actually selects and
+#          executes (coll component, pml, UCC, CUDA wrapper) via MCA verbose
+#          and UCC logging, to steer the next single-variable experiment.
+# Expected working directory: scripts/gaas-internode-coms-debug/debug-scripts/phase1-step1/ on GAAS.
+# Inputs: nodes pinned at submission via qsub -l select=host=... chunks (see
+#         submit example below) plus -v REQ_HOSTS; host HPC-X 2.25.1 via
+#         module nvhpc/26.3; bridge multi-node-test/rsh_pbsdsh.sh;
+#         collb2_node_snapshot.sh (per-node checkpoint helper) in this directory.
+# Outputs: ../../outputs/phase1-step1/step1_collb2_3x4_v1.{o,e} plus per-node
+#          evidence logs (ompiinfo, ucxdev, nvtopo, clean-node checkpoints
+#          pre/prectrl/mid/post); hostfile_collb2_3x4 in this directory.
+# Design: identical test matrix to Phase B rung 3x4 (osu_bcast H H + -d cuda
+#         with -m 67108864, full sweep up to 64 MiB; osu_allreduce H H +
+#         -d cuda, default sizes), run twice in this one job on the same
+#         nodes and placement: control run (default UCX) vs GDR-off run
+#         (UCX_IB_GPU_DIRECT_RDMA=n). GPU per rank =
+#         CUDA_VISIBLE_DEVICES=local rank; no CPU binding (--bind-to none,
+#         matching Phase B and real HPL-MxP runs).
+#         B2 additions (observational only — no UCC disablement, UCX
+#         threshold changes, affinity changes, or transport restrictions):
+#         - UCC_LOG_LEVEL=info forwarded with -x next to UCX_LOG_LEVEL=info
+#           and UCX_PROTO_INFO=y (kept from Phase B; no UCX debug level or
+#           per-message tracing, to avoid perturbing timing);
+#         - --mca coll_base_verbose 100, pml_base_verbose 10,
+#           mpi_common_cuda_verbose 10, mpi_common_cuda_warning 1 on every
+#           mpirun (MCA params propagate to all ranks; rank-tagged selection
+#           output is the per-rank proof of what executed — UCC_UCP_CONTEXT
+#           alone would not be);
+#         - ompi_info --all captured once before the benchmarks (collective
+#           components + MCA parameters record);
+#         - per-rank evidence incl. visible GPU UUID (device identity
+#           verification), CPU+memory affinity, effective UCX_/UCC_ env;
+#         - per-node clean-node checkpoint captures (loadavg, PSI, meminfo,
+#           cpuset, visible GPUs, in-job pbsnodes co-tenant listing) at pre,
+#           prectrl, mid, post; scheduler snapshots are taken outside the job
+#           immediately before submission and after completion.
+# Submit (from this directory, hosts from a live `pbsnodes -aSj` pristine
+#         check; chunks mirror the resource-alloc allocation-study shape
+#         (exp1 actual grant, exp2/exp3-proven host pinning; omitting
+#         ncpus/mem applies the server default and the cgroup OOM killer
+#         terminates the job — see resource-alloc clean250k_v1, job 60453):
+#   qsub -l "select=host=hpc-gaas-g14:ngpus=4:ncpus=48:mem=1000GB+host=hpc-gaas-g16:ngpus=4:ncpus=48:mem=1000GB+host=hpc-gaas-g17:ngpus=4:ncpus=48:mem=1000GB" \
+#        -v "REQ_HOSTS=hpc-gaas-g14+hpc-gaas-g16+hpc-gaas-g17" \
+#        run_phase1_step1_collb2_3x4.pbs
+# Assumptions: multi-node-test/rsh_pbsdsh.sh at repo root; launch flags follow
+#         multi-node-test/GAAS_MULTINODE_SETUP.md section 1.2.
+
+#PBS -N P1S1_C3X4B2
+#PBS -q gpu_as
+#PBS -P hpc_admin
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+#PBS -o ../../outputs/phase1-step1/step1_collb2_3x4_v1.o
+#PBS -e ../../outputs/phase1-step1/step1_collb2_3x4_v1.e
+
+# Multi-run A/B diagnostic: attempt every test in both runs, capture each exit
+# status, then summarize. -e is intentionally omitted so one failed test does
+# not hide the rest.
+set -uo pipefail
+
+cd "$PBS_O_WORKDIR"
+OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase1-step1"
+mkdir -p "$OUTDIR"
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
+SNAPSHOT="$PBS_O_WORKDIR/collb2_node_snapshot.sh"
+
+: "${REQ_HOSTS:?submit with -v REQ_HOSTS=<host1+host2[+host3]>}"
+
+module purge
+module load nvhpc/26.3
+chmod +x "$BRIDGE"
+
+HPCX="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1"
+export OSU_DIR="$HPCX/ompi/tests/osu-micro-benchmarks-cuda"
+export UCXBIN="$HPCX/ucx/bin"
+export LABEL="step1_collb2_3x4_v1"
+
+GPUS=4
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+
+# Host-pinning assertion: the scheduler must have granted exactly the
+# requested nodes (a host= chunk cannot be placed elsewhere; a mismatch means
+# the submission and the request disagree — abort before running).
+REQUESTED=$(printf '%s\n' "$REQ_HOSTS" | tr ',+' '\n\n' | sed 's/[[:space:]]//g' | grep -v '^$' | sort | paste -sd,)
+GRANTED=$(sort -u "$PBS_NODEFILE" | paste -sd,)
+if [ "$REQUESTED" != "$GRANTED" ]; then
+  echo "ERROR: granted nodes (${GRANTED}) != requested (${REQUESTED})" >&2
+  exit 1
+fi
+
+# De-duplicated hostfile with explicit per-node slot count (Blocker 8 pattern).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile_collb2_3x4"
+
+echo "=== Phase 1 Step 1 (Phase B2: collectives 3x4, diagnostic replication) metadata ==="
+echo "debug_dir=scripts/gaas-internode-coms-debug"
+echo "attempt=$LABEL"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} rank(s) per node = ${NPROCS} ranks"
+echo "nodes=${GRANTED}"
+echo "req_hosts=${REQ_HOSTS}"
+echo "mpirun=$(command -v mpirun)"
+echo "osu_dir=$OSU_DIR"
+echo "bridge=$BRIDGE"
+echo "binding=none (record-only evidence; matches Phase B / HPL-MxP run conditions)"
+echo "gdr_ab=ctrl (default UCX) vs gdroff (UCX_IB_GPU_DIRECT_RDMA=n), same job/nodes"
+echo "diagnostics=UCX_LOG_LEVEL=info UCX_PROTO_INFO=y UCC_LOG_LEVEL=info coll_base_verbose=100 pml_base_verbose=10 mpi_common_cuda_verbose=10 mpi_common_cuda_warning=1"
+echo "=== PBS_NODEFILE (raw) ==="
+cat "$PBS_NODEFILE"
+echo "=== hostfile ==="
+cat "$PWD/hostfile_collb2_3x4"
+
+# Clean-node checkpoint helper (once per node via pbsdsh; lock dir guards
+# against pbsdsh multi-firing). Scheduler-occupancy snapshots immediately
+# before submission and after completion are captured outside the job.
+node_snapshot() {
+  local tag="$1"
+  local lockbase
+  lockbase="$PWD/.locks_${LABEL}_${tag}"
+  rm -rf "$lockbase"
+  mkdir -p "$lockbase"
+  echo "=== clean-node checkpoint: $tag (pbsdsh, once per node) ==="
+  /opt/pbs/bin/pbsdsh -- /bin/bash "$SNAPSHOT" "$OUTDIR" "$LABEL" "$tag" "$lockbase" \
+    || echo "WARN: checkpoint ${tag} returned nonzero; continuing"
+}
+
+node_snapshot pre
+
+# Canonical host-native launch base (GAAS_MULTINODE_SETUP.md 1.2) with the B2
+# diagnostic MCA flags. UCX_*/UCC_* variables are additionally forwarded with
+# -x per invocation so all nodes provably see them (required for a valid A/B).
+MPICMD_BASE=(mpirun -np "$NPROCS"
+  --hostfile "$PWD/hostfile_collb2_3x4"
+  --mca plm_rsh_agent "$BRIDGE"
+  --mca plm_rsh_no_tree_spawn 1
+  --mca plm_rsh_num_concurrent 1
+  --mca routed direct
+  --mca coll_base_verbose 100
+  --mca pml_base_verbose 10
+  --mca mpi_common_cuda_verbose 10
+  --mca mpi_common_cuda_warning 1
+  --bind-to none)
+
+export UCX_LOG_LEVEL=info
+export UCX_PROTO_INFO=y
+export UCC_LOG_LEVEL=info
+
+# --- Evidence: ompi_info --all once before the benchmarks (components + MCA params) ---
+echo "=== Evidence: ompi_info --all (once, this node) ==="
+ompi_info --all > "$OUTDIR/${LABEL}_ompiinfo_$(hostname).log" 2>&1
+echo "ompiinfo_log=$OUTDIR/${LABEL}_ompiinfo_$(hostname).log"
+echo "--- coll/pml component summary ---"
+ompi_info 2>/dev/null | grep -E " MCA (coll|pml):" || true
+"$HPCX/ucc/bin/ucc_info" --version 2>&1 | head -3 || echo "ucc_info unavailable"
+"$UCXBIN/ucx_info" -v 2>&1 | head -4 || true
+
+# --- Evidence: rank placement + GPU identity + affinity + effective UCX/UCC env ---
+echo "=== Evidence: rank placement + GPU UUID + affinity + UCX/UCC env ==="
+"${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO -x UCC_LOG_LEVEL bash -c '
+  export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK
+  echo "rank=$OMPI_COMM_WORLD_RANK/$OMPI_COMM_WORLD_SIZE host=$(hostname) localrank=$OMPI_COMM_WORLD_LOCAL_RANK cvd=${CUDA_VISIBLE_DEVICES:-unset} cpus_allowed=$(grep Cpus_allowed_list /proc/self/status | cut -f2) mems_allowed=$(grep Mems_allowed_list /proc/self/status | cut -f2)"
+  echo "  gpu_uuids=[$(nvidia-smi -L 2>/dev/null | tr "\n" ";")]"
+  echo "  ucx_ucc_env=[$(env | grep -E "^(UCX_|UCC_)" | sort | tr "\n" ";")]"
+  true'
+EVID_RC=$?
+
+# --- Evidence: ucx_info -d + nvidia-smi topo -m per node (to log files) ---
+echo "=== Evidence: ucx_info -d + nvidia-smi topo -m per node (to log files) ==="
+"${MPICMD_BASE[@]}" -x OUTDIR -x UCXBIN -x LABEL bash -c '
+  if [ "$OMPI_COMM_WORLD_LOCAL_RANK" = "0" ]; then
+    "$UCXBIN/ucx_info" -d > "$OUTDIR/${LABEL}_ucxdev_$(hostname).log" 2>&1
+    nvidia-smi topo -m > "$OUTDIR/${LABEL}_nvtopo_$(hostname).log" 2>&1
+    echo "evidence_written host=$(hostname)"
+  fi; true'
+EVID_RC2=$?
+
+# --- A/B suite: control run vs GDR-off run, same nodes and placement ---
+FAILS=0
+TOTAL=0
+
+run_suite() {
+  # run_suite <mode: ctrl|gdroff> — runs the Phase B test matrix with the mode's UCX env.
+  local mode="$1"
+  local -a xflags=()
+  local rc
+  if [ "$mode" = "gdroff" ]; then
+    export UCX_IB_GPU_DIRECT_RDMA=n
+    xflags=(-x UCX_IB_GPU_DIRECT_RDMA)
+  else
+    unset UCX_IB_GPU_DIRECT_RDMA
+  fi
+  echo ""
+  echo "########## RUN: $mode (UCX_IB_GPU_DIRECT_RDMA=${UCX_IB_GPU_DIRECT_RDMA:-unset}) ##########"
+  date --iso-8601=seconds
+
+  echo "=== [$mode] osu_bcast H H (up to 64 MiB) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO -x UCC_LOG_LEVEL "${xflags[@]}" \
+    "$OSU_DIR/osu_bcast" -m 67108864
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_bcast_HH=$rc"
+
+  echo "=== [$mode] osu_bcast -d cuda (up to 64 MiB) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO -x UCC_LOG_LEVEL "${xflags[@]}" -x OSU_DIR \
+    bash -c 'export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK; exec "$OSU_DIR/osu_bcast" -d cuda -m 67108864'
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_bcast_cuda=$rc"
+
+  echo "=== [$mode] osu_allreduce H H (default sizes) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO -x UCC_LOG_LEVEL "${xflags[@]}" \
+    "$OSU_DIR/osu_allreduce"
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_allreduce_HH=$rc"
+
+  echo "=== [$mode] osu_allreduce -d cuda (default sizes) ==="
+  "${MPICMD_BASE[@]}" -x UCX_LOG_LEVEL -x UCX_PROTO_INFO -x UCC_LOG_LEVEL "${xflags[@]}" -x OSU_DIR \
+    bash -c 'export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK; exec "$OSU_DIR/osu_allreduce" -d cuda'
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_allreduce_cuda=$rc"
+  return 0
+}
+
+node_snapshot prectrl
+run_suite ctrl
+node_snapshot mid
+run_suite gdroff
+node_snapshot post
+
+echo ""
+echo "=== Phase B2 (3x4) summary ==="
+echo "evidence_rank_gpu_rc=$EVID_RC"
+echo "evidence_node_logs_rc=$EVID_RC2"
+echo "total_ab_tests=$TOTAL"
+echo "failed_ab_tests=$FAILS"
+if [ "$FAILS" -eq 0 ]; then
+  echo "COLL_B2_3X4_RESULT=ALL_TESTS_COMPLETED"
+else
+  echo "COLL_B2_3X4_RESULT=SOME_TESTS_FAILED"
+fi
+echo "=== step1_collb2_3x4_v1 complete ==="

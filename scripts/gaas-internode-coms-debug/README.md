@@ -179,6 +179,63 @@ Interpretation (as designed): healthy collective GDR ⇒ `-d cuda` close to `H H
 
 ---
 
+### Phase 1 — Step 1, Phase B2: collectives diagnostic replication on pristine nodes (designed 2026-09-09)
+
+Replicates the full Phase B collective GDR A/B ladder (all four rungs:
+2x1 → 2x2 → 3x1 → 3x4, one job per rung, submitted sequentially) with two
+deltas: added coll/pml/UCC selection diagnostics, and pristine host-pinned
+nodes. Motivation: Phase B found CUDA collectives pathological at ≥3 ranks
+with GDR on (13-44× slower than staged), but those jobs ran on uncontrolled
+nodes; resource-alloc exp2/exp3 later proved co-tenant host contention causes
+a ~16× dose-response degradation on its own. B2 answers both open questions
+at once: does the collective pathology reproduce without contention, and
+what does MPI actually choose/execute on the pathological path.
+
+Diagnostic settings: keep `UCX_LOG_LEVEL=info` + `UCX_PROTO_INFO=y`; add
+`UCC_LOG_LEVEL=info`, `--mca coll_base_verbose 100`, `--mca pml_base_verbose
+10`, `--mca mpi_common_cuda_verbose 10`, `--mca mpi_common_cuda_warning 1`;
+all relevant env vars forwarded with `-x` so every rank receives them. No
+`UCX_LOG_LEVEL=debug` or per-message tracing in the measurement runs.
+`ompi_info --all` captured once per job before the benchmarks.
+
+Measurements per job (both GDR modes, same-job A/B as Phase B): `osu_bcast`
+H H and `-d cuda` with `-m 67108864` (full sweep; contains the 1/8/32/64 MiB
+rows of interest); `osu_allreduce` H H and `-d cuda`, default sizes (≤1 MiB).
+Recorded per rank: host, global/local rank, `CUDA_VISIBLE_DEVICES`, visible
+GPU UUID (explicit device-identity verification), CPU and memory affinity,
+effective UCX/UCC environment.
+
+Clean-node controls: `pbsnodes -aSj` immediately before each submission, then
+pin the selected nodes via `qsub -l select=host=...` chunks in the
+allocation-study shape (`ngpus=4:ncpus=48:mem=1000GB` per chunk; omitting
+ncpus/mem triggers the server-default cgroup OOM — resource-alloc job
+60453). Preferred trio: g14+g16+g17 (2-node rungs use g14+g16), fallback to
+other pristine `gpu_as` nodes, documented. Recorded per job: pre-run
+scheduler occupancy (saved evidence), in-job co-tenant state (pbsdsh
+checkpoints at pre/prectrl/mid/post per node: loadavg, PSI, meminfo, cpuset,
+visible GPUs, in-job `pbsnodes` listing), and post-run state — a clean
+pre-submission snapshot alone is insufficient because another job may arrive
+before or during execution.
+
+Interpretation: GDR-on still catastrophically slower than GDR-off on clean
+nodes ⇒ collective pathology confirmed independently of host contention.
+Slowdown disappears ⇒ earlier Phase B result was contaminated by host
+resource contention. Logs showing UCC-related selection/execution ⇒ next
+single-variable test is GDR-on with `--mca coll ^ucc`; if UCC is not
+selected, investigate the CUDA collective wrapper or UCX GPU rendezvous path
+instead. `UCC_UCP_CONTEXT` alone is not proof that UCC executed the measured
+collective; `coll_base_verbose` selection output is required.
+
+Scope: observational only — no UCC disablement, UCX threshold changes,
+affinity changes, or transport restrictions in this round. Operational
+policy carried over from resource-alloc exp2/exp3: qdel pre-authorized for
+this experiment's own stuck/failed submissions, pristine-loss re-pick with
+documented reasons. Scripts:
+`debug-scripts/phase1-step1/run_phase1_step1_collb2_{2x1,2x2,3x1,3x4}.pbs`
++ `collb2_node_snapshot.sh` (per-node checkpoint helper).
+
+---
+
 ### Phase 1 — status and resume point (updated 2026-09-08)
 
 **Completed:**
