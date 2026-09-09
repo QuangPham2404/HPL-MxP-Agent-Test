@@ -223,6 +223,34 @@ job the same way).
 - **Planned attempts:** `cleanalloc250k_v1..v5`; evidence under `outputs/`
   with attempt-specific names, never overwritten.
 
+### Experiment 4 — N-sweep clean baseline (N=450k..510k, 7 jobs)
+
+- **Status:** in progress (2026-09-09). Script written and reviewed; runs
+  pending.
+- **Purpose:** establish the clean-node baseline performance-vs-N curve
+  for the 3x4 topology as the diagnostic reference (not optimization):
+  how the pristine-node condition scales with problem size, directly
+  comparable to the original contaminated 3x4 baseline at N=480k (job
+  `57232.gaas`, 4.0092e+04 GFLOPS total, 3340.96 per GPU) and to the
+  single-node 8xH200 reference (~275 TF/GPU at N=491520).
+- **Method:** 7 sequential attempts, N = 450000, 460000, ..., 510000 in
+  10k steps (user-capped at 510k — diagnostic scope, not an
+  N_max search), on the fixed pristine trio `g14+g16+g17` (live-verified
+  per submission). All other flags identical to experiments 2-3 (same
+  chunk shape, NB=1024, 3x4 row grid, `--bind-to none`, monitor-gpu,
+  UCX+NCCL logs, capture v2 + sampler). Walltime 30 min per attempt.
+- **Memory headroom (measured, from PBS records):** the app's host memory
+  scales ~N^2 — 172.7 GB/node at N=250k, 610 GB/node at N=480k — giving a
+  projected ~687 GB/node at N=510k, safely inside the `mem=1000GB`
+  per-chunk cgroup; no OOM is expected within the capped range. (An
+  uncapped sweep would hit the host-cgroup wall near N~615k before the
+  GPU-HBM limit ~700-750k — recorded here for future reference.)
+- **Operational policy:** carried over from experiments 2-3 (qdel
+  pre-authorized for this experiment's own stuck submissions; pristine
+  loss → re-pick when >=3 pristine nodes exist, else stop and ask).
+- **Planned attempts:** `nsweep450k` .. `nsweep510k`; evidence under
+  `outputs/` with attempt-specific names, never overwritten.
+
 ## Analysis
 
 ### Experiment 3 results (2026-09-09) — final
