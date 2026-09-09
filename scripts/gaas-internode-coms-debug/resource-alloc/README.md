@@ -40,6 +40,66 @@ behavior and optimization/best-practice guidance for other users running
 non-full-node GPU jobs (a mis-matched allocation can silently degrade anyone's
 job the same way).
 
+## Final conclusion (2026-09-09) — resource-allocation track closed
+
+The four experiments below fully decompose the 3x4 degradation's resource
+dimension. **This diagnosis branch is wrapped up**: the 3x4 multi-node
+topology is validated and ready to run HPL-MxP sweeps on, provided the
+node-condition guidance in the crucial takeaway below is followed. (The
+remaining performance gap to single-node belongs to the parent comms
+track — in-container GPUDirect — not to resources.)
+
+**Best-run comparison — 3x4 pristine (exp4) vs single-node 8xH200 best
+(`experiments/N-nb-resweep`, NB=3072 tuned):**
+
+| | Single-node best (`N-nb-resweep_491520`) | 3x4 pristine best (`nsweep510k`) | 3x4 vs single-node |
+|---|---:|---:|---:|
+| GPUs / nodes | 8 / 1 | 12 / 3 | 1.5x hardware |
+| N / NB | 491520 / 3072 | 510000 / 1024 | — |
+| GFLOPS total | 2.1974e+06 | 2.1633e+06 | **98.4%** |
+| GFLOPS/GPU (headline) | 274,674 | 180,272 | 65.6% |
+| LU GFLOPS/GPU | 488,878 | 328,403 | 67.2% |
+
+Like-for-like at NB=1024 (single-node peak `N-sweep_490000`: 1.8293e+06
+total, 228,657/GPU headline, 372,361/GPU LU): the 3x4 at the same N=490k
+delivered 2.0398e+06 total (169,981/GPU headline, 320,613/GPU LU) —
+**+11.5% total, 74.3% headline and 86.1% LU per-GPU**; at N=510k (where
+the single node OOMs) +18.3% total. Reading: the 3x4 matches the
+single-node best's total output with 1.5x the GPUs (the added GPUs'
+parallel efficiency is only ~23%); the residual per-GPU gap is
+inter-node comms overhead (parent-track ceiling) plus untuned NB (the
+single-node best used its tuned NB=3072 — an optimization question, out
+of diagnostic scope). The 3x4 also extends the usable problem size:
+single node hits its memory wall at N=510k, while the 3x4 is validated
+through 510k with mapped walls at N~617k (host cgroup, mem=1000GB) and
+N~630k (GPU HBM).
+
+**What the four experiments established:**
+
+1. **The original 3x4 baseline's ~44-50x deficit was co-tenant host
+   contention** (exp2 dose-response: ~1.0x pristine, ~1.6x light, ~25x
+   heavy GPU co-tenants) — host-side, not fabric-side (identical IB bytes
+   moved in all conditions, no co-tenant fabric traffic) — riding on the
+   container's GPUDirect-off staged comms path. At N=480k the pristine
+   3x4 ran 49.5x the original baseline (exp4).
+2. **Affinity/placement mismatch introduces little degradation**: PBS's
+   pristine-node carve-out is deterministic (exp3), its default
+   cross-NUMA carve-out (socket-1 GPUs + socket-0 cpuset, 34-89%
+   remote-memory fractions) costs nothing measurable, and the worst
+   natural allocation shape cost <=~4%. Bad affinity is a minor factor.
+3. **Clean 3x4 baseline established** (exp4): 155-180 TF/GPU headline
+   over N=450-510k; host-memory model (~10 + 2.6e-9 N^2 GB/node)
+   validated point-by-point.
+
+**Crucial takeaway for multi-node HPL-MxP sweeps on GAAS:** affinity /
+NUMA placement does not need fixing — **node condition is everything**.
+Run sweeps on pristine nodes (verify with `pbsnodes -aSj` immediately
+before each submission; only g06-g17 are reachable from queue `gpu_as`
+due to the Qlist partitioning), or, if pristine nodes are not available,
+at least compare only runs whose nodes carry the same co-tenant load
+level — mixing load conditions silently injects a 1.6-25x performance
+variable that no placement or affinity tuning can compensate for.
+
 ## Experiments
 
 ### Experiment 1 — Allocation-variance baseline series (N=250k, 5 jobs)
