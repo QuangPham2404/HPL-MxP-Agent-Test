@@ -240,5 +240,128 @@ must decide. **This is the strongest root-cause lead so far.**
 3. **Mechanism follow-up (optional)**: registration-cache / fenced-write
    investigation (e.g., `UCX_MEMTYPE_CACHE`, rndv thresholds, newer UCX).
 
+## Phase 1 — Step 1, Phase B2: collective diagnostic replication on clean pinned nodes (2026-09-09) — PHASE B CATASTROPHE = CONTENTION ARTIFACT; two residual GDR anomalies isolated; UCC executes collectives
+
+**Attempts:** `step1_collb2_2x1_v2` (job `61090.gaas`, g16+g17),
+`step1_collb2_2x2_v1` (job `61091.gaas`, g16+g17), `step1_collb2_3x1_v1`
+(job `61102.gaas`, g16+g17+g13), `step1_collb2_3x4_v1` (job `61104.gaas`,
+g16+g17+g13). Superseded `step1_collb2_2x1_v1` (job `61084.gaas`, g16+g17):
+8/8 tests completed but the per-node `ucxdev`/`nvtopo` evidence was silently
+lost to a script defect (Phase B's `export OUTDIR` was dropped, so `-x OUTDIR`
+forwarded nothing and the evidence block's trailing `true` masked the redirect
+failure) — Track 1 patched (`export OUTDIR` + missing-file guard) and rerun as
+v2; v1 measurements are valid and consistent with v2. Host HPC-X 2.25.1 OMPI
+4.1.9a1 + UCX 1.20.0, `rsh_pbsdsh.sh` bridge, `--bind-to none`,
+`CUDA_VISIBLE_DEVICES=local rank`, control (default UCX) vs GDR-off
+(`UCX_IB_GPU_DIRECT_RDMA=n`, `-x`) in the same job on the same pinned nodes;
+chunks `host=X:ngpus=4:ncpus=48:mem=1000GB` (allocation-study shape). Exact
+Phase B test matrix (`osu_bcast` H H + `-d cuda` `-m 67108864`; `osu_allreduce`
+H H + `-d cuda`, default sizes). B2 diagnostics: `UCC_LOG_LEVEL=info` (`-x`),
+`--mca coll_base_verbose 100`, `pml_base_verbose 10`,
+`mpi_common_cuda_verbose 10`, `mpi_common_cuda_warning 1`; `ompi_info --all`
+once per job; per-rank GPU-UUID/affinity/UCX-UCC-env evidence; pbsdsh
+clean-node checkpoints (pre/prectrl/mid/post) + pre/post scheduler snapshots.
+**All 32 tests rc=0.**
+**Evidence:** `outputs/phase1-step1/step1_collb2_*` (`.o`/`.e` + per-node
+ompiinfo/ucxdev/nvtopo + checkpoint logs + `presched`/`postsched` snapshots);
+scripts `debug-scripts/phase1-step1/run_phase1_step1_collb2_*.pbs` +
+`collb2_node_snapshot.sh`.
+
+**Clean-node record:** B2 waited for resource-alloc exp4 (N-sweep, jobs
+61055+) to release the trio; g14 was then taken by another user's 12h
+full-node job (61071), so the 2-node rungs ran on pristine g16+g17 and the
+3-node rungs on g16+g17+g13 — g13 nearly pristine (one light co-tenant, job
+59192: 12 CPUs + 1 GPU, present and stable at all 8 checkpoints, loadavg
+~17/100 CPUs), user-approved fallback. g20 briefly appeared pristine globally
+but is `gpu_ded`-partitioned (Qlist, unreachable from `gpu_as`; also taken by
+job 61097). In-job checkpoints recorded no foreign co-tenants on g16/g17 and
+only 59192 on g13; all H H negative controls are clean in every rung and mode.
+
+**Results — CUDA-buffer collectives, ctrl vs GDR-off (µs; ratio ctrl/gdroff;
+bcast sizes 1/8/32/64 MiB, allreduce 64K/256K/512K/1M):**
+
+| Rung | bcast cuda ctrl | bcast cuda gdroff | bcast ratio | allred cuda ctrl | allred gdroff | allred ratio |
+|---|---|---|---|---|---|---|
+| 2x1 | 29.1 / 176.3 / 678.1 / 1359.8 | 64.1 / 273.6 / 993.8 / 1975.9 | 0.5 / 0.6 / 0.7 / 0.7× | 29.1 / 35.5 / 44.4 / 54.8 | 67.2 / 77.5 / 100.2 / 122.5 | 0.4–0.5× |
+| 2x2 | 48.8 / 289.7 / 1118.8 / 2210.5 | 98.0 / 371.3 / 1314.9 / 2658.8 | 0.5 / 0.8 / 0.9 / 0.8× | 39.4 / 45.5 / 52.9 / 75.9 | 87.5 / 92.8 / 103.2 / 134.2 | 0.5–0.6× |
+| 3x1 | 47.8 / 250.1 / 938.9 / 1855.3 | 105.6 / 438.2 / 1450.5 / 2795.7 | 0.5 / 0.6 / 0.6 / 0.7× | 36.3 / 41.0 / 50.7 / **1127.3** | 84.0 / 91.0 / 108.1 / 146.3 | 0.4 / 0.5 / 0.5 / **7.7×** |
+| 3x4 | 67.6 / 651.7 / 2897.5 / **5864.9** | 103.2 / 331.1 / 1152.0 / 2294.2 | 0.7 / **2.0× / 2.5× / 2.6×** | 82.7 / 85.9 / 93.5 / 109.4 | 137.7 / 134.2 / 136.2 / 153.5 | 0.6–0.7× |
+
+H H negative controls: 0.8–1.1× at every size on every rung (bcast @64 MiB
+ctrl/gdroff: 805/804, 4093/3934, 2887/2868, 4520/4787 µs) — the A/B is valid
+throughout.
+
+**Comparison with Phase B (jobs 59931–59935, uncontrolled nodes):**
+
+| Cell | Phase B | B2 | Verdict |
+|---|---|---|---|
+| bcast @64 MiB 2x2 | 91,185 µs (36×) | 2,210 µs (0.8×) | catastrophe gone |
+| bcast @64 MiB 3x1 | 120,941 µs (44×) | 1,855 µs (0.7×) | catastrophe gone |
+| bcast @64 MiB 3x4 | 29,671 µs (13×) | 5,865 µs (**2.6×**) | reduced 5× — residual |
+| allreduce @1 MiB 2x2 | 1,545 µs (11×) | 75.9 µs (0.6×) | catastrophe gone |
+| allreduce @1 MiB 3x1 | 4,311 µs (30×) | 1,127 µs (**7.7×**) | reduced 4× — residual |
+| allreduce @1 MiB 3x4 | 591 µs (3.8×) | 109.4 µs (0.7×) | gone |
+
+**Findings:**
+
+1. **Phase B's catastrophic ≥3-rank GDR collective pathology (13–44×) does
+   not reproduce on clean nodes.** Six of eight rung×collective cells are now
+   *healthy* GDR — ctrl is 1.4–2.5× **faster** than staged (e.g. 3x1 bcast
+   @64 MiB: 1855 vs 2796 µs ≈ 36 vs 24 GB/s effective), the expected zero-copy
+   gain. Phase B ran on uncontrolled nodes; together with resource-alloc
+   exp2/exp3 (co-tenant dose-response 1.0×→1.6×→25×), **Phase B's collective
+   tables were contention-inflated and must be reinterpreted: the host GDR
+   path itself is healthy for collectives; the catastrophe required
+   co-tenancy.**
+2. **Two residual, reproducible GDR-on anomalies survive contention removal**
+   (clean H H controls in the same runs):
+   - **3x4 bcast cuda ≥8 MiB: 2.0–2.6× slower than staged** (5865 vs 2294 µs
+     @64 MiB; ~11.4 vs ~29.3 GB/s). This is the HPL-MxP baseline topology and
+     the panel-broadcast analog — the remaining host-stack suspect.
+   - **3x1 allreduce cuda @1 MiB: 7.7×** (1127 vs 146 µs), healthy at ≤512 KiB
+     — a sharp size threshold (onset between 512 KiB and 1 MiB).
+3. **What MPI actually chooses (the B2 diagnostic aim):** `pml = ucx`
+   (priority 51 over ob1 20; `select: component ucx selected`, every rank,
+   every run). Coll stack enabled on MPI_COMM_WORLD (coll_base_verbose →
+   stderr `.e` files): **ucc=100, hcoll=90, cuda=78, tuned=30, libnbc=10,
+   basic=10** (han/adapt disabled). **UCC executes the measured collectives in
+   both modes** — a UCC team is created and destroyed per test (66 score-map
+   lines × 8 tests in every rung) and the score map claims
+   `Cuda: {0..inf}:TL_UCP:10`. Per the B2 design, this rests on the
+   `comm_select` lines, not on `UCC_UCP_CONTEXT` presence alone.
+4. **Protocol evidence (UCX_PROTO_INFO):** ctrl cuda path = rendezvous
+   zero-copy over `rc_mlx5` (true GDR); gdroff = staged `cuda_copy, frag
+   host`. In the 3x4 bcast ctrl case the inter-node zero-copy selection is
+   **single-rail** (`rc_mlx5/mlx5_5` or `mlx5_9` per context) — a candidate
+   mechanism for the 2.6× residual (single 400G rail GDR vs multi-lane
+   staging). Intra-node cuda IPC zero-copy appears in both modes.
+5. Node facts: with `ngpus=4` chunks every rank sees the 4-GPU carve-out
+   (renumbered 0–3); per-rank `nvidia-smi -L` UUID evidence records the exact
+   physical devices (e.g. 3x1: g16 GPU0-a0650fac, g17 GPU0-0890a8d9, g13
+   first carve-out GPU); cpuset/NUMA and effective UCX/UCC env recorded per
+   rank.
+
+**Implications for the HPL-MxP debug:** the app's slow 3x4 baseline is now
+attributed primarily to (a) the in-container GPUDirect gap (`cuda_cpy`
+staging, `gdrdrv` absent — 2026-09-03 probe; pristine-node in-container runs
+still ~6× below the single-node reference) and (b) co-tenant host contention
+(resource-alloc exp2/exp3). The host-side Phase B "collective catastrophe" is
+largely an artifact — **but the new 3x4 bcast ≥8 MiB residual (2.6× under
+UCC/zero-copy GDR) sits exactly on the app's panel-broadcast pattern at the
+baseline topology** and is the strongest remaining host-stack lead.
+
+**Suggested follow-ups (not executed, user decision):**
+
+1. **Single-variable test per the B2 interpretation rule (UCC is selected):**
+   GDR-on with `--mca coll ^ucc` at 3x4 and 3x1 — separates the UCC-executed
+   path (hcoll/tuned fallback) for both residuals.
+2. **3x4 bcast residual mechanism:** rail behavior of the zero-copy selection
+   (single-rail `mlx5_5/9` observed) — multi-rail zero-copy knobs (e.g.
+   `UCX_MAX_RNDV_RAILS`, verify against `ucx_info -c`), `UCX_MEMTYPE_CACHE`,
+   rndv thresholds.
+3. **Track 2.2 re-scoped:** the decisive in-container test should now also
+   look for the 2–3× bcast-shaped residual on clean nodes rather than the
+   13–44× catastrophe.
+
 
 

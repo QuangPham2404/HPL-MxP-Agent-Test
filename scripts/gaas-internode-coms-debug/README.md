@@ -244,7 +244,7 @@ redirect failure (Track 1 defect; measurements unaffected). Patched
 
 ---
 
-### Phase 1 — status and resume point (updated 2026-09-08)
+### Phase 1 — status and resume point (updated 2026-09-09, post-B2)
 
 **Completed:**
 
@@ -252,40 +252,48 @@ redirect failure (Track 1 defect; measurements unaffected). Patched
   and CUDA-aware host MPI verified (`phase1_step0_sanity_v1`, job `59640.gaas`).
 - **Step 1 Phase A (p2p GDR A/B at 2x1): PASS** — host GPUDirect RDMA works for
   p2p (zero-copy selected, clear A/B deltas, negative control clean)
-  (`step1_p2p_2x1_v1`, job `59671.gaas`). CUDA p2p reaches ≈57% of the fabric
+  (`step1_p2p_2x1_v1`, job `59671.gaas`). CUDA p2p reaches ~57% of the fabric
   ceiling due to a 74/26 multi-rail split in the 1-GPU-per-node case.
-- **Step 1 Phase B (collective GDR A/B ladder): COMPLETE — critical finding.**
-  With default UCX (GDR enabled), CUDA collectives with ≥3 ranks are
-  **pathologically slow (13-44× slower than staging**; e.g. 3x1 bcast @ 64 MiB:
-  0.55 GB/s vs 24.2 GB/s staged). 2-rank collectives unaffected; H H negative
-  controls clean. See `DEBUG_PROGRESS.md` Phase B section for full tables,
-  protocol evidence, and analysis. Jobs `59931/59933/59934/59935.gaas`.
-  - Rail/affinity resolved for 3x4: each GPU has its own PIX-paired NIC
-    (rail-optimized 1:1 GPU:NIC) — Phase A's 74/26 was the 1-GPU-per-node
-    artifact.
+- **Step 1 Phase B (collective GDR A/B ladder, uncontrolled nodes):** found
+  CUDA collectives with ≥3 ranks pathologically slow (13-44×) with GDR on —
+  jobs `59931/59933/59934/59935.gaas`. **Superseded by B2: shown to be
+  contention-inflated** (see below).
+- **Step 1 Phase B2 (collective diagnostic replication on clean pinned
+  nodes): COMPLETE — Phase B catastrophe reinterpreted.** Full Phase B matrix
+  (4 rungs × 8 tests, all rc=0; jobs `61090/61091/61102/61104.gaas`, chunks
+  `host=X:ngpus=4:ncpus=48:mem=1000GB`, pristine g16+g17 + nearly-pristine g13
+  for 3-node rungs). Six of eight rung×collective cells are *healthy* GDR
+  (ctrl 1.4-2.5× faster than staged). Two reproducible residuals survive:
+  **3x4 bcast cuda ≥8 MiB (2.0-2.6× slower than staged)** and **3x1 allreduce
+  cuda @1 MiB (7.7×)**. Diagnostic answer: `pml=ucx`; coll stack
+  **ucc(100) > hcoll(90) > cuda(78) > tuned(30)**; **UCC (TL_UCP) executes the
+  collectives in both modes** (comm_select + per-test team create/destroy
+  evidence). Full tables and protocol evidence in `DEBUG_PROGRESS.md` Phase B2.
 
 **Pending (user decision required):**
 
-1. **Track 2.2 (decisive next step)**: minimal in-container HPL-MxP test on
-   3x4 — default vs `UCX_IB_GPU_DIRECT_RDMA=n` exported into the container —
-   plus an NCCL transport check (`NCCL_DEBUG=INFO`). Determines whether the
-   app's slowness rides the host-side GDR-collective pathology found in
-   Phase B or a separate container/NCCL issue (note: the 2026-09-03 probe
-   found a gdrdrv/GDR gap inside the container).
-2. **Optional mechanism follow-up**: registration-cache / fenced-write
-   investigation of the ≥3-rank GDR collective pathology
-   (`UCX_MEMTYPE_CACHE`, rndv thresholds, newer UCX).
-3. **Optional**: verify UCX per-rank rail balance at 3x4 (each GPU now has a
-   PIX NIC; the 74/26 question may be moot with the real 4-GPU mapping).
+1. **Single-variable test (per B2 interpretation rule, UCC selected):** GDR-on
+   with `--mca coll ^ucc` at 3x4 and 3x1 — separates the UCC-executed path
+   for both residuals.
+2. **3x4 bcast residual mechanism:** single-rail zero-copy GDR selection
+   (`mlx5_5/9`) — multi-rail knobs (`UCX_MAX_RNDV_RAILS` etc.), memtype
+   cache, rndv thresholds.
+3. **Track 2.2 (re-scoped):** minimal in-container HPL-MxP test on 3x4 —
+   default vs `UCX_IB_GPU_DIRECT_RDMA=n` exported into the container +
+   `NCCL_DEBUG=INFO` — now looking for the 2-3× bcast-shaped residual (not
+   the disproven 13-44× catastrophe) on clean nodes; the 2026-09-03 probe
+   found the in-container gdrdrv/GDR gap.
 4. **Phase 1 test 2 — `nccl-tests` (NCCL path)**: still blocked on the missing
    host `libnccl.so.2` (recorded 2026-09-03); NCCL path verification may
    happen via Track 2.2 in-container instead.
 
-**Resume point:** Phase 1 CUDA-aware-MPI GDR status is consolidated
-(p2p works; collectives pathological at ≥3 ranks with GDR on). Awaiting user
-instruction on pending item 1 (Track 2.2) and optional items 2-3. All results,
-analysis, and evidence pointers are in `DEBUG_PROGRESS.md`; raw evidence in
-`outputs/phase1-step0/` and `outputs/phase1-step1/`.
+**Resume point:** Phase 1 CUDA-aware-MPI GDR status consolidated post-B2:
+p2p GDR works; collective GDR healthy at 2x1/2x2 and mostly at 3x1/3x4;
+Phase B's catastrophe was co-tenant contamination; remaining host-stack
+suspects are the two residuals above, with UCC identified as the executing
+collective layer. Awaiting user instruction on pending items 1-3. All
+results, analysis, and evidence pointers are in `DEBUG_PROGRESS.md`; raw
+evidence in `outputs/phase1-step0/` and `outputs/phase1-step1/`.
 
 
 
