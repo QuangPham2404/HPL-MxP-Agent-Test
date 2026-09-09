@@ -234,6 +234,14 @@ documented reasons. Scripts:
 `debug-scripts/phase1-step1/run_phase1_step1_collb2_{2x1,2x2,3x1,3x4}.pbs`
 + `collb2_node_snapshot.sh` (per-node checkpoint helper).
 
+Attempt log: `step1_collb2_2x1_v1` (job `61084.gaas`, g16+g17) completed
+8/8 tests but the per-node `ucxdev`/`nvtopo` evidence files were silently
+lost — the script dropped Phase B's `export OUTDIR`, so `-x OUTDIR`
+forwarded nothing and the evidence block's trailing `true` masked the
+redirect failure (Track 1 defect; measurements unaffected). Patched
+(`export OUTDIR` + missing-file guard) and rerun as
+`step1_collb2_2x1_v2`.
+
 ---
 
 ### Phase 1 — status and resume point (updated 2026-09-08)

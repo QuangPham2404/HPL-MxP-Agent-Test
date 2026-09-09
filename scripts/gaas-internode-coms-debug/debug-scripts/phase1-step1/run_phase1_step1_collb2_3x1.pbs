@@ -156,6 +156,10 @@ MPICMD_BASE=(mpirun -np "$NPROCS"
 export UCX_LOG_LEVEL=info
 export UCX_PROTO_INFO=y
 export UCC_LOG_LEVEL=info
+# Required for the -x OUTDIR forwarding below (v1 of the 2x1 attempt dropped
+# it: ucxdev/nvtopo evidence never reached the ranks' OUTDIR and the trailing
+# `true` masked the redirect failure — see DEBUG_PROGRESS Phase B2).
+export OUTDIR
 
 # --- Evidence: ompi_info --all once before the benchmarks (components + MCA params) ---
 echo "=== Evidence: ompi_info --all (once, this node) ==="
@@ -185,6 +189,8 @@ echo "=== Evidence: ucx_info -d + nvidia-smi topo -m per node (to log files) ===
     echo "evidence_written host=$(hostname)"
   fi; true'
 EVID_RC2=$?
+ls "$OUTDIR"/${LABEL}_ucxdev_* "$OUTDIR"/${LABEL}_nvtopo_* >/dev/null 2>&1 \
+  || echo "WARN: ucxdev/nvtopo evidence files missing"
 
 # --- A/B suite: control run vs GDR-off run, same nodes and placement ---
 FAILS=0

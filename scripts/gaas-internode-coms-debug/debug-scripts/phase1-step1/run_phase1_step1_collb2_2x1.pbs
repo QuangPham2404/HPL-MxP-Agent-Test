@@ -14,7 +14,7 @@
 #         submit example below) plus -v REQ_HOSTS; host HPC-X 2.25.1 via
 #         module nvhpc/26.3; bridge multi-node-test/rsh_pbsdsh.sh;
 #         collb2_node_snapshot.sh (per-node checkpoint helper) in this directory.
-# Outputs: ../../outputs/phase1-step1/step1_collb2_2x1_v1.{o,e} plus per-node
+# Outputs: ../../outputs/phase1-step1/step1_collb2_2x1_v2.{o,e} plus per-node
 #          evidence logs (ompiinfo, ucxdev, nvtopo, clean-node checkpoints
 #          pre/prectrl/mid/post); hostfile_collb2_2x1 in this directory.
 # Design: identical test matrix to Phase B rung 2x1 (osu_bcast H H + -d cuda
@@ -58,8 +58,8 @@
 #PBS -P hpc_admin
 #PBS -l place=scatter
 #PBS -l walltime=00:45:00
-#PBS -o ../../outputs/phase1-step1/step1_collb2_2x1_v1.o
-#PBS -e ../../outputs/phase1-step1/step1_collb2_2x1_v1.e
+#PBS -o ../../outputs/phase1-step1/step1_collb2_2x1_v2.o
+#PBS -e ../../outputs/phase1-step1/step1_collb2_2x1_v2.e
 
 # Multi-run A/B diagnostic: attempt every test in both runs, capture each exit
 # status, then summarize. -e is intentionally omitted so one failed test does
@@ -83,7 +83,7 @@ chmod +x "$BRIDGE"
 HPCX="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1"
 export OSU_DIR="$HPCX/ompi/tests/osu-micro-benchmarks-cuda"
 export UCXBIN="$HPCX/ucx/bin"
-export LABEL="step1_collb2_2x1_v1"
+export LABEL="step1_collb2_2x1_v2"
 
 GPUS=1
 NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
@@ -156,6 +156,10 @@ MPICMD_BASE=(mpirun -np "$NPROCS"
 export UCX_LOG_LEVEL=info
 export UCX_PROTO_INFO=y
 export UCC_LOG_LEVEL=info
+# Required for the -x OUTDIR forwarding below (v1 of this attempt dropped it:
+# ucxdev/nvtopo evidence never reached the ranks' OUTDIR and the trailing
+# `true` masked the redirect failure — see DEBUG_PROGRESS Phase B2).
+export OUTDIR
 
 # --- Evidence: ompi_info --all once before the benchmarks (components + MCA params) ---
 echo "=== Evidence: ompi_info --all (once, this node) ==="
@@ -185,6 +189,8 @@ echo "=== Evidence: ucx_info -d + nvidia-smi topo -m per node (to log files) ===
     echo "evidence_written host=$(hostname)"
   fi; true'
 EVID_RC2=$?
+ls "$OUTDIR"/${LABEL}_ucxdev_* "$OUTDIR"/${LABEL}_nvtopo_* >/dev/null 2>&1 \
+  || echo "WARN: ucxdev/nvtopo evidence files missing"
 
 # --- A/B suite: control run vs GDR-off run, same nodes and placement ---
 FAILS=0
@@ -248,4 +254,4 @@ if [ "$FAILS" -eq 0 ]; then
 else
   echo "COLL_B2_2X1_RESULT=SOME_TESTS_FAILED"
 fi
-echo "=== step1_collb2_2x1_v1 complete ==="
+echo "=== step1_collb2_2x1_v2 complete ==="
