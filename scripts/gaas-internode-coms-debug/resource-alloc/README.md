@@ -66,18 +66,18 @@ delivered 2.0398e+06 total (169,981/GPU headline, 320,613/GPU LU) —
 **+11.5% total, 74.3% headline and 86.1% LU per-GPU**; at N=510k (where
 the single node OOMs) +18.3% total. Reading: the 3x4 matches the
 single-node best's total output with 1.5x the GPUs (the added GPUs'
-parallel efficiency is only ~23%); the residual per-GPU gap is
+parallel efficiency is only ≈23%); the residual per-GPU gap is
 inter-node comms overhead (parent-track ceiling) plus untuned NB (the
 single-node best used its tuned NB=3072 — an optimization question, out
 of diagnostic scope). The 3x4 also extends the usable problem size:
 single node hits its memory wall at N=510k, while the 3x4 is validated
-through 510k with mapped walls at N~617k (host cgroup, mem=1000GB) and
-N~630k (GPU HBM).
+through 510k with mapped walls at N≈617k (host cgroup, mem=1000GB) and
+N≈630k (GPU HBM).
 
 **What the four experiments established:**
 
-1. **The original 3x4 baseline's ~44-50x deficit was co-tenant host
-   contention** (exp2 dose-response: ~1.0x pristine, ~1.6x light, ~25x
+1. **The original 3x4 baseline's ≈44-50x deficit was co-tenant host
+   contention** (exp2 dose-response: ≈1.0x pristine, ≈1.6x light, ≈25x
    heavy GPU co-tenants) — host-side, not fabric-side (identical IB bytes
    moved in all conditions, no co-tenant fabric traffic) — riding on the
    container's GPUDirect-off staged comms path. At N=480k the pristine
@@ -86,9 +86,9 @@ N~630k (GPU HBM).
    pristine-node carve-out is deterministic (exp3), its default
    cross-NUMA carve-out (socket-1 GPUs + socket-0 cpuset, 34-89%
    remote-memory fractions) costs nothing measurable, and the worst
-   natural allocation shape cost <=~4%. Bad affinity is a minor factor.
+   natural allocation shape cost at most ≈4%. Bad affinity is a minor factor.
 3. **Clean 3x4 baseline established** (exp4): 155-180 TF/GPU headline
-   over N=450-510k; host-memory model (~10 + 2.6e-9 N^2 GB/node)
+   over N=450-510k; host-memory model (≈10 + 2.6e-9 N^2 GB/node)
    validated point-by-point.
 
 **Crucial takeaway for multi-node HPL-MxP sweeps on GAAS:** affinity /
@@ -142,7 +142,7 @@ variable that no placement or affinity tuning can compensate for.
   dirty v3 used a user-approved lighter mixed composition (g13+g09+g11)
   after the original dirty nodes' co-tenants ended mid-experiment. One
   failed attempt (`clean250k_v1`, submission-spec defect) recorded below.
-- **Purpose:** separate the ~16x catastrophic contention mode observed in
+- **Purpose:** separate the ≈16x catastrophic contention mode observed in
   experiment 1 (attributed to external co-tenant host/fabric load) from the
   constant CPU/GPU/NUMA placement mismatch, by holding the placement
   dimension fixed-ish and deliberately varying the co-tenant dimension:
@@ -178,22 +178,22 @@ variable that no placement or affinity tuning can compensate for.
     because it belongs to other queues. First submission (job `60449.gaas`,
     pinned to g22+g16+g14) could never start ("Insufficient amount of
     resource: Qlist") and was deleted; no run evidence lost.
-  - Within `gpu_as`, only g14 and g16 were completely free (for ~19 h;
+  - Within `gpu_as`, only g14 and g16 were completely free (for ≈19 h;
     queued small jobs were not being placed), and no third node would free
     up soon (co-tenant jobs elsewhere had days of walltime left). User
     approved a **relaxed clean condition**: clean runs pin g14 + g16
     (pristine) + g10 (lightest co-tenant available: one 12-cpu/1-GPU job,
-    `down22`, ~88 h remaining), all within queue `gpu_as` for comparability
+    `down22`, ≈88 h remaining), all within queue `gpu_as` for comparability
     with experiment 1 and the dirty series. The g10 co-tenant is recorded
     per attempt and visible in the sampler time series.
   - Dirty-series candidates identified: g11 (co-tenant 60315: 48 cpus + 4
-    GPUs, ~69 h remaining) and g13 (co-tenants 59192/59442/59443: 36 cpus
+    GPUs, ≈69 h remaining) and g13 (co-tenants 59192/59442/59443: 36 cpus
     + 3 GPUs, days remaining).
   - Dirty-series execution actuals: v1 ran as planned on g11+g13+g10
     (job 60461). Between v1 and v2, another user's job `60466` took g13's
     4 free GPUs; the first v2 submission (job `60470`) could never start
     and was qdel'd per the pre-authorized re-pick policy (reason recorded);
-    the re-submitted v2 (job `60474`) queued ~3 h until `60466` ended and
+    the re-submitted v2 (job `60474`) queued ≈3 h until `60466` ended and
     ran overnight on the same composition. Before v3, g11's co-tenant
     ended (node pristine) and g13's heavy co-tenants 59442/59443 ended,
     leaving no 3-node GPU-heavy set; the user approved a mixed composition
@@ -231,7 +231,7 @@ variable that no placement or affinity tuning can compensate for.
   under `outputs/` with attempt-specific names (`.o`/`.e` plus per-node
   `_pre_`/`_load_`/`_post_` logs, never overwritten).
 - **Failed attempt record — `clean250k_v1` (job `60453.gaas`, 2026-09-08,
-  19:12):** exit 137 ~40 s into the run, `cgroup/OOM: Killed because of
+  19:12):** exit 137 ≈40 s into the run, `cgroup/OOM: Killed because of
   memory limit` during matgen. Cause: the submission's host-pinned select
   omitted the per-chunk `ncpus=48:mem=1000GB` that experiment 1 actually
   used (its script comment documented only `select=3:ngpus=4`), so each
@@ -250,8 +250,8 @@ variable that no placement or affinity tuning can compensate for.
   results section).
 - **Purpose:** redo experiment 1's allocation-variance series with the
   co-tenant variable removed. Experiment 2 proved co-tenant host
-  contention dominates the 3x4 degradation (dose-response from ~1.6x on
-  lightly-loaded nodes to ~25x on heavily-shared ones), so experiment 1's
+  contention dominates the 3x4 degradation (dose-response from ≈1.6x on
+  lightly-loaded nodes to ≈25x on heavily-shared ones), so experiment 1's
   "allocation mismatch 5/5" data was confounded: the mismatch never varied
   independently of co-tenancy. This series measures what the placement
   dimension looks like on its own: the clean-node run-to-run noise band,
@@ -293,7 +293,7 @@ variable that no placement or affinity tuning can compensate for.
   how the pristine-node condition scales with problem size, directly
   comparable to the original contaminated 3x4 baseline at N=480k (job
   `57232.gaas`, 4.0092e+04 GFLOPS total, 3340.96 per GPU) and to the
-  single-node 8xH200 reference (~275 TF/GPU at N=491520).
+  single-node 8xH200 reference (≈275 TF/GPU at N=491520).
 - **Method:** 7 sequential attempts, N = 450000, 460000, ..., 510000 in
   10k steps (user-capped at 510k — diagnostic scope, not an
   N_max search), on the fixed pristine trio `g14+g16+g17` (live-verified
@@ -301,11 +301,11 @@ variable that no placement or affinity tuning can compensate for.
   chunk shape, NB=1024, 3x4 row grid, `--bind-to none`, monitor-gpu,
   UCX+NCCL logs, capture v2 + sampler). Walltime 30 min per attempt.
 - **Memory headroom (measured, from PBS records):** the app's host memory
-  scales ~N^2 — 172.7 GB/node at N=250k, 610 GB/node at N=480k — giving a
-  projected ~687 GB/node at N=510k, safely inside the `mem=1000GB`
+  scales as ≈N^2 — 172.7 GB/node at N=250k, 610 GB/node at N=480k — giving a
+  projected ≈687 GB/node at N=510k, safely inside the `mem=1000GB`
   per-chunk cgroup; no OOM is expected within the capped range. (An
-  uncapped sweep would hit the host-cgroup wall near N~615k before the
-  GPU-HBM limit ~700-750k — recorded here for future reference.)
+  uncapped sweep would hit the host-cgroup wall near N≈615k before the
+  GPU-HBM limit ≈700-750k — recorded here for future reference.)
 - **Operational policy:** carried over from experiments 2-3 (qdel
   pre-authorized for this experiment's own stuck submissions; pristine
   loss → re-pick when >=3 pristine nodes exist, else stop and ask).
@@ -324,13 +324,13 @@ contaminated 3x4 run (job `57232.gaas`, N=480000, GFLOPS total
 
 | Attempt | Job | N | Walltime | GFLOPS (total) | GFLOPS/GPU | vs baseline total (4.0092e+04) | LU s | LU GFLOPS/GPU | Solver s | RNG s AVG | matgen s | host GB/node | peak GPU MiB/GPU |
 |---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| nsweep450k | 61050 | 450000 | 3:27 | 1.8593e+06 | 154942 | +4538% | 17.11 | 295888 | 15.57 | 65.26 | 119.30 | 537 | ~70300 |
-| nsweep460k | 61051 | 460000 | 2:43 | 1.9046e+06 | 158714 | +4650% | 17.80 | 303761 | 16.27 | 49.97 | 74.60 | 561 | ~73700 |
-| nsweep470k | 61052 | 470000 | 2:48 | 1.9263e+06 | 160527 | +4705% | 18.73 | 307910 | 17.20 | 50.94 | 76.84 | 585 | ~76400 |
-| nsweep480k | 61055 | 480000 | 2:53 | 1.9842e+06 | 165350 | +4849% | 19.27 | 318875 | 17.89 | 53.77 | 80.09 | 610 | ~79800 |
-| nsweep490k | 61057 | 490000 | 2:53 | 2.0398e+06 | 169981 | +4988% | 20.39 | 320613 | 18.07 | 52.83 | 80.32 | 635 | ~82800 |
-| nsweep500k | 61058 | 500000 | 3:01 | 2.1320e+06 | 177667 | +5218% | 20.87 | 332720 | 18.22 | 53.85 | 86.56 | 661 | ~86000 |
-| nsweep510k | 61063 | 510000 | 3:03 | 2.1633e+06 | 180272 | +5296% | 22.44 | 328403 | 18.44 | 54.73 | 86.75 | 687 | ~89400 |
+| nsweep450k | 61050 | 450000 | 3:27 | 1.8593e+06 | 154942 | +4538% | 17.11 | 295888 | 15.57 | 65.26 | 119.30 | 537 | ≈70300 |
+| nsweep460k | 61051 | 460000 | 2:43 | 1.9046e+06 | 158714 | +4650% | 17.80 | 303761 | 16.27 | 49.97 | 74.60 | 561 | ≈73700 |
+| nsweep470k | 61052 | 470000 | 2:48 | 1.9263e+06 | 160527 | +4705% | 18.73 | 307910 | 17.20 | 50.94 | 76.84 | 585 | ≈76400 |
+| nsweep480k | 61055 | 480000 | 2:53 | 1.9842e+06 | 165350 | +4849% | 19.27 | 318875 | 17.89 | 53.77 | 80.09 | 610 | ≈79800 |
+| nsweep490k | 61057 | 490000 | 2:53 | 2.0398e+06 | 169981 | +4988% | 20.39 | 320613 | 18.07 | 52.83 | 80.32 | 635 | ≈82800 |
+| nsweep500k | 61058 | 500000 | 3:01 | 2.1320e+06 | 177667 | +5218% | 20.87 | 332720 | 18.22 | 53.85 | 86.56 | 661 | ≈86000 |
+| nsweep510k | 61063 | 510000 | 3:03 | 2.1633e+06 | 180272 | +5296% | 22.44 | 328403 | 18.44 | 54.73 | 86.75 | 687 | ≈89400 |
 
 **Findings:**
 
@@ -345,22 +345,22 @@ contaminated 3x4 run (job `57232.gaas`, N=480000, GFLOPS total
    original baseline's entire deficit at its own operating point is
    attributable to node condition (experiment 2's co-tenant dose-response
    riding on the comms ceiling).
-3. **Position vs the single-node reference**: at N~490k our headline
-   (169,981/GPU) is ~62% of the single-node 8xH200 reference level
-   (~275,000/GPU, N=491520, as recorded in the motivation), while the
+3. **Position vs the single-node reference**: at N≈490k our headline
+   (169,981/GPU) is ≈62% of the single-node 8xH200 reference level
+   (≈275,000/GPU, N=491520, as recorded in the motivation), while the
    LU-only rate (320,613/GPU) matches or exceeds it — the raw
    factorization engine is healthy; the headline gap is the comms ceiling
    (container GPUDirect off / staged path — parent track), not compute or
    resources.
-4. **Memory model validated point-by-point**: host GB/node = ~10 +
-   2.6e-9 x N^2 predicts all seven measurements within ~1% (537 -> 687
-   GB/node). Peak GPU memory per GPU grows 70.3 -> 89.4 GiB (~2.2x the raw
+4. **Memory model validated point-by-point**: host GB/node = ≈10 +
+   2.6e-9 x N^2 predicts all seven measurements within ≈1% (537 -> 687
+   GB/node). Peak GPU memory per GPU grows 70.3 -> 89.4 GiB (≈2.2x the raw
    fp16 matrix share). Extrapolated walls: the `mem=1000GB` host cgroup at
-   N~617k and the 141 GiB GPU HBM at N~630k — the user's 510k cap sits
-   ~20% below both, safely validated, and an uncapped sweep would end in
+   N≈617k and the 141 GiB GPU HBM at N≈630k — the user's 510k cap sits
+   ≈20% below both, safely validated, and an uncapped sweep would end in
    that 615-630k band.
 5. **450k first-run warmup anomaly**: the first sweep attempt (then-long-
-   idle trio) shows RNG 65.3 s / matgen 119.3 s vs ~50/~75 s at 460k+
+   idle trio) shows RNG 65.3 s / matgen 119.3 s vs ≈50/75 s at 460k+
    despite the smaller N — first-touch/page-fault warmup, not a trend
    point; 460k-510k are internally consistent (matgen 74.6 -> 86.8 s
    scales with N as expected).
@@ -371,8 +371,8 @@ contaminated 3x4 run (job `57232.gaas`, N=480000, GFLOPS total
 **Conclusion:** the resource-allocation track is complete. The pristine
 3x4 clean baseline at N=480k is **1.98e+06 GFLOPS (49.5x the original
 baseline)**, the usable range extends through at least N=510k (measured)
-with mapped walls at ~617-630k, and the residual gap to single-node
-performance (~38% of headline at ~490k) belongs to the comms track
+with mapped walls at ≈617-630k, and the residual gap to single-node
+performance (≈38% of headline at ≈490k) belongs to the comms track
 (in-container GPUDirect), not to resources, placement, or affinity.
 
 ### Experiment 3 results (2026-09-09) — final
@@ -392,7 +392,7 @@ rotated g13 in: nearly pristine, one light co-tenant `59192` at 12 cpus +
 | cleanalloc250k_v5.1 | 61032 | trio | 1:14 | 8.5678e+05 | 71398 | +2037% | 6.72 | 5.44 | 13.77 (g16 15.92) | 21.61 |
 
 **Failed attempt record — `cleanalloc250k_v5` (job `61031.gaas`,
-2026-09-09 20:15):** exit 1 in ~1 s, no evidence produced. Cause: the
+2026-09-09 20:15):** exit 1 in ≈1 s, no evidence produced. Cause: the
 submission was accidentally made from the `outputs/` subdirectory (after
 inspecting v4 evidence), so `PBS_O_WORKDIR` pointed there; the script's
 `REPO_ROOT`/`BRIDGE` resolution then failed (`chmod +x $BRIDGE` on a
@@ -422,7 +422,7 @@ from the correct directory as `cleanalloc250k_v5.1` (job `61032`).
 3. **Fully pristine nodes give the highest band of the whole
    investigation**: 70.8–71.4k GFLOPS/GPU vs experiment 2's clean series
    60.8–70.3k (which included g10's light co-tenant and its mixed-socket
-   carve-out) — the fully-pristine condition adds ~2–15% and halves the
+   carve-out) — the fully-pristine condition adds ≈2–15% and halves the
    spread.
 4. **The "worst" natural allocation shape costs at most a few percent on
    clean nodes**: v4's g13 combined a mixed-socket GPU set, a fragmented
@@ -434,10 +434,10 @@ from the correct directory as `cleanalloc250k_v5.1` (job `61032`).
    default carve-out (socket-1 GPUs + socket-0 CPUs), with per-node
    remote-memory fractions of 34–36% (g14), 87–89% (g16), and 72–79%
    (g17) — node-stable, attempt-stable, and with no measurable performance
-   effect. Placement/NUMA mismatch is worth at most ~4% here, versus
+   effect. Placement/NUMA mismatch is worth at most ≈4% here, versus
    co-tenancy's 1.6x–25x dose-response from experiment 2.
-6. **Sampler consistency**: our app's own host footprint is ~22–28 busy
-   CPUs/node in fast mode (exp2's number ~24 confirmed); no co-tenant
+6. **Sampler consistency**: our app's own host footprint is ≈22–28 busy
+   CPUs/node in fast mode (exp2's number ≈24 confirmed); no co-tenant
    arrivals were detected on the trio during any run (pre/post pbsnodes
    listings show only our job; loadavg flat).
 
@@ -445,13 +445,13 @@ from the correct directory as `cleanalloc250k_v5.1` (job `61032`).
 now give a complete, deconfounded picture of the 3x4 degradation's
 resource dimension. (1) Experiment 1's allocation-variance and bimodality
 observations were co-tenant-confounded. (2) Experiment 2 established the
-co-tenant dose-response continuum (~1.0x pristine → ~1.6x light → ~25x
+co-tenant dose-response continuum (≈1.0x pristine → ≈1.6x light → ≈25x
 heavy GPU co-tenants) as the dominant factor, host-side (not fabric-side),
 with the container's GPUDirect-off staged path as the sensitive element.
 (3) Experiment 3 shows PBS placement on clean nodes is deterministic, its
 default cross-NUMA carve-out is effectively free, and affinity mismatch is
-a minor (<=4%) effect. The original baseline's ~44x deficit therefore
-decomposes into co-tenant contention (up to ~25x) times the comms-stack
+a minor (<=4%) effect. The original baseline's ≈44x deficit therefore
+decomposes into co-tenant contention (up to ≈25x) times the comms-stack
 ceiling (container GPUDirect off — parent track). Practical guidance for
 non-full-node GPU jobs on GAAS: choose nodes without active co-tenants
 (node condition, not allocation shape, is what matters); affinity tuning
@@ -494,12 +494,12 @@ grows with N, so at N=480k the clean-condition margin would be larger).
 **Findings:**
 
 1. **The clean condition is fast and reproducible**: 60,840–70,330
-   GFLOPS/GPU (mean 66,572) with ~1:20 walltimes — 18–21x the original
-   baseline per GPU, and ~1.6x experiment 1's best (v5: 43,288/GPU, which
+   GFLOPS/GPU (mean 66,572) with ≈1:20 walltimes — 18–21x the original
+   baseline per GPU, and ≈1.6x experiment 1's best (v5: 43,288/GPU, which
    ran on co-tenant nodes). The 3x4 topology itself is healthy.
 2. **The heavy-dirty condition reproduces the slow mode deliberately and
    reproducibly**: v1/v2 at 2,772/2,891 GFLOPS/GPU with LU 263–270 s
-   (~39x the clean runs), solver 38–44 s (6-7x), matgen 58–60 s (2.8x) —
+   (≈39x the clean runs), solver 38–44 s (6-7x), matgen 58–60 s (2.8x) —
    matching experiment 1's v1-v4 slow mode (2,572–2,857/GPU) and the
    original baseline's magnitude. The degradation is causally tied to
    co-tenant node condition, not to our job's own placement.
@@ -510,7 +510,7 @@ grows with N, so at N=480k the clean-condition margin would be larger).
    (dirty v1/v2) 2.8–2.9k (−96%). Experiment 1's "bimodality" was two
    clusters along this continuum sampled with N=5.
 4. **The contention is host-side, not fabric-side**: total IB bytes moved
-   by the app are identical (~42.3-42.8 GB per node) in clean and dirty
+   by the app are identical (≈42.3-42.8 GB per node) in clean and dirty
    runs, and the dirty nodes' counters show ≈0 extra fabric traffic from
    co-tenants (g13: +0.27 GB over the app's baseline over 404 s). The app
    just takes 7.8x longer to move the same bytes. Combined with the
@@ -522,15 +522,15 @@ grows with N, so at N=480k the clean-condition margin would be larger).
    across all six runs (NCCL RDMA plugin v11 + SHARP collnet, same 9-device
    rail set on every node) — configuration is ruled out.
 5. **Co-tenant CPU load alone cannot explain the magnitude**: from
-   /proc/stat deltas, our own app uses ~24 busy CPUs per node in fast mode
-   and ~15 in slow mode (ranks wait on comms); g13's three co-tenant jobs
-   added only ~16 busy CPUs and g11's co-tenant (a resource-holding idle
-   session, job 60315) added ≈0 — yet LU still collapsed ~40x.
+   /proc/stat deltas, our own app uses ≈24 busy CPUs per node in fast mode
+   and ≈15 in slow mode (ranks wait on comms); g13's three co-tenant jobs
+   added only ≈16 busy CPUs and g11's co-tenant (a resource-holding idle
+   session, job 60315) added ≈0 — yet LU still collapsed ≈40x.
    Memory-bandwidth/PCIe contention remains the leading candidate
    mechanism (not yet directly measured — see limitations).
 6. **An "idle" co-tenant still degraded host-memory phases — and its
    removal normalized them**: in v1/v2, g11's ranks were the RNG-MAX node
-   (39.5/37.8 s vs clean ~13 s) and the matgen-MAX node, despite the
+   (39.5/37.8 s vs clean ≈13 s) and the matgen-MAX node, despite the
    co-tenant showing ≈0 CPU and ≈0 fabric activity at 10 s granularity
    (it held 4 GPUs + 48 cpus + 1000 GB host memory). In v3, with g11
    pristine, g11 became the RNG-MIN node (8.03 s) and matgen normalized —
@@ -548,13 +548,13 @@ grows with N, so at N=480k the clean-condition margin would be larger).
    Dirty v1's allocations were no worse. This confirms experiment 1's
    finding 3 with the strongest possible contrast.
 9. **GPU starvation signature reproduced**: sampler medians show the
-   allocated GPUs near-idle (~117-131 W, 0% utilization medians) through
+   allocated GPUs near-idle (≈117-131 W, 0% utilization medians) through
    the 7-minute heavy-dirty runs — the exp1 monitor observation, now with
    per-node in-run evidence.
 
-**Conclusions for the 3x4 degradation:** the original baseline's ~44x
+**Conclusions for the 3x4 degradation:** the original baseline's ≈44x
 deficit decomposes into (a) a co-tenant host-contention factor that ranges
-from ~1.0x (pristine nodes) through ~1.6x (light load) to ~25x (heavy GPU
+from ≈1.0x (pristine nodes) through ≈1.6x (light load) to ≈25x (heavy GPU
 co-tenants) on this cluster, times (b) the still-present comms-stack
 ceiling (container GPUDirect off / `cuda_cpy` staging — parent track): the
 clean-condition 60-70k GFLOPS/GPU at N=250k is still well below the
@@ -638,10 +638,10 @@ allocated GPUs to 0-3):
    g09 ranks took 54-89 s in v1-v4 vs 9.2-13.3 s in v5 — pointing to external
    contention (co-tenant host/fabric load) during v1-v4 rather than our job's
    own placement.
-4. **GPU monitoring corroborates the slow mode:** v1-v4 GPUs sat at ~125 W
+4. **GPU monitoring corroborates the slow mode:** v1-v4 GPUs sat at ≈125 W
    median (near-idle) for the whole 8-minute run — comms-starved. Even v5
-   (43.3 TF/GPU) remains ~6x below the single-node 8xH200 per-GPU reference
-   (~275 TF/GPU at N=491520), consistent with the still-unfixed GPUDirect
+   (43.3 TF/GPU) remains ≈6x below the single-node 8xH200 per-GPU reference
+   (≈275 TF/GPU at N=491520), consistent with the still-unfixed GPUDirect
    off / `cuda_cpy` staging ceiling.
 5. **Limitations:** co-tenant load was inferred (cpuset holes, RNG flip), not
    measured — the capture lacks host load and NIC counter snapshots; the
@@ -650,7 +650,7 @@ allocated GPUs to 0-3):
 
 **Implications:** all three factors coexist for non-full-node GPU jobs on
 GAAS: (a) the comms-stack ceiling (GPUDirect off, separate workstream),
-(b) a ~16x catastrophic contention mode that comes and goes with external
+(b) a ≈16x catastrophic contention mode that comes and goes with external
 node/fabric load, and (c) pervasive CPU/GPU/NUMA placement mismatch that is
 constant in this series and likely compounds both. A follow-up capture with
 host load + IB counters would separate (b) from (c) directly.

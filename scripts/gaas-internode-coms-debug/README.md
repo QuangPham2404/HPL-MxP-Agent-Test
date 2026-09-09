@@ -187,7 +187,7 @@ deltas: added coll/pml/UCC selection diagnostics, and pristine host-pinned
 nodes. Motivation: Phase B found CUDA collectives pathological at ≥3 ranks
 with GDR on (13-44× slower than staged), but those jobs ran on uncontrolled
 nodes; resource-alloc exp2/exp3 later proved co-tenant host contention causes
-a ~16× dose-response degradation on its own. B2 answers both open questions
+a ≈16× dose-response degradation on its own. B2 answers both open questions
 at once: does the collective pathology reproduce without contention, and
 what does MPI actually choose/execute on the pathological path.
 
@@ -252,7 +252,7 @@ redirect failure (Track 1 defect; measurements unaffected). Patched
   and CUDA-aware host MPI verified (`phase1_step0_sanity_v1`, job `59640.gaas`).
 - **Step 1 Phase A (p2p GDR A/B at 2x1): PASS** — host GPUDirect RDMA works for
   p2p (zero-copy selected, clear A/B deltas, negative control clean)
-  (`step1_p2p_2x1_v1`, job `59671.gaas`). CUDA p2p reaches ~57% of the fabric
+  (`step1_p2p_2x1_v1`, job `59671.gaas`). CUDA p2p reaches ≈57% of the fabric
   ceiling due to a 74/26 multi-rail split in the 1-GPU-per-node case.
 - **Step 1 Phase B (collective GDR A/B ladder): COMPLETE — critical finding.**
   With default UCX (GDR enabled), CUDA collectives with ≥3 ranks are

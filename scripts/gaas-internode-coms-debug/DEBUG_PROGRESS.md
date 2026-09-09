@@ -19,7 +19,7 @@ locally, byte-identical); script `debug-scripts/phase1-step0/run_phase1_step0_sa
 - **C — `osu_hello` cross-node through the bridge launch path: PASS** (v7.4,
   2 processes).
 - **D — `osu_allreduce` host buffers: PASS.** Full sweep 4 B → 1 MiB completed:
-  2.87 µs @ 4 B rising to 104.72 µs @ 1 MiB. Small-message ~3 µs is consistent
+  2.87 µs @ 4 B rising to 104.72 µs @ 1 MiB. Small-message ≈3 µs is consistent
   with a healthy low-latency inter-node path (transport identity is *not*
   proven here — that is Step 1's job).
 
@@ -42,7 +42,7 @@ confirmation. Note: Phase 1 test 2 (`nccl-tests`) still has the unresolved host
 (`hpc-gaas-g06`, `hpc-gaas-g10`, H200), host HPC-X 2.25.1 OMPI v4.1.9a1 +
 UCX 1.20.0, `rsh_pbsdsh.sh` bridge, `--bind-to none` (record-only). Control run
 (default UCX) vs GDR-off run (`UCX_IB_GPU_DIRECT_RDMA=n`) in the same job,
-same nodes/placement. 12/12 A/B tests completed (rc=0), ~7 min.
+same nodes/placement. 12/12 A/B tests completed (rc=0), ≈7 min.
 **Evidence:** `outputs/phase1-step1/step1_p2p_2x1_v1.{o,e}` (+ nvtopo/ucxtrans
 logs); script `debug-scripts/phase1-step1/run_phase1_step1_p2p_2x1.pbs`.
 
@@ -85,8 +85,8 @@ logs); script `debug-scripts/phase1-step1/run_phase1_step1_p2p_2x1.pbs`.
    - *Nuance — `D H` shows no gain (37.9 vs 41.4 GB/s):* not evidence against
      GDR (the logs still show zero-copy on that path). Two different
      bottlenecks coincidentally land at the same number: the control's
-     sender-side GDR is rail-limited (~40-50 GB/s, see below) while the staged
-     pipeline also runs ~40 GB/s. Same speed, different mechanism — which is
+     sender-side GDR is rail-limited (≈40-50 GB/s, see below) while the staged
+     pipeline also runs ≈40 GB/s. Same speed, different mechanism — which is
      why protocol logs, not just deltas, were captured.
 
 **Analysis — the CUDA multi-rail imbalance (74/26):**
@@ -97,7 +97,7 @@ logs); script `debug-scripts/phase1-step1/run_phase1_step1_p2p_2x1.pbs`.
   every other HCA is **NODE** distance (reachable, but crossing PCIe host
   bridges).
 - **UCX multi-rail behavior**: host memory → clean **50/50** across two rails
-  → 87.9 GB/s ≈ 2×400G NDR at ~88% efficiency ⇒ each rail carries ~44 GB/s.
+  → 87.9 GB/s ≈ 2×400G NDR at ≈88% efficiency ⇒ each rail carries ≈44 GB/s.
   CUDA memory → **74% `mlx5_2` / 26% `mlx5_0`** → 50.4 GB/s.
 - **Why the split is uneven for CUDA**: UCX scores each lane by estimated
   cost. Host memory looks symmetric from the process → tie → 50/50. GPU memory
@@ -106,8 +106,8 @@ logs); script `debug-scripts/phase1-step1/run_phase1_step1_p2p_2x1.pbs`.
   traffic.
 - **The arithmetic of the gap**: with a 74/26 split, both rails run in
   parallel but the 74%-loaded rail finishes last — it must carry 74% of the
-  bytes at ~44 GB/s, bounding the transfer at ~44/0.74 ≈ 59 GB/s theoretical;
-  50.4 GB/s observed. A balanced 50/50 would approach ~87 GB/s (the host
+  bytes at ≈44 GB/s, bounding the transfer at ≈44/0.74 ≈ 59 GB/s theoretical;
+  50.4 GB/s observed. A balanced 50/50 would approach ≈87 GB/s (the host
   ceiling). So the imbalance — not a broken GDR path — caps GPU traffic at 57%
   of the fabric.
 - **Relevance to HPL-MxP**: the app's inter-node traffic is GPU-resident; if
@@ -137,7 +137,7 @@ debugging (e.g. the 74/26 rail split) awaits user instruction.
 **Suggested follow-ups (not executed):**
 
 - **Rail-split investigation** (with the 1-GPU-per-node caveat above): force a
-  single rail (e.g. `UCX_TLS=rc_mlx5_2`) to confirm ~44 GB/s per rail; check
+  single rail (e.g. `UCX_TLS=rc_mlx5_2`) to confirm ≈44 GB/s per rail; check
   rail-count/selection knobs (e.g. `UCX_MAX_RNDV_RAILS`, to be verified
   against `ucx_info -c` before use); check whether the 3x4 per-GPU mapping
   naturally produces balanced rails.
@@ -183,7 +183,7 @@ bcast @ 64 MiB, allreduce @ 1 MiB):**
 
 Rows appended 2026-09-08 to show the bcast `-d cuda` size progression behind
 the linear-degradation claim (finding 2): the GDR-off latency is nearly flat
-in size (staged, ~25-30 GB/s effective) while the control grows linearly with
+in size (staged, ≈25-30 GB/s effective) while the control grows linearly with
 bytes, so the slowdown itself grows with message size (3x1: 16.6× @ 1 MiB →
 33.8× @ 8 MiB → 41.7× @ 32 MiB → 44× @ 64 MiB; 2x2: 12.7× → 24.7× → 35.6× →
 36×; 3x4: 4.8× → 10.7× → 12.0× → 13×; 2x1 stays 1.0× at every size).
@@ -199,7 +199,7 @@ is specific to CUDA buffers + GDR enabled + ≥3 ranks.
    are pathologically slow — 13× to 44× slower than staging.** Effective bcast
    rate at 3x1: control 0.55 GB/s vs GDR-off 24.2 GB/s (≈ H H 25.6 GB/s). The
    2-rank case (2x1) is unaffected (33.5 GB/s).
-2. **The degradation is linear in message size** (~1.9 µs/KB from ~32-64 KiB
+2. **The degradation is linear in message size** (≈1.9 µs/KB from ≈32-64 KiB
    onset; e.g. 3x1 ctrl bcast: 1 MiB → 1,751 µs, 64 MiB → 120,941 µs) — a
    per-fragment/per-page fixed cost dominates, consistent with either uncached
    GPU-memory re-registration per message or fenced GDR writes with
@@ -208,8 +208,8 @@ is specific to CUDA buffers + GDR enabled + ≥3 ranks.
 3. **Protocol evidence**: control-run logs show a mix of staged
    (`cuda_copy, frag host`, 50/50 rails) and zero-copy GDR (74/26 rails)
    selections across UCC/UCP contexts; the exercised ≥3-rank collective path
-   pays the ~1.9 µs/KB cost while the GDR-off run's staged path runs at
-   ~0.04 µs/KB. Phase A showed the same zero-copy GDR path is *fast* for pure
+   pays the ≈1.9 µs/KB cost while the GDR-off run's staged path runs at
+   ≈0.04 µs/KB. Phase A showed the same zero-copy GDR path is *fast* for pure
    2-rank p2p (50 GB/s) — so this is a collective-path interaction, not broken
    GDR per se.
 4. **Rail/affinity (3x4 nvtopo, 4 GPUs visible)**: each GPU has its own
@@ -220,7 +220,7 @@ is specific to CUDA buffers + GDR enabled + ≥3 ranks.
    choice still unverified — kept with the Phase A follow-up).
 
 **Implication for the HPL-MxP debug**: a 3×4 CUDA-aware-MPI collective with
-default GDR-enabled UCX runs at ~2 GB/s instead of ~25 GB/s — if any of the
+default GDR-enabled UCX runs at ≈2 GB/s instead of ≈25 GB/s — if any of the
 app's inter-node traffic rides this path, it fully explains an "extremely
 slow" baseline. Caveat: HPL-MxP runs in the container and primarily uses NCCL
 for collectives, and the 2026-09-03 comm-transport probe found a gdrdrv/GDR
