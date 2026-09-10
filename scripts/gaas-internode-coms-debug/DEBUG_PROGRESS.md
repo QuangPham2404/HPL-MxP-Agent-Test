@@ -442,5 +442,71 @@ H H negative controls: ±1.00–1.08× in every rep of both arms.
 ompiinfo/ucxdev/nvtopo, pre/prectrl/mid/post checkpoint logs, presched/
 postsched snapshots; all byte-verified against GAAS).
 
+### Phase B2 — UCC ablation (2026-09-10): SPLIT VERDICT — Case B (3x1 allreduce @1 MiB) is UCC-causal and disappears; Case A (3x4 bcast) persists and is NOT UCC
+
+**What was run:** the two confirmed anomaly cases repeated with UCC excluded
+from the coll framework (`--mca coll ^ucc` on every mpirun — the single delta
+vs the anomaly resweep; everything else unchanged: pinned pristine nodes,
+rank/GPU mapping, launcher, full B2 diagnostics, H H controls, same-job
+GDR-on/GDR-off A/B). 6 jobs, 3 reps per case, all on strictly pristine
+g14+g16+g17 (3/3 pristine verified before every submission, zero foreign
+co-tenants at every checkpoint), all 24 test executions rc=0. Case A jobs
+`61694/61695/61715.gaas`, Case B jobs `61717/61718/61719.gaas`; script
+`debug-scripts/phase1-step1/run_phase1_step1_collb2_uccabl.pbs`.
+
+**UCC-exclusion proof (as designed):** `.e` files show ucc entirely absent
+from `coll:base:comm_select` availability on MPI_COMM_WORLD (vs "component
+available: ucc, priority: 100" in every resweep/B2 run), with the fallback
+stack **hcoll(90) > cuda(78) > tuned(30) > libnbc(10) > basic(10)** enabled;
+`.o` files contain **zero** UCC team/score-map lines (vs 264 per resweep
+case-A job). Both proofs present in all 6 attempts.
+
+**Results — Case A, 3x4 `osu_bcast -d cuda` (µs, ctrl vs gdroff → signed
+ratio; sizes 1/8/32/64 MiB):**
+
+| Rep | 1 MiB | 8 MiB | 32 MiB | 64 MiB |
+|---|---|---|---|---|
+| v1 | 104.0/143.0 → +1.37× | 2652.7/944.2 → −2.81× | 13614.1/3800.0 → −3.58× | 29087.1/7596.9 → −3.83× |
+| v2 | 105.7/140.0 → +1.32× | 2371.2/943.1 → −2.51× | 13173.6/3913.9 → −3.37× | 29095.7/7639.0 → −3.81× |
+| v3 | 103.3/140.7 → +1.36× | 2462.9/1001.3 → −2.46× | 13354.8/3764.4 → −3.55× | 29337.2/7657.2 → −3.83× |
+
+**Results — Case B, 3x1 `osu_allreduce -d cuda` (µs, ctrl vs gdroff → signed
+ratio; sizes 256K/512K/1M):**
+
+| Rep | 256 KiB | 512 KiB | 1 MiB |
+|---|---|---|---|
+| v1 | 46.0/94.2 → +2.05× | 56.1/110.3 → +1.96× | 74.7/141.5 → **+1.89×** |
+| v2 | 46.0/93.8 → +2.04× | 56.1/110.3 → +1.97× | 74.5/141.1 → **+1.89×** |
+| v3 | 46.0/93.9 → +2.04× | 62.1/117.5 → +1.89× | 75.0/147.4 → **+1.97×** |
+
+H H negative controls: Case A ±1.00–1.06× at ≥8 MiB (−1.27…−1.30× at 1 MiB in
+v2/v3 — small-size noise); Case B ±1.00–1.08×.
+
+**Verdicts (per the ablation design's interpretation rules):**
+
+1. **Case B (3x1 allreduce cuda @1 MiB): anomaly DISAPPEARS with GDR enabled
+   → UCC/TL_UCP is causal.** Without UCC the 1 MiB ctrl drops from
+   1117–1310 µs (resweep pristine) to 74.5–75.0 µs — a 15–17× improvement —
+   flipping the ratio from −7.96…−9.34× to +1.89…+1.97× (healthy GDR, and
+   faster than even H H at ~131 µs). The healthy sub-512 KiB gains survive
+   (+1.89…+2.05×, slightly below the with-UCC +2.13…+2.28×). This is
+   in-job evidence: both A/B arms ran the same (UCC-free) coll stack.
+2. **Case A (3x4 bcast cuda ≥8 MiB): anomaly REMAINS (worse) → UCC is not
+   the primary cause.** The in-job A/B still shows GDR-on 2.5–3.8× slower
+   than staged at ≥8 MiB under the UCC-free stack, so the cause sits at or
+   below the UCX transport-selection layer. Per the design, the next step
+   for Case A is UCX rail/rendezvous-threshold testing.
+3. **UCC-exclusion is NOT a viable global mitigation:** excluding UCC
+   degrades *everything* at 3x4 — cuda bcast ctrl @64 MiB 29,087–29,337 µs
+   vs 6,326–6,394 µs with UCC (−4.6×), staged cuda 7,597–7,657 vs
+   2,129–2,161 µs (−3.5×), and even host H H bcast 13,315–13,637 vs
+   4,344–4,419 µs (−3.1×). UCC provides large collective value on this
+   stack; any mitigation must be per-collective/topology-aware (or UCC-side
+   tuning), not a blanket exclusion.
+
+**Evidence:** `outputs/phase1-step1/step1_collb2_uccabl_*` (`.o`/`.e`,
+ompiinfo/ucxdev/nvtopo, checkpoint logs, presched/postsched snapshots; all
+byte-verified against GAAS).
+
 
 

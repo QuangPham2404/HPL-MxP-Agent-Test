@@ -253,6 +253,17 @@ each; Case A is co-tenant-independent (pristine arm slightly stronger,
 verdicts in `DEBUG_PROGRESS.md` → Phase B2 → "Anomaly resweep"; script
 `run_phase1_step1_collb2_resweep.pbs`.
 
+**UCC ablation (2026-09-10, part of Phase B2):** the two anomaly cases
+repeated with `--mca coll ^ucc` (single delta; 6 jobs on pristine
+g14+g16+g17, all rc=0; UCC exclusion proven from comm_select + zero
+score-map lines; fallback stack hcoll(90)/cuda(78)/tuned(30)). **Split
+verdict: Case B (3x1 allreduce @1 MiB) disappears (+1.89…+1.97×, healthy) →
+UCC/TL_UCP causal; Case A (3x4 bcast ≥8 MiB) persists (−2.5…−3.8×) → not
+UCC, next is UCX rail/rendezvous-threshold testing.** UCC-exclusion is NOT a
+viable global mitigation (degrades everything at 3x4 by 3-4.6×, including
+host-buffer collectives). Details in `DEBUG_PROGRESS.md` → Phase B2 → "UCC
+ablation"; script `run_phase1_step1_collb2_uccabl.pbs`.
+
 ---
 
 ### Phase 1 — status and resume point (updated 2026-09-09, post-B2)
@@ -286,20 +297,31 @@ verdicts in `DEBUG_PROGRESS.md` → Phase B2 → "Anomaly resweep"; script
   pristine −2.95…−2.99× @64 MiB — co-tenant-independent); Case B reproduces
   6/6 (−5.0…−10.7× @1 MiB). Signed-ratio tables in `DEBUG_PROGRESS.md`
   Phase B2 → "Anomaly resweep".
+- **Step 1 Phase B2 UCC ablation: COMPLETE — split verdict.** 6 pristine
+  jobs (`61694/61695/61715/61717/61718/61719.gaas`, all rc=0). **Case B
+  (3x1 allreduce @1 MiB) is UCC-causal** — disappears without UCC
+  (+1.89…+1.97×, healthy GDR; 15-17× faster ctrl). **Case A (3x4 bcast ≥8
+  MiB) is NOT UCC** — persists (−2.46…−3.83×) under the hcoll/cuda/tuned
+  fallback. UCC-exclusion degrades everything at 3x4 by 3-4.6× → not a
+  viable global mitigation. Details in `DEBUG_PROGRESS.md` Phase B2 →
+  "UCC ablation".
 
 **Pending (user decision required):**
 
-1. **Single-variable test (per B2 interpretation rule, UCC selected):** GDR-on
-   with `--mca coll ^ucc` at 3x4 and 3x1 — separates the UCC-executed path
-   for both confirmed residuals.
-2. **3x4 bcast residual mechanism:** single-rail zero-copy GDR selection
-   (`mlx5_5/9`) — multi-rail knobs (`UCX_MAX_RNDV_RAILS` etc.), memtype
-   cache, rndv thresholds.
+1. **Case A follow-up (UCC ruled out):** UCX rail/rendezvous-threshold
+   testing at 3x4 — the single-rail zero-copy GDR selection
+   (`mlx5_4/5/8/9`) is the standing suspect; multi-rail knobs
+   (`UCX_MAX_RNDV_RAILS`, verify against `ucx_info -c`), `UCX_MEMTYPE_CACHE`,
+   rndv thresholds.
+2. **Case B mitigation exploration (UCC-causal):** per-collective UCC
+   tuning or selective exclusion (e.g., UCC algorithm selection for
+   allreduce at ≥1 MiB / TL_UCP thresholds) — NOT blanket `coll ^ucc`,
+   which costs 3-4.6× at 3x4.
 3. **Track 2.2 (re-scoped):** minimal in-container HPL-MxP test on 3x4 —
    default vs `UCX_IB_GPU_DIRECT_RDMA=n` exported into the container +
-   `NCCL_DEBUG=INFO` — now looking for the 2-3× bcast-shaped residual (not
-   the disproven 13-44× catastrophe) on clean nodes; the 2026-09-03 probe
-   found the in-container gdrdrv/GDR gap.
+   `NCCL_DEBUG=INFO` — looking for the bcast-shaped residual (now known to
+   be UCC-independent) on clean nodes; the 2026-09-03 probe found the
+   in-container gdrdrv/GDR gap.
 4. **Phase 1 test 2 — `nccl-tests` (NCCL path)**: still blocked on the missing
    host `libnccl.so.2` (recorded 2026-09-03); NCCL path verification may
    happen via Track 2.2 in-container instead.
