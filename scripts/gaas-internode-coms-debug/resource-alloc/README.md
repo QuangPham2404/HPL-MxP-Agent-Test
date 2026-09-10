@@ -40,6 +40,50 @@ behavior and optimization/best-practice guidance for other users running
 non-full-node GPU jobs (a mis-matched allocation can silently degrade anyone's
 job the same way).
 
+## Core problems remaining to investigate
+
+The experiments establish the dominant operational finding — co-tenant node
+condition must be controlled for multi-node HPL-MxP runs — but two scientific
+questions remain open before the resource-allocation effects can be considered
+fully deconfounded.
+
+### 1. Placement and affinity effects were not independently isolated
+
+The evidence rules out CPU/GPU/NUMA placement mismatch as the explanation for
+the original catastrophic 44–50x slowdown, but it does not establish a precise
+upper bound on the cost of placement mismatch. The main comparison used the
+same default cross-NUMA carve-out on the pristine trio, while the only notably
+different allocation shape (`cleanalloc250k_v4`) also changed the node set and
+introduced a light co-tenant on g13. Consequently, the approximately 3.8%
+performance difference in that run cannot be attributed to placement alone.
+
+There was no controlled same-node, same-condition A/B comparison between a
+matched GPU/CPU/NUMA allocation and the default mismatched allocation. The
+current evidence therefore supports the narrower conclusion that the default
+mismatched allocation can still deliver high performance and is not the main
+cause of the observed multi-node failure. It does not prove that affinity is
+free, or that its effect is at most 4%, across other node conditions, problem
+sizes, communication paths, or explicit binding policies.
+
+### 2. The physical mechanism of co-tenant interference remains inferred
+
+The clean/dirty experiments strongly associate the slowdown with active
+co-tenants and show that it is not explained by measured CPU utilization or
+additional application-visible InfiniBand traffic. However, the proposed
+mechanisms — DDR memory-bandwidth contention, PCIe contention, LLC pressure,
+or pressure caused by resident allocations — were not measured directly.
+No PCM or equivalent memory-bandwidth counters were collected, and the heavy
+dirty condition has only two replicates on the same node set. The 10-second
+sampling interval can also miss short bursts, while cgroup visibility limits
+direct observation of co-tenant GPU activity.
+
+The supported conclusion is therefore that co-tenant host/resource contention
+is the dominant cause and that the staged communication path is highly
+sensitive to it. The specific resource responsible, and the relative roles of
+DDR, PCIe, LLC, and resident GPU/host allocations, remain unresolved. A
+direct bandwidth/PCIe measurement or a controlled synthetic co-tenant
+dose-response experiment would be needed to close this mechanism question.
+
 ## Final conclusion (2026-09-09) — resource-allocation track closed
 
 The four experiments below fully decompose the 3x4 degradation's resource
@@ -658,4 +702,3 @@ host load + IB counters would separate (b) from (c) directly.
 **Suggested next steps (not executed):** add loadavg/IB-counter sampling to
 the capture; enlarge the sample to estimate the slow-mode frequency; re-run
 this series after GPUDirect is fixed to isolate the placement factor.
-
