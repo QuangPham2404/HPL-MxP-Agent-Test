@@ -508,5 +508,24 @@ v2/v3 — small-size noise); Case B ±1.00–1.08×.
 ompiinfo/ucxdev/nvtopo, checkpoint logs, presched/postsched snapshots; all
 byte-verified against GAAS).
 
+**Case B closure (2026-09-10, user-confirmed): CLOSED for the host
+GPUDirect-RDMA track.** Rationale: the 3x1 allreduce-cuda @1 MiB anomaly is
+root-caused to UCC/TL_UCP's ≥1 MiB allreduce path — resweep reproduced it
+6/6 (−5.0…−10.7×), the UCC ablation eliminated it 3/3 (+1.89…+1.97×, healthy
+GDR), and with UCC excluded the GDR-on path not only turns healthy but
+**outperforms host buffers** (74.5–75.0 µs vs H H ~131 µs @1 MiB). The host
+GDR setup (driver, fabric, GPU memory registration, zero-copy capability) is
+thereby cleared for this case: the transport delivers superior performance
+when the collective layer uses it well. Status of "resolved": root-caused
+with a demonstrated mitigation — the default stack still exhibits the
+anomaly; any actual fix is UCC-side tuning (per-collective algorithm/
+threshold selection for allreduce ≥1 MiB), recorded as an optional non-host-
+track follow-up. Blanket `--mca coll ^ucc` is ruled out as mitigation
+(3–4.6× degradation at 3x4). With this closure, **Case A (3x4 bcast ≥8 MiB)
+is the sole open host-track item**; the overall host-GDR certification is
+held open pending its resolution (suspect: UCX single-rail zero-copy
+selection, not the GDR infrastructure itself — see Phase A/B2/ablation
+evidence that the zero-copy path is healthy in every other configuration).
+
 
 

@@ -305,23 +305,28 @@ ablation"; script `run_phase1_step1_collb2_uccabl.pbs`.
   fallback. UCC-exclusion degrades everything at 3x4 by 3-4.6× → not a
   viable global mitigation. Details in `DEBUG_PROGRESS.md` Phase B2 →
   "UCC ablation".
+- **Case B (3x1 allreduce @1 MiB): CLOSED for the host GPUDirect-RDMA
+  track (2026-09-10, user-confirmed).** Root-caused to UCC/TL_UCP's ≥1 MiB
+  allreduce path; with UCC excluded the GDR-on path is healthy (+1.9×) and
+  outperforms host buffers (74.5–75.0 µs vs H H ~131 µs) — the host GDR
+  setup is cleared for this case. Optional non-host-track follow-up:
+  per-collective UCC tuning (blanket `coll ^ucc` ruled out). Full closure
+  rationale in `DEBUG_PROGRESS.md` Phase B2 → "Case B closure".
 
 **Pending (user decision required):**
 
-1. **Case A follow-up (UCC ruled out):** UCX rail/rendezvous-threshold
-   testing at 3x4 — the single-rail zero-copy GDR selection
-   (`mlx5_4/5/8/9`) is the standing suspect; multi-rail knobs
+1. **Case A (3x4 bcast ≥8 MiB) — sole open host-track item:** UCX
+   rail/rendezvous-threshold testing at 3x4 — the single-rail zero-copy GDR
+   selection (`mlx5_4/5/8/9`) is the standing suspect; multi-rail knobs
    (`UCX_MAX_RNDV_RAILS`, verify against `ucx_info -c`), `UCX_MEMTYPE_CACHE`,
-   rndv thresholds.
-2. **Case B mitigation exploration (UCC-causal):** per-collective UCC
-   tuning or selective exclusion (e.g., UCC algorithm selection for
-   allreduce at ≥1 MiB / TL_UCP thresholds) — NOT blanket `coll ^ucc`,
-   which costs 3-4.6× at 3x4.
-3. **Track 2.2 (re-scoped):** minimal in-container HPL-MxP test on 3x4 —
+   rndv thresholds. Host-GDR certification is held open pending this item.
+2. **Track 2.2 (re-scoped):** minimal in-container HPL-MxP test on 3x4 —
    default vs `UCX_IB_GPU_DIRECT_RDMA=n` exported into the container +
-   `NCCL_DEBUG=INFO` — looking for the bcast-shaped residual (now known to
-   be UCC-independent) on clean nodes; the 2026-09-03 probe found the
+   `NCCL_DEBUG=INFO` — looking for the bcast-shaped residual (known
+   UCC-independent) on clean nodes; the 2026-09-03 probe found the
    in-container gdrdrv/GDR gap.
+3. *(Optional, non-host-track)* Case B UCC-side tuning: per-collective
+   algorithm/threshold selection for allreduce ≥1 MiB.
 4. **Phase 1 test 2 — `nccl-tests` (NCCL path)**: still blocked on the missing
    host `libnccl.so.2` (recorded 2026-09-03); NCCL path verification may
    happen via Track 2.2 in-container instead.
