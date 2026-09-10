@@ -356,12 +356,91 @@ baseline topology** and is the strongest remaining host-stack lead.
    GDR-on with `--mca coll ^ucc` at 3x4 and 3x1 — separates the UCC-executed
    path (hcoll/tuned fallback) for both residuals.
 2. **3x4 bcast residual mechanism:** rail behavior of the zero-copy selection
-   (single-rail `mlx5_5/9` observed) — multi-rail zero-copy knobs (e.g.
+   (single-rail `mlx5_5/9` observed) — multi-rail knobs (e.g.
    `UCX_MAX_RNDV_RAILS`, verify against `ucx_info -c`), `UCX_MEMTYPE_CACHE`,
    rndv thresholds.
 3. **Track 2.2 re-scoped:** the decisive in-container test should now also
    look for the 2–3× bcast-shaped residual on clean nodes rather than the
    13–44× catastrophe.
+
+### Phase B2 — Anomaly resweep (2026-09-10): both residual anomalies are MECHANISM, not noise
+
+**The two anomaly cases (from Phase B2, restated):**
+
+- **Case A — 3x4 `osu_bcast -d cuda`:** GDR-on (ctrl) slower than staged
+  (gdroff) at ≥8 MiB; original measurement −2.0×/−2.5×/−2.6× at 8/32/64 MiB,
+  healthy +1.5× at 1 MiB; single-rail zero-copy GDR selection.
+- **Case B — 3x1 `osu_allreduce -d cuda`:** GDR-on slower at 1 MiB only;
+  original measurement −7.7× @1 MiB, healthy +2.1–2.3× at ≤512 KiB.
+
+**What was run:** a two-arm repetition series to separate mechanism from
+noise and from the original 3-node set's light co-tenant. Per case: 3
+repetitions on the **orig arm** (g16+g17+g13 — exactly the original anomaly
+conditions, g13's co-tenant 59192 present and stable at every checkpoint) and
+3 repetitions on the **pristine arm** (strictly pristine g14+g16+g17, freed
+overnight; zero foreign co-tenants at every checkpoint). Each repetition is a
+separate PBS job with a fresh allocation (per-rep GPU UUID evidence records
+the carve-out) running the case's cuda test + its H H negative control in the
+same-job A/B (ctrl vs `UCX_IB_GPU_DIRECT_RDMA=n`) with the full Phase B2
+diagnostic instrumentation. 12 jobs, 48 test executions, **all rc=0**
+(orig arm jobs `61419–61424.gaas`, pristine arm jobs `61425–61430.gaas`;
+script `debug-scripts/phase1-step1/run_phase1_step1_collb2_resweep.pbs`,
+parameterized `CASE/ATTEMPT/REQ_HOSTS`).
+
+**Ratio convention (from this subsection onward): `+N` = GDR-on N× faster
+than GDR-off; `−N` = GDR-on N× slower.**
+
+**Results — Case A, 3x4 `osu_bcast -d cuda` (µs, ctrl vs gdroff → signed
+ratio; sizes 8/32/64 MiB):**
+
+| Rep | Arm | 8 MiB | 32 MiB | 64 MiB |
+|---|---|---|---|---|
+| v1 | orig (g16+g17+g13) | 653.2/329.9 → −1.98× | 2914.9/1159.2 → −2.51× | 5917.3/2269.6 → −2.61× |
+| v2 | orig | 660.4/331.8 → −1.99× | 2904.1/1156.1 → −2.51× | 5886.9/2263.6 → −2.60× |
+| v3 | orig | 642.4/327.8 → −1.96× | 2899.0/1162.3 → −2.49× | 5911.9/2268.9 → −2.61× |
+| v1 | pristine (g14+g16+g17) | 590.1/342.1 → −1.72× | 2864.2/1114.8 → −2.57× | 6394.0/2160.8 → −2.96× |
+| v2 | pristine | 570.4/337.9 → −1.69× | 2891.0/1111.1 → −2.60× | 6359.0/2128.6 → −2.99× |
+| v3 | pristine | 588.6/336.5 → −1.75× | 2908.9/1127.4 → −2.58× | 6326.6/2143.5 → −2.95× |
+
+H H negative controls: ±1.00–1.04× in every rep of both arms.
+
+**Results — Case B, 3x1 `osu_allreduce -d cuda` (µs, ctrl vs gdroff → signed
+ratio; sizes 256K/512K/1M):**
+
+| Rep | Arm | 256 KiB | 512 KiB | 1 MiB |
+|---|---|---|---|---|
+| v1 | orig | 41.1/90.8 → +2.21× | 51.0/125.8 → +2.47× | 1247.3/149.0 → −8.37× |
+| v2 | orig | 40.9/90.6 → +2.22× | 50.7/108.1 → +2.13× | 1779.3/166.9 → −10.66× |
+| v3 | orig | 41.4/91.7 → +2.21× | 50.7/108.0 → +2.13× | 1229.8/245.9 → −5.00× |
+| v1 | pristine | 37.4/85.3 → +2.28× | 47.3/100.6 → +2.13× | 1128.5/141.7 → −7.96× |
+| v2 | pristine | 37.3/84.3 → +2.26× | 47.1/100.8 → +2.14× | 1117.0/139.9 → −7.99× |
+| v3 | pristine | 37.5/84.2 → +2.25× | 47.0/100.8 → +2.15× | 1310.0/140.3 → −9.34× |
+
+H H negative controls: ±1.00–1.08× in every rep of both arms.
+
+**Verdicts:**
+
+1. **Case A (3x4 bcast cuda ≥8 MiB): MECHANISM, co-tenant-independent.**
+   6/6 repetitions reproduce (orig arm −2.49…−2.61× @64 MiB, stable to ~±1%;
+   pristine arm −2.95…−2.99×, slightly *stronger* — g13's co-tenant is not a
+   contributor). The single-rail zero-copy GDR selection persists in every
+   rep (e.g. pris v1 on g14: `rc_mlx5` zero-copy across `mlx5_4/5/8/9`
+   depending on rank pair); UCC selection evidence identical per rep
+   (ucc=100 enabled, 264 score-map lines, UCC team per test).
+2. **Case B (3x1 allreduce cuda @1 MiB): MECHANISM.** 6/6 repetitions
+   reproduce (orig −5.0…−10.7×, pristine −7.96…−9.34× @1 MiB). The healthy
+   sub-512 KiB behavior is highly consistent (+2.13…+2.28× everywhere). The
+   pathological 1 MiB ctrl latency varies across reps (1117–1779 µs) — the
+   magnitude is less stable than Case A, but the direction never flips and
+   the staged arm stays ~140–250 µs.
+3. The original Phase B2 single-run measurements were therefore accurate
+   samples of stable behavior, not outliers; the two residuals join the
+   confirmed-fact base and remain the host-stack suspects for the app's
+   panel-broadcast-shaped traffic.
+
+**Evidence:** `outputs/phase1-step1/step1_collb2_resweep_*` (`.o`/`.e`,
+ompiinfo/ucxdev/nvtopo, pre/prectrl/mid/post checkpoint logs, presched/
+postsched snapshots; all byte-verified against GAAS).
 
 
 

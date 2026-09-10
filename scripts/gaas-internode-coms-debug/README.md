@@ -242,6 +242,17 @@ redirect failure (Track 1 defect; measurements unaffected). Patched
 (`export OUTDIR` + missing-file guard) and rerun as
 `step1_collb2_2x1_v2`.
 
+**Anomaly resweep (2026-09-10, part of Phase B2):** repetition series for
+the two residual anomalies — Case A (3x4 `osu_bcast -d cuda`, GDR-on −2×…
+−3× at ≥8 MiB) and Case B (3x1 `osu_allreduce -d cuda`, GDR-on −5×…−11× at
+1 MiB). Two arms × 3 reps per case (12 jobs, all rc=0): orig arm on
+g16+g17+g13 (original conditions) and pristine arm on strictly pristine
+g14+g16+g17. **Both anomalies are mechanism, not noise** — 6/6 reproduction
+each; Case A is co-tenant-independent (pristine arm slightly stronger,
+−2.95…−2.99× @64 MiB). Results, signed-ratio tables (+ = GDR faster), and
+verdicts in `DEBUG_PROGRESS.md` → Phase B2 → "Anomaly resweep"; script
+`run_phase1_step1_collb2_resweep.pbs`.
+
 ---
 
 ### Phase 1 — status and resume point (updated 2026-09-09, post-B2)
@@ -269,12 +280,18 @@ redirect failure (Track 1 defect; measurements unaffected). Patched
   **ucc(100) > hcoll(90) > cuda(78) > tuned(30)**; **UCC (TL_UCP) executes the
   collectives in both modes** (comm_select + per-test team create/destroy
   evidence). Full tables and protocol evidence in `DEBUG_PROGRESS.md` Phase B2.
+- **Step 1 Phase B2 anomaly resweep: COMPLETE — both residuals are
+  MECHANISM.** 12 jobs (2 cases × orig/pristine arms × 3 reps, all rc=0;
+  jobs `61419-61430.gaas`). Case A reproduces 6/6 (orig −2.5…−2.6×,
+  pristine −2.95…−2.99× @64 MiB — co-tenant-independent); Case B reproduces
+  6/6 (−5.0…−10.7× @1 MiB). Signed-ratio tables in `DEBUG_PROGRESS.md`
+  Phase B2 → "Anomaly resweep".
 
 **Pending (user decision required):**
 
 1. **Single-variable test (per B2 interpretation rule, UCC selected):** GDR-on
    with `--mca coll ^ucc` at 3x4 and 3x1 — separates the UCC-executed path
-   for both residuals.
+   for both confirmed residuals.
 2. **3x4 bcast residual mechanism:** single-rail zero-copy GDR selection
    (`mlx5_5/9`) — multi-rail knobs (`UCX_MAX_RNDV_RAILS` etc.), memtype
    cache, rndv thresholds.
