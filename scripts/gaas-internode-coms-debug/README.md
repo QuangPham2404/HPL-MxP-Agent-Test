@@ -315,11 +315,19 @@ ablation"; script `run_phase1_step1_collb2_uccabl.pbs`.
 
 **Pending (user decision required):**
 
-1. **Case A (3x4 bcast ≥8 MiB) — sole open host-track item:** UCX
-   rail/rendezvous-threshold testing at 3x4 — the single-rail zero-copy GDR
-   selection (`mlx5_4/5/8/9`) is the standing suspect; multi-rail knobs
-   (`UCX_MAX_RNDV_RAILS`, verify against `ucx_info -c`), `UCX_MEMTYPE_CACHE`,
-   rndv thresholds. Host-GDR certification is held open pending this item.
+1. **Case A (3x4 bcast ≥8 MiB) — sole open host-track item; rail hypothesis
+   REFUTED, next experiment queued:** the 2026-09-10 follow-up probe (see
+   `DEBUG_PROGRESS.md` Phase B2 → "Case A follow-up probe") verified the
+   build's rail knobs (`UCX_MAX_RNDV_RAILS=2` default,
+   `UCX_MULTI_LANE_MAX_RATIO=4.0` filter, `UCX_RNDV_PERF_DIFF=1.0` protocol
+   choice) and showed the GDR data path is **already 2-rail 50/50** (the
+   earlier "single-rail zero-copy" claims were mis-parsed proto rows and are
+   superseded — performance numbers and verdicts stand). Queued next
+   experiment: rendezvous-scheme/chunk test on the normal UCC-enabled path —
+   V0 base / V1 `UCX_RNDV_SCHEME=put` / V2 `UCX_MIN_RNDV_CHUNK_SIZE=256K`
+   (or 1M) / C gdroff control, same resweep structure, `UCX_MAX_RNDV_RAILS=2`
+   kept. Open decision: skip the literal rail test (recommended, no-op by
+   construction) or run it once for the record.
 2. **Track 2.2 (re-scoped):** minimal in-container HPL-MxP test on 3x4 —
    default vs `UCX_IB_GPU_DIRECT_RDMA=n` exported into the container +
    `NCCL_DEBUG=INFO` — looking for the bcast-shaped residual (known

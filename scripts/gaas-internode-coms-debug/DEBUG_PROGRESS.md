@@ -508,6 +508,87 @@ v2/v3 — small-size noise); Case B ±1.00–1.08×.
 ompiinfo/ucxdev/nvtopo, checkpoint logs, presched/postsched snapshots; all
 byte-verified against GAAS).
 
+### Phase B2 — Case A follow-up probe (2026-09-10): rail hypothesis REFUTED by proto evidence; next experiment queued (session hand-off)
+
+**Context:** user directed a focused UCX rail-selection experiment for Case A
+(3x4 bcast ≥8 MiB, −2.5…−3× with GDR on), with the instruction to first probe
+which flag could let UCX choose 2 rails instead of 1, keeping UCC enabled and
+`UCX_MAX_RNDV_RAILS=2`. User correction incorporated: in UCX source,
+`UCX_RNDV_PERF_DIFF` governs the rendezvous-vs-eager zero-copy protocol
+choice, NOT rail admission; the explicit lane filter is
+`UCX_MULTI_LANE_MAX_RATIO` (rejects lanes slower than the fastest by more
+than the ratio).
+
+**Verified knob inventory (this exact build: UCX 1.20.0 in HPC-X 2.25.1,
+via `ucx_info -c` on GAAS; note the login node needs
+`LD_LIBRARY_PATH=$HPCX/ucx/lib` prepended for ucx_info to run):**
+
+```text
+UCX_RNDV_PERF_DIFF=1.000        # rndv-vs-eager protocol choice (user-corrected semantics)
+UCX_MULTI_LANE_MAX_RATIO=4.000  # lane filter (rejects lanes >4x slower than fastest)
+UCX_MAX_RNDV_RAILS=2            # default; to be kept at 2 per user instruction
+UCX_MAX_RMA_RAILS=1
+UCX_MAX_EAGER_RAILS=1
+UCX_RNDV_SCHEME=auto
+UCX_MIN_RNDV_CHUNK_SIZE=16K
+```
+
+**Decisive finding — the 1→2-rail premise is refuted; the path is ALREADY
+2-rail.** Re-parsing the existing proto evidence specifically under the
+cuda-to-cuda ("data fetch into cuda/GPU0 **from cuda**") inter-node config
+tables shows 2-rail 50/50 selections for the large-message GDR zero-copy
+everywhere:
+
+- resweep ctrl (UCC, 6.3 ms @64 MiB): `130..inf | zero-copy read from
+  remote | 50% on rc_mlx5/mlx5_4 + 50% on rc_mlx5/mlx5_5` (per-destination
+  pairs on g16: mlx5_4+5, mlx5_8+4, mlx5_9+4);
+- ablation ctrl (no UCC, 29 ms @64 MiB): same 2-rail 50/50 pattern.
+
+**Correction to earlier sections:** the "single-rail zero-copy GDR
+selection" claims in the Phase B2 findings, anomaly-resweep verdicts, Case B
+closure, and UCC-ablation sections were based on mis-parsed proto rows
+(single-lane rows from eager/RMA/other-memtype tables, not the bcast data
+path). The correct reading: 2-rail 50/50 on all GDR data paths. Those
+sections' *performance* numbers and verdicts stand; only the rail-count
+attribution is superseded.
+
+**Implication:** no flag needs changing to obtain 2 rails — both
+`UCX_MAX_RNDV_RAILS=2` and the `MULTI_LANE_MAX_RATIO=4.0` filter already
+admit both rails. A "force 2 rails" experiment is a no-op by construction.
+Per the user's own decision tree ("if the rail test has no effect, proceed
+to a single UCX rendezvous/protocol-threshold test"), the evidence shortcut
+moves Case A directly to that stage.
+
+**What the A/B actually isolates (same UCC collective algorithm, same 2-rail
+selections, only the memory path differs):** GDR **zero-copy read-from-remote
+(get)** runs −2.5…−3× slower than staged `cuda_copy` + host frag. Surviving
+suspects: `UCX_RNDV_SCHEME=auto` chose *read/get* (forcing *put/write*
+changes the GDR DMA direction) and `UCX_MIN_RNDV_CHUNK_SIZE=16K` (per-chunk
+zcopy segmentation overhead reading GPU memory).
+
+**QUEUED NEXT EXPERIMENT (not executed; awaiting user decision at resume):**
+a rendezvous-scheme/chunk test on the normal UCC-enabled path, same
+structure as the resweep — pristine 3x4 pinned nodes, bcast cuda sweep +
+H H control, same-job GDR-on (ctrl) vs GDR-off (gdroff) A/B, full B2
+diagnostics with `UCX_PROTO_INFO=y`, in-job `ucx_info -c` capture per
+variant, `UCX_MAX_RNDV_RAILS=2` kept. Variant matrix proposal:
+V0 base (defaults) / V1 `UCX_RNDV_SCHEME=put` / V2
+`UCX_MIN_RNDV_CHUNK_SIZE=256K` (or 1M) / C gdroff staged control — one job.
+Open decision for the user: skip the literal rail test entirely
+(recommended — it is a no-op by construction) or run it once for the record.
+If neither V1 nor V2 moves the gap, Case A bottoms out as an inherent
+GDR-read-path behavior and gets recorded as such.
+
+**Node state at hand-off:** no strictly pristine trio existed at last probe
+(g14 fully held by job 61743; g13 acquired a second co-tenant 61740; only
+g16+g17 pristine). Probe `pbsnodes -aSj` before submission; the established
+pristine-first / minimal-occupancy-documented fallback policy applies.
+
+**Evidence for this probe:** existing
+`outputs/phase1-step1/step1_collb2_resweep_3x4bcast_pris_v1.o` and
+`step1_collb2_uccabl_3x4bcast_pris_v1.o` proto tables (cuda-to-cuda
+inter-node configs); live `ucx_info -c` output quoted above.
+
 **Case B closure (2026-09-10, user-confirmed): CLOSED for the host
 GPUDirect-RDMA track.** Rationale: the 3x1 allreduce-cuda @1 MiB anomaly is
 root-caused to UCC/TL_UCP's ≥1 MiB allreduce path — resweep reproduced it
