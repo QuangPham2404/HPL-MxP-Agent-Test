@@ -356,6 +356,92 @@ variable that no placement or affinity tuning can compensate for.
 - **Planned attempts:** `nsweep450k` .. `nsweep510k`; evidence under
   `outputs/` with attempt-specific names, never overwritten.
 
+### Experiment 5 — Host-contention mechanism investigation (N=250k, 3+3 jobs)
+
+- **Status:** planned, not executed (design recorded 2026-09-14).
+- **Purpose:** identify which host-side resource signals distinguish the
+  established slow co-tenant condition from the reproducible pristine
+  condition. This is a mechanism-screening experiment: it is intended to
+  rank DDR-memory, CPU scheduling, NUMA/remote-memory, PCIe/GPU, and fabric
+  hypotheses before any controlled synthetic co-tenant experiment.
+- **Design:** run three repeated pristine/busy pairs, for six total jobs:
+  `mech250k_pristine_r1..r3` and `mech250k_busy_r1..r3`. Submit the two arms
+  sequentially and alternate their order between repetitions to reduce
+  time-of-day and warm-up bias. The busy arm uses natural busy nodes rather
+  than launching an additional workload. Because the two arms use different
+  physical nodes, node identity remains a limitation; busy runs must retain
+  their per-node co-tenant composition and must not be pooled blindly when
+  those compositions differ.
+- **Fixed HPL-MxP configuration:** identical to the resource-allocation
+  experiments: 3 nodes x 4 GPUs, 12 ranks, `N=250000`, `NB=1024`, 3x4
+  row-major grid, `--gpu-affinity 0:1:2:3`, `--bind-to none`, the same
+  container/modules/launcher, `UCX_LOG_LEVEL=info`, `NCCL_DEBUG=INFO`,
+  `--skip-tests 1`, and the standard GPU-monitoring flags. Each chunk must
+  request `ngpus=4:ncpus=48:mem=1000GB`, with hosts pinned explicitly and the
+  granted host list asserted against the requested list.
+- **Node selection:** pristine nodes must have no foreign jobs and all
+  required CPU/GPU resources free immediately before submission; in-run
+  arrival or departure must still be recorded. Busy nodes must have at least
+  one foreign GPU-using job, at least four usable GPUs and 48 usable CPUs for
+  our chunk, and a known PBS resource vector. Record the foreign job IDs,
+  requested/assigned CPUs, GPUs, memory, node identity, queue/Qlist, and
+  pre-submission scheduler state for every node.
+- **Required static and dynamic evidence:** use dedicated mechanism-study
+  capture/sampler helpers so experiments 1-4 remain unchanged. Record:
+  - scheduler allocation, node state, co-tenant jobs/resources, queue/Qlist,
+    and PBS node/job metadata;
+  - CPU topology, cpusets, memory sets, cgroup paths and effective limits,
+    `cpu.stat`, `memory.current/max/events/stat`, NUMA memory statistics,
+    page faults, run-queue/load indicators, migrations, and CPU/memory
+    affinity for each local HPL process/rank;
+  - `/proc/stat`, `/proc/meminfo`, `/proc/vmstat`, PSI when available,
+    per-NUMA `numastat`, transparent-huge-page/VM state, and host memory
+    pressure;
+  - GPU UUIDs, PCI buses, GPU/CPU/NIC topology, NUMA association, PCIe
+    generation/width/replay/error state, clocks, power, temperature,
+    utilization, and memory use. Cgroup-visible GPU telemetry cannot directly
+    observe foreign GPUs, so scheduler evidence remains authoritative for
+    co-tenant GPU allocation;
+  - all IB port link/rate, transmit/receive, wait, discard, error, recovery,
+    and constraint counters, converted to per-interval deltas/rates, plus
+    UCX transport/rail and NCCL rail/plugin logs;
+  - direct read-only CPU/memory counters where GAAS permits them: first probe
+    `perf`, uncore IMC events, and `pcm-memory`; collect memory-controller
+    read/write bandwidth, LLC/cache activity, cycles, instructions, and stall
+    indicators when available. No tools are to be installed, and unavailable
+    counters must be recorded as unavailable rather than made fatal.
+- **Sampling:** retain pre-run, mid-run, and post-run snapshots and use an
+  approximately 2-second in-run interval for lightweight `/proc`, cgroup,
+  NUMA, IB, and GPU telemetry, subject to a preflight overhead check. Preserve
+  all raw PBS `.o`/`.e` files and per-node evidence with attempt-specific
+  names.
+- **Analysis:** compare busy versus pristine HPL total/per-GPU GFLOPS, LU,
+  solver, RNG, and matgen times, node/rank skew, GPU starvation, and
+  correctness. Retain the original baseline and include percentage change
+  against it, together with the busy/pristine ratio. Correlate phase-specific
+  degradation with node-level memory-bandwidth/LLC, CPU scheduling, NUMA,
+  PCIe/GPU, and IB deltas. Do not claim a specific mechanism unless its
+  signal repeats across the three pairs and aligns with the affected HPL
+  phase.
+- **Interpretation gates:** memory-controller bandwidth/LLC/remote-memory
+  signals aligned with RNG/matgen slowdown support host-memory contention;
+  PCIe/GPU-transfer or link-health signals aligned with LU/communication
+  slowdown support PCIe or staging contention; IB wait/discard/error or
+  extra co-tenant traffic supports fabric contention; CPU run-queue,
+  migration, or cgroup-throttling signals support CPU scheduling contention.
+  If degradation repeats without a distinguishing counter signature, retain
+  the result as unresolved and design a controlled synthetic co-tenant or
+  targeted bandwidth/PCIe probe rather than over-interpreting it.
+- **Acceptance criteria:** three correct pristine runs and three correct busy
+  runs, exact host-allocation verification for every job, complete pre/mid/
+  post evidence from all nodes, and no unexplained missing telemetry. Failed,
+  incomplete, or condition-changing attempts remain preserved and are not
+  counted as valid repetitions.
+- **Planned evidence paths:** `outputs/mech250k_*` PBS output and per-node
+  telemetry files; scripts will be added under `debug-scripts/` after this
+  design is reviewed. A later `N=480000` validation pair may be added after a
+  repeatable mechanism signal is identified.
+
 ## Analysis
 
 ### Experiment 4 results (2026-09-09) — final
