@@ -32,7 +32,9 @@ project-specific restrictions, but must not weaken the workflow pack.
 
 ## Project-specific automation permissions
 
-If this section is not filled, agents are to assume they can execute any commands to complete their specified jobs, adhering strictly to the workflow and its following restrictions.
+This section is intentionally explicit. The reusable workflow pack does not
+grant project-specific command authorization; an action not listed here still
+requires the user's direction and must satisfy the workflow pack.
 
 List only commands explicitly authorized for this project here. Include
 approved local commands, approved remote commands, command prefixes, paths,
@@ -47,6 +49,25 @@ Examples of information to define, only when approved:
 - permitted output retrieval commands;
 - commands that always require user approval;
 - commands that are prohibited.
+
+Currently authorized for documentation/setup work:
+
+- local read-only inspection with `pwd`, `rg`, `rg --files`, `sed`, `find`,
+  `wc`, `git status`, `git log`, and `git diff`;
+- local validation with `bash -n` for changed shell/PBS scripts and
+  `git diff --check` for reviewed changes;
+- creating designated project directories and documentation files locally;
+- read-only GAAS connection verification with `ssh -O check gaas`; and
+- non-interactive remote inspection only after the connection check, using
+  `ssh -o BatchMode=yes gaas` and staying inside the approved remote project
+  root.
+
+For future execution, the following require explicit user authorization in the
+current request: committing or pushing changes, remote `git pull`, module or
+package changes, PBS submission, scheduler monitoring beyond a bounded check,
+output retrieval, resource/launcher/transport changes, and any new tuning
+direction. Remote work must use the exact rules in `workflow/00-General-SSH-Rules.md`
+and the multinode gates in `workflow/08-Workflow-Multinode-Tuning.md`.
 
 The workflow pack does not grant permission to install packages, modify shared
 software, change source code, change resource policy, delete material, cancel
@@ -93,5 +114,13 @@ For analysis step in the workflow, always include: (1) the baseline from the bas
 Update on some new directories that might not be mention in the workflow package and structural changes on the project repo
 - `multi-node-test/` contains working model scripts for multinode launch of HPL, HPL-MxP, and HPCG. `multi-node-test/HPL-MxP` contains the script for launching multinode HPL-MxP
 - `experiments/3Nodes-4GPUs` and `planning/analysis/3Nodes-4GPUs` are directories dedicated to run and analyse HPL-MxP on 3 Nodes - 4 GPUs topology. Use this 2 directories whenever the experiements are ran on 3 nodes - 4 GPUs.
+- `experiments/3Nodes-4GPUs` is the canonical parent for new 3-node × 4-GPU
+  run families; each run belongs in a child experiment directory with its own
+  README, PBS script(s), and `outputs/`. Historical `experiments/3x4-*`
+  directories are preserved. `planning/analysis/3Nodes-4GPUs` is the matching
+  analysis area.
 - `planning/blueprint` is the directory for the general sweeping methodology for HPL-MxP on any hardware topology.
 - `planning/dependency-graph` details the dependency of flags with each other to help structure experiments and determine if resweeps are needed.
+- `workflow/08-Workflow-Multinode-Tuning.md` is the operational adapter for
+  multinode launch, evidence, authorization, and checkpoint rules; it does not
+  replace the general numbered workflow.

@@ -17,10 +17,20 @@ GPUs per node (12 GPUs total). The method also applies to other node counts,
 GPU counts, interconnects, CPU/NUMA layouts, and network topologies.
 
 This document is intentionally not a replacement for either the
-[tuning-parameter guide](../../../HPL_MxP_TuningParam_Guide.md) or the
-[dependency graph](../../dependency-graph/README.md). Consult those documents
+[tuning-parameter guide](../../HPL_MxP_TuningParam_Guide.md) or the
+[dependency graph](../dependency-graph/README.md). Consult those documents
 for detailed flag definitions and dependency evidence. Use this blueprint to
 decide and execute the next experiment.
+
+### Relationship to the repository workflow
+
+This blueprint supplies the optimization decision logic; it does not replace
+the numbered repository workflow. Use `workflow/07-Workflow.md` for the
+Step-2-to-Step-7 execution sequence, `workflow/08-Workflow-Multinode-Tuning.md`
+for the GAAS multinode launch contract, and the error/authorization files for
+their respective boundaries. A blueprint sweep proposal is not permission to
+submit a job. Creating or updating analysis conclusions still requires the
+general workflow's explicit `ANALYSE_RESULTS` authorization.
 
 ### The non-transfer rule
 
@@ -285,7 +295,7 @@ are only optional safe-to-check hypotheses. They are not the center or endpoint
 of the new sweep.
 
 Relevant dependencies include E01, E05, E07–E10, E14–E16, E18, E22–E24,
-E28, E34, and E36 in [edges.csv](../../dependency-graph/edges.csv).
+E28, E34, and E36 in [edges.csv](../dependency-graph/edges.csv).
 
 > These observations are prior knowledge and hypotheses only. The target topology must be evaluated independently.
 
@@ -976,8 +986,8 @@ for the human's final decision before proceeding. If the user chooses to
 proceed:
 
 1. Read the relevant entries in the
-   [dependency-graph README](../../dependency-graph/README.md) and
-   [edges.csv](../../dependency-graph/edges.csv). The agent need not reproduce
+   [dependency-graph README](../dependency-graph/README.md) and
+   [edges.csv](../dependency-graph/edges.csv). The agent need not reproduce
    or manually restate every edge.
 2. Ask and answer:
 
@@ -1086,10 +1096,10 @@ machine starts again at Phase 0 with this method, not with these values.
 This blueprint synthesizes the completed planning record while keeping old
 measurements separate from new-topology decisions:
 
-- [Optimization plans](../../PLANS.md)
-- [First consolidation](../../consolidate_1.md)
-- [Mechanism consolidation](../../consolidate_m1.md)
-- [Communication/scheduling consolidation](../../consolidate_m2.md)
+- [Optimization plans](../PLANS.md)
+- [First consolidation](../consolidate_1.md)
+- [Mechanism consolidation](../consolidate_m1.md)
+- [Communication/scheduling consolidation](../consolidate_m2.md)
 - Geometry analyses: [N](../n-sweep-370k-510k.md),
   [NB](../nb-sweep.md), and [coupled N/NB](../N-NB-resweep.md)
 - Decomposition and host analyses: [grid/order](../np-sweep.md),
@@ -1101,6 +1111,6 @@ measurements separate from new-topology decisions:
   [factorization/TRSM priority](../factorization-priority.md),
   [separate GEMM stream](../separate-stream-for-gemm.md), and
   [DGEMV host threading](../dgemv-with-multiple-threads.md)
-- [Dependency model](../../dependency-graph/README.md)
-- [Machine-readable dependency edges](../../dependency-graph/edges.csv)
-- [HPL-MxP tuning-parameter guide](../../../HPL_MxP_TuningParam_Guide.md)
+- [Dependency model](../dependency-graph/README.md)
+- [Machine-readable dependency edges](../dependency-graph/edges.csv)
+- [HPL-MxP tuning-parameter guide](../../HPL_MxP_TuningParam_Guide.md)

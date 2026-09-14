@@ -403,6 +403,8 @@ negative-result conditions, not the numbers.
     flatness, TRSM neutrality, register-step flatness, and DGEMV regressions
     are useful controls but are not universal constants.
 14. Any claimed gain near the measured noise floor should use same-node or
-    same-allocation bracketing/repetition, always report the original
-    `baseline-sweep_v1` value, and include percentage change from that original
-    baseline alongside the local control comparison.
+    same-allocation bracketing/repetition. For a new topology, always report
+    the immutable new-system original baseline as the percentage denominator
+    and include percentage change from the local control alongside it. The
+    historical `baseline-sweep_v1` value may be shown for context only; it is
+    not the denominator for the 3-node × 4-GPU campaign.

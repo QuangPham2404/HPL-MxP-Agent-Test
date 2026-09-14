@@ -29,6 +29,7 @@ Read in this order:
 6. `05-Workflow-Error-Patching-Procedures.md`
 7. `06-Workflow-Automation-and-Authorization.md`
 8. `07-Workflow.md`
+9. `08-Workflow-Multinode-Tuning.md`
 
 Also read the project root `AGENTS.md`, `APPLICATION.md`, and the latest
 progress report before acting. The project `AGENTS.md` identifies the active
@@ -130,4 +131,6 @@ instructions and the applicable workflow step.
 - `06-Workflow-Automation-and-Authorization.md`: routine authorization
   boundaries and project-specific permission handoff.
 - `07-Workflow.md`: the complete Step 1 through Step 7 workflow.
+- `08-Workflow-Multinode-Tuning.md`: GAAS multinode HPL-MxP launch, evidence,
+  authorization, and dependency-checkpoint adapter.
 - `clusters/`: optional cluster reference material, not mandatory reading.
