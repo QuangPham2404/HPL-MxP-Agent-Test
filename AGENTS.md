@@ -3,6 +3,20 @@
 This project uses the reusable Codex HPC Optimization Workflow Pack in
 `workflow/`.
 
+## Additional notes
+
+These two rules are active overrides: wherever they contradict any rule stated
+below them (including queue/group references in older instructions), these
+rules take precedence.
+
+1. **Job submission group:** from now on, all scripts use `hpc_ebslee`
+   instead of `hpc_admin` (PBS accounting group).
+2. **Queue scope for node selection:** when selecting clean nodes based on
+   user requirement, only the `gpu_as`, `gpu_ded`, and `gpu_free` queues are
+   available to choose from. Every queue not in this list is off-limits.
+   (Probe note, 2026-09-15: `gpu_free` is currently disabled; its successors
+   `gpu_free_normal`/`gpu_free_high` serve the same single node `g25`.)
+
 ## Required startup reading
 
 Before taking action, Codex must:
