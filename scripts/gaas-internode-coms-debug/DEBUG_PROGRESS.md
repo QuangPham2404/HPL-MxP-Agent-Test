@@ -649,3 +649,53 @@ the container Track 2.2 test, and optional UCC tuning as deferred follow-ups.
 records above; the detailed raw evidence remains under
 `outputs/phase1-step0/` and `outputs/phase1-step1/`.
 
+### Step 1 closure addendum — user-confirmed final conclusion and evidence reasoning (2026-09-16)
+
+**User-confirmed final OSU-CUDA conclusion: CUDA-aware MPI GPUDirect RDMA is
+proven working on the host path, for both P2P and tested collective
+traffic.** The remaining OSU-CUDA work concerns performance anomalies in
+particular collective paths, not basic confirmation of whether GPUDirect
+RDMA is functional.
+
+**Evidence chain (strongest proof = the P2P experiment):**
+
+- With default settings, `UCX_PROTO_INFO=y` reported **rendezvous zero-copy
+  read from remote** over `rc_mlx5` — the payload moves between GPU memory
+  and the InfiniBand fabric directly, which is GPUDirect RDMA (script
+  `debug-scripts/phase1-step1/run_phase1_step1_p2p_2x1.pbs:79-80`; output
+  `outputs/phase1-step1/step1_p2p_2x1_v1.o:50`).
+- With `UCX_IB_GPU_DIRECT_RDMA=n`, the protocol changed to CUDA-copy /
+  host-staging paths — the knob flipped the selected data path as designed.
+- GPU-to-GPU bandwidth and latency improved with GDR enabled (`D D` +25%
+  bandwidth @ 4 MiB; 10.15 vs 20.00 µs @ 8 B latency).
+- Host-to-host tests remained effectively unchanged — the negative control.
+
+**Collective-side equivalent evidence:** the clean 3×4 Case A output contains
+the same rendezvous zero-copy read-from-remote rows with 50/50 rail
+selection, while its GDR-off portion shows staging-related `cuda_copy` paths
+(output `outputs/phase1-step1/step1_collb2_resweep_3x4bcast_pris_v1.o:225`;
+test setup `debug-scripts/phase1-step1/run_phase1_step1_collb2_3x4.pbs:156-157`).
+
+**Roles of the three B2 diagnostics (confirmed):**
+
+1. `UCX_PROTO_INFO=y` — the direct evidence of the selected UCX data path.
+   Together with `UCX_LOG_LEVEL=info`, it shows zero-copy RDMA versus
+   CUDA/host staging.
+2. `--mca coll_base_verbose 100` — identifies the collective implementation
+   (UCC was selected in the normal B2 runs). It does not itself prove GDR.
+3. `--mca pml_base_verbose 10` — shows Open MPI selected the UCX PML. It
+   identifies the MPI point-to-point messaging layer but does not
+   independently prove GDR.
+
+**Qualifications carried with the closure:**
+
+- GPUDirect RDMA working does not mean every collective algorithm, message
+  size, or software path will perform well with it.
+- Case B's anomaly disappeared when UCC was excluded → associated with the
+  UCC collective path.
+- Case A still used the zero-copy GDR protocol but performed poorly → a
+  performance/algorithm/protocol issue, not failed GPUDirect RDMA.
+- `UCX_PROTO_INFO` reports UCX's selected protocol configuration; it is not
+  a packet-by-packet trace. The same-job GDR-on/GDR-off comparison and the
+  host-only (`H H`) control are what make the conclusion strong.
+

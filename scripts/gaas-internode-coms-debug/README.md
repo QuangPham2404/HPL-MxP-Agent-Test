@@ -371,3 +371,38 @@ dependency resolution, with no container mixing. All results, analysis, and
 evidence pointers are in `DEBUG_PROGRESS.md`; raw evidence is in
 `outputs/phase1-step0/` and `outputs/phase1-step1/`.
 
+**User-confirmed final OSU-CUDA conclusion (2026-09-16, closure addendum):**
+CUDA-aware MPI GPUDirect RDMA is **proven working on the host path, for both
+P2P and tested collective traffic**. The remaining OSU-CUDA work concerns
+performance anomalies in particular collective paths, not basic confirmation
+of whether GPUDirect RDMA is functional.
+
+- **Strongest proof — the P2P experiment:** with default settings,
+  `UCX_PROTO_INFO=y` reported rendezvous zero-copy read from remote over
+  `rc_mlx5`; with `UCX_IB_GPU_DIRECT_RDMA=n` the protocol changed to
+  CUDA-copy/host-staging paths; GPU-to-GPU bandwidth and latency improved
+  with GDR enabled; host-to-host tests stayed effectively unchanged
+  (negative control) (script
+  `debug-scripts/phase1-step1/run_phase1_step1_p2p_2x1.pbs:79-80`; output
+  `outputs/phase1-step1/step1_p2p_2x1_v1.o:50`).
+- **Collective-side equivalent evidence:** the clean 3×4 Case A output
+  contains the same rendezvous zero-copy read-from-remote rows with 50/50
+  rail selection, while its GDR-off portion shows staging-related
+  `cuda_copy` paths (output
+  `outputs/phase1-step1/step1_collb2_resweep_3x4bcast_pris_v1.o:225`; test
+  setup `debug-scripts/phase1-step1/run_phase1_step1_collb2_3x4.pbs:156-157`).
+- **Diagnostic roles:** `UCX_PROTO_INFO=y` is the direct evidence of the
+  selected UCX data path (with `UCX_LOG_LEVEL=info`, zero-copy RDMA vs
+  CUDA/host staging); `--mca coll_base_verbose 100` identifies the
+  collective implementation (UCC selected in normal B2 runs) but does not
+  itself prove GDR; `--mca pml_base_verbose 10` shows Open MPI selected the
+  UCX PML but does not independently prove GDR.
+- **Qualification:** working GPUDirect RDMA does not mean every collective
+  algorithm, message size, or software path performs well with it. Case B is
+  associated with the UCC collective path (anomaly disappeared when UCC was
+  excluded); Case A still used the zero-copy GDR protocol but performed
+  poorly — a performance/algorithm/protocol issue, not failed GPUDirect
+  RDMA. `UCX_PROTO_INFO` is a protocol-configuration report, not a
+  packet-by-packet trace; the same-job GDR-on/GDR-off comparison and the
+  host-only control are what make the conclusion strong.
+
