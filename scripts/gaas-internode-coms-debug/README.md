@@ -266,7 +266,7 @@ ablation"; script `run_phase1_step1_collb2_uccabl.pbs`.
 
 ---
 
-### Phase 1 — status and resume point (updated 2026-09-09, post-B2)
+### Phase 1 — status and resume point (updated 2026-09-16, OSU-CUDA closure)
 
 **Completed:**
 
@@ -312,11 +312,17 @@ ablation"; script `run_phase1_step1_collb2_uccabl.pbs`.
   setup is cleared for this case. Optional non-host-track follow-up:
   per-collective UCC tuning (blanket `coll ^ucc` ruled out). Full closure
   rationale in `DEBUG_PROGRESS.md` Phase B2 → "Case B closure".
+- **Phase 1 — Step 1 (`osu-cuda`): CLOSED as the current host CUDA-aware-MPI
+  investigation (2026-09-16, user-directed).** Host p2p GDR is proven, the
+  original collective catastrophe is reclassified as co-tenant contention,
+  and Case B is root-caused to UCC. Case A remains preserved as a deferred
+  host UCX follow-up; it is not being claimed as solved or discarded.
 
-**Pending (user decision required):**
+**Deferred follow-ups (not the immediate next step):**
 
-1. **Case A (3x4 bcast ≥8 MiB) — sole open host-track item; rail hypothesis
-   REFUTED, next experiment queued:** the 2026-09-10 follow-up probe (see
+1. **Case A (3x4 bcast ≥8 MiB) — deferred host-track item; rail hypothesis
+   REFUTED, UCX experiment retained for later:** the 2026-09-10 follow-up
+   probe (see
    `DEBUG_PROGRESS.md` Phase B2 → "Case A follow-up probe") verified the
    build's rail knobs (`UCX_MAX_RNDV_RAILS=2` default,
    `UCX_MULTI_LANE_MAX_RATIO=4.0` filter, `UCX_RNDV_PERF_DIFF=1.0` protocol
@@ -326,26 +332,42 @@ ablation"; script `run_phase1_step1_collb2_uccabl.pbs`.
    experiment: rendezvous-scheme/chunk test on the normal UCC-enabled path —
    V0 base / V1 `UCX_RNDV_SCHEME=put` / V2 `UCX_MIN_RNDV_CHUNK_SIZE=256K`
    (or 1M) / C gdroff control, same resweep structure, `UCX_MAX_RNDV_RAILS=2`
-   kept. Open decision: skip the literal rail test (recommended, no-op by
-   construction) or run it once for the record.
-2. **Track 2.2 (re-scoped):** minimal in-container HPL-MxP test on 3x4 —
+   kept. The literal rail test remains unnecessary because it is a no-op by
+   construction.
+2. **Track 2.2 (re-scoped, deferred):** minimal in-container HPL-MxP test on 3x4 —
    default vs `UCX_IB_GPU_DIRECT_RDMA=n` exported into the container +
    `NCCL_DEBUG=INFO` — looking for the bcast-shaped residual (known
    UCC-independent) on clean nodes; the 2026-09-03 probe found the
    in-container gdrdrv/GDR gap.
 3. *(Optional, non-host-track)* Case B UCC-side tuning: per-collective
    algorithm/threshold selection for allreduce ≥1 MiB.
-4. **Phase 1 test 2 — `nccl-tests` (NCCL path)**: still blocked on the missing
-   host `libnccl.so.2` (recorded 2026-09-03); NCCL path verification may
-   happen via Track 2.2 in-container instead.
+4. **Phase 1 test 2 — `nccl-tests` (NCCL path)** is now the immediate pivot,
+   with host-only scope. The existing host `all_reduce_perf` is still blocked
+   on missing `libnccl.so.2`; no NCCL job has been submitted yet.
+
+### Phase 1 — Step 1 closure and Step 2 pivot (2026-09-16)
+
+Phase 1 — Step 1 (`osu-cuda`) is closed for now. No more host OSU-CUDA
+collective experiments will be started in the immediate workflow. This is a
+scope closure, not a claim that every UCX/UCC behavior is fixed.
+
+- Closed evidence: host launch sanity, host p2p GPUDirect RDMA, clean-node
+  collective replication, anomaly resweep, and UCC ablation.
+- Case B is closed for the host-GDR track as UCC/TL_UCP-causal.
+- Case A is deferred with its evidence and queued UCX scheme/chunk idea
+  preserved for a later decision.
+- Phase 1 — Step 2 now starts with **host-only `nccl-tests`** so the NCCL
+  communication path can be evaluated separately from the paused OSU/UCX
+  branch. Container tests are intentionally excluded from this handoff.
+- The first Step 2 action is dependency resolution for host
+  `libnccl.so.2`; after that, begin with a small host `sendrecv` test and
+  record NCCL transport, HCA/rail, GDR status, and A/B behavior.
 
 **Resume point:** Phase 1 CUDA-aware-MPI GDR status consolidated post-B2:
-p2p GDR works; collective GDR healthy at 2x1/2x2 and mostly at 3x1/3x4;
-Phase B's catastrophe was co-tenant contamination; remaining host-stack
-suspects are the two residuals above, with UCC identified as the executing
-collective layer. Awaiting user instruction on pending items 1-3. All
-results, analysis, and evidence pointers are in `DEBUG_PROGRESS.md`; raw
-evidence in `outputs/phase1-step0/` and `outputs/phase1-step1/`.
-
-
+p2p GDR works; collective GDR is healthy in most clean cases; Phase B's
+catastrophe was co-tenant contamination; Case B is UCC-causal; and Case A is
+the deferred host UCX item. The immediate resume point is host-only NCCL
+dependency resolution, with no container mixing. All results, analysis, and
+evidence pointers are in `DEBUG_PROGRESS.md`; raw evidence is in
+`outputs/phase1-step0/` and `outputs/phase1-step1/`.
 

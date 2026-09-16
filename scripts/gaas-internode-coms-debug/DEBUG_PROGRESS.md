@@ -604,9 +604,48 @@ threshold selection for allreduce ≥1 MiB), recorded as an optional non-host-
 track follow-up. Blanket `--mca coll ^ucc` is ruled out as mitigation
 (3–4.6× degradation at 3x4). With this closure, **Case A (3x4 bcast ≥8 MiB)
 is the sole open host-track item**; the overall host-GDR certification is
-held open pending its resolution (suspect: UCX single-rail zero-copy
-selection, not the GDR infrastructure itself — see Phase A/B2/ablation
-evidence that the zero-copy path is healthy in every other configuration).
+held open pending its resolution. The later probe corrected the rail-count
+interpretation: the relevant path is already 2-rail 50/50. The remaining
+suspect is UCX GDR rendezvous/read-path behavior, not the GDR infrastructure
+itself (see Phase A/B2/ablation evidence that the zero-copy path is healthy
+in other configurations).
 
+## Phase 1 — Step 1 closure and pivot to Step 2 (2026-09-16) — OSU-CUDA HOST BRANCH CLOSED FOR NOW
 
+**User decision:** close Phase 1 — Step 1 (`osu-cuda`) as the current
+host-side CUDA-aware-MPI investigation and pivot to Phase 1 — Step 2,
+host-only `nccl-tests`. No further OSU-CUDA collective tuning is part of the
+immediate workflow. This is a scope closure for hand-off, not a claim that
+the remaining Case A behavior has been fixed.
+
+**Step 1 closure record:**
+
+- Step 0 host launch sanity passed (`59640.gaas`).
+- Host p2p GPUDirect RDMA passed (`59671.gaas`), with zero-copy protocol
+  evidence and clean H H negative controls.
+- The original 13–44× collective catastrophe was superseded by clean-node
+  B2 evidence and resource-allocation experiments: co-tenant host contention
+  was the dominant cause of that extreme result.
+- The two remaining B2 anomalies were repeated as mechanism, not noise.
+- Case B (3x1 CUDA allreduce at 1 MiB) was closed for the host-GDR track:
+  UCC/TL_UCP was causal and the anomaly disappeared under UCC ablation.
+- Case A (3x4 CUDA broadcast at ≥8 MiB) remains deferred. Its evidence is
+  retained, the earlier single-rail interpretation is corrected to a 2-rail
+  50/50 path, and the queued UCX scheme/chunk experiment is postponed.
+
+**Step 2 pivot:** the next debug branch is strictly host-side NCCL. The
+container is intentionally excluded so NCCL behavior can be evaluated without
+adding container integration variables. The existing host `all_reduce_perf`
+binary is known but cannot currently run because host `libnccl.so.2` is
+missing. No NCCL test job was submitted in this hand-off session.
+
+**Next hand-off action:** resolve or obtain an approved host NCCL library
+source, then prepare a small host `sendrecv` test before adding broadcast or
+larger NCCL coverage. Record NCCL backend, HCA/rail selection, GDR status,
+bandwidth/latency, and a default-versus-GDR-disabled comparison. Keep Case A,
+the container Track 2.2 test, and optional UCC tuning as deferred follow-ups.
+
+**Evidence:** this hand-off closes the current OSU-CUDA phase using the
+records above; the detailed raw evidence remains under
+`outputs/phase1-step0/` and `outputs/phase1-step1/`.
 
