@@ -94,5 +94,19 @@ HEAD`) into the PBS output and recorded per attempt below.
 
 ## Attempt log
 
-- `build_nccl_tests_host_v1` — (pending; record when run: PBS job ID, node,
-  source commit, binaries produced, smoke result, any error-patching)
+- `build_nccl_tests_host_v1` — PBS job `66850.gaas` (hpc-gaas-g10, 1× H200,
+  started 2026-09-17 00:16). **BUILD_OK**: all 9 perf binaries produced
+  (source commit `b4d5bee`, 2026-08-27); `ldd` resolves `libnccl.so.2` →
+  nvhpc 2.29.3, `libcudart.so.13`, `libmpi.so.40` (HPC-X). **Smoke HUNG**:
+  single-GPU `all_reduce_perf` produced no output for ~29 min until the PBS
+  walltime kill (`job killed: walltime 1888 exceeded limit 1800`). Evidence:
+  `outputs/build_nccl_tests_host_v1.{o,e}` (local copies byte-verified).
+  Suspected cause: unknown — buffered stdout hid all NCCL/app progress, so
+  the hang point (singleton `MPI_Init` vs CUDA init vs NCCL init/net) is
+  not localizable from v1 evidence. Track 1 instrumentation patch (the
+  build itself is healthy; the smoke's evidence capture was the defect):
+  v2 adds `NCCL_DEBUG_FILE=/dev/stderr` (line-buffered, kill-surviving)
+  with `NCCL_DEBUG_SUBSYS=ALL`, `timeout`-bounded phases, a standalone
+  singleton `osu_hello` MPI health phase, and default / `NCCL_IB_DISABLE=1`
+  / `NCCL_NET=Socket` arms to localize the hang. Rerun as
+  `build_nccl_tests_host_v2`.
