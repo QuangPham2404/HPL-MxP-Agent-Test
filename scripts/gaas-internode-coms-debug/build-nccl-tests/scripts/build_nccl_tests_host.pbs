@@ -1,0 +1,76 @@
+#!/bin/bash
+# Build + smoke: nccl-tests (host) — Phase 1 Step 2 support.
+#
+# Purpose: one PBS submission that (1) compiles nvidia/nccl-tests against
+# the site nvhpc/26.3 stack (CUDA 13.1, NCCL 2.29.3 from nvhpc comm_libs,
+# HPC-X 2.25.1 OpenMPI) with sm_90 (H200) codegen and (2) smoke-tests one
+# built binary on the job's single GPU. Build/smoke scripts, the source
+# tree, and all build evidence stay inside build-nccl-tests/ (see its
+# README.md); no outer directory is touched.
+#
+# Expected working directory: scripts/gaas-internode-coms-debug/build-nccl-tests/ on GAAS.
+# Inputs: nvidia/nccl-tests clone at nccl-tests/ (login-node clone);
+#         module nvhpc/26.3; 1 GPU for the smoke.
+# Outputs: PBS stdout/stderr to outputs/build_nccl_tests_host_v1.{o,e}
+#          (passed via -o/-e at submission); built binaries in
+#          nccl-tests/build/.
+# Design: fail-fast build (set -e inside the .sh); the smoke runs only
+#         after a successful build; both exit codes are echoed in the
+#         summary so a smoke failure never masks a build result (or vice
+#         versa). Attempt-specific output filenames come from the qsub
+#         -o/-e arguments, so retries never overwrite earlier evidence.
+# Submit (from this directory):
+#   mkdir -p outputs
+#   qsub -o outputs/build_nccl_tests_host_v1.o \
+#        -e outputs/build_nccl_tests_host_v1.e \
+#        scripts/build_nccl_tests_host.pbs
+# Assumptions: builds are forbidden on GAAS login nodes, hence the PBS job;
+#         explicit ncpus/mem in the select line (omitting them triggers the
+#         server-default cgroup OOM — resource-alloc job 60453 lesson);
+#         NCCL 2.29.3 is not in the module's LD_LIBRARY_PATH — the scripts
+#         add $NCCL_HOME/lib explicitly.
+
+#PBS -N build_nccltests
+#PBS -P hpc_ebslee
+#PBS -q gpu_as
+#PBS -l select=1:ngpus=1:ncpus=8:mem=64gb
+#PBS -l place=scatter
+#PBS -l walltime=00:30:00
+
+set -uo pipefail
+cd "$PBS_O_WORKDIR"
+
+echo "=== Build job metadata ==="
+echo "job_name=build_nccl_tests_host"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "host=$(hostname)"
+date --iso-8601=seconds
+
+module purge
+module load nvhpc/26.3
+
+echo "=== Module environment ==="
+echo "nvcc=$(command -v nvcc)"
+echo "mpicc=$(command -v mpicc)"
+echo "CUDA_HOME=${CUDA_HOME:-unset}"
+
+bash scripts/build_nccl_tests_host.sh
+BUILD_RC=$?
+
+if [ "$BUILD_RC" -eq 0 ]; then
+  bash scripts/smoke_nccl_tests.sh
+  SMOKE_RC=$?
+else
+  echo "SKIP: smoke (build failed)"
+  SMOKE_RC=skipped
+fi
+
+echo ""
+echo "=== Build job summary ==="
+echo "build_rc=$BUILD_RC"
+echo "smoke_rc=$SMOKE_RC"
+if [ "$BUILD_RC" -eq 0 ] && [ "$SMOKE_RC" -eq 0 ]; then
+  echo "BUILD_AND_SMOKE_OK"
+else
+  echo "BUILD_OR_SMOKE_FAILED"
+fi

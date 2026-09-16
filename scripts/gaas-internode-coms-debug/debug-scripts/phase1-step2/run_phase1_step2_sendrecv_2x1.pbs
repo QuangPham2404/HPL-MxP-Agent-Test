@@ -1,0 +1,223 @@
+#!/bin/bash
+# Phase 1 Step 2: host-only NCCL GPUDirect RDMA verification via
+# nccl-tests sendrecv_perf on 2 nodes x 1 GPU (the first NCCL experiment
+# of the debug; see scripts/gaas-internode-coms-debug/README.md, Phase 1
+# test 2). Binaries come from ../../build-nccl-tests/ (self-contained
+# build home); this script and its evidence stay in the phase1-step2
+# structure like every other step.
+#
+# Expected working directory: scripts/gaas-internode-coms-debug/debug-scripts/phase1-step2/ on GAAS.
+# Inputs: -v ATTEMPT=<full attempt label>,REQ_HOSTS=<host1+host2>;
+#         nodes pinned at submission via qsub -l select=host=... chunks
+#         (allocation-study shape: ngpus=4:ncpus=48:mem=1000GB per chunk;
+#         omitting ncpus/mem triggers the server-default cgroup OOM —
+#         resource-alloc job 60453); sendrecv_perf from
+#         ../../build-nccl-tests/nccl-tests/build/; host HPC-X 2.25.1 via
+#         module nvhpc/26.3; bridge multi-node-test/rsh_pbsdsh.sh;
+#         collb2_node_snapshot.sh helper reused from ../phase1-step1/.
+# Outputs: ../../outputs/phase1-step2/<ATTEMPT>.{o,e} (passed via -o/-e at
+#          submission) plus per-node evidence logs (nvtopo, lsmod
+#          peermem/gdrdrv, ibv devices) and clean-node checkpoints
+#          (pre/prectrl/mid1/mid2/post); hostfile_step2_sendrecv_2x1 in
+#          this directory.
+# Design: same-job three-arm A/B on the same nodes and placement:
+#           ctrl      — default NCCL (auto GPUDirect RDMA)
+#           gdroff    — NCCL_NET_GDR_LEVEL=LOC (never use GPUDirect RDMA;
+#                       verified 2.29.3 knob — NCCL_IB_GDR does not exist
+#                       in 2.29.3; see build-nccl-tests/README.md)
+#           sockfloor — NCCL_IB_DISABLE=1 (IB transport off; socket floor)
+#         Test: sendrecv_perf 8 B -> 64 MiB (factor 2), 1 GPU per rank
+#         (CUDA_VISIBLE_DEVICES=local rank), --bind-to none (matches
+#         HPL-MxP runs and the OSU precedent; affinity recorded, not
+#         controlled). NCCL_DEBUG=INFO +
+#         NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH in every arm; all
+#         NCCL_*/LD_LIBRARY_PATH vars forwarded with -x so both ranks
+#         provably see them (the ENV debug lines print
+#         "<param> set by environment to <value>" per rank).
+# Submit (from this directory, hosts from a live `pbsnodes -aSj` pristine
+#         check):
+#   qsub -N P1S2_SR_2X1 \
+#        -l "select=host=<h1>:ngpus=4:ncpus=48:mem=1000GB+host=<h2>:ngpus=4:ncpus=48:mem=1000GB" \
+#        -v "ATTEMPT=step2_sendrecv_2x1_v1,REQ_HOSTS=<h1>+<h2>" \
+#        -o ../../outputs/phase1-step2/step2_sendrecv_2x1_v1.o \
+#        -e ../../outputs/phase1-step2/step2_sendrecv_2x1_v1.e \
+#        run_phase1_step2_sendrecv_2x1.pbs
+# Assumptions: multi-node-test/rsh_pbsdsh.sh at repo root; launch flags
+#         follow multi-node-test/GAAS_MULTINODE_SETUP.md section 1.2;
+#         NCCL 2.29.3 lib reachable only via explicit LD_LIBRARY_PATH
+#         (forwarded with -x; the module does not add it).
+
+#PBS -N P1S2_SR_2X1
+#PBS -P hpc_ebslee
+#PBS -q gpu_as
+#PBS -l place=scatter
+#PBS -l walltime=00:30:00
+
+# Multi-arm A/B diagnostic: attempt every suite, capture each exit status,
+# then summarize. -e is intentionally omitted so one failed suite does not
+# hide the rest.
+set -uo pipefail
+
+cd "$PBS_O_WORKDIR"
+OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase1-step2"
+mkdir -p "$OUTDIR"
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
+SNAPSHOT="$PBS_O_WORKDIR/../phase1-step1/collb2_node_snapshot.sh"
+BNT="$REPO_ROOT/scripts/gaas-internode-coms-debug/build-nccl-tests"
+export SRBIN="$BNT/nccl-tests/build/sendrecv_perf"
+
+: "${ATTEMPT:?submit with -v ATTEMPT=<full attempt label, e.g. step2_sendrecv_2x1_v1>}"
+: "${REQ_HOSTS:?submit with -v REQ_HOSTS=<host1+host2>}"
+export LABEL="$ATTEMPT"
+
+module purge
+module load nvhpc/26.3
+chmod +x "$BRIDGE"
+
+NVHPC_ROOT="/usr/local/nvhpc/Linux_x86_64/26.3"
+export NCCL_HOME="$NVHPC_ROOT/comm_libs/nccl"
+export LD_LIBRARY_PATH="$NCCL_HOME/lib:${LD_LIBRARY_PATH:-}"
+export NCCL_DEBUG=INFO
+export NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH
+
+# --- Preflight (fatal: the experiment directly depends on these) ---
+[ -x "$SRBIN" ]    || { echo "FATAL: sendrecv_perf missing at $SRBIN (build it via build-nccl-tests first)" >&2; exit 1; }
+[ -f "$BRIDGE" ]   || { echo "FATAL: bridge missing at $BRIDGE" >&2; exit 1; }
+[ -f "$SNAPSHOT" ] || { echo "FATAL: snapshot helper missing at $SNAPSHOT" >&2; exit 1; }
+
+GPUS=1
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+[ "$NNODES" -eq 2 ] || { echo "FATAL: expected exactly 2 nodes, got $NNODES" >&2; exit 1; }
+
+# Host-pinning assertion: the scheduler must have granted exactly the
+# requested nodes (resource-alloc exp2 pattern).
+REQUESTED=$(printf '%s\n' "$REQ_HOSTS" | tr ',+' '\n\n' | sed 's/[[:space:]]//g' | grep -v '^$' | sort | paste -sd,)
+GRANTED=$(sort -u "$PBS_NODEFILE" | paste -sd,)
+if [ "$REQUESTED" != "$GRANTED" ]; then
+  echo "ERROR: granted nodes (${GRANTED}) != requested (${REQUESTED})" >&2
+  exit 1
+fi
+
+# De-duplicated hostfile with explicit per-node slot count (Blocker 8 pattern).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile_step2_sendrecv_2x1"
+
+echo "=== Phase 1 Step 2 (sendrecv 2x1) metadata ==="
+echo "debug_dir=scripts/gaas-internode-coms-debug"
+echo "attempt=$LABEL"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} rank(s) per node = ${NPROCS} ranks"
+echo "nodes=${GRANTED}"
+echo "req_hosts=${REQ_HOSTS}"
+echo "mpirun=$(command -v mpirun)"
+echo "sendrecv_bin=$SRBIN"
+echo "nccl_home=$NCCL_HOME"
+echo "nccl_lib=$NCCL_HOME/lib/libnccl.so.2 -> $(readlink -f "$NCCL_HOME/lib/libnccl.so.2")"
+echo "bridge=$BRIDGE"
+echo "binding=none (record-only evidence; matches HPL-MxP run conditions)"
+echo "ab_design=ctrl (default NCCL) vs gdroff (NCCL_NET_GDR_LEVEL=LOC) vs sockfloor (NCCL_IB_DISABLE=1), same job/nodes"
+echo "diagnostics=NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH"
+echo "sweep=8B..64MiB factor 2, -g 1, warmup 5, iters 20"
+echo "=== PBS_NODEFILE (raw) ==="
+cat "$PBS_NODEFILE"
+echo "=== hostfile ==="
+cat "$PWD/hostfile_step2_sendrecv_2x1"
+
+# Clean-node checkpoint helper (reused from Phase B2; once per node via
+# pbsdsh; lock dir guards against pbsdsh multi-firing). Scheduler-occupancy
+# snapshots immediately before submission and after completion are captured
+# outside the job.
+node_snapshot() {
+  local tag="$1"
+  local lockbase
+  lockbase="$PWD/.locks_${LABEL}_${tag}"
+  rm -rf "$lockbase"
+  mkdir -p "$lockbase"
+  echo "=== clean-node checkpoint: $tag (pbsdsh, once per node) ==="
+  /opt/pbs/bin/pbsdsh -- /bin/bash "$SNAPSHOT" "$OUTDIR" "$LABEL" "$tag" "$lockbase" \
+    || echo "WARN: checkpoint ${tag} returned nonzero; continuing"
+}
+
+# Canonical host-native launch base (GAAS_MULTINODE_SETUP.md 1.2). NCCL has
+# its own transport stack — no UCX/UCC diagnostics here; per-arm NCCL_* vars
+# are forwarded with -x per invocation so both nodes provably see them.
+MPICMD_BASE=(mpirun -np "$NPROCS"
+  --hostfile "$PWD/hostfile_step2_sendrecv_2x1"
+  --mca plm_rsh_agent "$BRIDGE"
+  --mca plm_rsh_no_tree_spawn 1
+  --mca plm_rsh_num_concurrent 1
+  --mca routed direct
+  --bind-to none)
+
+node_snapshot pre
+
+# --- Evidence: rank placement + GPU identity + affinity + NCCL env ---
+echo "=== Evidence: rank placement + GPU UUID + affinity + NCCL env ==="
+"${MPICMD_BASE[@]}" -x LD_LIBRARY_PATH -x NCCL_HOME bash -c '
+  export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK
+  echo "rank=$OMPI_COMM_WORLD_RANK/$OMPI_COMM_WORLD_SIZE host=$(hostname) localrank=$OMPI_COMM_WORLD_LOCAL_RANK cvd=${CUDA_VISIBLE_DEVICES:-unset} cpus_allowed=$(grep Cpus_allowed_list /proc/self/status | cut -f2) mems_allowed=$(grep Mems_allowed_list /proc/self/status | cut -f2)"
+  echo "  gpu_uuids=[$(nvidia-smi -L 2>/dev/null | tr "\n" ";")]"
+  echo "  nccl_env=[$(env | grep -E "^NCCL_" | sort | tr "\n" ";")]"
+  true'
+
+# --- Evidence: per-node nvtopo + GDR kernel modules + IB devices (to log files) ---
+echo "=== Evidence: nvtopo + peermem/gdrdrv lsmod + ibv devices per node (to log files) ==="
+"${MPICMD_BASE[@]}" -x OUTDIR -x LABEL bash -c '
+  if [ "$OMPI_COMM_WORLD_LOCAL_RANK" = "0" ]; then
+    nvidia-smi topo -m > "$OUTDIR/${LABEL}_nvtopo_$(hostname).log" 2>&1
+    { lsmod | grep -E "nvidia_peermem|peermem|gdrdrv" || echo "no peermem/gdrdrv modules matched"; } \
+      > "$OUTDIR/${LABEL}_lsmod_$(hostname).log" 2>&1
+    ibv_devices > "$OUTDIR/${LABEL}_ibvdev_$(hostname).log" 2>&1
+    echo "evidence_written host=$(hostname)"
+  fi; true'
+ls "$OUTDIR"/${LABEL}_nvtopo_* "$OUTDIR"/${LABEL}_lsmod_* "$OUTDIR"/${LABEL}_ibvdev_* >/dev/null 2>&1 \
+  || echo "WARN: per-node evidence files missing"
+
+# --- A/B/C suite: ctrl vs gdroff vs sockfloor, same nodes and placement ---
+FAILS=0
+TOTAL=0
+
+run_suite() {
+  # run_suite <mode: ctrl|gdroff|sockfloor> — one sendrecv sweep with the mode's NCCL env.
+  local mode="$1"
+  local -a xflags=()
+  local rc
+  case "$mode" in
+    gdroff)    export NCCL_NET_GDR_LEVEL=LOC; unset NCCL_IB_DISABLE;      xflags=(-x NCCL_NET_GDR_LEVEL) ;;
+    sockfloor) export NCCL_IB_DISABLE=1;      unset NCCL_NET_GDR_LEVEL;   xflags=(-x NCCL_IB_DISABLE) ;;
+    *)         unset NCCL_NET_GDR_LEVEL NCCL_IB_DISABLE ;;
+  esac
+  echo ""
+  echo "########## RUN: $mode (NCCL_NET_GDR_LEVEL=${NCCL_NET_GDR_LEVEL:-unset} NCCL_IB_DISABLE=${NCCL_IB_DISABLE:-unset}) ##########"
+  date --iso-8601=seconds
+
+  echo "=== [$mode] sendrecv_perf (8 B .. 64 MiB, factor 2, 1 GPU/rank) ==="
+  "${MPICMD_BASE[@]}" -x LD_LIBRARY_PATH -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x SRBIN "${xflags[@]}" \
+    bash -c 'export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK; exec "$SRBIN" -b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20'
+  rc=$?; TOTAL=$((TOTAL+1)); [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  echo "rc_${mode}_sendrecv=$rc"
+  return 0
+}
+
+node_snapshot prectrl
+run_suite ctrl
+node_snapshot mid1
+run_suite gdroff
+node_snapshot mid2
+run_suite sockfloor
+node_snapshot post
+
+echo ""
+echo "=== Phase 1 Step 2 (sendrecv 2x1) summary ==="
+echo "total_ab_tests=$TOTAL"
+echo "failed_ab_tests=$FAILS"
+if [ "$FAILS" -eq 0 ]; then
+  echo "STEP2_SENDRECV_2X1_RESULT=ALL_TESTS_COMPLETED"
+else
+  echo "STEP2_SENDRECV_2X1_RESULT=SOME_TESTS_FAILED"
+fi
+echo "=== ${LABEL} complete ==="
