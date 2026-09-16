@@ -11,13 +11,17 @@
 # v1 lesson (job 66850.gaas, see README.md attempt log): the build
 # succeeded but the smoke hung with zero output for ~29 min until the PBS
 # walltime kill — buffered stdout hid everything, so the hang point was
-# invisible. v2 fixes the capture and adds hang discrimination:
+# invisible. v2 fixed the capture and localized the hang: even standalone
+# `osu_hello` (pure MPI) hung, and no arm produced a single NCCL debug line
+# — standalone/singleton `MPI_Init` does not complete on GAAS compute nodes
+# (direct ssh to compute nodes is blocked; singleton bootstrap fails). v3
+# therefore launches every phase through `mpirun -np 1` (local fork, the
+# same launch mode every successful host MPI job here uses), keeping:
 #   - NCCL debug -> stderr via NCCL_DEBUG_FILE=/dev/stderr (line-buffered,
 #     survives a kill) with NCCL_DEBUG_SUBSYS=ALL;
-#   - every phase wrapped in `timeout` so the job never burns walltime;
-#   - phase 0 runs a standalone singleton osu_hello (HPC-X singleton
-#     MPI_Init health check, no NCCL/CUDA involved);
-#   - arms default / NCCL_IB_DISABLE=1 / NCCL_NET=Socket separate the IB
+#   - `timeout` bounds on every phase so the job never burns walltime;
+#   - phase 0 singleton-free MPI health check (mpirun-launched osu_hello);
+#   - arms default / NCCL_IB_DISABLE=1 / NCCL_NET=Socket separating the IB
 #     verbs path from the rest.
 # A completed arm proves the binary+stack run; a hung arm's stderr evidence
 # localizes the layer.
@@ -51,13 +55,17 @@ export NCCL_DEBUG_FILE=/dev/stderr
 HANGS=0
 
 run_arm() {
-  # run_arm <label> [VAR=value ...] — one timeout-bounded smoke arm.
+  # run_arm <label> [VAR=value ...] — one timeout-bounded smoke arm, launched
+  # via mpirun -np 1 (local fork; the singleton MPI_Init path hangs on GAAS
+  # compute nodes — see README.md attempt log v1/v2).
   local label="$1"; shift
   local rc
   echo ""
   echo "=== Smoke arm: $label (extra env: $*) ==="
   date --iso-8601=seconds
-  timeout 240 stdbuf -oL env "$@" \
+  timeout 240 mpirun -np 1 --bind-to none \
+    -x LD_LIBRARY_PATH -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x NCCL_DEBUG_FILE \
+    env "$@" \
     "$BUILD_DIR/all_reduce_perf" -b 8 -e 1048576 -f 16 -w 1 -n 2 -g 1
   rc=$?
   echo "arm_${label}_rc=$rc (124=timeout/hang)"
@@ -73,9 +81,9 @@ echo "nccl_debug=INFO subsys=ALL file=/dev/stderr"
 echo "--- libnccl resolution (ldd) ---"
 ldd "$BUILD_DIR/all_reduce_perf" | grep -E "nccl|cudart|mpi" || true
 
-echo "=== Phase 0: singleton MPI health (standalone osu_hello, no NCCL/CUDA) ==="
+echo "=== Phase 0: MPI health via mpirun (osu_hello, no NCCL/CUDA) ==="
 if [ -x "$OSU_DIR/osu_hello" ]; then
-  timeout 60 "$OSU_DIR/osu_hello"
+  timeout 90 mpirun -np 1 --bind-to none "$OSU_DIR/osu_hello"
   rc=$?
   echo "phase0_osu_hello_rc=$rc (124=timeout/hang)"
   [ "$rc" -ne 0 ] && HANGS=$((HANGS+1))

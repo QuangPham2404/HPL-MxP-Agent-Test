@@ -110,3 +110,26 @@ HEAD`) into the PBS output and recorded per attempt below.
   singleton `osu_hello` MPI health phase, and default / `NCCL_IB_DISABLE=1`
   / `NCCL_NET=Socket` arms to localize the hang. Rerun as
   `build_nccl_tests_host_v2`.
+- `build_nccl_tests_host_v2` — PBS job `66895.gaas` (hpc-gaas-g10,
+  2026-09-17 01:04, 13:41 walltime, exit marker `BUILD_OR_SMOKE_FAILED`).
+  **Build OK** (incremental no-op; binaries intact, source commit `b4d5bee`).
+  **Smoke: hang localized to the standalone/singleton MPI launch path — NOT
+  NCCL, NOT CUDA, NOT the build:**
+  - Phase 0 `osu_hello` (pure MPI, no NCCL/CUDA), executed directly without
+    `mpirun`, hung (`rc=124`, no hello output).
+  - All three `all_reduce_perf` arms (default / `NCCL_IB_DISABLE=1` /
+    `NCCL_NET=Socket`), executed directly without `mpirun`, hung (`rc=124`)
+    with **zero NCCL debug lines in stderr** (`NCCL_DEBUG_FILE=/dev/stderr`,
+    `NCCL_DEBUG_SUBSYS=ALL` active) — NCCL never started; the hang precedes
+    `ncclCommInit`, i.e. in `mpi_init` (nccl-tests' first call when built
+    with `MPI=1`).
+  - Both v1 and v2 ran on g10; direct ssh from the login node to compute
+    nodes is blocked on GAAS (verified: nested ssh returns rc=255), which
+    is consistent with the OpenMPI singleton `MPI_Init` path failing to
+    bootstrap a daemon on the compute node. Every successful host MPI job
+    in this debug ran through `mpirun` (+ pbsdsh bridge for multi-node).
+  Evidence: `outputs/build_nccl_tests_host_v2.{o,e}`. Track 1 fix (smoke
+  launch-pattern defect): v3 launches every phase through `mpirun -np 1`
+  (local fork; no singleton bootstrap path), keeping the timeout bounds,
+  stderr NCCL capture, and the three transport arms. Rerun as
+  `build_nccl_tests_host_v3`.
