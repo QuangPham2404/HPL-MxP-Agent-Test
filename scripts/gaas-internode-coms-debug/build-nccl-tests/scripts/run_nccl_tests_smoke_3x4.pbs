@@ -134,7 +134,11 @@ if timeout 600 mpirun -np "$NPROCS" \
         exit 1
       fi
       export CUDA_VISIBLE_DEVICES="$local_rank"
-      echo "rank=$rank/$world host=$(hostname) local_rank=$local_rank/$local_size CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES"
+      # nccl-tests defaults to cudaDev=localRank, which assumes every process
+      # sees all node GPUs; with one GPU visible per rank the index must be 0
+      # (v2 failure: "Invalid number of GPUs: N requested but only 1 found").
+      export NCCL_TESTS_DEVICE=0
+      echo "rank=$rank/$world host=$(hostname) local_rank=$local_rank/$local_size CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES NCCL_TESTS_DEVICE=$NCCL_TESTS_DEVICE"
       exec "$SRBIN" -b 1048576 -e 1048576 -g 1 -w 1 -n 2
     ' 2>&1 | tee "$NCCL_LOG"; then
   RUN_RC=0

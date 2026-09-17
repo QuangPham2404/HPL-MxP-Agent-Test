@@ -156,8 +156,24 @@ inconclusive even if the collective passes.
   nodes during the 2 s run. Patch (v2): the module load + `NCCL_HOME`/
   `LD_LIBRARY_PATH` exports moved before the tool preflight; retry submitted
   as `nccl_tests_3x4_smoke_v2` with new `.o`/`.e` names.
-- `nccl_tests_3x4_smoke_v2` — retry after the Track 1 patch (same pinned-node
-  selection, re-probed before submission).
+- `nccl_tests_3x4_smoke_v2` — PBS job `67417.gaas`, same pinned trio
+  (g01+g22+g20, same co-tenants; no new co-tenant entered during the 13 s
+  run). **FAILED at 13 s** (exit 5 from all_reduce_perf): all 12 ranks
+  launched and mapped correctly (3 nodes × 4 local ranks, per-rank
+  `CUDA_VISIBLE_DEVICES=local_rank`), but every rank with local_rank ≥ 1
+  aborted with `Invalid number of GPUs: {2,3,4} requested but only 1 were
+  found` + `Test failure common.cu:1545`. Root cause (read from the b4d5bee
+  source, `src/util.cu:770-782` / `src/common.cu:1658-1661`): nccl-tests
+  defaults to `cudaDev = localRank` when `NCCL_TESTS_DEVICE` is unset,
+  assuming each process sees all node GPUs; with one GPU visible per rank the
+  local-rank index is out of range. The 2x1/3x1 sendrecv runs never hit this
+  because they only ever had local_rank 0. Patch (v3): export
+  `NCCL_TESTS_DEVICE=0` per rank (the tool's own override) so each rank uses
+  its CVD-mapped device 0; per-rank GPU mapping and all other settings
+  unchanged. Evidence: `outputs/nccl_tests_3x4_smoke_v2.{o,e}` (preserved).
+- `nccl_tests_3x4_smoke_v3` — retry after the NCCL_TESTS_DEVICE patch
+  (node trio re-probed before submission; the v1/v2 trio was consumed by
+  other jobs after v2).
 
 ## Source provenance
 
