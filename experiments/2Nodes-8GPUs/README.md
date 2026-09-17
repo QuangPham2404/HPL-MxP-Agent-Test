@@ -60,6 +60,7 @@ per node, FP64 matrix in host RAM, N^2*8/2 bytes per node): ~700000-800000.
 
 | attempt | N | job id | queue | nodes | result | GFLOPS | per-GPU GFLOPS |
 |---|---|---|---|---|---|---|---|
+| 2x8-n-sweep_n500k_v1 | 500000 | 67383.gaas | gpu_ded | g01+g22 | PASSED (residual 3.06e-04), exit 0, walltime 00:02:04, mem ~996 GB/node | 2.9133e+06 | 1.8208e+05 |
 
 ## Runtime error-patching history
 
