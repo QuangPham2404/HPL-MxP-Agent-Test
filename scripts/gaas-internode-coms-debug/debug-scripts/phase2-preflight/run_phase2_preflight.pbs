@@ -37,6 +37,13 @@
 # Assumptions: the validated Approach-1 container launch path (modules,
 #          bridge, binds, -x env propagation) stays exactly as in
 #          multi-node-test/HPL-MxP/run_hplmxp_baseline.pbs.
+# v2 fixes (v1 = phase2_preflight_v1, job 67791.gaas, evidence preserved):
+#   - OSU search now recurses into /workspace/microbenchmarks/osu_mpi_tests
+#     (v1 only checked the dir itself and depth<=5 from /, missing the
+#     packaged binaries inside the subdirectory tree);
+#   - host GDR evidence is written by the remote command to the shared FS
+#     via /bin/bash (v1 used bare `bash` + a local redirect on pbsdsh, which
+#     captured nothing — pbsdsh task output does not return to the caller).
 
 #PBS -N P2_PREFLIGHT
 #PBS -P hpc_ebslee
@@ -144,6 +151,10 @@ apptainer exec --nv "$SIF" bash -c '
   ls -la /workspace/microbenchmarks/nccl_tests 2>&1
   echo "--- osu-like entries under /workspace (maxdepth 3) ---"
   timeout 60 find /workspace -maxdepth 3 -iname "*osu*" 2>/dev/null
+  echo "--- osu_mpi_tests recursive inventory (files, bounded) ---"
+  timeout 60 find /workspace/microbenchmarks/osu_mpi_tests -maxdepth 5 -type f 2>/dev/null | head -80
+  echo "--- osu_mpi_tests.sh runner (head) ---"
+  head -80 /workspace/microbenchmarks/osu_mpi_tests.sh 2>&1
   echo "--- osu-like entries under /opt and /usr/local (maxdepth 2) ---"
   timeout 60 find /opt /usr/local -maxdepth 2 -iname "*osu*" 2>/dev/null
 ' 2>&1 | tee "$INVENTORY_LOG"
@@ -158,15 +169,18 @@ apptainer exec --nv "$SIF" bash -c '
   done
   if [ -d "$NCCL_DIR" ]; then echo "tool_nccl_dir=PRESENT"; else echo "tool_nccl_dir=MISSING"; fi
   OSU_DIR=""
-  for d in /workspace/microbenchmarks/*osu* /workspace/*osu* /opt/*osu* /opt/hpcx/*osu* /usr/local/*osu*; do
-    [ -d "$d" ] || continue
-    if [ -x "$d/osu_bw" ]; then OSU_DIR="$d"; break; fi
-  done
+  # Primary: the packaged OSU suite under osu_mpi_tests (v1 defect: the search
+  # never looked inside this directory; binaries live in a subdirectory tree).
+  echo "--- all osu_bw paths under osu_mpi_tests ---"
+  timeout 60 find /workspace/microbenchmarks/osu_mpi_tests -type f -name osu_bw 2>/dev/null
+  hit=$(timeout 60 find /workspace/microbenchmarks/osu_mpi_tests -type f -name osu_bw 2>/dev/null | head -1)
+  if [ -n "$hit" ]; then OSU_DIR="$(dirname "$hit")"; fi
   if [ -z "$OSU_DIR" ]; then
-    hit=$(timeout 90 find / -maxdepth 5 -name osu_bw -print -quit 2>/dev/null)
+    hit=$(timeout 120 find / -maxdepth 6 -name osu_bw -print -quit 2>/dev/null)
     if [ -n "$hit" ]; then OSU_DIR="$(dirname "$hit")"; fi
   fi
   echo "tool_osu_dir=${OSU_DIR:-NOT_FOUND}"
+  if [ -n "$OSU_DIR" ]; then echo "tool_osu_bw_path=$OSU_DIR/osu_bw"; else echo "tool_osu_bw_path=none"; fi
   for b in osu_bw osu_latency osu_hello osu_allreduce osu_bcast; do
     if [ -n "$OSU_DIR" ] && [ -x "$OSU_DIR/$b" ]; then echo "tool_osu_${b}=FOUND"; else echo "tool_osu_${b}=MISSING"; fi
   done
@@ -292,23 +306,34 @@ echo "============================================================"
 idx=0
 for node in $(awk '{gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 != "" && !seen[$0]++) print}' "$PBS_NODEFILE"); do
   HOSTGDR_LOG="$OUTDIR/${ATTEMPT}_hostgdr_${node}.log"
+  rm -f "$HOSTGDR_LOG"
   echo "--- host GDR state: $node (vnode idx $idx) ---"
-  /opt/pbs/bin/pbsdsh -n "$idx" -- bash -c '
-    hostname
-    date --iso-8601=seconds
-    echo "--- lsmod GDR modules ---"
-    lsmod 2>/dev/null | grep -E "nvidia_peermem|nv_peer_mem|gdrdrv" || echo "(no peermem/gdrdrv module loaded)"
-    echo "--- /dev/gdrdrv ---"
-    ls -la /dev/gdrdrv 2>&1 || true
-    echo "--- /dev/infiniband (host view) ---"
-    ls /dev/infiniband/ 2>&1 || true
-    echo "--- host ibv_devices ---"
-    ibv_devices 2>&1 || true
-    echo "--- nvidia-smi topo -m ---"
-    nvidia-smi topo -m 2>&1 || true
-  ' > "$HOSTGDR_LOG" 2>&1
-  grep -E "^---|nvidia_peermem|gdrdrv|no peermem" "$HOSTGDR_LOG" | head -10
-  echo "host_gdr_log=$HOSTGDR_LOG"
+  # v1 defect fix: pbsdsh task output does not return to the caller's stdout
+  # (bare `bash` also failed to resolve), so the remote command writes its own
+  # log over the shared FS — the proven collb2_node_snapshot.sh pattern — via
+  # the full /bin/bash path.
+  /opt/pbs/bin/pbsdsh -n "$idx" -- /bin/bash -c "
+    {
+      hostname
+      date --iso-8601=seconds
+      echo '--- lsmod GDR modules ---'
+      lsmod 2>/dev/null | grep -E 'nvidia_peermem|nv_peer_mem|gdrdrv' || echo '(no peermem/gdrdrv module loaded)'
+      echo '--- /dev/gdrdrv ---'
+      ls -la /dev/gdrdrv 2>&1 || true
+      echo '--- /dev/infiniband (host view) ---'
+      ls /dev/infiniband/ 2>&1 || true
+      echo '--- host ibv_devices ---'
+      ibv_devices 2>&1 || true
+      echo '--- nvidia-smi topo -m ---'
+      nvidia-smi topo -m 2>&1 || true
+    } > '$HOSTGDR_LOG' 2>&1
+  " || echo "WARN: pbsdsh hostgdr launch returned nonzero for $node"
+  if [ -s "$HOSTGDR_LOG" ]; then
+    grep -E "^---|nvidia_peermem|gdrdrv|no peermem" "$HOSTGDR_LOG" | head -10
+    echo "host_gdr_log=$HOSTGDR_LOG"
+  else
+    echo "WARN: host GDR log empty for $node (evidence lost for this node)"
+  fi
   idx=$((idx+1))
 done
 

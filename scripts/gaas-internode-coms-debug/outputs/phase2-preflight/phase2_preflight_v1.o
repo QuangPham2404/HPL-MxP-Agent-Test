@@ -1,0 +1,430 @@
+=== Phase 2 Stage 1 (container/launch preflight) metadata ===
+attempt=phase2_preflight_v1
+pbs_job_id=67791.gaas
+2026-09-18T06:47:27+08:00
+expected_nodes=2 granted_nodes=2
+requested_hosts=hpc-gaas-g20+hpc-gaas-g22
+granted_hosts=hpc-gaas-g20+hpc-gaas-g22
+sif=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/multi-node-test/rsh_pbsdsh_container.sh
+modules=apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.2
+launcher=container /usr/local/mpi/bin/mpirun + rsh_pbsdsh_container.sh (Approach 1)
+gates: tooling (nccl-tests + osu-cuda-nvidia-alternative packaged), launch (bridge spawn + mapping + cross-node message flow)
+=== clean-node checkpoint: pre (pbsdsh, once per node) ===
+=== COLLB2_SNAPSHOT pre hpc-gaas-g20 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/outputs/phase2-preflight/phase2_preflight_v1_pre_hpc-gaas-g20.log ===
+=== COLLB2_SNAPSHOT pre hpc-gaas-g22 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/outputs/phase2-preflight/phase2_preflight_v1_pre_hpc-gaas-g22.log ===
+
+============================================================
+SECTION 1: SIF IMAGE IDENTITY
+============================================================
+-rwxr-xr-x 1 pham0094 1304617061 5307924480 May  6 06:07 /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+size=5307924480 bytes mtime=2026-05-06 06:07:56.408241441 +0800
+apptainer version 1.4.1
+--- apptainer inspect (labels) ---
+com.nvidia.build.id: {NVIDIA_BUILD_ID:-}
+com.nvidia.build.ref: 
+com.nvidia.cublas.version: 13.2.1.1
+com.nvidia.cublasmp.version: 0.7.0.125
+com.nvidia.cuda.version: 9.0
+com.nvidia.cudla.version: 13.1.1.006
+com.nvidia.cudnn.version: 9.17.1.4
+com.nvidia.cufft.version: 12.1.0.78
+com.nvidia.curand.version: 10.4.1.81
+com.nvidia.cusolver.version: 12.0.9.81
+com.nvidia.cusparse.version: 12.7.3.1
+com.nvidia.cusparselt.version: 0.8.1.1
+com.nvidia.nccl.version: 2.29.stable.20260109
+com.nvidia.npp.version: 13.0.3.3
+com.nvidia.nsightcompute.version: 2025.4.1.2
+com.nvidia.nsightsystems.version: 2025.6.1.190
+com.nvidia.nvjpeg.version: 13.0.3.75
+com.nvidia.nvvm.version: 13.1.115
+com.nvidia.tensorrt.version: 10.14.1.48+cuda13.0
+com.nvidia.tensorrtoss.version: 
+com.nvidia.volumes.needed: nvidia_driver
+org.label-schema.build-arch: amd64
+org.label-schema.build-date: Wednesday_6_May_2026_6:7:9_+08
+org.label-schema.schema-version: 1.0
+org.label-schema.usage.apptainer.version: 1.4.1
+org.label-schema.usage.singularity.deffile.bootstrap: docker
+org.label-schema.usage.singularity.deffile.from: nvcr.io/nvidia/hpc-benchmarks:26.02
+org.opencontainers.image.ref.name: ubuntu
+org.opencontainers.image.version: 24.04
+--- apptainer sif list (descriptors, head) ---
+------------------------------------------------------------------------------
+ID   |GROUP   |LINK    |SIF POSITION (start-end)  |TYPE
+------------------------------------------------------------------------------
+1    |1       |NONE    |32176-32237               |Def.FILE
+2    |1       |NONE    |32237-41475               |JSON.Generic
+3    |1       |NONE    |41475-44630               |JSON.Generic
+4    |1       |NONE    |45056-5307924480          |FS (Squashfs/*System/amd64)
+--- sha256 (guarded, optional) ---
+123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628  /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+
+============================================================
+SECTION 2: CONTAINER TOOLING INVENTORY (opening check)
+============================================================
+WARNING: group: unknown groupid 1304617061
+--- ls -la /workspace ---
+total 2
+-rw-r--r--  1 pham0094 1304617061  813 Feb 28  2026 hpc-benchmarks-gpu-env.sh
+drwxr-xr-x  4 pham0094 1304617061    0 Feb 28  2026 hpcg-linux-x86_64
+lrwxrwxrwx  1 pham0094 1304617061   25 Feb 28  2026 hpcg.sh -> hpcg-linux-x86_64/hpcg.sh
+drwxr-xr-x  4 pham0094 1304617061    0 Feb 28  2026 hpl-linux-x86_64
+drwxr-xr-x  3 pham0094 1304617061    0 Feb 28  2026 hpl-mxp-linux-x86_64
+lrwxrwxrwx  1 pham0094 1304617061   31 Feb 28  2026 hpl-mxp.sh -> hpl-mxp-linux-x86_64/hpl-mxp.sh
+lrwxrwxrwx  1 pham0094 1304617061   23 Feb 28  2026 hpl.sh -> hpl-linux-x86_64/hpl.sh
+drwxr-xr-x  4 pham0094 1304617061    0 Feb 28  2026 lib
+-rw-r--r--  1 pham0094 1304617061  467 Jan 10  2026 license.txt
+drwxr-xr-x  6 pham0094 1304617061    0 Feb 28  2026 microbenchmarks
+drwxr-xr-x 11 pham0094 1304617061    0 Feb 28  2026 source_code
+drwxr-xr-x  2 pham0094 1304617061    0 Feb 28  2026 stream-gpu-linux-x86_64
+lrwxrwxrwx  1 pham0094 1304617061   42 Feb 28  2026 stream-gpu-test.sh -> stream-gpu-linux-x86_64/stream-gpu-test.sh
+-rw-r--r--  1 pham0094 1304617061 1064 Feb 28  2026 third-party.txt
+--- ls -la /workspace/microbenchmarks ---
+total 21
+-rwxr-xr-x 1 pham0094 1304617061 2229 Feb 27  2026 binding.sh
+lrwxrwxrwx 1 pham0094 1304617061   27 Feb 28  2026 gemm_parse_results.sh -> gemm_tests/parse_results.sh
+drwxr-xr-x 2 pham0094 1304617061    0 Feb 28  2026 gemm_tests
+lrwxrwxrwx 1 pham0094 1304617061   24 Feb 28  2026 gemm_tests.sh -> gemm_tests/gemm_tests.sh
+drwxr-xr-x 2 pham0094 1304617061    0 Feb 28  2026 nccl_tests
+-rwxr-xr-x 1 pham0094 1304617061 3593 Feb 27  2026 nccl_tests.sh
+-rwxr-xr-x 1 pham0094 1304617061 2596 Feb 27  2026 nvshmem_device_tests.sh
+-rwxr-xr-x 1 pham0094 1304617061 2386 Feb 27  2026 nvshmem_host_tests.sh
+drwxr-xr-x 4 pham0094 1304617061    0 Feb 28  2026 nvshmem_tests
+drwxr-xr-x 3 pham0094 1304617061    0 Feb 28  2026 osu_mpi_tests
+-rwxr-xr-x 1 pham0094 1304617061 6961 Feb 27  2026 osu_mpi_tests.sh
+-rwxr-xr-x 1 pham0094 1304617061 4526 Feb 27  2026 run_benchmark.sh
+--- ls -la /workspace/microbenchmarks/nccl_tests ---
+total 0
+lrwxrwxrwx 1 pham0094 1304617061 30 Feb 28  2026 all_gather_perf -> /usr/local/bin/all_gather_perf
+lrwxrwxrwx 1 pham0094 1304617061 34 Feb 28  2026 all_gather_perf_mpi -> /usr/local/bin/all_gather_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 30 Feb 28  2026 all_reduce_perf -> /usr/local/bin/all_reduce_perf
+lrwxrwxrwx 1 pham0094 1304617061 34 Feb 28  2026 all_reduce_perf_mpi -> /usr/local/bin/all_reduce_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 28 Feb 28  2026 alltoall_perf -> /usr/local/bin/alltoall_perf
+lrwxrwxrwx 1 pham0094 1304617061 32 Feb 28  2026 alltoall_perf_mpi -> /usr/local/bin/alltoall_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 29 Feb 28  2026 broadcast_perf -> /usr/local/bin/broadcast_perf
+lrwxrwxrwx 1 pham0094 1304617061 33 Feb 28  2026 broadcast_perf_mpi -> /usr/local/bin/broadcast_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 26 Feb 28  2026 gather_perf -> /usr/local/bin/gather_perf
+lrwxrwxrwx 1 pham0094 1304617061 30 Feb 28  2026 gather_perf_mpi -> /usr/local/bin/gather_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 29 Feb 28  2026 hypercube_perf -> /usr/local/bin/hypercube_perf
+lrwxrwxrwx 1 pham0094 1304617061 33 Feb 28  2026 hypercube_perf_mpi -> /usr/local/bin/hypercube_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 26 Feb 28  2026 reduce_perf -> /usr/local/bin/reduce_perf
+lrwxrwxrwx 1 pham0094 1304617061 30 Feb 28  2026 reduce_perf_mpi -> /usr/local/bin/reduce_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 34 Feb 28  2026 reduce_scatter_perf -> /usr/local/bin/reduce_scatter_perf
+lrwxrwxrwx 1 pham0094 1304617061 38 Feb 28  2026 reduce_scatter_perf_mpi -> /usr/local/bin/reduce_scatter_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 27 Feb 28  2026 scatter_perf -> /usr/local/bin/scatter_perf
+lrwxrwxrwx 1 pham0094 1304617061 31 Feb 28  2026 scatter_perf_mpi -> /usr/local/bin/scatter_perf_mpi
+lrwxrwxrwx 1 pham0094 1304617061 28 Feb 28  2026 sendrecv_perf -> /usr/local/bin/sendrecv_perf
+lrwxrwxrwx 1 pham0094 1304617061 32 Feb 28  2026 sendrecv_perf_mpi -> /usr/local/bin/sendrecv_perf_mpi
+--- osu-like entries under /workspace (maxdepth 3) ---
+/workspace/microbenchmarks/osu_mpi_tests
+/workspace/microbenchmarks/osu_mpi_tests.sh
+/workspace/source_code/osu_mpi
+/workspace/source_code/osu_mpi/osu_mpi.tar.gz
+--- osu-like entries under /opt and /usr/local (maxdepth 2) ---
+inventory_exec_rc=0
+WARNING: group: unknown groupid 1304617061
+tool_nccl_sendrecv_perf=FOUND
+tool_nccl_broadcast_perf=FOUND
+tool_nccl_all_reduce_perf=FOUND
+tool_nccl_dir=PRESENT
+tool_osu_dir=NOT_FOUND
+tool_osu_osu_bw=MISSING
+tool_osu_osu_latency=MISSING
+tool_osu_osu_hello=MISSING
+tool_osu_osu_allreduce=MISSING
+tool_osu_osu_bcast=MISSING
+--- ldd all_reduce_perf (nccl/cuda linkage) ---
+	libverifiable.so.0 => not found
+	libcudart.so.13 => /usr/local/cuda/targets/x86_64-linux/lib/libcudart.so.13 (0x0000145e13600000)
+	libnccl.so.2 => /lib/x86_64-linux-gnu/libnccl.so.2 (0x0000145e07f33000)
+gate_exec_rc=0
+osu_bw --help skipped (osu_bw/osu_latency not found in container)
+tooling_inventory_nccl_tests_ok=1 (sendrecv_perf + broadcast_perf + all_reduce_perf)
+tooling_inventory_osu_ok=0 (osu_bw + osu_latency at: none)
+tooling_inventory_osu_cuda_evidence=0 (ldd libcuda/libcudart and/or --help cuda option)
+PHASE2_PREFLIGHT_TOOLING_GATE=FAIL
+
+============================================================
+SECTION 3: CONTAINER STACK VERSIONS
+============================================================
+WARNING: group: unknown groupid 1304617061
+--- nvidia-smi -L ---
+GPU 0: NVIDIA H200 (UUID: GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404)
+GPU 1: NVIDIA H200 (UUID: GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294)
+GPU 2: NVIDIA H200 (UUID: GPU-f70c775b-2f84-a567-767c-db349e8cacfa)
+GPU 3: NVIDIA H200 (UUID: GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f)
+--- nvidia-smi (driver/CUDA, head) ---
+Fri Sep 18 06:47:45 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.126.20             Driver Version: 580.126.20     CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H200                    Off |   00000000:9A:00.0 Off |                    0 |
+| N/A   31C    P0            113W /  700W |       0MiB / 143771MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA H200                    Off |   00000000:BB:00.0 Off |                    0 |
+| N/A   29C    P0             74W /  700W |       0MiB / 143771MiB |      0%      Default |
+|                                         |                        |             Disabled |
+--- container mpirun --version ---
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+--- ompi_info version ---
+Open MPI v4.1.9a1
+
+http://www.open-mpi.org/community/help/
+--- ompi_info cuda/ucx/gdr lines (CUDA-aware evidence) ---
+  Configure command line: '--prefix=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ompi' '--with-libevent=internal' '--enable-mpi1-compatibility' '--without-xpmem' '--with-cuda=/hpc/local/oss/cuda13.0.2' '--with-slurm' '--with-platform=contrib/platform/mellanox/optimized' '--with-hcoll=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/hcoll' '--with-ucx=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ucx' '--with-ucc=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ucc'
+          MPI extensions: affinity, cuda, pcollreq
+                 MCA btl: smcuda (MCA v2.1.0, API v3.1.0, Component v4.1.9)
+                MCA coll: cuda (MCA v2.1.0, API v2.0.0, Component v4.1.9)
+                 MCA osc: ucx (MCA v2.1.0, API v3.0.0, Component v4.1.9)
+                 MCA pml: ucx (MCA v2.1.0, API v2.0.0, Component v4.1.9)
+           MCA opal base: informational "opal_built_with_cuda_support" (current value: "true", data source: default, level: 4 tuner/basic, type: bool, synonyms: mpi_built_with_cuda_support)
+                          Whether CUDA GPU buffer support is built into library or not
+           MCA opal base: parameter "opal_cuda_support" (current value: "true", data source: default, level: 3 user/all, type: bool, synonyms: mpi_cuda_support)
+                          Whether CUDA GPU buffer support is enabled or not
+           MCA opal base: parameter "opal_warn_on_missing_libcuda" (current value: "false", data source: file (/opt/hpcx/ompi/etc/openmpi-mca-params.conf:83), level: 3 user/all, type: bool)
+                          Whether to print a message when CUDA support is enabled but libcuda is not found
+                          Valid values: Comma-delimited list of:  0x1:"send", 0x2:"put", 0x4:"get", 0x8:"inplace", 0x4000:"signaled", 0x8000:"atomics", 0x10000:"fetching-atomics", 0x20000:"static", 0x400:"cuda-put", 0x800:"cuda-get", 0x1000:"cuda-async-send", 0x2000:"cuda-async-recv", 0x200:"failover", 0x10:"need-ack", 0x20:"need-csum", 0x100:"hetero-rdma", 0x80000:"rdma-flush"
+            MCA btl self: parameter "btl_self_cuda_eager_limit" (current value: "0", data source: default, level: 5 tuner/detail, type: size_t)
+            MCA btl self: parameter "btl_self_cuda_rdma_limit" (current value: "18446744073709551615", data source: default, level: 5 tuner/detail, type: size_t)
+            MCA btl self: parameter "btl_self_cuda_max_send_size" (current value: "0", data source: default, level: 4 tuner/basic, type: size_t)
+                          Maximum size (in bytes) of a single GPU "phase 2" fragment of a long message when using the pipeline protocol (must be >= 1) (only valid on smcuda btl)
+          MCA btl smcuda: ---------------------------------------------------
+          MCA btl smcuda: parameter "btl_smcuda_min_size" (current value: "134217728", data source: default, level: 9 dev/all, type: unsigned_long)
+          MCA btl smcuda: parameter "btl_smcuda_free_list_num" (current value: "8", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_free_list_max" (current value: "-1", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_free_list_inc" (current value: "64", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_max_procs" (current value: "-1", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_fifo_size" (current value: "4096", data source: default, level: 4 tuner/basic, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_num_fifos" (current value: "1", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_fifo_lazy_free" (current value: "120", data source: default, level: 5 tuner/detail, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_sm_extra_procs" (current value: "0", data source: default, level: 9 dev/all, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_allocator" (current value: "bucket", data source: default, level: 9 dev/all, type: string)
+                          Name of allocator component to use for btl/smcuda allocations
+          MCA btl smcuda: parameter "btl_smcuda_use_cuda_ipc" (current value: "1", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_use_cuda_ipc_same_gpu" (current value: "1", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_cuda_ipc_verbose" (current value: "0", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_exclusivity" (current value: "65537", data source: default, level: 7 dev/basic, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_flags" (current value: "send", data source: default, level: 5 tuner/detail, type: unsigned_int)
+                          Valid values: Comma-delimited list of:  0x1:"send", 0x2:"put", 0x4:"get", 0x8:"inplace", 0x4000:"signaled", 0x8000:"atomics", 0x10000:"fetching-atomics", 0x20000:"static", 0x400:"cuda-put", 0x800:"cuda-get", 0x1000:"cuda-async-send", 0x2000:"cuda-async-recv", 0x200:"failover", 0x10:"need-ack", 0x20:"need-csum", 0x100:"hetero-rdma", 0x80000:"rdma-flush"
+          MCA btl smcuda: informational "btl_smcuda_atomic_flags" (current value: "", data source: default, level: 5 tuner/detail, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_rndv_eager_limit" (current value: "4096", data source: default, level: 4 tuner/basic, type: size_t)
+          MCA btl smcuda: parameter "btl_smcuda_eager_limit" (current value: "4096", data source: default, level: 4 tuner/basic, type: size_t)
+          MCA btl smcuda: parameter "btl_smcuda_cuda_eager_limit" (current value: "18446744073709551615", data source: default, level: 5 tuner/detail, type: size_t)
+          MCA btl smcuda: parameter "btl_smcuda_cuda_rdma_limit" (current value: "18446744073709551615", data source: default, level: 5 tuner/detail, type: size_t)
+--- ucx_info -v ---
+# Library version: 1.20.0
+# Library path: /opt/hpcx/ucx/bin/../lib/libucs.so.0
+# API headers version: 1.20.0
+# Git branch '', revision be940c1
+# Configured with: --disable-logging --disable-debug --disable-assertions --disable-params-check --enable-mt --without-knem --with-xpmem=/hpc/local/oss/xpmem/v2.7.1 --without-java --enable-devel-headers --with-fuse3-static --with-cuda=/hpc/local/oss/cuda13.0.2 --with-gdrcopy --prefix=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ucx/mt
+--- command locations ---
+/usr/local/ucx/bin/ucx_info
+/usr/local/mpi/bin/orted
+--- nvcc ---
+Cuda compilation tools, release 13.1, V13.1.115
+Build cuda_13.1.r13.1/compiler.37061995_0
+--- NCCL libraries (bounded find) ---
+/usr/lib/x86_64-linux-gnu/libnccl.so.2
+/usr/lib/x86_64-linux-gnu/libnccl.so.2.29.2
+--- relevant container environment ---
+CUDA_ARCH_LIST=7.5 8.0 8.6 9.0 10.0 12.0
+CUDA_COMPONENT_LIST=cccl crt nvrtc driver-dev culibos-dev cudart cudart-dev nvcc tileiras
+CUDA_DEVICE_ORDER=PCI_BUS_ID
+CUDA_DRIVER_VERSION=590.48.01
+CUDA_HOME=/usr/local/cuda-13.1
+CUDA_VERSION=13.1.1.006
+CUDA_VISIBLE_DEVICES=GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f,GPU-f70c775b-2f84-a567-767c-db349e8cacfa,GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294,GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404
+LD_LIBRARY_PATH=/usr/local/cuda/compat/lib.real:/usr/local/cuda/compat/lib.real:/usr/local/cuda/compat/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/.singularity.d/libs
+NCCL_VERSION=2.29.stable.20260109
+OMPI_ALLOW_RUN_AS_ROOT=1
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+OMPI_MCA_coll_hcoll_enable=0
+OMPI_MCA_pml=ucx
+PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/mpi/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ucx/bin:/opt/amazon/efa/bin
+--- NCCL single-rank version probe (all_reduce_perf -b 8 -e 8 -w 1 -n 2) ---
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [0] name=mlx5_0 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [1] name=mlx5_1 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [2] name=mlx5_2 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [3] name=mlx5_3 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [4] name=mlx5_4 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [5] name=mlx5_5 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [6] name=mlx5_8 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [7] name=mlx5_9 speed=400000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Made virtual device [8] name=mlx5_bond_0 speed=200000 ndevs=1
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.3<0>
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : GPU Direct RDMA (nvidia-peermem) enabled for HCA 0 'mlx5_0
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : GPU Direct RDMA (DMABUF) enabled for HCA 0 'mlx5_0
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : GPU Direct RDMA (nvidia-peermem) enabled for HCA 0 'mlx5_0
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : GPU Direct RDMA (DMABUF) enabled for HCA 0 'mlx5_0
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/SHARP : GPU Direct RDMA Enabled for HCA 0 'mlx5_0'
+hpc-gaas-g22:1252730:1252730 [0] NCCL INFO NET/IB : GPU Direct RDMA (nvidia-peermem) enabled for HCA 1 'mlx5_1
+nccl_version_probe_log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/outputs/phase2-preflight/phase2_preflight_v1_nccl_version_probe.log
+
+============================================================
+SECTION 4: CONTAINER RDMA DEVICE/LIBRARY ACCESS (mother node)
+============================================================
+WARNING: group: unknown groupid 1304617061
+--- /dev/infiniband ---
+total 0
+drwxr-xr-x  2 nobody nogroup      580 Sep 16 15:41 .
+drwxr-xr-x 23 nobody nogroup     4940 Sep 16 15:43 ..
+crw-------  1 nobody nogroup 231,  64 Sep 16 15:41 issm0
+crw-------  1 nobody nogroup 231,  65 Sep 16 15:41 issm1
+crw-------  1 nobody nogroup 231,  66 Sep 16 15:41 issm2
+crw-------  1 nobody nogroup 231,  67 Sep 16 15:41 issm3
+crw-------  1 nobody nogroup 231,  68 Sep 16 15:41 issm4
+crw-------  1 nobody nogroup 231,  69 Sep 16 15:41 issm5
+crw-------  1 nobody nogroup 231,  72 Sep 16 15:41 issm8
+crw-------  1 nobody nogroup 231,  73 Sep 16 15:41 issm9
+crw-rw-rw-  1 nobody nogroup  10, 118 Sep 16 15:41 rdma_cm
+crw-------  1 nobody nogroup 231,   0 Sep 16 15:41 umad0
+crw-------  1 nobody nogroup 231,   1 Sep 16 15:41 umad1
+crw-------  1 nobody nogroup 231,   2 Sep 16 15:41 umad2
+crw-------  1 nobody nogroup 231,   3 Sep 16 15:41 umad3
+crw-------  1 nobody nogroup 231,   4 Sep 16 15:41 umad4
+crw-------  1 nobody nogroup 231,   5 Sep 16 15:41 umad5
+crw-------  1 nobody nogroup 231,   6 Sep 16 15:41 umad6
+crw-------  1 nobody nogroup 231,   8 Sep 16 15:41 umad8
+crw-------  1 nobody nogroup 231,   9 Sep 16 15:41 umad9
+crw-rw-rw-  1 nobody nogroup 231, 192 Sep 16 15:40 uverbs0
+crw-rw-rw-  1 nobody nogroup 231, 193 Sep 16 15:40 uverbs1
+crw-rw-rw-  1 nobody nogroup 231, 194 Sep 16 15:40 uverbs2
+crw-rw-rw-  1 nobody nogroup 231, 195 Sep 16 15:40 uverbs3
+crw-rw-rw-  1 nobody nogroup 231, 196 Sep 16 15:40 uverbs4
+crw-rw-rw-  1 nobody nogroup 231, 197 Sep 16 15:40 uverbs5
+crw-rw-rw-  1 nobody nogroup 231, 198 Sep 16 15:41 uverbs6
+crw-rw-rw-  1 nobody nogroup 231, 200 Sep 16 15:40 uverbs8
+crw-rw-rw-  1 nobody nogroup 231, 201 Sep 16 15:40 uverbs9
+--- /sys/class/infiniband ---
+mlx5_0
+mlx5_1
+mlx5_2
+mlx5_3
+mlx5_4
+mlx5_5
+mlx5_8
+mlx5_9
+mlx5_bond_0
+--- ibv_devices ---
+    device          	   node GUID
+    ------          	----------------
+    mlx5_0          	605e650300752b74
+    mlx5_1          	605e650300752d18
+    mlx5_2          	605e650300752d28
+    mlx5_3          	605e650300752b88
+    mlx5_4          	605e650300752d80
+    mlx5_5          	605e650300752b7c
+    mlx5_8          	605e650300752cf4
+    mlx5_9          	605e650300752cfc
+    mlx5_bond_0     	d894240300bc526e
+--- verbs/ucx/nccl shared libraries (ldconfig) ---
+	libuct.so.0 (libc6,x86-64) => /opt/hpcx/ucx/lib/libuct.so.0
+	libuct.so (libc6,x86-64) => /opt/hpcx/ucx/lib/libuct.so
+	libucp.so.0 (libc6,x86-64) => /opt/hpcx/ucx/lib/libucp.so.0
+	libucp.so (libc6,x86-64) => /opt/hpcx/ucx/lib/libucp.so
+	libnccl_wrapper.so.0 (libc6,x86-64) => /opt/hpcx/clusterkit/lib/libnccl_wrapper.so.0
+	libnccl_wrapper.so (libc6,x86-64) => /opt/hpcx/clusterkit/lib/libnccl_wrapper.so
+	libnccl.so.2 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnccl.so.2
+	libnccl.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libnccl.so
+	libnccl-tuner-ofi.so (libc6,x86-64) => /opt/amazon/aws-ofi-nccl/lib/libnccl-tuner-ofi.so
+	libnccl-profiler-inspector.so.0 (libc6,x86-64) => /opt/hpcx/nccl_spectrum-x_plugin/lib/libnccl-profiler-inspector.so.0
+	libnccl-profiler-inspector.so (libc6,x86-64) => /opt/hpcx/nccl_spectrum-x_plugin/lib/libnccl-profiler-inspector.so
+	libnccl-net.so.0 (libc6,x86-64) => /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so.0
+	libnccl-net.so.0 (libc6,x86-64) => /opt/hpcx/nccl_spectrum-x_plugin/lib/libnccl-net.so.0
+	libnccl-net.so (libc6,x86-64) => /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+	libnccl-net.so (libc6,x86-64) => /opt/hpcx/nccl_spectrum-x_plugin/lib/libnccl-net.so
+	libnccl-net-ofi.so (libc6,x86-64) => /opt/amazon/aws-ofi-nccl/lib/libnccl-net-ofi.so
+	libibverbs.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libibverbs.so.1
+
+============================================================
+SECTION 5: HOST GDR MODULE STATE PER NODE (informational, no gate)
+============================================================
+--- host GDR state: hpc-gaas-g22 (vnode idx 0) ---
+host_gdr_log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/outputs/phase2-preflight/phase2_preflight_v1_hostgdr_hpc-gaas-g22.log
+--- host GDR state: hpc-gaas-g20 (vnode idx 1) ---
+host_gdr_log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/outputs/phase2-preflight/phase2_preflight_v1_hostgdr_hpc-gaas-g20.log
+
+============================================================
+SECTION 6: CONTAINER LAUNCH-PATH CHECK (2 nodes, Approach 1)
+============================================================
+--- hostfile ---
+hpc-gaas-g22 slots=1
+hpc-gaas-g20 slots=1
+--- rank spawn + mapping + per-rank device view (container mpirun via bridge) ---
+WARNING: group: unknown groupid 1304617061
+rsh_pbsdsh_container: HOST=hpc-gaas-g20 idx=1 cmd=[    OPAL_PREFIX=/opt/hpcx/ompi ; export OPAL_PREFIX;    PATH=/usr/local/mpi/bin:$PATH ; export PATH ; LD_LIBRARY_PATH=/usr/local/mpi/lib:${LD_LIBRARY_PATH:-} ; export LD_LIBRARY_PATH ; DYLD_LIBRARY_PATH=/usr/local/mpi/lib:${DYLD_LIBRARY_PATH:-} ; export DYLD_LIBRARY_PATH ;   /usr/local/mpi/bin/orted -mca ess "env" -mca ess_base_jobid "114098176" -mca ess_base_vpid 1 -mca ess_base_num_procs "2" -mca orte_node_regex "hpc-gaas-g[2:22,20]@0(2)" -mca orte_hnp_uri "114098176.0;tcp://10.20.0.3,172.16.2.150,192.168.230.28,172.17.0.1:49119" --mca plm_rsh_agent "/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/multi-node-test/rsh_pbsdsh_container.sh" --mca plm_rsh_no_tree_spawn "1" --mca plm_rsh_num_concurrent "1" --mca routed "direct" -mca plm "rsh" -mca coll_hcoll_enable "0" -mca pml "ucx" -mca hwloc_base_binding_policy "none" -mca pmix "^s1,s2,cray,isolated"]
+rank=0/2 host=hpc-gaas-g22 local_rank=0/1
+cvd=GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f,GPU-f70c775b-2f84-a567-767c-db349e8cacfa,GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294,GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404
+cpus_allowed=0-47 mems_allowed=0-1
+--- visible GPUs (rank view) ---
+rank=1/2 host=hpc-gaas-g20 local_rank=0/1
+cvd=GPU-b3cf9040-4fdc-ebcf-9d88-2613cf802f5b,GPU-279fc793-4587-a974-4f83-4052f284d64c,GPU-83501b5f-6b67-b028-78c7-100870d96f83,GPU-647458fd-7ac0-089b-7015-92aad946a187
+cpus_allowed=0-35,48-49,56-65 mems_allowed=0-1
+--- visible GPUs (rank view) ---
+GPU 0: NVIDIA H200 (UUID: GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404)
+GPU 1: NVIDIA H200 (UUID: GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294)
+GPU 2: NVIDIA H200 (UUID: GPU-f70c775b-2f84-a567-767c-db349e8cacfa)
+GPU 0: NVIDIA H200 (UUID: GPU-647458fd-7ac0-089b-7015-92aad946a187)
+GPU 3: NVIDIA H200 (UUID: GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f)
+GPU 1: NVIDIA H200 (UUID: GPU-83501b5f-6b67-b028-78c7-100870d96f83)
+--- /dev/infiniband (rank view) ---
+issm0  issm3  issm8    umad0  umad3  umad6  uverbs0  uverbs3  uverbs6
+issm1  issm4  issm9    umad1  umad4  umad8  uverbs1  uverbs4  uverbs8
+issm2  issm5  rdma_cm  umad2  umad5  umad9  uverbs2  uverbs5  uverbs9
+--- ibv_devices (rank view) ---
+GPU 2: NVIDIA H200 (UUID: GPU-279fc793-4587-a974-4f83-4052f284d64c)
+GPU 3: NVIDIA H200 (UUID: GPU-b3cf9040-4fdc-ebcf-9d88-2613cf802f5b)
+--- /dev/infiniband (rank view) ---
+    device          	   node GUID
+    ------          	----------------
+    mlx5_0          	605e650300752b74
+    mlx5_1          	605e650300752d18
+    mlx5_2          	605e650300752d28
+    mlx5_3          	605e650300752b88
+    mlx5_4          	605e650300752d80
+    mlx5_5          	605e650300752b7c
+    mlx5_8          	605e650300752cf4
+    mlx5_9          	605e650300752cfc
+    mlx5_bond_0     	d894240300bc526e
+issm0  issm3  issm7    umad0  umad3  umad6  uverbs0  uverbs3  uverbs6
+issm1  issm4  issm8    umad1  umad4  umad7  uverbs1  uverbs4  uverbs7
+issm2  issm5  rdma_cm  umad2  umad5  umad8  uverbs2  uverbs5  uverbs8
+--- ibv_devices (rank view) ---
+    device          	   node GUID
+    ------          	----------------
+    mlx5_0          	605e650300752fa8
+    mlx5_1          	605e650300752f5c
+    mlx5_2          	605e650300752f60
+    mlx5_3          	605e650300752f9c
+    mlx5_4          	605e650300752e90
+    mlx5_5          	605e650300752b30
+    mlx5_8          	605e6503007532bc
+    mlx5_9          	605e650300753168
+    mlx5_bond_0     	d894240300bc3efc
+container_spawn_mapping_rc=0 (124=timeout)
+spawn_rank_lines=2 spawn_distinct_hosts=2
+cross-node MPI message-flow test skipped (no usable OSU binary in container; spawn check above is the launch evidence)
+PHASE2_PREFLIGHT_LAUNCH_GATE=SPAWN_ONLY (no OSU binary for message-flow test)
+=== clean-node checkpoint: post (pbsdsh, once per node) ===
+=== COLLB2_SNAPSHOT post hpc-gaas-g22 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/outputs/phase2-preflight/phase2_preflight_v1_post_hpc-gaas-g22.log ===
+=== COLLB2_SNAPSHOT post hpc-gaas-g20 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/outputs/phase2-preflight/phase2_preflight_v1_post_hpc-gaas-g20.log ===
+
+============================================================
+SECTION 7: SUMMARY
+============================================================
+phase2_preflight_end=2026-09-18T06:48:07+08:00
+tooling_gate=FAIL launch_gate=SPAWN_ONLY
+PHASE2_PREFLIGHT_RESULT=ACTION_REQUIRED (tooling_gate=FAIL launch_gate=SPAWN_ONLY; stop and report per the agreed missing-tooling path)
