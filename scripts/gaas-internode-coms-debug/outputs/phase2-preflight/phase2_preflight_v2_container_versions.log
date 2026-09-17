@@ -1,0 +1,101 @@
+WARNING: group: unknown groupid 1304617061
+--- nvidia-smi -L ---
+GPU 0: NVIDIA H200 (UUID: GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404)
+GPU 1: NVIDIA H200 (UUID: GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294)
+GPU 2: NVIDIA H200 (UUID: GPU-f70c775b-2f84-a567-767c-db349e8cacfa)
+GPU 3: NVIDIA H200 (UUID: GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f)
+--- nvidia-smi (driver/CUDA, head) ---
+Fri Sep 18 06:50:54 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.126.20             Driver Version: 580.126.20     CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H200                    Off |   00000000:9A:00.0 Off |                    0 |
+| N/A   31C    P0            116W /  700W |       0MiB / 143771MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA H200                    Off |   00000000:BB:00.0 Off |                    0 |
+| N/A   29C    P0             75W /  700W |       0MiB / 143771MiB |      0%      Default |
+|                                         |                        |             Disabled |
+--- container mpirun --version ---
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+--- ompi_info version ---
+Open MPI v4.1.9a1
+
+http://www.open-mpi.org/community/help/
+--- ompi_info cuda/ucx/gdr lines (CUDA-aware evidence) ---
+  Configure command line: '--prefix=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ompi' '--with-libevent=internal' '--enable-mpi1-compatibility' '--without-xpmem' '--with-cuda=/hpc/local/oss/cuda13.0.2' '--with-slurm' '--with-platform=contrib/platform/mellanox/optimized' '--with-hcoll=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/hcoll' '--with-ucx=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ucx' '--with-ucc=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ucc'
+          MPI extensions: affinity, cuda, pcollreq
+                 MCA btl: smcuda (MCA v2.1.0, API v3.1.0, Component v4.1.9)
+                MCA coll: cuda (MCA v2.1.0, API v2.0.0, Component v4.1.9)
+                 MCA osc: ucx (MCA v2.1.0, API v3.0.0, Component v4.1.9)
+                 MCA pml: ucx (MCA v2.1.0, API v2.0.0, Component v4.1.9)
+           MCA opal base: informational "opal_built_with_cuda_support" (current value: "true", data source: default, level: 4 tuner/basic, type: bool, synonyms: mpi_built_with_cuda_support)
+                          Whether CUDA GPU buffer support is built into library or not
+           MCA opal base: parameter "opal_cuda_support" (current value: "true", data source: default, level: 3 user/all, type: bool, synonyms: mpi_cuda_support)
+                          Whether CUDA GPU buffer support is enabled or not
+           MCA opal base: parameter "opal_warn_on_missing_libcuda" (current value: "false", data source: file (/opt/hpcx/ompi/etc/openmpi-mca-params.conf:83), level: 3 user/all, type: bool)
+                          Whether to print a message when CUDA support is enabled but libcuda is not found
+                          Valid values: Comma-delimited list of:  0x1:"send", 0x2:"put", 0x4:"get", 0x8:"inplace", 0x4000:"signaled", 0x8000:"atomics", 0x10000:"fetching-atomics", 0x20000:"static", 0x400:"cuda-put", 0x800:"cuda-get", 0x1000:"cuda-async-send", 0x2000:"cuda-async-recv", 0x200:"failover", 0x10:"need-ack", 0x20:"need-csum", 0x100:"hetero-rdma", 0x80000:"rdma-flush"
+            MCA btl self: parameter "btl_self_cuda_eager_limit" (current value: "0", data source: default, level: 5 tuner/detail, type: size_t)
+            MCA btl self: parameter "btl_self_cuda_rdma_limit" (current value: "18446744073709551615", data source: default, level: 5 tuner/detail, type: size_t)
+            MCA btl self: parameter "btl_self_cuda_max_send_size" (current value: "0", data source: default, level: 4 tuner/basic, type: size_t)
+                          Maximum size (in bytes) of a single GPU "phase 2" fragment of a long message when using the pipeline protocol (must be >= 1) (only valid on smcuda btl)
+          MCA btl smcuda: ---------------------------------------------------
+          MCA btl smcuda: parameter "btl_smcuda_min_size" (current value: "134217728", data source: default, level: 9 dev/all, type: unsigned_long)
+          MCA btl smcuda: parameter "btl_smcuda_free_list_num" (current value: "8", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_free_list_max" (current value: "-1", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_free_list_inc" (current value: "64", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_max_procs" (current value: "-1", data source: default, level: 5 tuner/detail, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_fifo_size" (current value: "4096", data source: default, level: 4 tuner/basic, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_num_fifos" (current value: "1", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_fifo_lazy_free" (current value: "120", data source: default, level: 5 tuner/detail, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_sm_extra_procs" (current value: "0", data source: default, level: 9 dev/all, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_allocator" (current value: "bucket", data source: default, level: 9 dev/all, type: string)
+                          Name of allocator component to use for btl/smcuda allocations
+          MCA btl smcuda: parameter "btl_smcuda_use_cuda_ipc" (current value: "1", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_use_cuda_ipc_same_gpu" (current value: "1", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_cuda_ipc_verbose" (current value: "0", data source: default, level: 4 tuner/basic, type: int)
+          MCA btl smcuda: parameter "btl_smcuda_exclusivity" (current value: "65537", data source: default, level: 7 dev/basic, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_flags" (current value: "send", data source: default, level: 5 tuner/detail, type: unsigned_int)
+                          Valid values: Comma-delimited list of:  0x1:"send", 0x2:"put", 0x4:"get", 0x8:"inplace", 0x4000:"signaled", 0x8000:"atomics", 0x10000:"fetching-atomics", 0x20000:"static", 0x400:"cuda-put", 0x800:"cuda-get", 0x1000:"cuda-async-send", 0x2000:"cuda-async-recv", 0x200:"failover", 0x10:"need-ack", 0x20:"need-csum", 0x100:"hetero-rdma", 0x80000:"rdma-flush"
+          MCA btl smcuda: informational "btl_smcuda_atomic_flags" (current value: "", data source: default, level: 5 tuner/detail, type: unsigned_int)
+          MCA btl smcuda: parameter "btl_smcuda_rndv_eager_limit" (current value: "4096", data source: default, level: 4 tuner/basic, type: size_t)
+          MCA btl smcuda: parameter "btl_smcuda_eager_limit" (current value: "4096", data source: default, level: 4 tuner/basic, type: size_t)
+          MCA btl smcuda: parameter "btl_smcuda_cuda_eager_limit" (current value: "18446744073709551615", data source: default, level: 5 tuner/detail, type: size_t)
+          MCA btl smcuda: parameter "btl_smcuda_cuda_rdma_limit" (current value: "18446744073709551615", data source: default, level: 5 tuner/detail, type: size_t)
+--- ucx_info -v ---
+# Library version: 1.20.0
+# Library path: /opt/hpcx/ucx/bin/../lib/libucs.so.0
+# API headers version: 1.20.0
+# Git branch '', revision be940c1
+# Configured with: --disable-logging --disable-debug --disable-assertions --disable-params-check --enable-mt --without-knem --with-xpmem=/hpc/local/oss/xpmem/v2.7.1 --without-java --enable-devel-headers --with-fuse3-static --with-cuda=/hpc/local/oss/cuda13.0.2 --with-gdrcopy --prefix=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ucx/mt
+--- command locations ---
+/usr/local/ucx/bin/ucx_info
+/usr/local/mpi/bin/orted
+--- nvcc ---
+Cuda compilation tools, release 13.1, V13.1.115
+Build cuda_13.1.r13.1/compiler.37061995_0
+--- NCCL libraries (bounded find) ---
+/usr/lib/x86_64-linux-gnu/libnccl.so.2
+/usr/lib/x86_64-linux-gnu/libnccl.so.2.29.2
+--- relevant container environment ---
+CUDA_ARCH_LIST=7.5 8.0 8.6 9.0 10.0 12.0
+CUDA_COMPONENT_LIST=cccl crt nvrtc driver-dev culibos-dev cudart cudart-dev nvcc tileiras
+CUDA_DEVICE_ORDER=PCI_BUS_ID
+CUDA_DRIVER_VERSION=590.48.01
+CUDA_HOME=/usr/local/cuda-13.1
+CUDA_VERSION=13.1.1.006
+CUDA_VISIBLE_DEVICES=GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f,GPU-f70c775b-2f84-a567-767c-db349e8cacfa,GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294,GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404
+LD_LIBRARY_PATH=/usr/local/cuda/compat/lib.real:/usr/local/cuda/compat/lib.real:/usr/local/cuda/compat/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/.singularity.d/libs
+NCCL_VERSION=2.29.stable.20260109
+OMPI_ALLOW_RUN_AS_ROOT=1
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+OMPI_MCA_coll_hcoll_enable=0
+OMPI_MCA_pml=ucx
+PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/mpi/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ucx/bin:/opt/amazon/efa/bin

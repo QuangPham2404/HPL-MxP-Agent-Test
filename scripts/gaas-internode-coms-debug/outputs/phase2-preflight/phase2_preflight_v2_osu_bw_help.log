@@ -1,0 +1,40 @@
+WARNING: group: unknown groupid 1304617061
+Usage: osu_bw [options]
+Options:
+  -h, --help                print this help
+  -v, --version             print version info
+  -m, --message-size        [MIN:]MAX - set the minimum and/or the maximum message size to MIN and/or MAX
+                            bytes respectively. Examples:
+                            -m 128      // min = default, max = 128
+                            -m 2:128    // min = 2, max = 128
+                            -m 2:       // min = 2, max = default
+  -x, --warmup              ITER - set number of warmup
+                            iterations to skip before timing (default 200)
+  -i, --iterations          ITER - number of iterations for timing (default 10000)
+  -t, --num-test-calls      Non-blocking collectives-> CALLS - set the number of MPI_Test() calls during the dummy computation,
+                            set CALLS to 100, 1000, or any number > 0.
+                            Multi-Threaded/Process-> SEND:[RECV] - set the sender and receiver number of threads/processes(t/p)
+                            min: 1 default: (receiver t/p: 2 sender t/p: 1), max: 128.
+                            Examples:
+                            -t 4        // receiver t/p = 4 and sender t/p = 1
+                            -t 4:6      // sender t/p = 4 and receiver t/p = 6
+                            -t 2:       // not defined
+  -W, --window-size         SIZE - set number of messages to send before synchronization (default 64)
+  -b, --buffer-num          Use different buffers to perform data transfer (default single)
+                            Options: single, multiple
+  -c, --validation          [log:<dir>]Enable validation. Disabled by default.
+                            Results are logged into <dir> by passing "log"
+  -u, --validation-warmup   ITR Set number of warmup iterations to skip before timing when validationis enabled (default 5)
+  -G, --graph               [tty,png,pdf] - graph output of per iteration values.
+  -D, --ddt                 [TYPE]:[ARGS] - Enable DDT support
+                            -D cont                          //Contiguous
+                            -D vect:[stride]:[block_length]  //Vector
+                            -D indx:[ddt file path]          //Index
+  -P, --papi                [EVENTS]:[PATH] - Enable PAPI support. OMB must be configured with CUDA support.
+                            [EVENTS]       //Comma seperated list of PAPI events
+                            [PATH]         //PAPI output file path
+  -T, --type                [all,mpi_char,mpi_int,mpi_float] - Set MPI_TYPE . Default:MPI_CHAR. Reduction defaults: MPI_INT
+  -I, --session             Enable session based MPI initialization.
+  -z, --tail-lat            Print tail latencies.
+                            -z Outputs P99, P90, P50 percentiles
+                            -z<1-99,1-99,1-99..> Comma seperated percentile range

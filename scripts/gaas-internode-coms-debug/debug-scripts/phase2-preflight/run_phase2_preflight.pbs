@@ -23,7 +23,13 @@
 #      -> LAUNCH_GATE
 #
 # Gates:
-#   PHASE2_PREFLIGHT_TOOLING_GATE  = PASS | FAIL   (both packages complete)
+#   PHASE2_PREFLIGHT_TOOLING_GATE  = PASS | PARTIAL | FAIL
+#     PASS   = nccl-tests complete AND a CUDA-capable osu_bw + osu_latency
+#              pair found in the container (CUDA decided by ldd linkage).
+#     PARTIAL = nccl-tests complete but no CUDA-capable OSU anywhere
+#              (Stage 2's D D arm blocked — stop and report per the agreed
+#              missing-tooling path).
+#     FAIL   = nccl-tests incomplete.
 #   PHASE2_PREFLIGHT_LAUNCH_GATE   = PASS | SPAWN_ONLY | FAIL
 #   PHASE2_PREFLIGHT_RESULT        = PASS | ACTION_REQUIRED
 #   Job exits 0 only when TOOLING_GATE=PASS and LAUNCH_GATE=PASS; any other
@@ -44,6 +50,15 @@
 #   - host GDR evidence is written by the remote command to the shared FS
 #     via /bin/bash (v1 used bare `bash` + a local redirect on pbsdsh, which
 #     captured nothing — pbsdsh task output does not return to the caller).
+# v3 fixes (v2 = phase2_preflight_v2, job 67793.gaas, evidence preserved):
+#   - unrestricted whole-container osu search (v2's depth-6 cap missed
+#     deeper candidates, e.g. /opt/hpcx/ompi/tests/... at depth 7);
+#   - CUDA capability is decided by ldd linkage (libcudart/libcuda) per
+#     found osu_bw — v2's --help grep false-positived on the generic PAPI
+#     help text ("OMB must be configured with CUDA support"), so the v2
+#     TOOLING_GATE=PASS overstated: the /workspace osu_mpi_tests package
+#     (OMB 7.x) has no CUDA linkage. The gate now requires a CUDA-capable
+#     osu_bw + osu_latency pair somewhere in the container.
 
 #PBS -N P2_PREFLIGHT
 #PBS -P hpc_ebslee
@@ -168,25 +183,35 @@ apptainer exec --nv "$SIF" bash -c '
     if [ -x "$NCCL_DIR/$b" ]; then echo "tool_nccl_${b}=FOUND"; else echo "tool_nccl_${b}=MISSING"; fi
   done
   if [ -d "$NCCL_DIR" ]; then echo "tool_nccl_dir=PRESENT"; else echo "tool_nccl_dir=MISSING"; fi
-  OSU_DIR=""
-  # Primary: the packaged OSU suite under osu_mpi_tests (v1 defect: the search
-  # never looked inside this directory; binaries live in a subdirectory tree).
-  echo "--- all osu_bw paths under osu_mpi_tests ---"
-  timeout 60 find /workspace/microbenchmarks/osu_mpi_tests -type f -name osu_bw 2>/dev/null
-  hit=$(timeout 60 find /workspace/microbenchmarks/osu_mpi_tests -type f -name osu_bw 2>/dev/null | head -1)
-  if [ -n "$hit" ]; then OSU_DIR="$(dirname "$hit")"; fi
-  if [ -z "$OSU_DIR" ]; then
-    hit=$(timeout 120 find / -maxdepth 6 -name osu_bw -print -quit 2>/dev/null)
-    if [ -n "$hit" ]; then OSU_DIR="$(dirname "$hit")"; fi
-  fi
-  echo "tool_osu_dir=${OSU_DIR:-NOT_FOUND}"
-  if [ -n "$OSU_DIR" ]; then echo "tool_osu_bw_path=$OSU_DIR/osu_bw"; else echo "tool_osu_bw_path=none"; fi
-  for b in osu_bw osu_latency osu_hello osu_allreduce osu_bcast; do
-    if [ -n "$OSU_DIR" ] && [ -x "$OSU_DIR/$b" ]; then echo "tool_osu_${b}=FOUND"; else echo "tool_osu_${b}=MISSING"; fi
+  echo "--- unrestricted osu / cuda-nvidia search (whole container, one pass) ---"
+  OSU_BW_LIST=$(timeout 300 find / \( -name "osu_bw" -o -type d -iname "*osu*" -o -iname "*cuda-nvidia*" \) -not -path "/proc/*" -not -path "/sys/*" -not -path "/dev/*" 2>/dev/null | head -60)
+  echo "$OSU_BW_LIST"
+  echo "--- /opt/hpcx/ompi/tests ---"
+  ls -la /opt/hpcx/ompi/tests/ 2>&1 || echo "no /opt/hpcx/ompi/tests"
+  # Evaluate every osu_bw found anywhere: version + linkage. CUDA capability
+  # is decided by ldd (libcudart/libcuda), NOT by help text.
+  OSU_MSGFLOW_DIR=""
+  OSU_CUDA_DIR=""
+  for wb in $(printf "%s\n" "$OSU_BW_LIST" | grep "/osu_bw$" | head -20); do
+    d=$(dirname "$wb")
+    echo "--- osu_bw candidate: $d ---"
+    "$wb" --version 2>&1 | head -3 || true
+    LDD_OUT=$(ldd "$wb" 2>&1)
+    echo "$LDD_OUT" | grep -iE "libcudart|libcuda|libmpi|not found" || echo "(no cuda/mpi lines in ldd output)"
+    if [ -z "$OSU_MSGFLOW_DIR" ]; then OSU_MSGFLOW_DIR="$d"; fi
+    if [ -z "$OSU_CUDA_DIR" ] && echo "$LDD_OUT" | grep -qiE "libcudart|libcuda"; then
+      OSU_CUDA_DIR="$d"
+    fi
   done
-  if [ -n "$OSU_DIR" ] && [ -x "$OSU_DIR/osu_bw" ]; then
-    echo "--- ldd osu_bw (cuda/mpi linkage) ---"
-    ldd "$OSU_DIR/osu_bw" 2>&1 | grep -iE "cuda|mpi|not found" || echo "(no cuda/mpi lines in ldd output)"
+  echo "tool_osu_msgflow_dir=${OSU_MSGFLOW_DIR:-NOT_FOUND}"
+  echo "tool_osu_cuda_dir=${OSU_CUDA_DIR:-NOT_FOUND}"
+  if [ -n "$OSU_CUDA_DIR" ]; then
+    for b in osu_bw osu_latency; do
+      if [ -x "$OSU_CUDA_DIR/$b" ]; then echo "tool_osu_cuda_${b}=FOUND"; else echo "tool_osu_cuda_${b}=MISSING"; fi
+    done
+  else
+    echo "tool_osu_cuda_osu_bw=MISSING"
+    echo "tool_osu_cuda_osu_latency=MISSING"
   fi
   if [ -d "$NCCL_DIR" ] && [ -x "$NCCL_DIR/all_reduce_perf" ]; then
     echo "--- ldd all_reduce_perf (nccl/cuda linkage) ---"
@@ -195,44 +220,39 @@ apptainer exec --nv "$SIF" bash -c '
 ' 2>&1 | tee "$GATE_LOG"
 echo "gate_exec_rc=${PIPESTATUS[0]}"
 
-OSU_DIR="$(sed -n 's/^tool_osu_dir=//p' "$GATE_LOG" | head -1)"
-[ "$OSU_DIR" = "NOT_FOUND" ] && OSU_DIR=""
+OSU_MSGFLOW_DIR="$(sed -n 's/^tool_osu_msgflow_dir=//p' "$GATE_LOG" | head -1)"
+[ "$OSU_MSGFLOW_DIR" = "NOT_FOUND" ] && OSU_MSGFLOW_DIR=""
+OSU_CUDA_DIR="$(sed -n 's/^tool_osu_cuda_dir=//p' "$GATE_LOG" | head -1)"
+[ "$OSU_CUDA_DIR" = "NOT_FOUND" ] && OSU_CUDA_DIR=""
 
 NCCL_TOOLS_OK=1
 for b in sendrecv_perf broadcast_perf all_reduce_perf; do
   grep -qx "tool_nccl_${b}=FOUND" "$GATE_LOG" || NCCL_TOOLS_OK=0
 done
-OSU_TOOLS_OK=0
-OSU_CUDA_EVIDENCE=0
-if [ -n "$OSU_DIR" ] && grep -qx "tool_osu_osu_bw=FOUND" "$GATE_LOG" && grep -qx "tool_osu_osu_latency=FOUND" "$GATE_LOG"; then
-  OSU_TOOLS_OK=1
+OSU_CUDA_OK=0
+if [ -n "$OSU_CUDA_DIR" ] && grep -qx "tool_osu_cuda_osu_bw=FOUND" "$GATE_LOG" && grep -qx "tool_osu_cuda_osu_latency=FOUND" "$GATE_LOG"; then
+  OSU_CUDA_OK=1
 fi
-# Scope the ldd CUDA check to the osu_bw block only — the all_reduce_perf ldd
-# links libcudart too and must not count as osu CUDA evidence.
-OSU_LDD_BLOCK="$(awk '/--- ldd osu_bw/{f=1;next} /^--- ldd all_reduce_perf/{f=0} f' "$GATE_LOG")"
-if printf "%s\n" "$OSU_LDD_BLOCK" | grep -qi "libcuda\|libcudart"; then OSU_CUDA_EVIDENCE=1; fi
 
-# osu_bw --help: records the buffer-type options (D/H or -d cuda style) and
-# gives secondary CUDA-support evidence.
-if [ "$OSU_TOOLS_OK" -eq 1 ]; then
-  OSU_HELP_LOG="$OUTDIR/${ATTEMPT}_osu_bw_help.log"
-  timeout 90 apptainer exec --nv "$SIF" "$OSU_DIR/osu_bw" --help > "$OSU_HELP_LOG" 2>&1 || true
-  echo "--- osu_bw --help (head) ---"
-  head -40 "$OSU_HELP_LOG"
-  if grep -qi "cuda" "$OSU_HELP_LOG"; then OSU_CUDA_EVIDENCE=1; fi
+# osu_bw --help of the CUDA build (if any): records the buffer-type options
+# (D/H or -d cuda style) that Stage 2 will use.
+if [ "$OSU_CUDA_OK" -eq 1 ]; then
+  OSU_HELP_LOG="$OUTDIR/${ATTEMPT}_osu_bw_cuda_help.log"
+  timeout 90 apptainer exec --nv "$SIF" "$OSU_CUDA_DIR/osu_bw" --help > "$OSU_HELP_LOG" 2>&1 || true
+  echo "--- CUDA osu_bw --help (head) ---"
+  head -45 "$OSU_HELP_LOG"
 else
-  echo "osu_bw --help skipped (osu_bw/osu_latency not found in container)"
+  echo "CUDA osu_bw --help skipped (no CUDA-capable osu_bw found in container)"
 fi
 
 echo "tooling_inventory_nccl_tests_ok=$NCCL_TOOLS_OK (sendrecv_perf + broadcast_perf + all_reduce_perf)"
-echo "tooling_inventory_osu_ok=$OSU_TOOLS_OK (osu_bw + osu_latency at: ${OSU_DIR:-none})"
-echo "tooling_inventory_osu_cuda_evidence=$OSU_CUDA_EVIDENCE (ldd libcuda/libcudart and/or --help cuda option)"
-if [ "$NCCL_TOOLS_OK" -eq 1 ] && [ "$OSU_TOOLS_OK" -eq 1 ] && [ "$OSU_CUDA_EVIDENCE" -eq 1 ]; then
+echo "tooling_inventory_osu_cuda_ok=$OSU_CUDA_OK (CUDA-capable osu_bw + osu_latency at: ${OSU_CUDA_DIR:-none})"
+if [ "$NCCL_TOOLS_OK" -eq 1 ] && [ "$OSU_CUDA_OK" -eq 1 ]; then
   TOOLING_VERDICT=PASS
   echo "PHASE2_PREFLIGHT_TOOLING_GATE=PASS"
-elif [ "$NCCL_TOOLS_OK" -eq 1 ] && [ "$OSU_TOOLS_OK" -eq 1 ]; then
+elif [ "$NCCL_TOOLS_OK" -eq 1 ]; then
   TOOLING_VERDICT=PARTIAL
-  echo "PHASE2_PREFLIGHT_TOOLING_GATE=PARTIAL (osu present but CUDA support unproven; manual review required)"
+  echo "PHASE2_PREFLIGHT_TOOLING_GATE=PARTIAL (nccl-tests complete; osu packaged but NO CUDA-capable osu_bw/osu_latency found — Stage 2 D D arm blocked; stop and report)"
 else
   TOOLING_VERDICT=FAIL
   echo "PHASE2_PREFLIGHT_TOOLING_GATE=FAIL"
@@ -386,20 +406,15 @@ DISTINCT_HOSTS=$(grep "^rank=" "$LAUNCH_LOG" | sed "s/.*host=\([^ ]*\).*/\1/" | 
 echo "spawn_rank_lines=$RANK_LINES spawn_distinct_hosts=$DISTINCT_HOSTS"
 
 # Cross-node MPI message flow through the same launch path, using the
-# container OSU package if present (fallback chain; H H buffers only — this
-# is launch-path health, not the Stage 2 GDR measurement).
+# container's CUDA-capable osu_bw if found (exercising the Stage-2 binary),
+# else the first packaged osu_bw; H H buffers only — this is launch-path
+# health, not the Stage 2 GDR measurement.
+MSGFLOW_DIR="$OSU_CUDA_DIR"
+[ -n "$MSGFLOW_DIR" ] || MSGFLOW_DIR="$OSU_MSGFLOW_DIR"
 MSGFLOW_RC=""
-MSGFLOW_BIN=""
-if grep -qx "tool_osu_osu_hello=FOUND" "$GATE_LOG"; then
-  MSGFLOW_BIN="osu_hello"
-elif grep -qx "tool_osu_osu_allreduce=FOUND" "$GATE_LOG"; then
-  MSGFLOW_BIN="osu_allreduce"
-elif grep -qx "tool_osu_osu_bw=FOUND" "$GATE_LOG"; then
-  MSGFLOW_BIN="osu_bw"
-fi
 MSGFLOW_LOG="$OUTDIR/${ATTEMPT}_container_mpi_msgflow.log"
-if [ -n "$MSGFLOW_BIN" ]; then
-  echo "--- cross-node MPI message flow: $MSGFLOW_BIN (container, H H) ---"
+if [ -n "$MSGFLOW_DIR" ]; then
+  echo "--- cross-node MPI message flow: $MSGFLOW_DIR/osu_bw (container, H H) ---"
   timeout 300 apptainer exec --nv \
     -B /opt/pbs:/opt/pbs \
     -B /var/spool/pbs:/var/spool/pbs \
@@ -414,11 +429,11 @@ if [ -n "$MSGFLOW_BIN" ]; then
       --mca routed direct \
       -x PATH -x LD_LIBRARY_PATH \
       --bind-to none \
-      "$OSU_DIR/$MSGFLOW_BIN" 2>&1 | tee "$MSGFLOW_LOG"
+      "$MSGFLOW_DIR/osu_bw" 2>&1 | tee "$MSGFLOW_LOG"
   MSGFLOW_RC="${PIPESTATUS[0]}"
-  echo "container_msgflow_${MSGFLOW_BIN}_rc=$MSGFLOW_RC (124=timeout)"
+  echo "container_msgflow_osu_bw_rc=$MSGFLOW_RC (124=timeout; binary dir: $MSGFLOW_DIR)"
 else
-  echo "cross-node MPI message-flow test skipped (no usable OSU binary in container; spawn check above is the launch evidence)"
+  echo "cross-node MPI message-flow test skipped (no osu_bw found in container; spawn check above is the launch evidence)"
 fi
 
 cp "$HOSTFILE" "$OUTDIR/${ATTEMPT}_hostfile_${PBS_JOBID}"
@@ -434,7 +449,7 @@ if [ "$SPAWN_RC" -eq 0 ] && [ "$RANK_LINES" -eq "$EXPECTED_NNODES" ] && [ "$DIST
       echo "PHASE2_PREFLIGHT_LAUNCH_GATE=PASS"
     else
       LAUNCH_VERDICT=FAIL
-      echo "PHASE2_PREFLIGHT_LAUNCH_GATE=FAIL (spawn/mapping OK but $MSGFLOW_BIN returned $MSGFLOW_RC)"
+      echo "PHASE2_PREFLIGHT_LAUNCH_GATE=FAIL (spawn/mapping OK but osu_bw message flow returned $MSGFLOW_RC)"
     fi
   else
     LAUNCH_VERDICT=SPAWN_ONLY
