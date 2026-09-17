@@ -550,3 +550,53 @@ metrics only).
   attempt IDs (B2 resweep methodology), never by overwriting.
 - Node windows are hunted per job (cleanest eligible at submission time,
   co-tenants documented); jobs are one-at-a-time.
+
+---
+
+### Phase 1 — CLOSURE (2026-09-17, user cross-checked and confirmed): host GPUDirect RDMA proven for both communication stacks
+
+Phase 1 of the internode-comms debug is **complete and closed**. Both of its
+verification tracks are closed positive with log-evidenced conclusions, and
+the user has cross-checked and confirmed both evidence chains.
+
+- **Step 1 — CUDA-aware MPI (`osu-cuda`, closed 2026-09-16):** GPUDirect
+  RDMA works on the host path for P2P and tested collective traffic.
+  Evidence chain: `UCX_PROTO_INFO` rendezvous zero-copy over `rc_mlx5`
+  (GDR-on) vs staged `cuda_copy`/host-frag paths (GDR-off), clean `H H`
+  negative controls, consistent A/B deltas. The residual collective-path
+  anomalies (Case A) are performance/algorithm issues on a *working* GDR
+  path, not GDR failures — see the 2026-09-16 closure addendum.
+- **Step 2 — NCCL (`nccl-tests`, closed 2026-09-17):** GPUDirect RDMA works
+  on the host path for NCCL point-to-point and collective traffic across the
+  full 2x1 → 3x1 → 3x4 ladder. Evidence chain: per-channel
+  `via NET/IBext_v11/N/GDRDMA` graph tags in every ctrl arm vs **zero**
+  GDRDMA tags in every `NCCL_NET_GDR_LEVEL=LOC` arm (with the LOC knob
+  provably reaching all ranks via `NCCL_DEBUG_SUBSYS=ENV` and the same
+  `NET/IBext_v11` IB backend in both arms), plus uniform GDR-on gains — at
+  the HPL-MxP baseline topology (3x4, 64 MiB): sendrecv **+54%**, broadcast
+  **+151% (2.51×)**, allreduce **+133% (2.33×)**. The single failure
+  encountered (3x4 default-GDR allreduce on a bond-asymmetric node mix) was
+  root-caused to a RoCE-bond rail misalignment and resolved with
+  `NCCL_IB_HCA` bond exclusion — an NCCL/plugin robustness gap, not a GDR
+  failure (case `2026-09-17-A`, RESOLVED).
+
+**Combined Phase 1 conclusion: the host communication infrastructure
+(driver, GPU-memory registration via peermem/DMABUF, and the InfiniBand
+fabric) delivers working GPUDirect RDMA through both CUDA-aware MPI and
+NCCL.** Per the original debug plan's branch logic (host GDRDMA works →
+Track 2.2), the next phase is **Track 2.2: verify the same capability inside
+the HPL-MxP container** (the 2026-09-03 probe found the in-container
+gdrdrv/GDR gap; pristine-node in-container runs remain slow — the strongest
+remaining root-cause lead for the slow 3x4 baseline).
+
+Remaining deferred/open items — none block this closure:
+
+1. Case A (3x4 bcast ≥8 MiB, UCX GDR read-path performance) — host UCX
+   tuning item; evidence and queued rendezvous-scheme/chunk experiment
+   preserved.
+2. Socket-floor control (`NCCL_IB_DISABLE=1` ineffective with the IBext
+   plugin) — separate follow-up.
+3. Upstream report of the RoCE-bond rail abort (case `2026-09-17-A`).
+4. GDR-channel fraction (33–50% in ctrl arms): NCCL engages GDR on only
+   part of its IB channels by default; recorded — measured deltas are lower
+   bounds of the GDR effect.

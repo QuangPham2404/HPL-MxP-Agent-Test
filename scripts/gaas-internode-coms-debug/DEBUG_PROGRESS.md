@@ -957,3 +957,35 @@ Three layers, weakest to strongest (semantics verified against
    disabled, so the A/B isolates exactly the GDR data path; the observed
    deltas (+2.51× bcast, +2.33× allred, +1.54× sendrecv @64 MiB 3x4) are
    attributable to it.
+
+## Phase 1 — CLOSURE (2026-09-17, user cross-checked and confirmed)
+
+Host GPUDirect RDMA is proven on BOTH host communication stacks, closing
+Phase 1 of the internode-comms debug:
+
+- **Step 1 (osu-cuda / CUDA-aware MPI): closed 2026-09-16** — zero-copy GDR
+  protocol evidence (`UCX_PROTO_INFO` rendezvous over `rc_mlx5`), clean
+  same-job A/B, clean `H H` negative controls, for P2P and tested
+  collectives; residual anomalies are performance items on a working GDR
+  path (Case A deferred with preserved evidence).
+- **Step 2 (nccl-tests / NCCL): closed 2026-09-17** — full 2x1→3x1→3x4 GDR
+  A/B campaign (sendrecv + broadcast + allreduce; ctrl vs
+  `NCCL_NET_GDR_LEVEL=LOC`) with the per-channel `/GDRDMA` evidence chain;
+  all six cells measured and valid (the 3x4 allreduce cell via the validated
+  `NCCL_IB_HCA` bond-exclusion fix for case `2026-09-17-A`, RESOLVED);
+  GDR-on gains at 3x4/64 MiB: sendrecv +54%, broadcast +151% (2.51×),
+  allreduce +133% (2.33×).
+
+**Combined conclusion (user-confirmed): the host communication infrastructure
+— driver, GPU-memory registration (peermem/DMABUF), InfiniBand fabric —
+delivers working GPUDirect RDMA through both CUDA-aware MPI and NCCL.**
+Per the debug plan branch logic, the next phase is Track 2.2 (in-container
+HPL-MxP GDR verification; the 2026-09-03 probe found the in-container
+gdrdrv/GDR gap — the strongest remaining lead for the slow 3x4 baseline).
+Deferred items (none blocking): Case A UCX rendezvous-scheme/chunk
+experiment, Socket-floor control verification, upstream RoCE-bond report,
+GDR-channel-fraction note.
+
+**Resume point:** Phase 1 CLOSED. Next decision — begin Track 2.2 (minimal
+in-container HPL-MxP GDR A/B on clean 3x4 nodes) or address a deferred item;
+awaiting user direction.
