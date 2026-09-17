@@ -267,3 +267,19 @@ inconclusive — a PASS marker alone does not certify the comparison.
   retry / `NCCL_IB_HCA=^mlx5_bond` arm / reduced-rank diagnostic / upstream
   report — awaiting user decision). Evidence:
   `../../outputs/phase1-step2/step2_gdr_coll_3x4_v1*` (byte-verified).
+- `step2_gdr_coll_3x4_v2` — PBS job `67584.gaas`, 2026-09-17 23:02 +08,
+  same trio g22+g20+g02, 83 s, exit 0, `STEP2_GDR_COLL_RESULT=PASS`.
+  **Track 2 case `2026-09-17-A` fix validated**: wrapper
+  `run_phase1_step2_gdr_coll_3x4_hca.pbs` sets
+  `NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_8,mlx5_9`
+  (eight IB HCAs, RoCE bond excluded) for BOTH arms. Root cause of the v1
+  ctrl-allreduce failure: that arm's channel plan assigned g22 rank 1's
+  inter-node links to `mlx5_bond_0` (Dev 8, RoCE) while the peers used
+  `mlx5_4` (IB) — incompatible link types at connect → ncclInternalError;
+  no other arm used Dev 8. With the filter: zero bond channels in any arm;
+  ctrl allreduce 628 IB/236 GDRDMA vs gdroff 600/0. **Recovered cell — 3x4
+  allreduce (algbw): 64 MiB 43.92 vs 18.86 GB/s (+2.33×; busbw 80.51 vs
+  34.57), 16 MiB +1.94×, 4 MiB +1.47×, 1 MiB +1.12×.** Broadcast reproduces
+  v1 (+2.92× @64 MiB). Full case record: root
+  `MANUAL_INSPECTION_ERROR.md` → `2026-09-17-A` (RESOLVED). Evidence:
+  `../../outputs/phase1-step2/step2_gdr_coll_3x4_v2*` (byte-verified).

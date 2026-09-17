@@ -63,5 +63,42 @@ proposed fix never authorizes it.
   `scripts/gaas-internode-coms-debug/outputs/phase1-step2/step2_gdr_coll_3x4_v1*`
   (esp. `_ctrl_allreduce.log`, `_gdroff_allreduce.log`,
   `_ctrl_broadcast.log`, `.o`, `.e`, per-node fabric/checkpoint logs).
-- **Awaiting:** user decision on the suggested options. No automatic retry;
-  the P2P/broadcast/allreduce(2x1,3x1) results are unaffected.
+
+### Resolution (2026-09-17 ~23:00 +08)
+
+- **Status:** RESOLVED (fix validated by rerun).
+- **Authorization:** user-directed investigation request ("investigate the
+  error and how to solve it", 2026-09-17).
+- **Root cause (confirmed from evidence):** the IBext plugin's channel plan
+  for the ctrl 12-rank allreduce on nodes g22+g20+g02 assigned g22 rank 1's
+  inter-node links (channels 04/0 and 10/0 toward ranks 7 on g20 and 11 on
+  g02) to `mlx5_bond_0` (NCCL Dev 8, RoCE, with GDRDMA) while the peer
+  endpoints of the same links used `mlx5_4` (Dev 4, InfiniBand). RoCE vs IB
+  is an incompatible link-type pair → the plugin's connect check
+  (`ib_plugin.c:1312`) rejected the connection → `transport/net.cc:555`
+  returned ncclInternalError(3) → the first (warmup) allreduce aborted with
+  zero size rows measured. Only this arm used Dev 8 (broadcast ctrl 72
+  channels and both gdroff plans used HCAs 0–7 only); the bond is topology-
+  admitted (`keep=1 coll=(null)`) on every run and is only fatal when a
+  channel plan actually lands on it asymmetrically — node-mix dependent
+  (the 12-rank allreduce smoke on g01+g22+g20 passed).
+- **Fix applied:** `NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,
+  mlx5_8,mlx5_9` (explicit include of the eight IB HCAs, excluding the RoCE
+  bond) applied to BOTH arms for device symmetry — implemented as
+  `run_phase1_step2_gdr_coll_3x4_hca.pbs` + a conditional `-x NCCL_IB_HCA`
+  passthrough in the shared runner (commit `7cda615`). The plugin reads
+  `NCCL_IB_HCA` (verified in its env-var table) and its own warning
+  suggests this knob.
+- **Validation (`step2_gdr_coll_3x4_v2`, job `67584.gaas`, same trio
+  g22+g20+g02, 83 s, exit 0, PASS):** ctrl allreduce now completes — 628
+  via-IBext channels with 236 GDRDMA vs gdroff 600/0; zero bond/dev-8
+  channel lines in any arm; `ib_hca_filter` recorded in metadata. Recovered
+  cell: 3x4 allreduce 64 MiB algbw **43.92 vs 18.86 GB/s (+2.33×)**, busbw
+  80.51 vs 34.57; 16 MiB +1.94×; 4 MiB +1.47×; 1 MiB +1.12×. Broadcast
+  reproduces v1 (ctrl 72.65 vs gdroff 24.85 GB/s @64 MiB, +2.92×).
+- **Remaining concerns:** the unfiltered default remains latent-broken for
+  12-rank default-GDR allreduce on node mixes that trigger the asymmetric
+  bond rail (an NCCL/plugin robustness gap — the plugin aborts instead of
+  excluding the incompatible rail). Worth reporting upstream with the v1
+  logs. The GDR A/B campaign cell now carries the documented condition
+  "bond excluded" for both arms at 3x4 collective.

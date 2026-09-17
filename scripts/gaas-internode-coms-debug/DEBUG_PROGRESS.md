@@ -889,3 +889,42 @@ upstream report.
 Awaiting user decision on case `2026-09-17-A` and on any follow-up
 (Socket-control verification, Case A UCX experiment, Track 2.2 in-container
 test all still deferred).
+
+## Track 2 case 2026-09-17-A — RESOLVED (2026-09-17 ~23:00 +08): RoCE-bond rail misalignment; fix = NCCL_IB_HCA bond exclusion, validated
+
+User directed investigation. **Root cause (evidence-confirmed):** the v1
+ctrl 12-rank allreduce channel plan (nodes g22+g20+g02) assigned g22 rank
+1's inter-node links (channels 04/0, 10/0 → ranks 7/g20 and 11/g02) to
+`mlx5_bond_0` (Dev 8, RoCE, GDRDMA) while the peer endpoints used `mlx5_4`
+(Dev 4, InfiniBand); RoCE↔IB connect is link-type-incompatible →
+`ib_plugin.c:1312` reject → `transport/net.cc:555 → 3` (ncclInternalError)
+→ first warmup allreduce aborted (zero rows). Only that arm used Dev 8
+(broadcast ctrl and both gdroff plans used HCAs 0-7; all three nodes have
+identical NIC inventories, so it is a per-plan rail asymmetry, node-mix
+dependent — the g01+g22+g20 smoke passed).
+
+**Fix:** `NCCL_IB_HCA` restricted to the eight IB HCAs (bond excluded) for
+BOTH arms — new wrapper `run_phase1_step2_gdr_coll_3x4_hca.pbs` +
+conditional `-x NCCL_IB_HCA` passthrough in the shared runner (commit
+`7cda615`; the IBext plugin reads `NCCL_IB_HCA`, verified in its env table).
+
+**Validation (`step2_gdr_coll_3x4_v2`, job `67584.gaas`, same trio, 83 s,
+exit 0, PASS):** zero bond channels in any arm; ctrl allreduce 628 IB/236
+GDRDMA vs gdroff 600/0. **Recovered 3x4 allreduce cell (algbw): 64 MiB
+43.92 vs 18.86 GB/s (+2.33×; busbw 80.51 vs 34.57); 16 MiB +1.94×; 4 MiB
++1.47×; 1 MiB +1.12×.** Broadcast reproduces v1 (+2.92× @64 MiB).
+
+**Final campaign table (algbw GB/s @64 MiB; `+N` = GDR-on N× faster):**
+
+| Rung | sendrecv | broadcast | allreduce |
+|---|---|---|---|
+| 2x1 | 24.63 vs 21.74 (+1.13×) | 48.28 vs 48.13 (+1.00×) | 28.43 vs 24.60 (+1.16×) |
+| 3x1 | 24.54 vs 22.11 (+1.11×) | 38.69 vs 37.52 (+1.03×) | 23.39 vs 19.23 (+1.22×) |
+| 3x4 | 40.78 vs 26.44 (+1.54×) | 70.88 vs 28.28 (+2.51×) | 43.92 vs 18.86 (**+2.33×**, bond-excluded v2) |
+
+All six cells now measured and valid; the 3x4 collective cells carry the
+documented condition "NCCL_IB_HCA bond-excluded, both arms". The unfiltered
+default remains latent-broken for 12-rank default-GDR allreduce on
+bond-asymmetric node mixes (upstream-report-worthy; plugin aborts instead of
+excluding the incompatible rail). Full case: root
+`MANUAL_INSPECTION_ERROR.md` → `2026-09-17-A` (RESOLVED).
