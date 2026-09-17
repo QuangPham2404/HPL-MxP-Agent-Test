@@ -133,3 +133,19 @@ HEAD`) into the PBS output and recorded per attempt below.
   (local fork; no singleton bootstrap path), keeping the timeout bounds,
   stderr NCCL capture, and the three transport arms. Rerun as
   `build_nccl_tests_host_v3`.
+
+- `build_nccl_tests_host_v3` — PBS job `67034.gaas` (hpc-gaas-g06,
+  2026-09-17 07:37 +08, one H200; PBS Exit_status=0).
+  PBS recorded the effective allocation as one GPU, 12 CPUs, and 250 GB.
+  **BUILD_AND_SMOKE_OK**: incremental build verified all nine perf binaries;
+  source commit `b4d5bee`; `ldd` resolved HPC-X `libmpi.so.40`, CUDA 13,
+  and NCCL 2.29.3. The MPI health phase launched `osu_hello` with
+  `mpirun -np 1` and returned 0. Default, `NCCL_IB_DISABLE=1`, and
+  `NCCL_NET=Socket` `all_reduce_perf` arms all returned 0, each reporting
+  `Out of bounds values : 0 OK`; summary markers were `SMOKE_OK` and
+  `BUILD_AND_SMOKE_OK`. Default-arm NCCL logs selected `IBext_v11` and
+  reported GPUDirect RDMA enabled. This is a single-rank startup/build smoke:
+  NCCL enumerated the IB/GDR stack but did not exchange data with another
+  rank, so it is not evidence of inter-node NCCL communication.
+  Raw PBS evidence remains on GAAS at
+  `scripts/gaas-internode-coms-debug/build-nccl-tests/outputs/build_nccl_tests_host_v3.{o,e}`.

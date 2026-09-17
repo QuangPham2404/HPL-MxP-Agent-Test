@@ -406,3 +406,19 @@ of whether GPUDirect RDMA is functional.
   packet-by-packet trace; the same-job GDR-on/GDR-off comparison and the
   host-only control are what make the conclusion strong.
 
+
+### Phase 1 Step 2 status update — 2026-09-17
+
+The host nccl-tests build and v3 single-node smoke passed in PBS job
+67034.gaas on hpc-gaas-g06. All three all_reduce_perf arms completed with
+zero-error markers. The default NCCL log selected the IBext network plugin
+and reported GDR enabled. Since this smoke launched one rank, it validated
+local MPI/NCCL startup only; it did not test inter-node traffic.
+
+Ran the host NCCL sendrecv tests for 2x1 and 3x1 (jobs 67037.gaas and
+67038.gaas) using the Phase 1 Step 1 host mpirun + pbsdsh bridge pattern and
+the HPL-MxP launch model's explicit hostfile, rank-to-local-GPU mapping, no
+binding, and per-node evidence. MPI and correctness checks passed, but the
+`NCCL_IB_DISABLE=1` arm still selected `NET/IBext_v11`, so the socket-floor
+transport check failed. The 3x4 run is held until the Socket selection is
+verified. See `debug-scripts/phase1-step2/README.md` for job evidence.

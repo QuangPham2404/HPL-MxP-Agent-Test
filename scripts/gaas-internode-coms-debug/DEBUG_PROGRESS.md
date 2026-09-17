@@ -699,3 +699,38 @@ test setup `debug-scripts/phase1-step1/run_phase1_step1_collb2_3x4.pbs:156-157`)
   a packet-by-packet trace. The same-job GDR-on/GDR-off comparison and the
   host-only (`H H`) control are what make the conclusion strong.
 
+
+## Phase 1 — Step 2: nccl-tests smoke passed; multinode sendrecv partially run (2026-09-17)
+
+**Build and smoke:** attempt `build_nccl_tests_host_v3`, PBS job
+`67034.gaas`, completed on `hpc-gaas-g06` with PBS Exit_status=0.
+All nine binaries were present after the incremental build. The v3 launcher
+ran `osu_hello` and each one-rank `all_reduce_perf` arm through
+`mpirun -np 1`; all return codes were 0, with the nccl-tests zero-error
+marker and final `BUILD_AND_SMOKE_OK`. NCCL default diagnostics selected
+`IBext_v11` and reported GPUDirect RDMA enabled. Because every communicator
+had one rank, no inter-node NCCL traffic was generated.
+
+**Evidence:** GAAS paths
+`scripts/gaas-internode-coms-debug/build-nccl-tests/outputs/build_nccl_tests_host_v3.o`
+and `build_nccl_tests_host_v3.e`. Earlier v1/v2 stdout/stderr files were
+preserved during fast-forward synchronization under
+`build-nccl-tests/outputs/.pre-sync-v2/`; their tracked copies are now in
+the synced local history.
+
+**Multinode test:** a shared host-native NCCL sendrecv runner and PBS
+wrappers for 2x1, 3x1, and 3x4 are under
+`debug-scripts/phase1-step2/`. They follow the Phase 1 Step 1 host
+`mpirun` + `rsh_pbsdsh.sh` bridge, the HPL-MxP topology/hostfile and
+rank-to-local-GPU mapping conventions, three NCCL transport-control arms,
+rank/fabric evidence, and one-job-at-a-time scheduling. Jobs `67037.gaas`
+(2x1) and `67038.gaas` (3x1) completed with exit status 0 and zero-error
+markers. In each `sockfloor` arm, however, logs showed NCCL RDMA Plugin v11
+and `NET/IBext_v11` despite `NCCL_IB_DISABLE=1`; the 3x1 log also showed
+GDRDMA. The requested socket control therefore did not run, so these are not
+fully validated matrix passes. The 3x4 job was not submitted.
+
+**Current step and next action:** Phase 1 — Step 2. Verify the supported way
+to force the Socket network with the installed plugin; do not change the
+transport control or submit 3x4 until that correction is reviewed. Preserve
+the existing `.o`, `.e`, per-arm, and node evidence.

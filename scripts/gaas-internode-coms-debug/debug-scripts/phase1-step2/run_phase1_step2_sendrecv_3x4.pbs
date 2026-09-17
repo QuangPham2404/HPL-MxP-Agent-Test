@@ -1,9 +1,9 @@
 #!/bin/bash
-# Phase 1 Step 2 NCCL sendrecv test: 2 nodes x 1 GPU/rank (2 MPI/NCCL ranks).
+# Phase 1 Step 2 NCCL sendrecv test: 3 nodes x 4 GPUs/rank (12 MPI/NCCL ranks).
 # Submit from debug-scripts/phase1-step2/ with host-pinned select chunks and
 # attempt-specific PBS output names documented in README.md.
 
-#PBS -N P1S2_SR_2X1
+#PBS -N P1S2_SR_3X4
 #PBS -P hpc_ebslee
 #PBS -q gpu_ded
 #PBS -l place=scatter
@@ -11,5 +11,5 @@
 
 set -euo pipefail
 cd "$PBS_O_WORKDIR"
-export TOPOLOGY=2x1 EXPECTED_NNODES=2 GPUS_PER_NODE=1
+export TOPOLOGY=3x4 EXPECTED_NNODES=3 GPUS_PER_NODE=4
 exec /bin/bash "$PBS_O_WORKDIR/run_phase1_step2_sendrecv_common.sh"
