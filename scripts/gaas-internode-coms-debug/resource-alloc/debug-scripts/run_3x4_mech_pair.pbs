@@ -1,0 +1,187 @@
+# HPL-MxP 3x4 host-contention mechanism pair run — resource-alloc
+# experiment 5 (see resource-alloc/README.md).
+#
+# One arm of one pristine/busy repetition. The benchmark configuration is
+# identical to experiments 1-4 (3 nodes x 4 GPUs, 12 ranks, N=250000,
+# NB=1024, 3x4 row grid, --bind-to none, no affinity flags, --skip-tests 1,
+# GPU monitoring, UCX_LOG_LEVEL=info, NCCL_DEBUG=INFO), with hosts pinned
+# explicitly and the granted host list asserted against the request.
+#
+# New instrumentation vs experiments 2-4 (all in debug-scripts/):
+#   - capture_node_alloc_mech.sh  pre/post capture: v2 superset + job-cgroup
+#     path/effective limits/counters, THP/VM state, GPU PCIe link gen/width;
+#   - sample_node_load_mech.sh    ~2 s in-run sampler: adds per-tick cgroup
+#     counters, every-5th-tick local xhpl_mxp rank affinity/RSS/faults, GPU
+#     temperature + PCIe link, and an optional probe-validated background
+#     `perf stat -a` collector (enabled by passing PERF_EVENTS via -v).
+#
+# Expected working directory: the resource-alloc directory on GAAS. Submit
+# each attempt (from that directory) with — hosts from a live pbsnodes
+# check, REQ_HOSTS plus-separated because PBS -v splits on commas. Each
+# chunk mirrors experiments 1-4's actual request shape (ncpus=48,
+# mem=1000GB per chunk; omitting them triggers the server-default cgroup
+# memory limit — see the clean250k_v1 failure record):
+#   qsub -l "select=host=A:ngpus=4:ncpus=48:mem=1000GB+host=B:ngpus=4:ncpus=48:mem=1000GB+host=C:ngpus=4:ncpus=48:mem=1000GB" \
+#        -v "ATTEMPT=mech250k_pristine_r1,COND=pristine,REQ_HOSTS=A+B+C" \
+#        -o outputs/mech250k_pristine_r1.o -e outputs/mech250k_pristine_r1.e \
+#        debug-scripts/run_3x4_mech_pair.pbs
+# Optional: add PERF_EVENTS=<comma-separated probe-validated events> to -v.
+
+#PBS -N hpl_mxp_mech
+#PBS -q gpu_as
+#PBS -P hpc_ebslee
+#PBS -l place=scatter
+#PBS -l walltime=00:30:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+
+: "${ATTEMPT:?submit with -v ATTEMPT=<attempt label, e.g. mech250k_pristine_r1>}"
+: "${REQ_HOSTS:?submit with -v REQ_HOSTS=<host1+host2+host3>}"
+COND="${COND:-unknown}"
+PERF_EVENTS="${PERF_EVENTS:-}"
+
+GPUS=4                                   # GPUs (and ranks) per node
+NPROW=3
+NPCOL=4
+NPORDER=row
+N=250000
+NB=1024
+
+UCX_LOG_LEVEL=info
+NCCL_DEBUG=INFO
+export UCX_LOG_LEVEL NCCL_DEBUG
+export PERF_EVENTS                      # forwarded to the per-node sampler
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+CAPTURE="$PBS_O_WORKDIR/debug-scripts/capture_node_alloc_mech.sh"
+SAMPLER="$PBS_O_WORKDIR/debug-scripts/sample_node_load_mech.sh"
+
+PREFIX="$PWD/outputs/${ATTEMPT}"
+LOCK_PRE="$PWD/outputs/.locks_precap_${ATTEMPT}"
+LOCK_POST="$PWD/outputs/.locks_postcap_${ATTEMPT}"
+LOCK_SAMP="$PWD/outputs/.locks_sampler_${ATTEMPT}"
+STOP_FILE="$PWD/outputs/.sampler_stop_${ATTEMPT}"
+SAMPLER_INTERVAL=2
+SAMPLER_MAX_TICKS=850                    # 850 x 2 s = ~28.3 min < 30 min walltime
+
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+NPROCS=$((NNODES * GPUS))
+if [ "$((NPROW * NPCOL))" -ne "$NPROCS" ]; then
+  echo "ERROR: grid ${NPROW}x${NPCOL}=$((NPROW * NPCOL)) != ${NPROCS} ranks" >&2
+  exit 1
+fi
+
+# Host-pinning assertion: the scheduler must have granted exactly the
+# requested nodes (a host= chunk cannot be placed elsewhere; a mismatch
+# means the submission and the request disagree — abort before running).
+REQUESTED=$(printf '%s\n' "$REQ_HOSTS" | tr ',+' '\n\n' | sed 's/[[:space:]]//g' | grep -v '^$' | sort | paste -sd,)
+GRANTED=$(sort -u "$PBS_NODEFILE" | paste -sd,)
+if [ "$REQUESTED" != "$GRANTED" ]; then
+  echo "ERROR: granted nodes (${GRANTED}) != requested (${REQUESTED})" >&2
+  exit 1
+fi
+
+GPU_AFFINITY=$(seq -s: 0 $((GPUS - 1)))
+
+# De-duplicated hostfile with explicit per-node slot count.
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+
+echo "experiment_id=resource-alloc-exp5"
+echo "attempt=${ATTEMPT}"
+echo "condition=${COND}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} order=${NPORDER}"
+echo "n=${N} nb=${NB}"
+echo "nodes=${GRANTED}"
+echo "req_hosts=${REQ_HOSTS}"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "ucx_log_level=${UCX_LOG_LEVEL}"
+echo "nccl_debug=${NCCL_DEBUG}"
+echo "perf_events=${PERF_EVENTS:-none}"
+echo "sampler_interval=${SAMPLER_INTERVAL}s max_ticks=${SAMPLER_MAX_TICKS}"
+echo "=== PBS_NODEFILE (raw) ==="
+cat "$PBS_NODEFILE"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# Fresh per-attempt lock bases and sentinel for this attempt only.
+rm -rf "$LOCK_PRE" "$LOCK_POST" "$LOCK_SAMP"
+rm -f "$STOP_FILE"
+mkdir -p "$LOCK_PRE" "$LOCK_POST" "$LOCK_SAMP"
+
+# Per-node pre-run capture: best-effort instrumentation, must not block.
+echo "=== pre-run per-node capture (pbsdsh, once per node) ==="
+/opt/pbs/bin/pbsdsh -- /bin/bash "$CAPTURE" "$PREFIX" "$LOCK_PRE" pre \
+  || echo "WARN: pre-run capture returned nonzero; continuing"
+
+# In-run per-node sampler in the background; stopped via sentinel after the
+# application finishes (bounded wait), with the tick cap as failsafe.
+echo "=== start in-run per-node sampler (background, ${SAMPLER_INTERVAL} s interval) ==="
+/opt/pbs/bin/pbsdsh -- /bin/bash "$SAMPLER" "$PREFIX" "$LOCK_SAMP" \
+  "$SAMPLER_INTERVAL" "$STOP_FILE" "$SAMPLER_MAX_TICKS" &
+SAMPLER_PID=$!
+
+# Application launch: identical to experiments 1-4.
+set +e
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    -x UCX_LOG_LEVEL \
+    -x NCCL_DEBUG \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity "$GPU_AFFINITY" \
+      --nprow "$NPROW" \
+      --npcol "$NPCOL" \
+      --nporder "$NPORDER" \
+      --n "$N" \
+      --nb "$NB" \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
+APPRC=$?
+set -e
+
+# Stop the sampler: sentinel file, then bounded wait for the pbsdsh client
+# (samplers poll the sentinel each tick, so they exit within one interval).
+echo "=== stop in-run sampler ==="
+touch "$STOP_FILE"
+for _ in $(seq 1 12); do
+  kill -0 "$SAMPLER_PID" 2>/dev/null || break
+  sleep 5
+done
+kill "$SAMPLER_PID" 2>/dev/null || true
+wait "$SAMPLER_PID" 2>/dev/null || true
+
+# Per-node post-run capture (separate lock base so it always runs).
+echo "=== post-run per-node capture (pbsdsh, once per node) ==="
+/opt/pbs/bin/pbsdsh -- /bin/bash "$CAPTURE" "$PREFIX" "$LOCK_POST" post \
+  || echo "WARN: post-run capture returned nonzero; continuing"
+
+echo "app_exit_code=${APPRC}"
+echo "=== attempt evidence files ==="
+ls -la "$PWD/outputs/${ATTEMPT}"* 2>/dev/null || true
+echo "=== resource-alloc exp5 attempt ${ATTEMPT} (${COND}) complete ==="
+exit "$APPRC"

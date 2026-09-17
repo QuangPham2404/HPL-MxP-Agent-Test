@@ -1,0 +1,59 @@
+# Hardware-counter preflight probe for resource-alloc experiment 5
+# (see resource-alloc/README.md). Read-only: no application run, no tools
+# installed, nothing made fatal.
+#
+# Runs on one small gpu_as chunk and does two things:
+#   1. probe_hw_counters.sh — availability of perf (binary, paranoid level,
+#      system-wide core-PMU, LLC, uncore IMC patterns), pcm-memory, PSI;
+#   2. sampler overhead check — runs sample_node_load_mech.sh for 6 ticks at
+#      the experiment-5 cadence (2 s) and reports the per-tick wall time from
+#      the logged epoch timestamps, so the ~2 s cadence is validated before
+#      any scored run.
+#
+# Expected working directory: the resource-alloc directory on GAAS. Submit:
+#   qsub -o outputs/mech_preflight_v1.o -e outputs/mech_preflight_v1.e \
+#        debug-scripts/run_mech_preflight.pbs
+
+#PBS -N mech_preflight
+#PBS -q gpu_as
+#PBS -P hpc_ebslee
+#PBS -l select=1:ngpus=1:ncpus=4
+#PBS -l walltime=00:10:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+
+ATTEMPT=mech_preflight_v1
+PREFIX="$PWD/outputs/${ATTEMPT}"
+PROBE="$PBS_O_WORKDIR/debug-scripts/probe_hw_counters.sh"
+SAMPLER="$PBS_O_WORKDIR/debug-scripts/sample_node_load_mech.sh"
+
+echo "experiment_id=resource-alloc-exp5-preflight"
+echo "attempt=${ATTEMPT}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "node=$(hostname)"
+date --iso-8601=seconds
+echo "cpuset=$(grep Cpus_allowed_list /proc/self/status | awk '{print $2}')"
+
+echo "=== 1. hardware-counter availability probe ==="
+/bin/bash "$PROBE" "${PREFIX}_hwprobe.log"
+
+echo "=== 2. sampler overhead check (6 ticks at 2 s) ==="
+LOCK_SAMP="$PWD/outputs/.locks_preflight_sampler"
+STOP_FILE="$PWD/outputs/.sampler_stop_preflight"
+rm -rf "$LOCK_SAMP"
+rm -f "$STOP_FILE"
+mkdir -p "$LOCK_SAMP"
+# Foreground, tick-capped run (max_ticks=6, no stop file) — returns after
+# ~6 ticks; PERF_EVENTS intentionally empty here (perf is only probed).
+/bin/bash "$SAMPLER" "$PREFIX" "$LOCK_SAMP" 2 /dev/null/nonexistent 6 \
+  || echo "WARN: sampler returned nonzero"
+
+echo "--- sampler tick-duration analysis (from epoch timestamps) ---"
+awk '
+  /^SAMPLE tick=/ { for (i=1;i<=NF;i++) if ($i ~ /^epoch=/) { split($i,a,"="); e=a[2]; split($0,b," "); for (j=1;j<=NF;j++) if ($j ~ /^tick=/) { split($j,c,"="); t=c[2] } if (pe) printf "tick %s->%s: %d s wall\n", pt, t, e-pe; pe=e; pt=t } }
+' "${PREFIX}_load_$(hostname).log" || echo "WARN: tick analysis failed"
+
+echo "=== preflight complete — review ${PREFIX}_hwprobe.log and the sampler log ==="
+ls -la "$PWD/outputs/${ATTEMPT}"* 2>/dev/null || true

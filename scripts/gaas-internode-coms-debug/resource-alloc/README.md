@@ -441,6 +441,19 @@ variable that no placement or affinity tuning can compensate for.
   telemetry files; scripts will be added under `debug-scripts/` after this
   design is reviewed. A later `N=480000` validation pair may be added after a
   repeatable mechanism signal is identified.
+- **Execution decisions (user, 2026-09-18):** design reviewed and approved.
+  Scripts prepared under `debug-scripts/`: `probe_hw_counters.sh` (read-only
+  counter availability), `capture_node_alloc_mech.sh` (v2-superset capture),
+  `sample_node_load_mech.sh` (~2 s sampler + optional probe-validated
+  `perf stat -a` collector via `PERF_EVENTS`), `run_3x4_mech_pair.pbs` (one
+  arm of one pair), `run_mech_preflight.pbs` (separate first probe job:
+  counter availability + sampler-overhead check). Pair order r1
+  pristine→busy, r2 busy→pristine, r3 pristine→busy. Pristine fallback:
+  2 strictly pristine + lightest GPU-pristine third, documented per attempt.
+  qdel pre-authorized for this experiment's own stuck submissions only
+  (pinned host taken by another job), each recorded with reason. Queue
+  `gpu_as`, walltime 00:30:00, chunk `ngpus=4:ncpus=48:mem=1000GB`,
+  accounting group `hpc_ebslee` (current project convention).
 
 ## Analysis
 
