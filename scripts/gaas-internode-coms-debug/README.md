@@ -715,6 +715,11 @@ Stage 1 additions and locked decisions:
    case at N=120000/NB=1024 before the N=480000 same-allocation A/B (~2:30
    walltime, `--skip-tests 1` + monitoring flags).
 
-Stage 1 execution: `phase2_preflight_v1`
-(`debug-scripts/phase2-preflight/`, 2026-09-18) — results in
-`DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1".
+Stage 1 execution (2026-09-18): `phase2_preflight_v1` → `v2` → `v3` (scored,
+job `67795.gaas`, g22+g20; v1/v2 were Track 1 script-defect reruns, evidence
+preserved). **Outcome: launch gate PASS; tooling gate PARTIAL — nccl-tests
+fully packaged; OSU packaged only as a non-CUDA OMB v7.5 build; no
+CUDA-capable osu_bw/osu_latency and no "osu-cuda-nvidia-alternative" anywhere
+in the container.** Stage 2 is stopped at the agreed missing-tooling decision
+point (options: host-OSU bind-mount / in-container build / NCCL arm first /
+different SIF). Full record: `DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1".

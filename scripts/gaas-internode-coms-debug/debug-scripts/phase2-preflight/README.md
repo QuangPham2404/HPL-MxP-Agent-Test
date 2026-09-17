@@ -73,6 +73,32 @@ modules, binds, or transport settings without user direction.
 
 ## Attempt log
 
-- `phase2_preflight_v1` — submitted 2026-09-18 (see
-  `../../outputs/phase2-preflight/phase2_preflight_v1*`); outcome recorded in
-  `../../DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1".
+- `phase2_preflight_v1` — PBS job `67791.gaas` (2026-09-18, g22+g20, ~1 min,
+  exit 1). Two Track 1 script defects: the OSU search never looked inside
+  `osu_mpi_tests/` (checked the directory surface and depth≤5 from `/`;
+  binaries live at depth 6), and the host-GDR pbsdsh capture produced empty
+  logs (bare `bash` + local redirect — pbsdsh task output does not return to
+  the caller). Established: nccl-tests complete, SIF identity (sha256),
+  container versions, container RDMA access, launch spawn/mapping OK.
+  Evidence preserved: `../../outputs/phase2-preflight/phase2_preflight_v1*`.
+- `phase2_preflight_v2` — PBS job `67793.gaas` (same pair, ~1 min, exit 0
+  at the time). Found the OSU package (`osu_mpi_tests/mpi/pt2pt/osu_bw`,
+  OMB v7.5) and ran the cross-node MPI message-flow check (osu_bw H H, rc=0,
+  ~88 GB/s @4 MiB). **Superseded gate logic:** CUDA capability was decided by
+  a `--help` grep that false-positived on the generic PAPI help text, and the
+  global search was still depth-capped — its `TOOLING_GATE=PASS` was
+  overstated. Evidence preserved: `phase2_preflight_v2*`.
+- `phase2_preflight_v3` — PBS job `67795.gaas` (same pair, ~4 min, exit 1 by
+  design). **Scored attempt.** Unrestricted whole-container search + ldd-
+  based CUDA gate. Final: `TOOLING_GATE=PARTIAL` (nccl-tests complete; OSU
+  packaged as non-CUDA OMB v7.5 only; **no CUDA-capable osu_bw/osu_latency
+  anywhere; "osu-cuda-nvidia-alternative" not packaged**),
+  `LAUNCH_GATE=PASS`, `RESULT=ACTION_REQUIRED` → Stage 2 stopped for user
+  decision per the agreed missing-tooling path. Full results and options:
+  `../../DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1". Evidence:
+  `phase2_preflight_v3*`.
+
+Known limitation: the per-node host-GDR capture (lsmod/`/dev/gdrdrv`/topo)
+failed silently in all three attempts; compensating evidence is the
+in-container NCCL probe (nvidia_peermem GDR enablement lines, this run) plus
+the Phase 1 Step 2 fabric logs for the same node pair (2026-09-17).
