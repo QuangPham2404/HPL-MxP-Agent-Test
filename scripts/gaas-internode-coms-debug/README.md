@@ -683,3 +683,38 @@ launcher, or other transport settings in this experiment.**
   itself creates no files or jobs.
 - The pre-existing untracked `hpl-mxp-runs-on-gaas/` directory is outside
   scope and is preserved.
+
+#### Execution decisions and Stage 1 launch (agreed 2026-09-18, user-directed)
+
+Recording-keeping: from this experiment onward, Phase 2 analysis, results,
+and next steps go into `DEBUG_PROGRESS_P2.md` (this file's sibling);
+`DEBUG_PROGRESS.md` is the frozen Phase 1 record.
+
+Stage 1 additions and locked decisions:
+
+1. **Stage 1 opens with the container tooling check** (user-required):
+   verify that `nccl-tests` and `osu-cuda-nvidia-alternative` are packaged
+   in the HPL-MxP SIF, with the binaries Phase 2 needs. Stage 1 is a single
+   inspection-only PBS job on 2 host-pinned nodes (device access and the
+   bridge launch path require compute nodes; login-node container work is
+   off-limits).
+2. **Stage 2 test set:** the full per-stack set at BOTH rungs — `osu_bw`/
+   `osu_latency` (`D D` + `H H` controls) for MPI/UCX and
+   sendrecv/broadcast/all_reduce (host-campaign sweep, 8 B→64 MiB) for NCCL.
+3. **Missing tooling:** if either package is absent from the container,
+   stop and report with fallback proposals (no Stage 2 jobs, no bind-mount
+   fallbacks without explicit approval).
+4. **Bond-abort contingency (case `2026-09-17-A` analog):** if the container
+   default NCCL 3x4 allreduce fails with the matching signature (mixed
+   RoCE/IB link warnings + `ib_plugin` reject), a rerun with `NCCL_IB_HCA`
+   bond-excluded in both arms is pre-authorized as a separate documented
+   attempt — the same fix validated on host (job `67584.gaas`).
+5. Operational specifics carried over: `ngpus=4:ncpus=48:mem=1000GB` chunks
+   on every rung, scripts under `debug-scripts/phase2-*/`, outputs under
+   `outputs/phase2-*/`, attempt-specific filenames, small Stage 3 validation
+   case at N=120000/NB=1024 before the N=480000 same-allocation A/B (~2:30
+   walltime, `--skip-tests 1` + monitoring flags).
+
+Stage 1 execution: `phase2_preflight_v1`
+(`debug-scripts/phase2-preflight/`, 2026-09-18) — results in
+`DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1".

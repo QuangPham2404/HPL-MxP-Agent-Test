@@ -1,0 +1,437 @@
+#!/bin/bash
+# Phase 2 Stage 1: container and launch preflight for the in-container
+# GPUDirect-RDMA verification (Track 2.2; see parent ../README.md "Phase 2
+# plan"). Inspection only — no A/B arms, no measurements.
+#
+# Checks, in order:
+#   1. Container tooling inventory (the opening check): is nccl-tests and
+#      osu-cuda-nvidia-alternative packaged inside the HPL-MxP SIF, with the
+#      binaries Phase 2 needs (sendrecv_perf/broadcast_perf/all_reduce_perf;
+#      osu_bw/osu_latency with CUDA support)?  -> TOOLING_GATE
+#   2. SIF image identity (stat + inspect + guarded sha256).
+#   3. Container stack versions: MPI (CUDA-aware?), UCX, NCCL (tiny single-rank
+#      version probe via all_reduce_perf, guarded), CUDA/driver view.
+#   4. Container RDMA device/library access (mother-node container view).
+#   5. Host GDR module state per node (lsmod peermem/gdrdrv, /dev/gdrdrv,
+#      /dev/infiniband, nvidia-smi topo) — informational only, never a pass
+#      condition (gdrdrv presence is NOT a gate).
+#   6. Container launch-path check: container mpirun + rsh_pbsdsh_container.sh
+#      bridge + container orted across the 2 allocated nodes — per-rank
+#      node/GPU mapping + per-rank container /dev/infiniband view, then a
+#      cross-node MPI message-flow test using the container OSU package if
+#      present (osu_hello -> osu_allreduce -> osu_bw fallback chain).
+#      -> LAUNCH_GATE
+#
+# Gates:
+#   PHASE2_PREFLIGHT_TOOLING_GATE  = PASS | FAIL   (both packages complete)
+#   PHASE2_PREFLIGHT_LAUNCH_GATE   = PASS | SPAWN_ONLY | FAIL
+#   PHASE2_PREFLIGHT_RESULT        = PASS | ACTION_REQUIRED
+#   Job exits 0 only when TOOLING_GATE=PASS and LAUNCH_GATE=PASS; any other
+#   combination exits 1 with the gates explaining why (evidence preserved).
+#
+# Expected working directory: debug-scripts/phase2-preflight/ on GAAS.
+# Inputs: ATTEMPT and REQ_HOSTS via qsub -v; a 2-node host-pinned allocation
+#         (ngpus=4:ncpus=48:mem=1000GB chunks) from gpu_as/gpu_ded.
+# Outputs: PBS .o/.e (attempt-named, via qsub -o/-e) plus evidence files under
+#          ../../outputs/phase2-preflight/.
+# Assumptions: the validated Approach-1 container launch path (modules,
+#          bridge, binds, -x env propagation) stays exactly as in
+#          multi-node-test/HPL-MxP/run_hplmxp_baseline.pbs.
+
+#PBS -N P2_PREFLIGHT
+#PBS -P hpc_ebslee
+#PBS -q gpu_ded
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -uo pipefail
+
+cd "${PBS_O_WORKDIR:?PBS_O_WORKDIR is not set}"
+: "${PBS_JOBID:?PBS_JOBID is not set}"
+: "${PBS_NODEFILE:?PBS_NODEFILE is not set}"
+: "${ATTEMPT:?submit with -v ATTEMPT=<unique attempt label>}"
+: "${REQ_HOSTS:?submit with -v REQ_HOSTS=<host1+host2>}"
+
+EXPECTED_NNODES=2
+
+OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase2-preflight"
+mkdir -p "$OUTDIR"
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
+SNAPSHOT="$PBS_O_WORKDIR/../phase1-step1/collb2_node_snapshot.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+NCCL_TESTS_DIR="/workspace/microbenchmarks/nccl_tests"
+
+module purge || true
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0 \
+  || { echo "FATAL: cannot load the validated module set" >&2; exit 1; }
+
+for tool in apptainer timeout sort paste sed grep awk cat date chmod; do
+  command -v "$tool" >/dev/null 2>&1 || {
+    echo "FATAL: required tool '$tool' not found" >&2; exit 1;
+  }
+done
+[ -x /opt/pbs/bin/pbsdsh ] || { echo "FATAL: /opt/pbs/bin/pbsdsh not executable" >&2; exit 1; }
+[ -r "$PBS_NODEFILE" ] || { echo "FATAL: PBS_NODEFILE unreadable" >&2; exit 1; }
+[ -f "$BRIDGE" ] || { echo "FATAL: container bridge missing: $BRIDGE" >&2; exit 1; }
+chmod +x "$BRIDGE" || { echo "FATAL: cannot chmod bridge" >&2; exit 1; }
+[ -f "$SNAPSHOT" ] || { echo "FATAL: snapshot helper missing: $SNAPSHOT" >&2; exit 1; }
+[ -f "$SIF" ] || { echo "FATAL: SIF not found: $SIF" >&2; exit 1; }
+
+normalize_list() {
+  printf '%s\n' "$1" | tr ',+' '\n\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+    | grep -v '^$' | sort -u | paste -sd+
+}
+
+NNODES="$(awk '{gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 != "" && !seen[$0]++) n++} END {print n+0}' "$PBS_NODEFILE")"
+REQ_HOST_COUNT="$(printf '%s\n' "$REQ_HOSTS" | awk -F'[+,]' '{print NF}')"
+REQUESTED_HOSTS="$(normalize_list "$REQ_HOSTS")"
+GRANTED_HOSTS="$(awk '{gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 != "") print $0}' "$PBS_NODEFILE" | sort -u | paste -sd+)"
+
+echo "=== Phase 2 Stage 1 (container/launch preflight) metadata ==="
+echo "attempt=$ATTEMPT"
+echo "pbs_job_id=$PBS_JOBID"
+date --iso-8601=seconds
+echo "expected_nodes=$EXPECTED_NNODES granted_nodes=$NNODES"
+echo "requested_hosts=$REQUESTED_HOSTS"
+echo "granted_hosts=$GRANTED_HOSTS"
+echo "sif=$SIF"
+echo "bridge=$BRIDGE"
+echo "modules=apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.2"
+echo "launcher=container /usr/local/mpi/bin/mpirun + rsh_pbsdsh_container.sh (Approach 1)"
+echo "gates: tooling (nccl-tests + osu-cuda-nvidia-alternative packaged), launch (bridge spawn + mapping + cross-node message flow)"
+
+if [ "$NNODES" -ne "$EXPECTED_NNODES" ] || [ "$REQ_HOST_COUNT" -ne "$EXPECTED_NNODES" ] || [ "$REQUESTED_HOSTS" != "$GRANTED_HOSTS" ]; then
+  echo "FATAL: expected exactly the two requested hosts; nodes=$NNODES requested=[$REQUESTED_HOSTS] granted=[$GRANTED_HOSTS]" >&2
+  exit 1
+fi
+
+node_snapshot() {
+  local tag="$1"
+  local lockbase="$OUTDIR/.locks_${ATTEMPT}_${PBS_JOBID}_${tag}"
+  echo "=== clean-node checkpoint: $tag (pbsdsh, once per node) ==="
+  /opt/pbs/bin/pbsdsh -- /bin/bash "$SNAPSHOT" "$OUTDIR" "$ATTEMPT" "$tag" "$lockbase" \
+    || echo "WARN: clean-node checkpoint $tag failed; preserving preflight execution"
+}
+
+node_snapshot pre
+
+echo
+echo "============================================================"
+echo "SECTION 1: SIF IMAGE IDENTITY"
+echo "============================================================"
+ls -la "$SIF"
+stat -c "size=%s bytes mtime=%y" "$SIF" || true
+apptainer --version || true
+echo "--- apptainer inspect (labels) ---"
+timeout 120 apptainer inspect "$SIF" 2>&1 | head -40 || true
+echo "--- apptainer sif list (descriptors, head) ---"
+timeout 120 apptainer sif list "$SIF" 2>&1 | head -10 || true
+echo "--- sha256 (guarded, optional) ---"
+timeout 600 sha256sum "$SIF" || echo "sha256sum did not complete within 600s (non-fatal; stat+inspect recorded above)"
+
+echo
+echo "============================================================"
+echo "SECTION 2: CONTAINER TOOLING INVENTORY (opening check)"
+echo "============================================================"
+INVENTORY_LOG="$OUTDIR/${ATTEMPT}_inventory.log"
+apptainer exec --nv "$SIF" bash -c '
+  echo "--- ls -la /workspace ---"
+  ls -la /workspace 2>&1
+  echo "--- ls -la /workspace/microbenchmarks ---"
+  ls -la /workspace/microbenchmarks 2>&1
+  echo "--- ls -la /workspace/microbenchmarks/nccl_tests ---"
+  ls -la /workspace/microbenchmarks/nccl_tests 2>&1
+  echo "--- osu-like entries under /workspace (maxdepth 3) ---"
+  timeout 60 find /workspace -maxdepth 3 -iname "*osu*" 2>/dev/null
+  echo "--- osu-like entries under /opt and /usr/local (maxdepth 2) ---"
+  timeout 60 find /opt /usr/local -maxdepth 2 -iname "*osu*" 2>/dev/null
+' 2>&1 | tee "$INVENTORY_LOG"
+echo "inventory_exec_rc=${PIPESTATUS[0]}"
+
+# Machine-parsable gate evaluation inside one container exec.
+GATE_LOG="$OUTDIR/${ATTEMPT}_tooling_gate.log"
+apptainer exec --nv "$SIF" bash -c '
+  NCCL_DIR="/workspace/microbenchmarks/nccl_tests"
+  for b in sendrecv_perf broadcast_perf all_reduce_perf; do
+    if [ -x "$NCCL_DIR/$b" ]; then echo "tool_nccl_${b}=FOUND"; else echo "tool_nccl_${b}=MISSING"; fi
+  done
+  if [ -d "$NCCL_DIR" ]; then echo "tool_nccl_dir=PRESENT"; else echo "tool_nccl_dir=MISSING"; fi
+  OSU_DIR=""
+  for d in /workspace/microbenchmarks/*osu* /workspace/*osu* /opt/*osu* /opt/hpcx/*osu* /usr/local/*osu*; do
+    [ -d "$d" ] || continue
+    if [ -x "$d/osu_bw" ]; then OSU_DIR="$d"; break; fi
+  done
+  if [ -z "$OSU_DIR" ]; then
+    hit=$(timeout 90 find / -maxdepth 5 -name osu_bw -print -quit 2>/dev/null)
+    if [ -n "$hit" ]; then OSU_DIR="$(dirname "$hit")"; fi
+  fi
+  echo "tool_osu_dir=${OSU_DIR:-NOT_FOUND}"
+  for b in osu_bw osu_latency osu_hello osu_allreduce osu_bcast; do
+    if [ -n "$OSU_DIR" ] && [ -x "$OSU_DIR/$b" ]; then echo "tool_osu_${b}=FOUND"; else echo "tool_osu_${b}=MISSING"; fi
+  done
+  if [ -n "$OSU_DIR" ] && [ -x "$OSU_DIR/osu_bw" ]; then
+    echo "--- ldd osu_bw (cuda/mpi linkage) ---"
+    ldd "$OSU_DIR/osu_bw" 2>&1 | grep -iE "cuda|mpi|not found" || echo "(no cuda/mpi lines in ldd output)"
+  fi
+  if [ -d "$NCCL_DIR" ] && [ -x "$NCCL_DIR/all_reduce_perf" ]; then
+    echo "--- ldd all_reduce_perf (nccl/cuda linkage) ---"
+    ldd "$NCCL_DIR/all_reduce_perf" 2>&1 | grep -iE "nccl|cuda|not found" || echo "(no nccl/cuda lines in ldd output)"
+  fi
+' 2>&1 | tee "$GATE_LOG"
+echo "gate_exec_rc=${PIPESTATUS[0]}"
+
+OSU_DIR="$(sed -n 's/^tool_osu_dir=//p' "$GATE_LOG" | head -1)"
+[ "$OSU_DIR" = "NOT_FOUND" ] && OSU_DIR=""
+
+NCCL_TOOLS_OK=1
+for b in sendrecv_perf broadcast_perf all_reduce_perf; do
+  grep -qx "tool_nccl_${b}=FOUND" "$GATE_LOG" || NCCL_TOOLS_OK=0
+done
+OSU_TOOLS_OK=0
+OSU_CUDA_EVIDENCE=0
+if [ -n "$OSU_DIR" ] && grep -qx "tool_osu_osu_bw=FOUND" "$GATE_LOG" && grep -qx "tool_osu_osu_latency=FOUND" "$GATE_LOG"; then
+  OSU_TOOLS_OK=1
+fi
+# Scope the ldd CUDA check to the osu_bw block only — the all_reduce_perf ldd
+# links libcudart too and must not count as osu CUDA evidence.
+OSU_LDD_BLOCK="$(awk '/--- ldd osu_bw/{f=1;next} /^--- ldd all_reduce_perf/{f=0} f' "$GATE_LOG")"
+if printf "%s\n" "$OSU_LDD_BLOCK" | grep -qi "libcuda\|libcudart"; then OSU_CUDA_EVIDENCE=1; fi
+
+# osu_bw --help: records the buffer-type options (D/H or -d cuda style) and
+# gives secondary CUDA-support evidence.
+if [ "$OSU_TOOLS_OK" -eq 1 ]; then
+  OSU_HELP_LOG="$OUTDIR/${ATTEMPT}_osu_bw_help.log"
+  timeout 90 apptainer exec --nv "$SIF" "$OSU_DIR/osu_bw" --help > "$OSU_HELP_LOG" 2>&1 || true
+  echo "--- osu_bw --help (head) ---"
+  head -40 "$OSU_HELP_LOG"
+  if grep -qi "cuda" "$OSU_HELP_LOG"; then OSU_CUDA_EVIDENCE=1; fi
+else
+  echo "osu_bw --help skipped (osu_bw/osu_latency not found in container)"
+fi
+
+echo "tooling_inventory_nccl_tests_ok=$NCCL_TOOLS_OK (sendrecv_perf + broadcast_perf + all_reduce_perf)"
+echo "tooling_inventory_osu_ok=$OSU_TOOLS_OK (osu_bw + osu_latency at: ${OSU_DIR:-none})"
+echo "tooling_inventory_osu_cuda_evidence=$OSU_CUDA_EVIDENCE (ldd libcuda/libcudart and/or --help cuda option)"
+if [ "$NCCL_TOOLS_OK" -eq 1 ] && [ "$OSU_TOOLS_OK" -eq 1 ] && [ "$OSU_CUDA_EVIDENCE" -eq 1 ]; then
+  TOOLING_VERDICT=PASS
+  echo "PHASE2_PREFLIGHT_TOOLING_GATE=PASS"
+elif [ "$NCCL_TOOLS_OK" -eq 1 ] && [ "$OSU_TOOLS_OK" -eq 1 ]; then
+  TOOLING_VERDICT=PARTIAL
+  echo "PHASE2_PREFLIGHT_TOOLING_GATE=PARTIAL (osu present but CUDA support unproven; manual review required)"
+else
+  TOOLING_VERDICT=FAIL
+  echo "PHASE2_PREFLIGHT_TOOLING_GATE=FAIL"
+fi
+
+echo
+echo "============================================================"
+echo "SECTION 3: CONTAINER STACK VERSIONS"
+echo "============================================================"
+VERSIONS_LOG="$OUTDIR/${ATTEMPT}_container_versions.log"
+apptainer exec --nv "$SIF" bash -c '
+  echo "--- nvidia-smi -L ---"
+  nvidia-smi -L 2>&1
+  echo "--- nvidia-smi (driver/CUDA, head) ---"
+  nvidia-smi 2>&1 | head -15
+  echo "--- container mpirun --version ---"
+  /usr/local/mpi/bin/mpirun --version 2>&1 | head -3
+  echo "--- ompi_info version ---"
+  /usr/local/mpi/bin/ompi_info --version 2>&1 | head -6
+  echo "--- ompi_info cuda/ucx/gdr lines (CUDA-aware evidence) ---"
+  /usr/local/mpi/bin/ompi_info --all 2>/dev/null | grep -iE "cuda|ucx|gdr" | head -40
+  echo "--- ucx_info -v ---"
+  ucx_info -v 2>&1 | head -8 || echo "ucx_info not on container PATH"
+  echo "--- command locations ---"
+  command -v ucx_info || true
+  command -v orted || true
+  echo "--- nvcc ---"
+  nvcc --version 2>&1 | tail -2 || echo "no-nvcc on PATH"
+  echo "--- NCCL libraries (bounded find) ---"
+  timeout 90 find /usr /opt /workspace -maxdepth 6 -name "libnccl.so.2*" 2>/dev/null | head -5
+  echo "--- relevant container environment ---"
+  printenv | sort | grep -E "^(PATH|LD_LIBRARY_PATH|UCX|NCCL|OMPI|CUDA|HPL)" | head -30
+' 2>&1 | tee "$VERSIONS_LOG"
+
+# Tiny single-rank NCCL version/transport probe (8 B, 2 iters — NOT a
+# measurement): records the container NCCL version and its default network
+# plugin selection, guarded on the packaged binary existing.
+if grep -qx "tool_nccl_all_reduce_perf=FOUND" "$GATE_LOG"; then
+  NCCL_PROBE_LOG="$OUTDIR/${ATTEMPT}_nccl_version_probe.log"
+  echo "--- NCCL single-rank version probe (all_reduce_perf -b 8 -e 8 -w 1 -n 2) ---"
+  NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,ENV,NET \
+    timeout 180 apptainer exec --nv "$SIF" \
+    "$NCCL_TESTS_DIR/all_reduce_perf" -b 8 -e 8 -w 1 -n 2 \
+    > "$NCCL_PROBE_LOG" 2>&1 || true
+  grep -E "NCCL version|NET/|Using network|GPU Direct|Out of bounds" "$NCCL_PROBE_LOG" | head -20
+  echo "nccl_version_probe_log=$NCCL_PROBE_LOG"
+else
+  echo "NCCL version probe skipped (all_reduce_perf not found in container)"
+fi
+
+echo
+echo "============================================================"
+echo "SECTION 4: CONTAINER RDMA DEVICE/LIBRARY ACCESS (mother node)"
+echo "============================================================"
+RDMA_LOG="$OUTDIR/${ATTEMPT}_container_rdma_mother.log"
+apptainer exec --nv "$SIF" bash -c '
+  echo "--- /dev/infiniband ---"
+  ls -la /dev/infiniband/ 2>&1 || echo "no /dev/infiniband visible in container"
+  echo "--- /sys/class/infiniband ---"
+  ls /sys/class/infiniband/ 2>&1 || echo "no /sys/class/infiniband visible"
+  echo "--- ibv_devices ---"
+  ibv_devices 2>&1 || echo "ibv_devices unavailable in container"
+  echo "--- verbs/ucx/nccl shared libraries (ldconfig) ---"
+  ldconfig -p 2>/dev/null | grep -iE "libibverbs|libucp|libuct|libnccl" | head -20
+' 2>&1 | tee "$RDMA_LOG"
+
+echo
+echo "============================================================"
+echo "SECTION 5: HOST GDR MODULE STATE PER NODE (informational, no gate)"
+echo "============================================================"
+idx=0
+for node in $(awk '{gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 != "" && !seen[$0]++) print}' "$PBS_NODEFILE"); do
+  HOSTGDR_LOG="$OUTDIR/${ATTEMPT}_hostgdr_${node}.log"
+  echo "--- host GDR state: $node (vnode idx $idx) ---"
+  /opt/pbs/bin/pbsdsh -n "$idx" -- bash -c '
+    hostname
+    date --iso-8601=seconds
+    echo "--- lsmod GDR modules ---"
+    lsmod 2>/dev/null | grep -E "nvidia_peermem|nv_peer_mem|gdrdrv" || echo "(no peermem/gdrdrv module loaded)"
+    echo "--- /dev/gdrdrv ---"
+    ls -la /dev/gdrdrv 2>&1 || true
+    echo "--- /dev/infiniband (host view) ---"
+    ls /dev/infiniband/ 2>&1 || true
+    echo "--- host ibv_devices ---"
+    ibv_devices 2>&1 || true
+    echo "--- nvidia-smi topo -m ---"
+    nvidia-smi topo -m 2>&1 || true
+  ' > "$HOSTGDR_LOG" 2>&1
+  grep -E "^---|nvidia_peermem|gdrdrv|no peermem" "$HOSTGDR_LOG" | head -10
+  echo "host_gdr_log=$HOSTGDR_LOG"
+  idx=$((idx+1))
+done
+
+echo
+echo "============================================================"
+echo "SECTION 6: CONTAINER LAUNCH-PATH CHECK (2 nodes, Approach 1)"
+echo "============================================================"
+# De-duplicated hostfile with slots=1 -> -np 2 places one rank per node
+# (same slots convention as the Phase 1 host 2x1 rungs).
+HOSTFILE="$PWD/${ATTEMPT}_hostfile_${PBS_JOBID}"
+awk -v slots=1 '
+  { gsub(/\r/,""); sub(/^[ \t]+/,""); sub(/[ \t]+$/,""); if ($0=="") next }
+  { if (!seen[$0]++) print $0 " slots=" slots }
+' "$PBS_NODEFILE" > "$HOSTFILE"
+echo "--- hostfile ---"
+cat "$HOSTFILE"
+
+LAUNCH_LOG="$OUTDIR/${ATTEMPT}_container_launch.log"
+echo "--- rank spawn + mapping + per-rank device view (container mpirun via bridge) ---"
+timeout 300 apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT/multi-node-test":"$REPO_ROOT/multi-node-test" \
+  -B "$PBS_O_WORKDIR":"$PBS_O_WORKDIR" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$EXPECTED_NNODES" \
+    --hostfile "$HOSTFILE" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    bash -c '
+      echo "rank=$OMPI_COMM_WORLD_RANK/$OMPI_COMM_WORLD_SIZE host=$(hostname) local_rank=$OMPI_COMM_WORLD_LOCAL_RANK/$OMPI_COMM_WORLD_LOCAL_SIZE"
+      echo "cvd=$(printenv CUDA_VISIBLE_DEVICES || echo unset)"
+      echo "cpus_allowed=$(grep Cpus_allowed_list /proc/self/status | cut -f2) mems_allowed=$(grep Mems_allowed_list /proc/self/status | cut -f2)"
+      echo "--- visible GPUs (rank view) ---"
+      nvidia-smi -L 2>&1
+      echo "--- /dev/infiniband (rank view) ---"
+      ls /dev/infiniband/ 2>&1 || echo "no /dev/infiniband visible"
+      echo "--- ibv_devices (rank view) ---"
+      ibv_devices 2>&1 || echo "ibv_devices unavailable"
+    ' 2>&1 | tee "$LAUNCH_LOG"
+SPAWN_RC="${PIPESTATUS[0]}"
+echo "container_spawn_mapping_rc=$SPAWN_RC (124=timeout)"
+
+RANK_LINES=$(grep -c "^rank=" "$LAUNCH_LOG" || true)
+DISTINCT_HOSTS=$(grep "^rank=" "$LAUNCH_LOG" | sed "s/.*host=\([^ ]*\).*/\1/" | sort -u | wc -l)
+echo "spawn_rank_lines=$RANK_LINES spawn_distinct_hosts=$DISTINCT_HOSTS"
+
+# Cross-node MPI message flow through the same launch path, using the
+# container OSU package if present (fallback chain; H H buffers only — this
+# is launch-path health, not the Stage 2 GDR measurement).
+MSGFLOW_RC=""
+MSGFLOW_BIN=""
+if grep -qx "tool_osu_osu_hello=FOUND" "$GATE_LOG"; then
+  MSGFLOW_BIN="osu_hello"
+elif grep -qx "tool_osu_osu_allreduce=FOUND" "$GATE_LOG"; then
+  MSGFLOW_BIN="osu_allreduce"
+elif grep -qx "tool_osu_osu_bw=FOUND" "$GATE_LOG"; then
+  MSGFLOW_BIN="osu_bw"
+fi
+MSGFLOW_LOG="$OUTDIR/${ATTEMPT}_container_mpi_msgflow.log"
+if [ -n "$MSGFLOW_BIN" ]; then
+  echo "--- cross-node MPI message flow: $MSGFLOW_BIN (container, H H) ---"
+  timeout 300 apptainer exec --nv \
+    -B /opt/pbs:/opt/pbs \
+    -B /var/spool/pbs:/var/spool/pbs \
+    -B "$REPO_ROOT/multi-node-test":"$REPO_ROOT/multi-node-test" \
+    -B "$PBS_O_WORKDIR":"$PBS_O_WORKDIR" \
+    "$SIF" \
+    /usr/local/mpi/bin/mpirun -np "$EXPECTED_NNODES" \
+      --hostfile "$HOSTFILE" \
+      --mca plm_rsh_agent "$BRIDGE" \
+      --mca plm_rsh_no_tree_spawn 1 \
+      --mca plm_rsh_num_concurrent 1 \
+      --mca routed direct \
+      -x PATH -x LD_LIBRARY_PATH \
+      --bind-to none \
+      "$OSU_DIR/$MSGFLOW_BIN" 2>&1 | tee "$MSGFLOW_LOG"
+  MSGFLOW_RC="${PIPESTATUS[0]}"
+  echo "container_msgflow_${MSGFLOW_BIN}_rc=$MSGFLOW_RC (124=timeout)"
+else
+  echo "cross-node MPI message-flow test skipped (no usable OSU binary in container; spawn check above is the launch evidence)"
+fi
+
+cp "$HOSTFILE" "$OUTDIR/${ATTEMPT}_hostfile_${PBS_JOBID}"
+rm -f "$HOSTFILE"
+
+# Launch gate: spawn check must succeed with one rank per node; message-flow
+# adds real cross-node MPI comms. Without OSU binaries the gate degrades to
+# SPAWN_ONLY (the tooling gate already forces a stop in that case).
+if [ "$SPAWN_RC" -eq 0 ] && [ "$RANK_LINES" -eq "$EXPECTED_NNODES" ] && [ "$DISTINCT_HOSTS" -eq "$EXPECTED_NNODES" ]; then
+  if [ -n "$MSGFLOW_RC" ]; then
+    if [ "$MSGFLOW_RC" -eq 0 ]; then
+      LAUNCH_VERDICT=PASS
+      echo "PHASE2_PREFLIGHT_LAUNCH_GATE=PASS"
+    else
+      LAUNCH_VERDICT=FAIL
+      echo "PHASE2_PREFLIGHT_LAUNCH_GATE=FAIL (spawn/mapping OK but $MSGFLOW_BIN returned $MSGFLOW_RC)"
+    fi
+  else
+    LAUNCH_VERDICT=SPAWN_ONLY
+    echo "PHASE2_PREFLIGHT_LAUNCH_GATE=SPAWN_ONLY (no OSU binary for message-flow test)"
+  fi
+else
+  LAUNCH_VERDICT=FAIL
+  echo "PHASE2_PREFLIGHT_LAUNCH_GATE=FAIL (spawn_rc=$SPAWN_RC rank_lines=$RANK_LINES distinct_hosts=$DISTINCT_HOSTS)"
+fi
+
+node_snapshot post
+
+echo
+echo "============================================================"
+echo "SECTION 7: SUMMARY"
+echo "============================================================"
+echo "phase2_preflight_end=$(date --iso-8601=seconds)"
+echo "tooling_gate=$TOOLING_VERDICT launch_gate=$LAUNCH_VERDICT"
+if [ "$TOOLING_VERDICT" = "PASS" ] && [ "$LAUNCH_VERDICT" = "PASS" ]; then
+  echo "PHASE2_PREFLIGHT_RESULT=PASS (Stage 2 container-native A/B may proceed)"
+  exit 0
+else
+  echo "PHASE2_PREFLIGHT_RESULT=ACTION_REQUIRED (tooling_gate=$TOOLING_VERDICT launch_gate=$LAUNCH_VERDICT; stop and report per the agreed missing-tooling path)"
+  exit 1
+fi
