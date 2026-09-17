@@ -140,12 +140,24 @@ the collective. A Socket result is a valid observation, not a script failure;
 if the log does not clearly identify the data backend, report transport as
 inconclusive even if the collective passes.
 
-Status: relocated here on 2026-09-17. It was originally misplaced at
-`../debug-scripts/nccl-tests-smoke-3x4/` (first committed as `b34738d`); that
-directory is preserved as `../debug-scripts/[IGNORE]nccl-tests-smoke-3x4/`
-and must not be used. Not synchronized or submitted: the `ssh -O check gaas`
-preflight returned `No ControlPath specified`. Restore the persistent GAAS
-connection before the fresh `pbsnodes -aSj` node probe and submission.
+### Smoke attempt log
+
+- `nccl_tests_3x4_smoke_v1` — PBS job `67415.gaas`, submitted 2026-09-17
+  16:19 +08 on the cleanest feasible allowed-queue trio (pinned gpu_ded:
+  g22 pristine 8/8; g01 7/8 with 4 single-GPU co-tenants arriving minutes
+  before; g20 6/8 after a 6h job ended; the pristine g16-g18 nodes are
+  `gpu_aisg`, which is outside the allowed gpu_as/gpu_ded scope). **FAILED in
+  2 s** (exit 1, empty `.o`): `FATAL: required tool 'mpirun' was not found` —
+  deterministic Track 1 defect: the tool preflight ran before
+  `module load nvhpc/26.3`, which is what supplies `mpirun` on compute nodes.
+  Evidence: `outputs/nccl_tests_3x4_smoke_v1.{o,e}` (preserved) and
+  `outputs/nccl_tests_3x4_smoke_v1_{presched_t0,startrun_snapshot}.txt`
+  (pre-submission/run-start scheduler snapshots). No co-tenant entered the
+  nodes during the 2 s run. Patch (v2): the module load + `NCCL_HOME`/
+  `LD_LIBRARY_PATH` exports moved before the tool preflight; retry submitted
+  as `nccl_tests_3x4_smoke_v2` with new `.o`/`.e` names.
+- `nccl_tests_3x4_smoke_v2` — retry after the Track 1 patch (same pinned-node
+  selection, re-probed before submission).
 
 ## Source provenance
 

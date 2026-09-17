@@ -38,6 +38,13 @@ NPROCS=$((EXPECTED_NNODES * GPUS_PER_NODE))
 NCCL_LOG="$OUTDIR/${ATTEMPT}_${PBS_JOBID}_nccl.log"
 HOSTFILE="$OUTDIR/${ATTEMPT}_${PBS_JOBID}_hostfile"
 
+# Load the HPC software environment before the tool preflight: mpirun comes
+# from nvhpc/26.3 and is absent from the bare PBS environment (v1 failure).
+module purge || { echo "FATAL: module purge failed" >&2; exit 1; }
+module load nvhpc/26.3 || { echo "FATAL: cannot load nvhpc/26.3" >&2; exit 1; }
+export NCCL_HOME
+export LD_LIBRARY_PATH="$NCCL_HOME/lib:${LD_LIBRARY_PATH:-}"
+
 for tool in mpirun timeout awk sort paste sed grep date tee tr wc cat chmod; do
   command -v "$tool" >/dev/null 2>&1 || {
     echo "FATAL: required tool '$tool' was not found" >&2
@@ -84,11 +91,6 @@ if [ "$(wc -l < "$HOSTFILE")" -ne "$EXPECTED_NNODES" ]; then
   echo "FATAL: expected $EXPECTED_NNODES unique hosts in $HOSTFILE" >&2
   exit 1
 fi
-
-module purge || { echo "FATAL: module purge failed" >&2; exit 1; }
-module load nvhpc/26.3 || { echo "FATAL: cannot load nvhpc/26.3" >&2; exit 1; }
-export NCCL_HOME
-export LD_LIBRARY_PATH="$NCCL_HOME/lib:${LD_LIBRARY_PATH:-}"
 
 # Remove the controls used by the earlier diagnostic matrix so this run observes
 # NCCL's default network/HCA selection. Debugging variables only add visibility.
