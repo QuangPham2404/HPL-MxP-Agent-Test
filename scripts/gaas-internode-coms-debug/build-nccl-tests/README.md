@@ -3,20 +3,24 @@
 Self-contained home for building NVIDIA `nccl-tests`
 (https://github.com/nvidia/nccl-tests) on GAAS for Phase 1 — Step 2
 (host-only NCCL GPUDirect RDMA verification) of the internode comms debug.
-Everything related to building, smoke-testing, and debugging the nccl-tests
-build — scripts, the source tree, and build evidence — stays in this
-directory. The experiments that use the built binaries live in
-`../debug-scripts/phase1-step2/` with evidence in `../outputs/phase1-step2/`,
-planned and recorded in `../README.md` and `../DEBUG_PROGRESS.md` like every
-other step. No outer directory (`builds/`, repo root) is touched by this
-build.
+Everything related to building and smoke-testing the nccl-tests toolchain —
+build/smoke scripts, the source tree, smoke runs, and all of their evidence —
+stays in this directory. This includes the 3x4 functional smoke below: smoke
+runs are build-toolchain artifacts and must not contaminate the outer
+experiment/evidence trees. The transport-control experiment matrix that uses
+the built binaries lives in `../debug-scripts/phase1-step2/` with evidence in
+`../outputs/phase1-step2/`, planned and recorded in `../README.md` and
+`../DEBUG_PROGRESS.md` like every other step. No outer directory (`builds/`,
+repo root) is touched by this build.
 
 ## Layout
 
-- `scripts/` — build + smoke scripts (tracked)
+- `scripts/` — build + smoke scripts, including the 3x4 functional smoke
+  `run_nccl_tests_smoke_3x4.pbs` (tracked)
 - `nccl-tests/` — upstream source clone; builds in-tree into
   `nccl-tests/build/` (not tracked; ignored via the root `.gitignore`)
-- `outputs/` — build + smoke PBS `.o`/`.e` evidence (tracked)
+- `outputs/` — build + smoke PBS `.o`/`.e` evidence, including the 3x4 smoke
+  outputs (tracked)
 
 ## Toolchain (verified 2026-09-17, GAAS read-only probe)
 
@@ -84,6 +88,64 @@ qsub -o outputs/build_nccl_tests_host_v1.o \
 
 Retries use a new attempt suffix (`_v2`, …) with new `.o`/`.e` filenames;
 never overwrite earlier evidence.
+
+## 3x4 functional smoke (`scripts/run_nccl_tests_smoke_3x4.pbs`)
+
+One functional smoke of the host-native build on the 3-node × 4-GPU topology
+(12 MPI/NCCL ranks), separate from the single-node build smoke above and from
+the Phase 1 Step 2 transport-control matrix in `../debug-scripts/phase1-step2/`.
+It answers: (1) does one NCCL collective complete correctly on this topology,
+and (2) which NCCL network backend does the default configuration select for
+the collective data path — the IB plugin or Socket? No A/B arms, no forced
+Socket/GDR settings, no message-size sweep, no performance comparison;
+socket/bootstrap messages alone are not evidence of a Socket data path.
+
+- Binary: `nccl-tests/build/all_reduce_perf`; stack `nvhpc/26.3` (host HPC-X
+  OpenMPI, CUDA 13.1, NCCL 2.29.3); one rank per GPU via
+  `CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK`; host `mpirun` +
+  `multi-node-test/rsh_pbsdsh.sh` bridge (Phase 1 Step 1 recipe).
+- Test: one `all_reduce_perf` invocation at a fixed 1 MiB payload, one
+  warmup, two iterations — functional correctness only.
+- NCCL settings: `NCCL_DEBUG=INFO` +
+  `NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH`; `NCCL_IB_DISABLE`,
+  `NCCL_NET`, `NCCL_NET_GDR_LEVEL`, `NCCL_IB_HCA`, and `NCCL_SOCKET_IFNAME`
+  are unset so default network selection is observed.
+
+Submission (from this directory). Before each submission inspect
+`pbsnodes -aSj` and choose the cleanest three eligible distinct nodes from
+`gpu_as` or `gpu_ded` (`gpu_free` is currently disabled), in the queue
+matching those nodes. Reserve four GPUs, 48 CPUs, and 1000 GB per node
+(established clean-node shape); do not specify `mpiprocs` — the script
+derives 12 ranks from the topology. Group `hpc_ebslee`:
+
+```bash
+pbsnodes -aSj
+mkdir -p outputs
+qsub -q <gpu_as-or-gpu_ded> \
+  -l "select=host=<node1>:ngpus=4:ncpus=48:mem=1000GB+host=<node2>:ngpus=4:ncpus=48:mem=1000GB+host=<node3>:ngpus=4:ncpus=48:mem=1000GB" \
+  -v "ATTEMPT=nccl_tests_3x4_smoke_v1,REQ_HOSTS=<node1>+<node2>+<node3>" \
+  scripts/run_nccl_tests_smoke_3x4.pbs
+```
+
+Submit one job only. For any retry, choose a new `ATTEMPT` and new PBS `.o`
+/ `.e` names with `qsub -o` and `-e`; preserve all earlier output.
+
+Pass criteria: PBS exit status 0, exactly the three requested/granted nodes,
+four local ranks per node, and `all_reduce_perf` reporting `Out of bounds
+values : 0 OK`. Classify the selected data backend from NCCL `NET` lines in
+the combined log under `outputs/`: `NET/IBext_v11` (or another `NET/IB`
+backend) with HCA details means IB; `NET/Socket` with its interface means
+Socket; bootstrap/socket lines alone are control traffic and do not classify
+the collective. A Socket result is a valid observation, not a script failure;
+if the log does not clearly identify the data backend, report transport as
+inconclusive even if the collective passes.
+
+Status: relocated here on 2026-09-17. It was originally misplaced at
+`../debug-scripts/nccl-tests-smoke-3x4/` (first committed as `b34738d`); that
+directory is preserved as `../debug-scripts/[IGNORE]nccl-tests-smoke-3x4/`
+and must not be used. Not synchronized or submitted: the `ssh -O check gaas`
+preflight returned `No ControlPath specified`. Restore the persistent GAAS
+connection before the fresh `pbsnodes -aSj` node probe and submission.
 
 ## Source provenance
 

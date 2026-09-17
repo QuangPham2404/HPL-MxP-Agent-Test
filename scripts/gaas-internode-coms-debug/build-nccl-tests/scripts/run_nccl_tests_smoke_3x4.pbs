@@ -1,0 +1,157 @@
+#!/bin/bash
+# One functional nccl-tests smoke on three GAAS nodes with four GPUs per node.
+# Expected working directory: scripts/gaas-internode-coms-debug/build-nccl-tests/
+# on GAAS; submit from that directory with:
+#   qsub scripts/run_nccl_tests_smoke_3x4.pbs
+# Inputs: ATTEMPT and REQ_HOSTS supplied to qsub; a host-native nccl-tests build.
+# Outputs: PBS .o/.e files, the rank hostfile, and combined NCCL/application log
+#          under build-nccl-tests/outputs/ (self-contained with the build).
+# Assumptions: one rank per GPU; host HPC-X from nvhpc/26.3; default NCCL
+#              network selection, with only diagnostic logging enabled.
+
+#PBS -N NCCL_SMOKE_3X4
+#PBS -P hpc_ebslee
+#PBS -l place=scatter
+#PBS -l walltime=00:20:00
+#PBS -o outputs/nccl_tests_3x4_smoke_v1.o
+#PBS -e outputs/nccl_tests_3x4_smoke_v1.e
+
+set -uo pipefail
+
+cd "${PBS_O_WORKDIR:?PBS_O_WORKDIR is not set}"
+: "${PBS_JOBID:?PBS_JOBID is not set}"
+: "${PBS_NODEFILE:?PBS_NODEFILE is not set}"
+: "${ATTEMPT:?submit with -v ATTEMPT=<unique attempt label>}"
+: "${REQ_HOSTS:?submit with -v REQ_HOSTS=<host1+host2+host3>}"
+
+OUTDIR="$PBS_O_WORKDIR/outputs"
+mkdir -p "$OUTDIR"
+
+REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../.." && pwd)"
+BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
+BNT_ROOT="$PBS_O_WORKDIR"
+SRBIN="$BNT_ROOT/nccl-tests/build/all_reduce_perf"
+NCCL_HOME="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/nccl"
+GPUS_PER_NODE=4
+EXPECTED_NNODES=3
+NPROCS=$((EXPECTED_NNODES * GPUS_PER_NODE))
+NCCL_LOG="$OUTDIR/${ATTEMPT}_${PBS_JOBID}_nccl.log"
+HOSTFILE="$OUTDIR/${ATTEMPT}_${PBS_JOBID}_hostfile"
+
+for tool in mpirun timeout awk sort paste sed grep date tee tr wc cat chmod; do
+  command -v "$tool" >/dev/null 2>&1 || {
+    echo "FATAL: required tool '$tool' was not found" >&2
+    exit 1
+  }
+done
+[ -r "$PBS_NODEFILE" ] || { echo "FATAL: unreadable PBS_NODEFILE=$PBS_NODEFILE" >&2; exit 1; }
+[ -f "$BRIDGE" ] || { echo "FATAL: pbsdsh bridge missing: $BRIDGE" >&2; exit 1; }
+chmod +x "$BRIDGE" || { echo "FATAL: cannot make pbsdsh bridge executable: $BRIDGE" >&2; exit 1; }
+
+normalize_list() {
+  printf '%s\n' "$1" | tr ',+' '\n\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sort -u | paste -sd+
+}
+
+NNODES="$(awk '{gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 != "" && !seen[$0]++) n++} END {print n+0}' "$PBS_NODEFILE")"
+REQ_HOST_COUNT="$(printf '%s\n' "$REQ_HOSTS" | awk -F'[+,]' '{print NF}')"
+REQUESTED_HOSTS="$(normalize_list "$REQ_HOSTS")"
+GRANTED_HOSTS="$(awk '{gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 != "") print $0}' "$PBS_NODEFILE" | sort -u | paste -sd+)"
+
+echo "=== NCCL 3x4 smoke metadata ==="
+echo "attempt=$ATTEMPT"
+echo "pbs_job_id=$PBS_JOBID"
+date --iso-8601=seconds
+echo "expected_layout=${EXPECTED_NNODES}nodesx${GPUS_PER_NODE}gpus ranks=$NPROCS"
+echo "requested_hosts=$REQUESTED_HOSTS"
+echo "granted_hosts=$GRANTED_HOSTS"
+echo "nccl_binary=$SRBIN"
+echo "nccl_source_commit=$(git -C "$BNT_ROOT/nccl-tests" rev-parse HEAD 2>/dev/null || echo unknown)"
+echo "network_controls=unset (NCCL default selection)"
+echo "test=one all_reduce_perf invocation, 1 MiB payload, warmup=1 iterations=2"
+echo "nccl_log=$NCCL_LOG"
+
+if [ "$NNODES" -ne "$EXPECTED_NNODES" ] || [ "$REQ_HOST_COUNT" -ne "$EXPECTED_NNODES" ] || [ "$REQUESTED_HOSTS" != "$GRANTED_HOSTS" ]; then
+  echo "FATAL: expected exactly the three requested hosts; nodes=$NNODES requested=[$REQUESTED_HOSTS] granted=[$GRANTED_HOSTS]" >&2
+  exit 1
+fi
+
+awk -v slots="$GPUS_PER_NODE" '
+  { gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 == "") next }
+  { if (!seen[$0]++) print $0 " slots=" slots }
+' "$PBS_NODEFILE" > "$HOSTFILE"
+
+if [ "$(wc -l < "$HOSTFILE")" -ne "$EXPECTED_NNODES" ]; then
+  echo "FATAL: expected $EXPECTED_NNODES unique hosts in $HOSTFILE" >&2
+  exit 1
+fi
+
+module purge || { echo "FATAL: module purge failed" >&2; exit 1; }
+module load nvhpc/26.3 || { echo "FATAL: cannot load nvhpc/26.3" >&2; exit 1; }
+export NCCL_HOME
+export LD_LIBRARY_PATH="$NCCL_HOME/lib:${LD_LIBRARY_PATH:-}"
+
+# Remove the controls used by the earlier diagnostic matrix so this run observes
+# NCCL's default network/HCA selection. Debugging variables only add visibility.
+unset NCCL_IB_DISABLE NCCL_NET NCCL_NET_GDR_LEVEL NCCL_IB_HCA NCCL_SOCKET_IFNAME
+export NCCL_DEBUG=INFO
+export NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH
+export NCCL_DEBUG_FILE=/dev/stderr
+export SRBIN
+
+[ -f "$NCCL_HOME/lib/libnccl.so.2" ] || { echo "FATAL: NCCL library missing under $NCCL_HOME/lib" >&2; exit 1; }
+[ -x "$SRBIN" ] || { echo "FATAL: all_reduce_perf missing or not executable: $SRBIN" >&2; exit 1; }
+
+echo "=== MPI/NCCL runtime ==="
+echo "mpirun=$(command -v mpirun)"
+mpirun --version | sed -n '1,2p'
+echo "nccl_home=$NCCL_HOME"
+echo "nccl_library=$(readlink -f "$NCCL_HOME/lib/libnccl.so.2" 2>/dev/null || echo unresolved)"
+echo "nccl_environment=$(env | grep '^NCCL_' | sort | tr '\n' ';' || true)"
+echo "=== hostfile ==="
+cat "$HOSTFILE"
+echo "=== linked runtime libraries ==="
+ldd "$SRBIN" 2>&1 | grep -E 'lib(nccl|mpi|cudart)' || true
+
+echo "=== One 12-rank nccl-tests all-reduce ==="
+if timeout 600 mpirun -np "$NPROCS" \
+    --hostfile "$HOSTFILE" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    --bind-to none \
+    -x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS \
+    -x NCCL_DEBUG_FILE -x SRBIN \
+    bash -c '
+      rank="${OMPI_COMM_WORLD_RANK:?}"
+      world="${OMPI_COMM_WORLD_SIZE:?}"
+      local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:?}"
+      local_size="${OMPI_COMM_WORLD_LOCAL_SIZE:?}"
+      if [ "$world" -ne 12 ] || [ "$local_size" -ne 4 ] || [ "$local_rank" -ge 4 ]; then
+        echo "FATAL: unexpected MPI mapping rank=$rank/$world local_rank=$local_rank/$local_size host=$(hostname)" >&2
+        exit 1
+      fi
+      export CUDA_VISIBLE_DEVICES="$local_rank"
+      echo "rank=$rank/$world host=$(hostname) local_rank=$local_rank/$local_size CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES"
+      exec "$SRBIN" -b 1048576 -e 1048576 -g 1 -w 1 -n 2
+    ' 2>&1 | tee "$NCCL_LOG"; then
+  RUN_RC=0
+else
+  RUN_RC=$?
+fi
+echo "all_reduce_perf_rc=$RUN_RC"
+
+if [ "$RUN_RC" -ne 0 ]; then
+  echo "NCCL_3X4_SMOKE_RESULT=FAIL (launcher/test returned $RUN_RC)"
+  exit 1
+fi
+if ! grep -Fq 'Out of bounds values : 0 OK' "$NCCL_LOG"; then
+  echo "NCCL_3X4_SMOKE_RESULT=FAIL (zero-error marker missing)"
+  exit 1
+fi
+
+echo "=== NCCL network-selection evidence (classify data backend from NET lines) ==="
+grep -E 'Using network|NET/(IB|Socket)|NET/IBext|Using .*mlx5|mlx5_' "$NCCL_LOG" || true
+echo "Bootstrap/socket control traffic is not the NCCL data backend. Review NET backend and HCA/interface lines above."
+echo "NCCL_TRANSPORT_READOUT=REQUIRES_LOG_REVIEW"
+echo "NCCL_3X4_SMOKE_RESULT=PASS"

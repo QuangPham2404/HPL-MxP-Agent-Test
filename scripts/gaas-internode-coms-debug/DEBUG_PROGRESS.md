@@ -749,9 +749,21 @@ README/output paths. The run will classify IB vs Socket from NCCL `NET` data
 backend/HCA/interface messages; bootstrap sockets alone are not evidence of a
 Socket data path. The 3x4 smoke is not a performance comparison.
 
-**Status: committed/pushed locally, not synchronized or submitted.** Commit
-`b34738d` contains the isolated smoke script and documentation. The required
-`ssh -O check gaas` preflight returned `No ControlPath specified`, so no remote
-inspection, node probe, synchronization, or submission was attempted. Restore
-the GAAS persistent SSH connection/check before resuming at fresh
-`pbsnodes -aSj` node selection.
+**Logistics correction (2026-09-17, user-directed):** the smoke is a
+build-toolchain run, so it now lives inside the self-contained
+`build-nccl-tests/` tree — script at
+`build-nccl-tests/scripts/run_nccl_tests_smoke_3x4.pbs` (submitted from
+`build-nccl-tests/`), outputs in `build-nccl-tests/outputs/`. The misplaced
+`debug-scripts/nccl-tests-smoke-3x4/` directory was re-labeled
+`debug-scripts/[IGNORE]nccl-tests-smoke-3x4/` and preserved — do not run from
+it. Script paths were fixed for the new submission directory: `REPO_ROOT` is
+now three levels up from `PBS_O_WORKDIR`, and `BNT_ROOT` anchors directly on
+`PBS_O_WORKDIR`. Run documentation moved into
+`build-nccl-tests/README.md` → "3x4 functional smoke".
+
+**Status: not synchronized or submitted.** The smoke was first committed and
+pushed as `b34738d` (old placement); the relocation is pending in the local
+tree. The required `ssh -O check gaas` preflight returned `No ControlPath
+specified`, so no remote inspection, node probe, synchronization, or
+submission was attempted. Restore the GAAS persistent SSH connection/check
+before resuming at fresh `pbsnodes -aSj` node selection.

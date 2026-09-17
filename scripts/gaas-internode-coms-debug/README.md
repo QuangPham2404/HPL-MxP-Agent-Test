@@ -426,11 +426,17 @@ verified. See `debug-scripts/phase1-step2/README.md` for job evidence.
 #### Separate 3x4 functional smoke requested on 2026-09-17
 
 The Socket-control issue above belongs to that multi-arm matrix. It does not
-block a separate default-path `nccl-tests` smoke. The one-command 3x4 smoke is
-prepared under `debug-scripts/nccl-tests-smoke-3x4/`; it runs one 1 MiB
-all-reduce on 12 ranks and records NCCL network/HCA/interface selection
-without forcing a transport. It is committed and pushed in `b34738d`, but has
-not been synchronized or submitted because the required `ssh -O check gaas`
-returned `No ControlPath specified`. Restore the documented persistent
-connection, then probe nodes and submit the smoke independently of the older
-matrix.
+block a separate default-path `nccl-tests` smoke. The one-command 3x4 smoke
+runs one 1 MiB all-reduce on 12 ranks and records NCCL network/HCA/interface
+selection without forcing a transport. **Logistics correction (2026-09-17):**
+the smoke is a build-toolchain run, so per the self-contained
+`build-nccl-tests/` design its script lives at
+`build-nccl-tests/scripts/run_nccl_tests_smoke_3x4.pbs`, submitted from
+`build-nccl-tests/`, with outputs in `build-nccl-tests/outputs/`. The
+originally misplaced `debug-scripts/nccl-tests-smoke-3x4/` directory is
+preserved and re-labeled `debug-scripts/[IGNORE]nccl-tests-smoke-3x4/` — do
+not run from it. The smoke was first committed and pushed in `b34738d`; the
+relocation is recorded in the repository history. It has not been synchronized
+or submitted because the required `ssh -O check gaas` returned `No ControlPath
+specified`. Restore the documented persistent connection, then probe nodes and
+submit the smoke independently of the older matrix.

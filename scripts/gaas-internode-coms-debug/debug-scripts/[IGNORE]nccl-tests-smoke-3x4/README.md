@@ -1,5 +1,14 @@
 # NCCL-tests 3-node × 4-GPU smoke test
 
+> **[IGNORE] — superseded placement (2026-09-17).** This smoke was misplaced
+> under `debug-scripts/`. Per the self-contained `build-nccl-tests/` design,
+> the live script is now
+> `../../build-nccl-tests/scripts/run_nccl_tests_smoke_3x4.pbs`, submitted
+> from `build-nccl-tests/` with outputs in `build-nccl-tests/outputs/`. This
+> directory is preserved for history only — do not submit from here. The
+> instructions below describe the original (wrong) placement and are kept
+> only as a record.
+
 ## Purpose and scope
 
 This is one functional smoke test of the host-native `nccl-tests` build on the
