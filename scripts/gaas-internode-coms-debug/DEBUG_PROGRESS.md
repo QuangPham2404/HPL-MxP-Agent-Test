@@ -734,3 +734,23 @@ fully validated matrix passes. The 3x4 job was not submitted.
 to force the Socket network with the installed plugin; do not change the
 transport control or submit 3x4 until that correction is reviewed. Preserve
 the existing `.o`, `.e`, per-arm, and node evidence.
+
+## Separate user-requested NCCL 3x4 smoke (2026-09-17)
+
+The user clarified that the immediate goal is a plain default-path nccl-tests
+smoke on 3 nodes × 4 GPUs, not the Phase 1 Step 2 transport-control matrix. The
+older matrix's Socket-control issue applies only to its `NCCL_IB_DISABLE=1`
+arm; it does not block a smoke that leaves transport selection at default.
+
+Prepared `debug-scripts/nccl-tests-smoke-3x4/` with one fixed-size
+`all_reduce_perf` invocation (12 ranks, one GPU per rank), the Phase 1 Step 1
+host MPI + pbsdsh launch pattern, NCCL network-selection logging, and separate
+README/output paths. The run will classify IB vs Socket from NCCL `NET` data
+backend/HCA/interface messages; bootstrap sockets alone are not evidence of a
+Socket data path. The 3x4 smoke is not a performance comparison.
+
+**Status: prepared locally, not submitted.** The required
+`ssh -O check gaas` preflight returned `No ControlPath specified`, so no remote
+inspection, node probe, synchronization, or submission was attempted. Restore
+the GAAS persistent SSH connection/check before resuming at fresh
+`pbsnodes -aSj` node selection.

@@ -422,3 +422,14 @@ binding, and per-node evidence. MPI and correctness checks passed, but the
 `NCCL_IB_DISABLE=1` arm still selected `NET/IBext_v11`, so the socket-floor
 transport check failed. The 3x4 run is held until the Socket selection is
 verified. See `debug-scripts/phase1-step2/README.md` for job evidence.
+
+#### Separate 3x4 functional smoke requested on 2026-09-17
+
+The Socket-control issue above belongs to that multi-arm matrix. It does not
+block a separate default-path `nccl-tests` smoke. The one-command 3x4 smoke is
+prepared under `debug-scripts/nccl-tests-smoke-3x4/`; it runs one 1 MiB
+all-reduce on 12 ranks and records NCCL network/HCA/interface selection
+without forcing a transport. It has not been submitted because the required
+`ssh -O check gaas` returned `No ControlPath specified`. Restore the documented
+persistent connection, then probe nodes and submit the smoke independently of
+the older matrix.
