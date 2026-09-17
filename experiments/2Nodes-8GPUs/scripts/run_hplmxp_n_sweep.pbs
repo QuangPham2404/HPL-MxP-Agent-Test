@@ -1,0 +1,114 @@
+#!/bin/bash
+# HPL-MxP full-node N sweep: 2 GAAS nodes x 8 H200 GPUs (16 ranks, grid 4x4).
+#
+# Purpose: smoke-test N=500000, then step N by +100000 until the memory wall
+# (OOM), using the validated Approach-1 multinode launch (container mpirun +
+# rsh_pbsdsh_container.sh bridge; see multi-node-test/GAAS_MULTINODE_SETUP.md).
+#
+# Expected working directory: this experiment directory
+# (experiments/2Nodes-8GPUs/) on GAAS. Submit with:
+#   qsub -q gpu_ded -v "N=500000,ATTEMPT=2x8-n-sweep_n500k_v1" \
+#        -o outputs/2x8-n-sweep_n500k_v1.o -e outputs/2x8-n-sweep_n500k_v1.e \
+#        scripts/run_hplmxp_n_sweep.pbs
+#
+# Inputs: N (matrix size) and ATTEMPT (output stem) via environment.
+# Outputs: attempt-specific PBS stdout/stderr under outputs/.
+# Assumptions: approved container and modules exist on GAAS; one GPU per MPI
+# process; NB fixed at 3072 (user decision 2026-09-17); gpu_as is an allowed
+# alternative queue (override with `qsub -q gpu_as`).
+
+#PBS -N hplmxp_2x8_nsweep
+#PBS -q gpu_ded
+#PBS -P hpc_ebslee
+#PBS -l select=2:ngpus=8
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+
+# --- Experiment metadata -----------------------------------------------------
+cd "$PBS_O_WORKDIR"
+EXPERIMENT_ID="2x8-n-sweep"
+ATTEMPT="${ATTEMPT:-unknown}"
+N="${N:-unknown}"
+NB=3072
+GPUS=8                                   # GPUs (and ranks) per node
+EXPECTED_NODES=2
+
+echo "experiment_id=${EXPERIMENT_ID}"
+echo "attempt=${ATTEMPT}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "queue=${PBS_O_QUEUE:-unknown}"
+echo "project=hpc_ebslee"
+echo "n=${N} nb=${NB}"
+date --iso-8601=seconds
+
+# --- Locate repo root and the validated launch bridge ------------------------
+REPO_ROOT="$(cd "${PBS_O_WORKDIR}/../.." && pwd)"
+BRIDGE="${REPO_ROOT}/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+[ -f "$BRIDGE" ] || { echo "FATAL: bridge not found at ${BRIDGE}; submit from the experiment directory (experiments/2Nodes-8GPUs/)" >&2; exit 1; }
+[ -f "$SIF" ] || { echo "FATAL: container image not found: ${SIF}" >&2; exit 1; }
+
+# --- Allocation checks (place=scatter, no mpiprocs; ranks derived) ------------
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+[ "$NNODES" -eq "$EXPECTED_NODES" ] || { echo "FATAL: expected ${EXPECTED_NODES} distinct nodes, got ${NNODES}" >&2; exit 1; }
+NPROCS=$((NNODES * GPUS))
+
+# Process grid nprow x npcol = NPROCS, npcol >= nprow (square-ish): 16 -> 4x4.
+NPCOL=$(awk -v r="$NPROCS" 'BEGIN { n=int(sqrt(r)); if (n*n<r) n++; for (c=n; c<=r; c++) if (r%c==0) { print c; exit } }')
+NPROW=$((NPROCS / NPCOL))
+
+GPU_AFFINITY=$(seq -s: 0 $((GPUS - 1)))
+
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} nporder=row"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "bridge=${BRIDGE}"
+echo "container=${SIF}"
+
+# --- Environment (validated module set) ---------------------------------------
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+apptainer --version || echo "warn: apptainer --version failed"
+
+# Optional diagnostics: must not block an otherwise valid run.
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+
+# De-duplicated hostfile with explicit per-node slot count (GAAS Blocker 8).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# --- Launch: container mpirun + pbsdsh bridge (Approach 1, validated) ---------
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity "$GPU_AFFINITY" \
+      --nprow "$NPROW" \
+      --npcol "$NPCOL" \
+      --nporder row \
+      --n "$N" \
+      --nb "$NB" \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
+
+echo "=== HPL-MxP 2x8 N-sweep complete: ${ATTEMPT} ==="
