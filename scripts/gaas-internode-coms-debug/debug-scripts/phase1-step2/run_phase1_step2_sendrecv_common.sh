@@ -36,6 +36,11 @@ esac
 
 OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase1-step2"
 mkdir -p "$OUTDIR"
+# Exported so `mpirun -x OUTDIR` actually forwards it to the per-node fabric
+# evidence launch (inherited defect: unexported OUTDIR silently redirected
+# fabric evidence to / and the trailing echo misreported success; same class
+# as the Phase B2 v1 evidence loss).
+export OUTDIR
 
 REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
 BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
