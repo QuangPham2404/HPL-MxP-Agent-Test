@@ -449,3 +449,104 @@ the IB plugin `NET/IBext_v11` with GPUDirect RDMA enabled on all 8 HCAs
 (bond0 bootstrap is control traffic only). Full attempt log and evidence:
 `build-nccl-tests/README.md` → "3x4 functional smoke"; raw evidence in
 `build-nccl-tests/outputs/`.
+
+---
+
+### NCCL GPUDirect RDMA A/B experiment plan (agreed 2026-09-17)
+
+Host-only NCCL GDR characterization for Phase 1 — Step 2, now that the
+nccl-tests build and the 3x4 functional smoke are complete. `sendrecv_perf`
+covers point-to-point traffic and `broadcast_perf` + `all_reduce_perf` cover
+collectives, mirroring the OSU Phase 1 Step 1 tests. The GDR-off control is
+`NCCL_NET_GDR_LEVEL=LOC` (disables GPUDirect RDMA while leaving the IB
+network backend available) — proven effective by the prior 2x1/3x1 sendrecv
+evidence: gdroff arms had 0 GDRDMA channels vs 8/16 (2x1) and 16/24 (3x1) in
+the ctrl arms. The `NCCL_IB_DISABLE=1` Socket-floor control is excluded from
+this family (it failed to select Socket in jobs 67037/67038) and remains a
+separate follow-up.
+
+#### Experiment matrix
+
+Six PBS jobs, submitted one at a time in ladder order (mode-major: the P2P
+ladder first, then the collective ladder). One job = one (mode, topology)
+cell; both GDR arms run in the same job on the same allocation and placement.
+
+| # | Attempt name           | Mode       | Tests                                | Topology | Ranks | Jobs |
+|---|------------------------|------------|--------------------------------------|----------|-------|------|
+| 1 | `step2_gdr_p2p_2x1_v1` | P2P        | `sendrecv_perf`                      | 2x1      | 2     | 1    |
+| 2 | `step2_gdr_p2p_3x1_v1` | P2P        | `sendrecv_perf`                      | 3x1      | 3     | 1    |
+| 3 | `step2_gdr_p2p_3x4_v1` | P2P        | `sendrecv_perf`                      | 3x4      | 12    | 1    |
+| 4 | `step2_gdr_coll_2x1_v1`| Collective | `broadcast_perf` (root 0) + `all_reduce_perf` | 2x1 | 2  | 1    |
+| 5 | `step2_gdr_coll_3x1_v1`| Collective | `broadcast_perf` (root 0) + `all_reduce_perf` | 3x1 | 3  | 1    |
+| 6 | `step2_gdr_coll_3x4_v1`| Collective | `broadcast_perf` (root 0) + `all_reduce_perf` | 3x4 | 12 | 1    |
+
+No 2x2 rung: 3x4 already exercises the intra-node (NVLink/SHM) + inter-node
+(IB/GDR) mix that 2x2 would add.
+
+#### Arms, sweep, and run conditions (per job)
+
+| Parameter    | `ctrl` arm                       | `gdroff` arm                     |
+|--------------|----------------------------------|----------------------------------|
+| NCCL settings | defaults (transport selection free) | `NCCL_NET_GDR_LEVEL=LOC`        |
+| Sweep        | `-b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20` (8 B → 64 MiB, factor 2, 5 warmups, 20 iters) — identical in both arms | same |
+| Order        | first, after pre/prectrl node checkpoints; gdroff follows mid-job checkpoint | second |
+| Rank↔GPU     | one rank per GPU: `CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK` + `NCCL_TESTS_DEVICE=0` (v2-smoke lesson) | same |
+
+All other transport/algorithm settings stay at NCCL defaults. Launch: the
+tested GAAS host MPI + `rsh_pbsdsh.sh` bridge, host-pinned `place=scatter`,
+no `mpiprocs`, `gpu_as`/`gpu_ded` (cleanest eligible nodes, group
+`hpc_ebslee`), the established `ngpus=4:ncpus=48:mem=1000GB` chunks (on every
+rung, including 1-GPU-per-node topologies, for node isolation), 45-min
+walltime, raw PBS output and per-arm logs under `outputs/phase1-step2/`.
+
+#### Runner changes (extend, do not fork)
+
+`debug-scripts/phase1-step2/run_phase1_step2_sendrecv_common.sh` becomes a
+parameterized shared runner (`TESTS` and `ARMS`, defaults preserving the old
+three-arm sendrecv behavior so the Socket-floor follow-up path stays intact)
+plus six new topology/mode wrappers. Changes beyond parameterization:
+`NCCL_TESTS_DEVICE=0` in every rank launch; `NCCL_DEBUG_SUBSYS` extended to
+`INIT,BOOTSTRAP,ENV,NET,GRAPH,P2P,COLL,SHM,TUNING`; `NCCL_DEBUG_FILE=/dev/stderr`.
+The existing co-tenant checkpoints (pre/prectrl/mid/post), per-node fabric
+evidence (`nvidia-smi topo -m`, GPU inventory, `nvidia_peermem`/`gdrdrv`,
+`ibv_devices`), rank/GPU mapping echo, MPI health gate, and arm-major order
+carry over unchanged. TRACE logging, if ever needed, goes into separate short
+diagnostic runs only — never the scored jobs.
+
+#### Diagnostics and acceptance
+
+Per test-arm: rc=0, `Out of bounds values : 0 OK`, and the expected
+rank/GPU/node mapping. A GDR comparison cell is valid only when both arms
+select the IB data path (`NET/IBext_v11`) **and** the channel-level evidence
+shows `ctrl ≥ 1` inter-node `GDRDMA` channel (actual count/fraction recorded
+per cell) with `gdroff = 0` GDRDMA channels. Classification must parse the
+per-channel `via NET/IBext_v11/N/...` lines — the per-HCA "GPU Direct RDMA
+Enabled/Disabled" capability messages mix within a single log and are not
+data-path evidence. Cells failing this gate are labeled inconclusive, not
+failed.
+
+Record per-size latency and bandwidth: `algbw` for P2P; `algbw` + `busbw` for
+collectives. Analysis tables (in `DEBUG_PROGRESS.md`) use the B2 signed-ratio
+convention (`+N` = ctrl N× faster than gdroff) per topology × test × size,
+with the GDR-channel fraction as a mandatory column, and include the
+HPL-MxP 3x4 baseline as context only (percent changes between comparable
+metrics only).
+
+#### Recorded caveats
+
+- Ctrl arms historically use GDRDMA on only 50–67% of IB channels (NCCL
+  per-channel choice); A/B deltas are diluted by the staged channels in the
+  ctrl arm — hence the mandatory GDR-channel-fraction evidence column.
+- 3x4 P2P is a ring (src/sendrecv.cu: `sendPeer=rank+1 mod N`): 6 intra-node
+  NVLink + 6 inter-node IB legs; the inter-node legs bound the critical path,
+  so it is not directly comparable to the pure-inter-node 2x1/3x1 rungs.
+- Prior `step2_sendrecv_{2x1,3x1}_v1` runs are kept as preliminary evidence:
+  their ctrl/gdroff arms are valid GDR A/B data; their sockfloor arms are not.
+
+#### Assumptions
+
+- Topology ladder is 2x1 → 3x1 → 3x4; no 2x2 rung.
+- One sweep per arm; anomalous or noisy cells are repeated later under new
+  attempt IDs (B2 resweep methodology), never by overwriting.
+- Node windows are hunted per job (cleanest eligible at submission time,
+  co-tenants documented); jobs are one-at-a-time.

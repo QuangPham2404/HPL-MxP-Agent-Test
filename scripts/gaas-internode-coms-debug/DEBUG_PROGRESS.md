@@ -779,8 +779,12 @@ functional smoke only; no performance conclusion. Evidence (byte-verified):
 `build-nccl-tests/outputs/nccl_tests_3x4_smoke_v3*` (+ v1/v2 attempts,
 scheduler snapshots); attempt log in `build-nccl-tests/README.md`.
 
-**Next (resume point):** the 3x4 default-path NCCL smoke is complete. The
-open host-track item remains the Phase 1 Step 2 sendrecv matrix's
-Socket-control verification (`NCCL_IB_DISABLE=1` still selected `IBext_v11`
-in jobs 67037/67038), plus the deferred Case A UCX rendezvous-scheme/chunk
-experiment and Track 2.2 in-container test — all awaiting user direction.
+**Next (resume point):** the 3x4 default-path NCCL smoke is complete and the
+NCCL GDR A/B experiment plan is agreed (2026-09-17, recorded in `README.md` →
+"NCCL GPUDirect RDMA A/B experiment plan"): six jobs (P2P
+`sendrecv_perf` ladder 2x1→3x1→3x4, then collective `broadcast_perf` +
+`all_reduce_perf` ladder), two arms per job (ctrl vs
+`NCCL_NET_GDR_LEVEL=LOC`), extending the `debug-scripts/phase1-step2/`
+shared runner. Deferred follow-ups unchanged: Socket-control verification
+(`NCCL_IB_DISABLE=1` still selected `IBext_v11` in jobs 67037/67038), Case A
+UCX rendezvous-scheme/chunk experiment, and the Track 2.2 in-container test.
