@@ -238,3 +238,32 @@ inconclusive — a PASS marker alone does not certify the comparison.
   64 KiB. Evidence:
   `../../outputs/phase1-step2/step2_gdr_p2p_3x4_v1*` (byte-verified,
   fabric logs for all three nodes present).
+
+### Collective attempt log
+
+- `step2_gdr_coll_2x1_v1` — PBS job `67577.gaas`, 2026-09-17 22:47 +08 on
+  g22+g20, 44 s, exit 0, `STEP2_GDR_COLL_RESULT=PASS`. **Valid GDR A/B for
+  both tests** (ctrl 16 IB/8 GDRDMA vs gdroff 16/0 each). Broadcast root 0
+  (pinned via `-r 0`; the default rotates root across ranks). GDR gains
+  mild: bcast 64 MiB 48.28 vs 48.13 GB/s (+1%); allreduce 64 MiB 28.43 vs
+  24.60 (+16%). Evidence: `../../outputs/phase1-step2/step2_gdr_coll_2x1_v1*`.
+- `step2_gdr_coll_3x1_v1` — PBS job `67578.gaas`, 22:50 +08, g22+g20+g02,
+  54 s, exit 0, PASS. **Valid A/B both tests** (bcast ctrl 24/8 vs 24/0;
+  allreduce ctrl 40/14 vs 40/0). GDR gains: allreduce 64 MiB algbw +22%
+  (23.39 vs 19.23; busbw 31.18 vs 25.64), bcast +3%; allreduce 1 MiB is
+  GDR-on slower (2.53 vs 3.15 algbw, −25%) — small-size penalty noted.
+  Evidence: `../../outputs/phase1-step2/step2_gdr_coll_3x1_v1*`.
+- `step2_gdr_coll_3x4_v1` — PBS job `67581.gaas`, 22:51 +08, g22+g20+g02,
+  12 ranks, 81 s, **exit 1 — SPLIT result.** Broadcast: **PASS, valid A/B,
+  largest GDR gain of the whole campaign** — 64 MiB algbw **70.88 vs
+  28.28 GB/s (+151%, 2.51×)**; 16 MiB +74%; 4 MiB +99%; 1 MiB +19%
+  (ctrl 72 IB/24 GDRDMA vs gdroff 48/0). Allreduce: **ctrl arm FAILED
+  before the first measured size** — NCCL internal error at
+  `all_reduce.cu:507` after 6× mixed-link-type warnings (RoCE
+  `mlx5_bond_0` vs IB HCAs) unique to this arm; gdroff arm passed (600
+  IB/0 GDRDMA; 64 MiB algbw 18.85, busbw 34.56). The 3x4 allreduce cell is
+  recorded FAILED/INCONCLUSIVE; classified Track 2, case
+  `2026-09-17-A` in root `MANUAL_INSPECTION_ERROR.md` (options: unchanged
+  retry / `NCCL_IB_HCA=^mlx5_bond` arm / reduced-rank diagnostic / upstream
+  report — awaiting user decision). Evidence:
+  `../../outputs/phase1-step2/step2_gdr_coll_3x4_v1*` (byte-verified).

@@ -837,3 +837,55 @@ No socket channels anywhere; no co-tenant entered any node during any run
 not yet created (per plan, added after P2P validates). Deferred follow-ups
 unchanged: Socket-control verification, Case A UCX scheme/chunk experiment,
 Track 2.2 in-container test.
+
+## NCCL GDR A/B — collective ladder COMPLETE (2026-09-17 ~22:54 +08)
+
+User authorized the full collective ladder after the P2P report. Wrappers
+added with `broadcast_perf` pinned to fixed root 0 (`-r 0`; its default
+`-r -1` rotates root across all ranks — src/broadcast.cu), committed
+`f6310da`. All three rungs ran back-to-back on the same pinned trio
+g22+g20+g02 (fresh probes before each; no co-tenant entered any node during
+any run; presched/postsched snapshots per attempt).
+
+**Collective GDR A/B summary (algbw GB/s, out-of-place; `+N` = GDR-on N×
+faster; validity = ctrl IB/GDRDMA vs gdroff IB/0):**
+
+| Rung | Test | 1 MiB | 4 MiB | 16 MiB | 64 MiB | Validity |
+|---|---|---|---|---|---|---|
+| 2x1 | bcast | 27.34 vs 26.12 (+1.05×) | 42.01 vs 40.38 (+1.04×) | 47.31 vs 46.62 (+1.01×) | 48.28 vs 48.13 (+1.00×) | 16/8 vs 16/0 ✓ |
+| 2x1 | allred | 4.98 vs 4.35 (+1.14×) | 23.93 vs 20.70 (+1.16×) | 27.76 vs 23.54 (+1.18×) | 28.43 vs 24.60 (+1.16×) | 16/8 vs 16/0 ✓ |
+| 3x1 | bcast | 21.81 vs 21.70 (+1.01×) | 31.90 vs 31.57 (+1.01×) | 38.08 vs 36.37 (+1.05×) | 38.69 vs 37.52 (+1.03×) | 24/8 vs 24/0 ✓ |
+| 3x1 | allred | 2.53 vs 3.15 (−1.25×) | 19.06 vs 16.90 (+1.13×) | 22.78 vs 19.06 (+1.20×) | 23.39 vs 19.23 (+1.22×) | 40/14 vs 40/0 ✓ |
+| 3x4 | bcast | 8.01 vs 6.73 (+1.19×) | 18.51 vs 9.29 (+1.99×) | 43.90 vs 25.26 (+1.74×) | **70.88 vs 28.28 (+2.51×)** | 72/24 vs 48/0 ✓ |
+| 3x4 | allred | **FAILED (ctrl)** | — | — | — (gdroff: 18.85 algbw / 34.56 busbw @64 MiB) | ctrl died; gdroff 600/0 ✓ |
+
+Jobs: 2x1 `67577.gaas` (44 s, PASS), 3x1 `67578.gaas` (54 s, PASS), 3x4
+`67581.gaas` (81 s, exit 1 — split). All 69 evidence files retrieved
+byte-verified into `outputs/phase1-step2/`.
+
+**3x4 allreduce ctrl failure — Track 2, case `2026-09-17-A`** (root
+`MANUAL_INSPECTION_ERROR.md`): NCCL internal error (`all_reduce.cu:507`)
+before the first measured size, preceded by 6× mixed-link-type warnings
+(RoCE `mlx5_bond_0` vs IB HCAs) that appear ONLY in the failed arm (0 in the
+three passing 3x4 arms); broadcast ctrl/gdroff and allreduce gdroff passed
+on the identical launch; the earlier 12-rank 1 MiB all-reduce smoke
+(`67419.gaas`, g01+g22+g20) passed with default GDR. Suspected: default-GDR
+12-rank allreduce graph construction considers the RoCE bond and fails on
+the link-type mismatch. Options recorded, NOT applied: unchanged retry /
+`NCCL_IB_HCA=^mlx5_bond` (user-approved arm only) / reduced-rank diagnostic /
+upstream report.
+
+**Campaign findings (P2P + collective):**
+- GDR is uniformly beneficial at scale, with the gain concentrating at the
+  HPL-MxP baseline topology 3x4: sendrecv +54%, **broadcast +151% (2.51×)
+  at 64 MiB** — the panel-broadcast analog — allreduce ctrl cell failed
+  (Track 2).
+- Small messages (≤64 KiB P2P, 1 MiB 3x1 allreduce) are neutral-to-slightly-
+  negative under GDR.
+- GDR-channel fractions (ctrl): 8/16, 8/24, 24/72 (3x4 bcast), 14/40,
+  36/96 — deltas are lower bounds of the GDR effect.
+
+**Next:** collective ladder complete (5/6 cells valid, 1 Track 2 case OPEN).
+Awaiting user decision on case `2026-09-17-A` and on any follow-up
+(Socket-control verification, Case A UCX experiment, Track 2.2 in-container
+test all still deferred).
