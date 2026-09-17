@@ -803,12 +803,15 @@ rerun as v2 (`67488.gaas`): PASS, same transport evidence, numbers reproduce
 v1, fabric evidence captured (nvidia_peermem loaded, 8 HCAs). Both attempts'
 evidence retrieved byte-verified into `outputs/phase1-step2/`.
 
-**3x1/3x4 rungs: blocked on node saturation (not a hard blocker).** Only
-g22 (pristine) + g20 (7/8) feasible in gpu_as/gpu_ded; no third node
-(g01 at 2/8 GPUs + 28/100 CPUs behind a rapid-refill job series; g02/g03/g21
-long-occupied; gpu_as ≤3/8; gpu_aisg off-scope and occupied). ~80 min of
-bounded polling before this record; user directed continued polling. Resume:
-probe `pbsnodes -aSj`, submit `step2_gdr_p2p_3x1_v1` on the cleanest
-feasible trio (prefer g22+g20+third), then `step2_gdr_p2p_3x4_v1`, one job
-at a time with presched/postsched snapshots. Collective ladder waits for
-user go after P2P reports.
+**3x1/3x4 rungs: blocked on node saturation; PAUSED by user decision
+(2026-09-17 ~21:00 +08, resume later).** Only g22 (pristine) + g20 (7/8)
+feasible in gpu_as/gpu_ded all evening; no third node reached
+4 GPUs/48 CPUs/1 TB (g01 peaked 3/8 + 40 CPU + 765 GB behind the kng122
+series and 66066 array treadmill; g02/g03 CPU/mem-short with long jobs;
+gpu_as ≤3/8; gpu_aisg off-scope). ~3.5 h bounded polling. User declined
+queued-pinned submission; pause recorded. **Exact resume action:** fresh
+`pbsnodes -aSj`, submit `step2_gdr_p2p_3x1_v1` (runner
+`run_phase1_step2_gdr_p2p_3x1.pbs`, wrapper synced) on the cleanest feasible
+gpu_ded trio anchored on g22+g20 with whichever third node frees first, then
+`step2_gdr_p2p_3x4_v1`, one at a time, presched/postsched snapshots per
+attempt; then report P2P before the collective ladder (awaiting user go).
