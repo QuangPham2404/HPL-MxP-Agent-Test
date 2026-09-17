@@ -171,9 +171,23 @@ inconclusive even if the collective passes.
   `NCCL_TESTS_DEVICE=0` per rank (the tool's own override) so each rank uses
   its CVD-mapped device 0; per-rank GPU mapping and all other settings
   unchanged. Evidence: `outputs/nccl_tests_3x4_smoke_v2.{o,e}` (preserved).
-- `nccl_tests_3x4_smoke_v3` — retry after the NCCL_TESTS_DEVICE patch
-  (node trio re-probed before submission; the v1/v2 trio was consumed by
-  other jobs after v2).
+- `nccl_tests_3x4_smoke_v3` — PBS job `67419.gaas`, submitted 2026-09-17
+  16:27 +08 on the same pinned gpu_ded trio (g01 4/8 with the same 4
+  single-GPU co-tenants, g20 6/8 with 2 co-tenants, g22 pristine 8/8;
+  re-probed after the user's own 25-min `E03P15C` job released the nodes).
+  **PASS** — PBS exit 0 in 19 s; all 12 ranks placed 4-per-node with distinct
+  physical H200s (per-rank `CUDA_VISIBLE_DEVICES` + `NCCL_TESTS_DEVICE=0`,
+  distinct PCI bus IDs in the device report); `Out of bounds values : 0 OK`.
+  **Transport readout: the default NCCL configuration selects the
+  InfiniBand plugin (`NET/IBext_v11`) for the collective data path with
+  GPUDirect RDMA enabled** — all 8 node HCAs (`mlx5_0`…`mlx5_9`) populated
+  with `keep=1 coll=1`, "GPU Direct RDMA Enabled" per HCA, and inter-node
+  channels `via NET/IBext_v11/N/GDRDMA`; `bond0.321` served bootstrap/control
+  traffic only (not a Socket data path); NCCL 2.29.3+cuda13.1. No new
+  co-tenant entered any node during the 19 s run. This is a functional smoke
+  only — no performance comparison. Evidence (byte-verified against GAAS):
+  `outputs/nccl_tests_3x4_smoke_v3.{o,e}`, 
+  `outputs/nccl_tests_3x4_smoke_v3_67419.gaas_{hostfile,nccl.log}`.
 
 ## Source provenance
 

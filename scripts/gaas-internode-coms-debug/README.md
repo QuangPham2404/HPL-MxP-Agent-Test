@@ -436,7 +436,16 @@ the smoke is a build-toolchain run, so per the self-contained
 originally misplaced `debug-scripts/nccl-tests-smoke-3x4/` directory is
 preserved and re-labeled `debug-scripts/[IGNORE]nccl-tests-smoke-3x4/` — do
 not run from it. The smoke was first committed and pushed in `b34738d`; the
-relocation is recorded in the repository history. It has not been synchronized
-or submitted because the required `ssh -O check gaas` returned `No ControlPath
-specified`. Restore the documented persistent connection, then probe nodes and
-submit the smoke independently of the older matrix.
+relocation is recorded in the repository history.
+
+**Outcome (2026-09-17, 16:27 +08): `nccl_tests_3x4_smoke_v3` PASSED
+(job `67419.gaas`).** After two Track 1 fixes (v1: tool preflight ran before
+`module load nvhpc/26.3`; v2: nccl-tests defaults to `cudaDev=localRank`,
+fixed with `NCCL_TESTS_DEVICE=0` under per-rank `CUDA_VISIBLE_DEVICES`), the
+12-rank 1 MiB all-reduce completed with `Out of bounds values : 0 OK` on
+pinned gpu_ded nodes g01+g22+g20. **Transport answer: default NCCL selects
+the IB plugin `NET/IBext_v11` with GPUDirect RDMA enabled on all 8 HCAs
+(inter-node channels `via NET/IBext_v11/N/GDRDMA`); Socket was not selected**
+(bond0 bootstrap is control traffic only). Full attempt log and evidence:
+`build-nccl-tests/README.md` → "3x4 functional smoke"; raw evidence in
+`build-nccl-tests/outputs/`.

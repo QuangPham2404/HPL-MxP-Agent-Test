@@ -1,0 +1,85 @@
+=== NCCL 3x4 smoke metadata ===
+attempt=nccl_tests_3x4_smoke_v2
+pbs_job_id=67417.gaas
+2026-09-17T16:22:23+08:00
+expected_layout=3nodesx4gpus ranks=12
+requested_hosts=hpc-gaas-g01+hpc-gaas-g20+hpc-gaas-g22
+granted_hosts=hpc-gaas-g01+hpc-gaas-g20+hpc-gaas-g22
+nccl_binary=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/build-nccl-tests/nccl-tests/build/all_reduce_perf
+nccl_source_commit=b4d5beebca8a76cf01335f724d154b9b9d394d96
+network_controls=unset (NCCL default selection)
+test=one all_reduce_perf invocation, 1 MiB payload, warmup=1 iterations=2
+nccl_log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/build-nccl-tests/outputs/nccl_tests_3x4_smoke_v2_67417.gaas_nccl.log
+=== MPI/NCCL runtime ===
+mpirun=/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/bin/mpirun
+mpirun (Open MPI) 4.1.9a1
+
+nccl_home=/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/nccl
+nccl_library=/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/nccl/lib/libnccl.so.2.29.3
+nccl_environment=NCCL_DEBUG_FILE=/dev/stderr;NCCL_DEBUG=INFO;NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH;NCCL_HOME=/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/nccl;
+=== hostfile ===
+hpc-gaas-g01 slots=4
+hpc-gaas-g22 slots=4
+hpc-gaas-g20 slots=4
+=== linked runtime libraries ===
+	libcudart.so.13 => /usr/local/nvhpc/Linux_x86_64/26.3/cuda/lib64/libcudart.so.13 (0x0000153a27fb1000)
+	libmpi.so.40 => /usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/lib/libmpi.so.40 (0x0000153a27c76000)
+	libnccl.so.2 => /usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/nccl/lib/libnccl.so.2 (0x0000153a1c3c5000)
+=== One 12-rank nccl-tests all-reduce ===
+rank=2/12 host=hpc-gaas-g01 local_rank=2/4 CUDA_VISIBLE_DEVICES=2
+rank=0/12 host=hpc-gaas-g01 local_rank=0/4 CUDA_VISIBLE_DEVICES=0
+rank=1/12 host=hpc-gaas-g01 local_rank=1/4 CUDA_VISIBLE_DEVICES=1
+rank=3/12 host=hpc-gaas-g01 local_rank=3/4 CUDA_VISIBLE_DEVICES=3
+rank=6/12 host=hpc-gaas-g22 local_rank=2/4 CUDA_VISIBLE_DEVICES=2
+rank=5/12 host=hpc-gaas-g22 local_rank=1/4 CUDA_VISIBLE_DEVICES=1
+rank=7/12 host=hpc-gaas-g22 local_rank=3/4 CUDA_VISIBLE_DEVICES=3
+rank=4/12 host=hpc-gaas-g22 local_rank=0/4 CUDA_VISIBLE_DEVICES=0
+rank=10/12 host=hpc-gaas-g20 local_rank=2/4 CUDA_VISIBLE_DEVICES=2
+rank=11/12 host=hpc-gaas-g20 local_rank=3/4 CUDA_VISIBLE_DEVICES=3
+rank=9/12 host=hpc-gaas-g20 local_rank=1/4 CUDA_VISIBLE_DEVICES=1
+rank=8/12 host=hpc-gaas-g20 local_rank=0/4 CUDA_VISIBLE_DEVICES=0
+Invalid number of GPUs: 3 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+Invalid number of GPUs: 2 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+Invalid number of GPUs: 4 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+ .. hpc-gaas-g01 pid 33004: Test failure common.cu:1545
+ .. hpc-gaas-g01 pid 33003: Test failure common.cu:1545
+ .. hpc-gaas-g01 pid 33005: Test failure common.cu:1545
+# nccl-tests version 2.20.0 (b4d5bee) nccl-headers=22903 nccl-library=22903
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1048576 maxBytes 1048576 step: 1048576(bytes) warmup iters: 1 iters: 2 agg iters: 1 validation: 1 graph: 0 unalign: 0
+#
+# Using devices
+Invalid number of GPUs: 4 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+Invalid number of GPUs: 4 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+Invalid number of GPUs: 3 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+Invalid number of GPUs: 2 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+ .. hpc-gaas-g22 pid 785621: Test failure common.cu:1545
+ .. hpc-gaas-g22 pid 785620: Test failure common.cu:1545
+ .. hpc-gaas-g22 pid 785622: Test failure common.cu:1545
+Invalid number of GPUs: 3 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+Invalid number of GPUs: 2 requested but only 1 were found.
+Please check the number of processes and GPUs per process.
+ .. hpc-gaas-g20 pid 217801: Test failure common.cu:1545
+ .. hpc-gaas-g20 pid 217800: Test failure common.cu:1545
+ .. hpc-gaas-g20 pid 217799: Test failure common.cu:1545
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[1116,1],1]
+  Exit code:    5
+--------------------------------------------------------------------------
+all_reduce_perf_rc=5
+NCCL_3X4_SMOKE_RESULT=FAIL (launcher/test returned 5)

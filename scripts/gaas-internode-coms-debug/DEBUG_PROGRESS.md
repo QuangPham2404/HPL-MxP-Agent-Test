@@ -761,9 +761,26 @@ now three levels up from `PBS_O_WORKDIR`, and `BNT_ROOT` anchors directly on
 `PBS_O_WORKDIR`. Run documentation moved into
 `build-nccl-tests/README.md` → "3x4 functional smoke".
 
-**Status: not synchronized or submitted.** The smoke was first committed and
-pushed as `b34738d` (old placement); the relocation is pending in the local
-tree. The required `ssh -O check gaas` preflight returned `No ControlPath
-specified`, so no remote inspection, node probe, synchronization, or
-submission was attempted. Restore the GAAS persistent SSH connection/check
-before resuming at fresh `pbsnodes -aSj` node selection.
+**Outcome (2026-09-17 16:27 +08): `nccl_tests_3x4_smoke_v3` PASSED —
+default NCCL selects IB (`NET/IBext_v11`) with GPUDirect RDMA enabled.**
+Job `67419.gaas`, pinned gpu_ded trio g01+g22+g20 (only feasible
+allowed-queue trio: g16-g19 pristine but `gpu_aisg` = off-limits; g01 4
+co-tenants, g20 2, g22 pristine; no new co-tenant entered during the 19 s
+run). 12 ranks, 4 per node, distinct physical H200s, `Out of bounds
+values : 0 OK`. Transport evidence: all 8 HCAs populated (`keep=1 coll=1`),
+"GPU Direct RDMA Enabled" per HCA, inter-node channels `via
+NET/IBext_v11/N/GDRDMA`; bond0 bootstrap = control traffic only, not a
+Socket data path; NCCL 2.29.3+cuda13.1. Two Track 1 fixes preceded the pass:
+v1 (`67415.gaas`, 2 s) — tool preflight ran before `module load nvhpc/26.3`
+supplies `mpirun`; v2 (`67417.gaas`, 13 s) — nccl-tests defaults to
+`cudaDev=localRank` (src/util.cu), invalid under per-rank
+`CUDA_VISIBLE_DEVICES`, fixed with `NCCL_TESTS_DEVICE=0`. This is a
+functional smoke only; no performance conclusion. Evidence (byte-verified):
+`build-nccl-tests/outputs/nccl_tests_3x4_smoke_v3*` (+ v1/v2 attempts,
+scheduler snapshots); attempt log in `build-nccl-tests/README.md`.
+
+**Next (resume point):** the 3x4 default-path NCCL smoke is complete. The
+open host-track item remains the Phase 1 Step 2 sendrecv matrix's
+Socket-control verification (`NCCL_IB_DISABLE=1` still selected `IBext_v11`
+in jobs 67037/67038), plus the deferred Case A UCX rendezvous-scheme/chunk
+experiment and Track 2.2 in-container test — all awaiting user direction.
