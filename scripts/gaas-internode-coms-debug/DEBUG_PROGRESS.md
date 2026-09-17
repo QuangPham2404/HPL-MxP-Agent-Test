@@ -749,7 +749,8 @@ README/output paths. The run will classify IB vs Socket from NCCL `NET` data
 backend/HCA/interface messages; bootstrap sockets alone are not evidence of a
 Socket data path. The 3x4 smoke is not a performance comparison.
 
-**Status: prepared locally, not submitted.** The required
+**Status: committed/pushed locally, not synchronized or submitted.** Commit
+`b34738d` contains the isolated smoke script and documentation. The required
 `ssh -O check gaas` preflight returned `No ControlPath specified`, so no remote
 inspection, node probe, synchronization, or submission was attempted. Restore
 the GAAS persistent SSH connection/check before resuming at fresh

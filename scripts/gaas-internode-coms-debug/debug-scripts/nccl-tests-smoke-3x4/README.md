@@ -79,7 +79,8 @@ test does not force either transport and does not compare performance.
 
 ## Current attempt
 
-`nccl_tests_3x4_smoke_v1` is prepared locally and has not been submitted. The
-GAAS preflight command `ssh -O check gaas` returned `No ControlPath specified`,
-so the required persistent-connection gate did not pass. No remote inspection,
-synchronization, node probe, or PBS submission was performed in this attempt.
+`nccl_tests_3x4_smoke_v1` is committed and pushed as `b34738d`, but has not
+been synchronized to GAAS or submitted. The GAAS preflight command
+`ssh -O check gaas` returned `No ControlPath specified`, so the required
+persistent-connection gate did not pass. No remote inspection, synchronization,
+node probe, or PBS submission was performed in this attempt.

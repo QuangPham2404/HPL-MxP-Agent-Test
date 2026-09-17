@@ -429,7 +429,8 @@ The Socket-control issue above belongs to that multi-arm matrix. It does not
 block a separate default-path `nccl-tests` smoke. The one-command 3x4 smoke is
 prepared under `debug-scripts/nccl-tests-smoke-3x4/`; it runs one 1 MiB
 all-reduce on 12 ranks and records NCCL network/HCA/interface selection
-without forcing a transport. It has not been submitted because the required
-`ssh -O check gaas` returned `No ControlPath specified`. Restore the documented
-persistent connection, then probe nodes and submit the smoke independently of
-the older matrix.
+without forcing a transport. It is committed and pushed in `b34738d`, but has
+not been synchronized or submitted because the required `ssh -O check gaas`
+returned `No ControlPath specified`. Restore the documented persistent
+connection, then probe nodes and submit the smoke independently of the older
+matrix.
