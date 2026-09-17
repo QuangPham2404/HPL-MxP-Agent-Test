@@ -194,3 +194,34 @@ arms show `via_ibext_channels > 0` with `gdrdma_channels >= 1` in ctrl and
 `gdrdma_channels = 0` in gdroff (from the `transport_summary` line, i.e.
 channel `via` lines). Cells failing that transport gate are labeled
 inconclusive — a PASS marker alone does not certify the comparison.
+
+### P2P attempt log
+
+- `step2_gdr_p2p_2x1_v1` — PBS job `67456.gaas`, 2026-09-17 17:45 +08 on
+  pinned gpu_ded g22 (pristine) + g20 (one co-tenant, job 67357), 31 s,
+  exit 0, `STEP2_GDR_P2P_RESULT=PASS`. **Valid GDR A/B**: ctrl 16 via-IBext
+  channels with 8 GDRDMA vs gdroff 16 via-IBext with 0 GDRDMA; zero socket
+  channels. GDR-on gain (algbw, out-of-place): +11–17% at ≥1 MiB (64 MiB:
+  24.72 vs 22.06 GB/s; 1 MiB: 15.04 vs 12.85), neutral at ≤512 KiB.
+  **Track 1 defect**: the per-node fabric evidence
+  (`nvidia-smi topo`/inventory/peermem/ibv) was silently lost — the runner
+  never exported `OUTDIR`, so `mpirun -x OUTDIR` forwarded nothing and the
+  redirect to `/_fabric_...` failed behind a misleading success echo
+  (inherited from the original runner; jobs 67037/67038 lost theirs the same
+  way). Measurements and transport evidence unaffected. Patched
+  (`export OUTDIR`, commit `2972fc9`) and rerun as v2. Evidence:
+  `../../outputs/phase1-step2/step2_gdr_p2p_2x1_v1*` (byte-verified).
+- `step2_gdr_p2p_2x1_v2` — PBS job `67488.gaas`, 2026-09-17 18:51 +08, same
+  pinned pair, 31 s, exit 0, `STEP2_GDR_P2P_RESULT=PASS`. **The scored 2x1
+  attempt**: identical transport evidence (ctrl 16/8 GDRDMA, gdroff 16/0),
+  numbers reproduce v1 (64 MiB algbw 24.63 vs 21.74 GB/s), and the fabric
+  evidence is now correctly captured for g22 and g20 (nvidia_peermem loaded,
+  8-HCA inventory, GPU topo). Evidence:
+  `../../outputs/phase1-step2/step2_gdr_p2p_2x1_v2*` (byte-verified).
+- `step2_gdr_p2p_3x1_v1` / `step2_gdr_p2p_3x4_v1` — **not submitted
+  (node-saturation blocker, 2026-09-17 evening)**: after the 2x1 run, no
+  third node in `gpu_as`/`gpu_ded` had ≥4 free GPUs + ≥48 CPUs + 1 TB
+  (g01 blocked at 2/8 GPUs and 28/100 CPUs by a rapidly-refilling job
+  series; g02/g03/g21 held by long jobs; gpu_as all ≤3/8; pristine g16–g19
+  are `gpu_aisg`, outside the allowed scope, and occupied). Bounded polling
+  ~80 min; resuming when a window opens.

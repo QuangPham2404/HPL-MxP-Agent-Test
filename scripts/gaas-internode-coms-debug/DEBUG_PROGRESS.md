@@ -788,3 +788,27 @@ NCCL GDR A/B experiment plan is agreed (2026-09-17, recorded in `README.md` →
 shared runner. Deferred follow-ups unchanged: Socket-control verification
 (`NCCL_IB_DISABLE=1` still selected `IBext_v11` in jobs 67037/67038), Case A
 UCX rendezvous-scheme/chunk experiment, and the Track 2.2 in-container test.
+
+## NCCL GDR A/B — P2P ladder status (2026-09-17 evening)
+
+**2x1 rung: COMPLETE, valid GDR A/B, GDR wins at large messages.** Runner
+parameterization + 3 P2P wrappers committed `cab6ac6`. Job `67456.gaas`
+(v1, g22 pristine + g20 one co-tenant): PASS in 31 s; ctrl 16 via-IBext
+channels with 8 GDRDMA vs gdroff 16/0 — the validity gate holds. GDR-on
+algbw gain: +11–17% at ≥1 MiB (64 MiB 24.72 vs 22.06 GB/s; 1 MiB 15.04 vs
+12.85), neutral ≤512 KiB. v1 lost its per-node fabric evidence to an
+inherited Track 1 defect (`OUTDIR` unexported → `-x OUTDIR` forwarded
+nothing; jobs 67037/67038 lost theirs identically); patched in `2972fc9`,
+rerun as v2 (`67488.gaas`): PASS, same transport evidence, numbers reproduce
+v1, fabric evidence captured (nvidia_peermem loaded, 8 HCAs). Both attempts'
+evidence retrieved byte-verified into `outputs/phase1-step2/`.
+
+**3x1/3x4 rungs: blocked on node saturation (not a hard blocker).** Only
+g22 (pristine) + g20 (7/8) feasible in gpu_as/gpu_ded; no third node
+(g01 at 2/8 GPUs + 28/100 CPUs behind a rapid-refill job series; g02/g03/g21
+long-occupied; gpu_as ≤3/8; gpu_aisg off-scope and occupied). ~80 min of
+bounded polling before this record; user directed continued polling. Resume:
+probe `pbsnodes -aSj`, submit `step2_gdr_p2p_3x1_v1` on the cleanest
+feasible trio (prefer g22+g20+third), then `step2_gdr_p2p_3x4_v1`, one job
+at a time with presched/postsched snapshots. Collective ladder waits for
+user go after P2P reports.
