@@ -8,7 +8,7 @@ proposed fix never authorizes it.
 
 ## Case 2026-09-17-A: NCCL internal error — 3x4 default-GDR all_reduce_perf
 
-- **Status:** OPEN (USER_ACTION_REQUIRED)
+- **Status:** RESOLVED (fix validated by rerun)
 - **Workflow:** `scripts/gaas-internode-coms-debug/` Phase 1 — Step 2, NCCL
   GDR A/B collective ladder, attempt `step2_gdr_coll_3x4_v1`, ctrl allreduce
   arm.
