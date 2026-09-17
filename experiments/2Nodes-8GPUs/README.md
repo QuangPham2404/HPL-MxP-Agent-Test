@@ -5,6 +5,11 @@ per GPU, process grid 4x4, row order). Single experiment family, small number
 of arms: find the maximum N before the memory wall (OOM) and record
 performance along the way.
 
+**Status (2026-09-17):** N-sweep COMPLETE (wall found, see below). The
+follow-up basic parameter sweep (NB + grid/order) is **planned and
+user-approved but ON HOLD** — see "Planned next experiment" below for the
+hand-off.
+
 ## Structure
 
 - `scripts/run_hplmxp_n_sweep.pbs` — parametrized PBS run script
@@ -80,3 +85,77 @@ Peak performance: N=700000, GFLOPS = 4.1061e+06 (2.5663e+05 per GPU).
   memory)` at matrix.cpp:298 during startup (exit 102, 36 s). No patch
   attempted; recorded as the series terminal condition per the authorized
   protocol. Raw evidence: `outputs/2x8-n-sweep_n800k_v1.{o,e}`.
+
+## Planned next experiment (ON HOLD): basic parameter sweep
+
+Approved plan, put on hold by the user on 2026-09-17 before any submission.
+Nothing has been run for this sweep; `scripts/run_hplmxp_basic_sweep.pbs`
+does not exist yet and must be created first.
+
+Fixed config (same as the N sweep): `N=700000` (2x8 peak), 16 ranks,
+`--gpu-affinity 0:...:7`, package defaults elsewhere (broadcast 50, chunk 8),
+`--skip-tests 1` + GPU monitoring, project `hpc_ebslee`, queue `gpu_ded`
+(fallback `gpu_as`), `walltime=00:45:00`. Control = existing
+`2x8-n-sweep_n700k_v1` (NB=3072, 4x4 row, 4.1061e+06 GFLOPS, g01+g22) —
+user chose to reuse it instead of fresh control/repeat runs; record allocated
+nodes per run to flag drift (cross-node noise 1-2.6%).
+
+### Phase A — NB sweep, full bracket from 1024 (grid 4x4 row)
+
+| attempt | NB | source |
+|---|---|---|
+| `2x8-nb-sweep_nb1024_v1` | 1024 | new |
+| `2x8-nb-sweep_nb2048_v1` | 2048 | new |
+| *(reference)* | 3072 | **existing** `n700k_v1` = 4.1061e+06 |
+| `2x8-nb-sweep_nb4096_v1` | 4096 | new |
+| `2x8-nb-sweep_nb5120_v1` | 5120 | new |
+| `2x8-nb-sweep_nb6144_v1` | 6144 | new |
+| `2x8-nb-sweep_nb7168_v1` | 7168 | new (device-OOM risk: ~17 GB HBM free/GPU at N=700k) |
+| `2x8-nb-sweep_nb8192_v1` | 8192 | only if not already stopped |
+
+Stop rule: two consecutive points clearly below the running peak (>~2%),
+mirroring the 1x8 nb-sweep stop at 7168→8192; any OOM/FAILED is a definitive
+axis stop (recorded as the wall, not retried).
+
+### Phase B — grid/order sweep at the Phase-A-winning NB
+
+| attempt | grid | order |
+|---|---|---|
+| `2x8-grid-sweep_2x8row_v1` | 2x8 | row |
+| `2x8-grid-sweep_2x8col_v1` | 2x8 | col |
+| `2x8-grid-sweep_8x2row_v1` | 8x2 | row |
+| `2x8-grid-sweep_8x2col_v1` | 8x2 | col |
+| *(reference if NB stays 3072)* | 4x4 | row |
+| `2x8-grid-sweep_4x4col_v1` | 4x4 | col |
+
+If Phase A picks NB != 3072, the 4x4-row point is run fresh too (6 new runs).
+Node-mapping context: 2x8 row keeps process rows node-local; 2x8 col keeps
+process columns node-local; 4x4 spans nodes on both communicators.
+
+### Mechanics and rules for the resuming session
+
+- New parametrized script `scripts/run_hplmxp_basic_sweep.pbs`: identical
+  Approach-1 launch, but explicit `NB`, `NPROW`, `NPCOL`, `NPORDER` via
+  `qsub -v` (do not modify the existing `run_hplmxp_n_sweep.pbs`). Submit
+  from this experiment directory:
+  `qsub -q gpu_ded -v "N=700000,NB=4096,NPROW=4,NPCOL=4,NPORDER=row,ATTEMPT=..." -o outputs/$ATTEMPT.o -e outputs/$ATTEMPT.e scripts/run_hplmxp_basic_sweep.pbs`
+- One job at a time; PASSED + finite residual + GFLOPS gate per run; retrieve
+  `.o/.e`; append `results/metrics.csv` (experiment ids `2x8-nb-sweep`,
+  `2x8-grid-sweep`); update the run-summary table with % vs the 4.1061e+06
+  control; pathspec-limited commit/push; remote pull with the move-aside
+  pattern for untracked outputs (see progress/2026-09-17-progress_s3.md).
+- Dependency checkpoint after each phase (E07/E10: NB<->grid coupling;
+  E22/E23: NB moves reopen broadcast/chunk conclusions) — record it in this
+  README.
+- Do not submit anything without user confirmation of scope; the hold was
+  user-initiated.
+
+### Recorded follow-up direction (not yet authorized)
+
+From the 1x8 campaign analysis (`planning/PLANS.md`, dependency graph), the
+top unapplied 1x8 winners for 2x8, ranked by expected transfer, are:
+(1) `OMP_NUM_THREADS=8` + `OMP_PLACES=sockets` + `OMP_PROC_BIND=TRUE`
+(+5.15% on 1x8); (2) `--prioritize-factorization 1` (+3.5% e2e / +6.6% LU,
+targets the 2x8 weak spot: per-GPU LU efficiency is -29% vs tuned 1x8);
+(3) `--fill-device 1` with buffer 1024-2048 MB (~+2.3%, correctness-gate the
+buffer). These are recommendations only; not execution permission.
