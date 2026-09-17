@@ -155,8 +155,11 @@ channel `via` lines — the A/B validity evidence).
 | 5 | `step2_gdr_coll_3x1_v1` | `broadcast_perf` (root 0) + `all_reduce_perf` | 3x1 | 3 | ctrl, gdroff |
 | 6 | `step2_gdr_coll_3x4_v1` | `broadcast_perf` (root 0) + `all_reduce_perf` | 3x4 | 12 | ctrl, gdroff |
 
-Collective wrappers are added after the P2P ladder validates; they are not
-submitted as part of the P2P stage.
+Collective wrappers `run_phase1_step2_gdr_coll_{2x1,3x1,3x4}.pbs` were added
+after the P2P ladder validated (all three rungs PASS with valid GDR A/B,
+2026-09-17 ~22:35 +08). `broadcast_perf` is pinned to fixed root 0 via
+`-r 0` in the shared runner — its default (`-r -1`) rotates the root across
+all ranks (src/broadcast.cu), which is not the agreed convention.
 
 ### Submission sequence (P2P ladder; one job at a time, fresh node probe before each)
 

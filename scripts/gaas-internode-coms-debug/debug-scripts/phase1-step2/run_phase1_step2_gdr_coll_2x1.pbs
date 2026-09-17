@@ -1,0 +1,19 @@
+#!/bin/bash
+# Phase 1 Step 2 NCCL GDR A/B, collective mode: broadcast_perf (fixed root 0
+# via -r 0) + all_reduce_perf on 2 nodes x 1 GPU (2 MPI/NCCL ranks). Two arms
+# on the same allocation: ctrl (default NCCL) then gdroff
+# (NCCL_NET_GDR_LEVEL=LOC). Submit from debug-scripts/phase1-step2/ with
+# host-pinned select chunks and attempt-specific PBS output names documented
+# in README.md.
+
+#PBS -N P1S2_GDRCOLL_2X1
+#PBS -P hpc_ebslee
+#PBS -q gpu_ded
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+export TOPOLOGY=2x1 EXPECTED_NNODES=2 GPUS_PER_NODE=1
+export TESTS="broadcast allreduce" ARMS="ctrl gdroff" RESULT_TAG=STEP2_GDR_COLL
+exec /bin/bash "$PBS_O_WORKDIR/run_phase1_step2_sendrecv_common.sh"

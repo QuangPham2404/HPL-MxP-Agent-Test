@@ -236,11 +236,18 @@ run_suite() {
   for testname in $TESTS; do
     testbin="$(testbin_for "$testname")" || return 1
     export TESTBIN="$testbin"
+    # Per-test extra args: broadcast_perf defaults to -r -1 = root ROTATION
+    # across all ranks (src/broadcast.cu); the agreed convention is fixed
+    # root 0, so pin it explicitly. Other tests take no extra args.
+    case "$testname" in
+      broadcast) export TESTARGS="-r 0" ;;
+      *)         export TESTARGS="" ;;
+    esac
     arm_log="$OUTDIR/$LABEL"_"$mode"_"$testname".log
     echo ""
     echo "########## RUN: arm=$mode test=$testname (NCCL_NET_GDR_LEVEL=$(printenv NCCL_NET_GDR_LEVEL 2>/dev/null || echo unset) NCCL_IB_DISABLE=$(printenv NCCL_IB_DISABLE 2>/dev/null || echo unset)) ##########"
     date --iso-8601=seconds
-    xf=(-x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x NCCL_DEBUG_FILE -x TESTBIN)
+    xf=(-x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x NCCL_DEBUG_FILE -x TESTBIN -x TESTARGS)
     case "$mode" in
       gdroff)    xf+=(-x NCCL_NET_GDR_LEVEL) ;;
       sockfloor) xf+=(-x NCCL_IB_DISABLE) ;;
@@ -252,7 +259,7 @@ run_suite() {
       # nccl-tests defaults to cudaDev=localRank, which assumes every process
       # sees all node GPUs; with one GPU visible per rank the index must be 0.
       export NCCL_TESTS_DEVICE=0
-      exec "$TESTBIN" -b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20
+      exec "$TESTBIN" -b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20 $TESTARGS
     ' > "$arm_log" 2>&1
     rc=$?
     cat "$arm_log"
