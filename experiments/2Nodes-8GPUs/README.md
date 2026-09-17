@@ -63,7 +63,20 @@ per node, FP64 matrix in host RAM, N^2*8/2 bytes per node): ~700000-800000.
 | 2x8-n-sweep_n500k_v1 | 500000 | 67383.gaas | gpu_ded | g01+g22 | PASSED (residual 3.06e-04), exit 0, walltime 00:02:04, mem ~996 GB/node | 2.9133e+06 | 1.8208e+05 |
 | 2x8-n-sweep_n600k_v1 | 600000 | 67393.gaas | gpu_ded | g01+g22 | PASSED (residual 3.13e-04), exit 0, walltime 00:02:40, mem ~1360 GB/node | 3.4441e+06 | 2.1525e+05 |
 | 2x8-n-sweep_n700k_v1 | 700000 | 67397.gaas | gpu_ded | g01+g22 | PASSED (residual 2.73e-04), exit 0, walltime 00:03:19, mem ~1845 GB/node | 4.1061e+06 | 2.5663e+05 |
+| 2x8-n-sweep_n800k_v1 | 800000 | 67404.gaas | gpu_ded | g01+g22 | FAILED: device CUDA OOM (exit 102, 36 s) | - | - |
+
+**Series complete (2026-09-17).** Memory wall for 2x8 is between N=700000 and
+N=800000, and it is the **GPU HBM**, not host RAM: at N=800000 every rank
+aborts with `cudaMalloc(&_mat_sp_dev, mat_sp_bytes) = 2 (out of memory)`
+(matrix.cpp:298) — per-process device consumption MAX 161.7 GB vs 138.7 GB
+available on each H200, while host RAM still had ~238 GB headroom per process.
+Implied device-matrix ceiling: N ≈ sqrt(139.8 GB x 16 GPUs / 4 B) ≈ 747000.
+Peak performance: N=700000, GFLOPS = 4.1061e+06 (2.5663e+05 per GPU).
 
 ## Runtime error-patching history
 
-None yet.
+- `2x8-n-sweep_n800k_v1` (job 67404.gaas, g01+g22): definitive memory wall,
+  not a defect. All 16 ranks aborted with device `cudaMalloc ... = 2 (out of
+  memory)` at matrix.cpp:298 during startup (exit 102, 36 s). No patch
+  attempted; recorded as the series terminal condition per the authorized
+  protocol. Raw evidence: `outputs/2x8-n-sweep_n800k_v1.{o,e}`.
