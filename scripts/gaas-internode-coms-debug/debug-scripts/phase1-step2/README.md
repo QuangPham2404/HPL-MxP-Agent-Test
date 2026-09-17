@@ -130,3 +130,67 @@ A timeout, MPI launch failure, rank/GPU mapping mismatch, missing correctness
 marker, or unexpected NCCL transport is preserved for manual inspection.
 Do not automatically retry or change launcher, resources, modules, or
 transport settings.
+
+## NCCL GDR A/B family (`step2_gdr_*`) — agreed 2026-09-17
+
+Implements the "NCCL GPUDirect RDMA A/B experiment plan" in the parent
+`../README.md`: six jobs (mode × topology), two GDR arms per job on the same
+allocation. The shared runner `run_phase1_step2_sendrecv_common.sh` is now
+parameterized — `TESTS` (`sendrecv` | `broadcast` | `allreduce`), `ARMS`
+(`ctrl gdroff sockfloor`), `RESULT_TAG` — with defaults preserving the
+original three-arm sendrecv behavior above. Changes carried by every new arm
+run: `NCCL_TESTS_DEVICE=0` under per-rank `CUDA_VISIBLE_DEVICES` (smoke v2
+lesson), extended `NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH,P2P,COLL,SHM,TUNING`,
+`NCCL_DEBUG_FILE=/dev/stderr`, per-arm per-test logs
+`<attempt>_<arm>_<test>.log` capturing stdout+stderr, and a per-run
+`transport_summary` line (via_ibext / gdrdma / via_socket channel counts from
+channel `via` lines — the A/B validity evidence).
+
+| Job | Attempt | Tests | Topology | Ranks | Arms |
+|---|---|---|---|---:|---|
+| 1 | `step2_gdr_p2p_2x1_v1` | `sendrecv_perf` | 2x1 | 2 | ctrl, gdroff |
+| 2 | `step2_gdr_p2p_3x1_v1` | `sendrecv_perf` | 3x1 | 3 | ctrl, gdroff |
+| 3 | `step2_gdr_p2p_3x4_v1` | `sendrecv_perf` | 3x4 | 12 | ctrl, gdroff |
+| 4 | `step2_gdr_coll_2x1_v1` | `broadcast_perf` (root 0) + `all_reduce_perf` | 2x1 | 2 | ctrl, gdroff |
+| 5 | `step2_gdr_coll_3x1_v1` | `broadcast_perf` (root 0) + `all_reduce_perf` | 3x1 | 3 | ctrl, gdroff |
+| 6 | `step2_gdr_coll_3x4_v1` | `broadcast_perf` (root 0) + `all_reduce_perf` | 3x4 | 12 | ctrl, gdroff |
+
+Collective wrappers are added after the P2P ladder validates; they are not
+submitted as part of the P2P stage.
+
+### Submission sequence (P2P ladder; one job at a time, fresh node probe before each)
+
+Same node-pinning and clean-node rules as above: choose the cleanest
+eligible nodes from `gpu_as`/`gpu_ded` matching each node's queue, reserve
+`ngpus=4:ncpus=48:mem=1000GB` per pinned node, group `hpc_ebslee`, no
+`mpiprocs`. Prefer reusing the same node set across rungs for cross-rung
+comparability when the fresh probe still supports it. From this directory on
+GAAS after synchronization:
+
+~~~bash
+mkdir -p ../../outputs/phase1-step2
+pbsnodes -aSj > ../../outputs/phase1-step2/step2_gdr_p2p_2x1_v1_presched.txt
+qsub -q gpu_ded \
+  -l "select=host=<node1>:ngpus=4:ncpus=48:mem=1000GB+host=<node2>:ngpus=4:ncpus=48:mem=1000GB" \
+  -v "ATTEMPT=step2_gdr_p2p_2x1_v1,REQ_HOSTS=<node1>+<node2>" \
+  -o ../../outputs/phase1-step2/step2_gdr_p2p_2x1_v1.o \
+  -e ../../outputs/phase1-step2/step2_gdr_p2p_2x1_v1.e \
+  run_phase1_step2_gdr_p2p_2x1.pbs
+~~~
+
+After completion, capture the post-run snapshot, re-probe, and submit 3x1
+(`step2_gdr_p2p_3x1_v1`, three host chunks, `run_phase1_step2_gdr_p2p_3x1.pbs`),
+then 3x4 (`step2_gdr_p2p_3x4_v1`, `run_phase1_step2_gdr_p2p_3x4.pbs`), each
+with its own `presched`/`postsched` snapshots and attempt-specific `.o`/`.e`
+names.
+
+### Validation (GDR A/B)
+
+A run passes only when PBS exits 0, the MPI health phase reports the expected
+process count, every arm×test returns 0 with `Out of bounds values : 0 OK`,
+the expected rank/GPU mapping is printed, and the final marker is
+`STEP2_GDR_P2P_RESULT=PASS`. A GDR comparison cell is valid only when both
+arms show `via_ibext_channels > 0` with `gdrdma_channels >= 1` in ctrl and
+`gdrdma_channels = 0` in gdroff (from the `transport_summary` line, i.e.
+channel `via` lines). Cells failing that transport gate are labeled
+inconclusive — a PASS marker alone does not certify the comparison.

@@ -1,13 +1,20 @@
 #!/bin/bash
-# Shared host-native NCCL sendrecv runner for Phase 1 Step 2.
+# Shared host-native NCCL runner for Phase 1 Step 2 (GDR A/B family).
 #
-# Purpose: execute the same NCCL sendrecv A/B/C test on a parameterized
-# 2x1, 3x1, or 3x4 topology using the tested GAAS host MPI + pbsdsh launch.
+# Purpose: execute the NCCL GDR A/B arms — ctrl (default NCCL) vs gdroff
+# (NCCL_NET_GDR_LEVEL=LOC, IB without GPUDirect RDMA), optionally sockfloor
+# (NCCL_IB_DISABLE=1) — on a parameterized 2x1, 3x1, or 3x4 topology using
+# the tested GAAS host MPI + pbsdsh launch. TESTS selects the nccl-tests
+# binaries run per arm (sendrecv, broadcast, allreduce); ARMS selects and
+# orders the arms; both default to the original three-arm sendrecv matrix so
+# the Socket-floor follow-up path stays intact. RESULT_TAG names the final
+# pass/fail marker.
 # Expected working directory: debug-scripts/phase1-step2/ on GAAS.
-# Inputs: ATTEMPT and REQ_HOSTS from qsub; topology and ranks/node from the
-#         topology-specific PBS wrapper; nccl-tests binaries from
-#         ../../build-nccl-tests/nccl-tests/build/.
-# Outputs: PBS stdout/stderr and per-arm/per-node evidence under
+# Inputs: ATTEMPT and REQ_HOSTS from qsub; TOPOLOGY, EXPECTED_NNODES,
+#         GPUS_PER_NODE, TESTS, ARMS, RESULT_TAG from the PBS wrapper
+#         (defaults preserve the original sendrecv matrix behavior);
+#         nccl-tests binaries from ../../build-nccl-tests/nccl-tests/build/.
+# Outputs: PBS stdout/stderr and per-arm/per-test/per-node evidence under
 #          ../../outputs/phase1-step2/.
 # Assumptions: full four-GPU node chunks are pinned for clean-node controls;
 #         one MPI rank uses one local GPU; no mpiprocs in PBS select.
@@ -18,6 +25,9 @@ cd "$PBS_O_WORKDIR"
 : "${REQ_HOSTS:?submit with -v REQ_HOSTS=<host1+host2[+host3]>}"
 : "${EXPECTED_NNODES:?PBS wrapper must set EXPECTED_NNODES}"
 : "${GPUS_PER_NODE:?PBS wrapper must set GPUS_PER_NODE}"
+TESTS="${TESTS:-sendrecv}"
+ARMS="${ARMS:-ctrl gdroff sockfloor}"
+RESULT_TAG="${RESULT_TAG:-STEP2_SENDRECV}"
 
 case "$GPUS_PER_NODE" in
   1|4) ;;
@@ -31,7 +41,6 @@ REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
 BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh.sh"
 SNAPSHOT="$PBS_O_WORKDIR/../phase1-step1/collb2_node_snapshot.sh"
 BNT="$REPO_ROOT/scripts/gaas-internode-coms-debug/build-nccl-tests"
-SRBIN="$BNT/nccl-tests/build/sendrecv_perf"
 OSU_DIR="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/tests/osu-micro-benchmarks-cuda"
 
 module purge || true
@@ -41,16 +50,29 @@ NVHPC_ROOT="/usr/local/nvhpc/Linux_x86_64/26.3"
 export NCCL_HOME="$NVHPC_ROOT/comm_libs/nccl"
 export LD_LIBRARY_PATH="$NCCL_HOME/lib:$(printenv LD_LIBRARY_PATH 2>/dev/null)"
 export NCCL_DEBUG=INFO
-export NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH
-export SRBIN
+export NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH,P2P,COLL,SHM,TUNING
+export NCCL_DEBUG_FILE=/dev/stderr
 export LABEL="$ATTEMPT"
+
+# Map a TESTS entry to its built nccl-tests binary.
+testbin_for() {
+  case "$1" in
+    sendrecv)  echo "$BNT/nccl-tests/build/sendrecv_perf" ;;
+    broadcast) echo "$BNT/nccl-tests/build/broadcast_perf" ;;
+    allreduce) echo "$BNT/nccl-tests/build/all_reduce_perf" ;;
+    *) echo "FATAL: unknown test '$1' (expected sendrecv, broadcast, or allreduce)" >&2; return 1 ;;
+  esac
+}
 
 # --- Preflight: fatal only for required launch/test inputs ---
 for tool in mpirun timeout sort wc paste awk sed grep cat date printenv; do
   command -v "$tool" >/dev/null 2>&1 || { echo "FATAL: required tool $tool not found" >&2; exit 1; }
 done
 [ -r "$PBS_NODEFILE" ] || { echo "FATAL: PBS_NODEFILE unreadable" >&2; exit 1; }
-[ -x "$SRBIN" ] || { echo "FATAL: sendrecv_perf missing at $SRBIN (build v3 must pass first)" >&2; exit 1; }
+for t in $TESTS; do
+  tb="$(testbin_for "$t")" || exit 1
+  [ -x "$tb" ] || { echo "FATAL: $t binary missing or not executable at $tb (nccl-tests build v3 must pass first)" >&2; exit 1; }
+done
 [ -x "$BRIDGE" ] || { echo "FATAL: pbsdsh bridge missing or not executable at $BRIDGE" >&2; exit 1; }
 [ -f "$SNAPSHOT" ] || { echo "FATAL: clean-node snapshot helper missing at $SNAPSHOT" >&2; exit 1; }
 [ -f "$NCCL_HOME/lib/libnccl.so.2" ] || { echo "FATAL: libnccl.so.2 missing at $NCCL_HOME/lib" >&2; exit 1; }
@@ -79,7 +101,7 @@ awk -v slots="$GPUS_PER_NODE" '
   { if (!seen[$0]++) print $0 " slots=" slots }
 ' "$PBS_NODEFILE" > "$HOSTFILE"
 
-echo "=== Phase 1 Step 2 (NCCL sendrecv) metadata ==="
+echo "=== Phase 1 Step 2 (NCCL GDR A/B) metadata ==="
 echo "attempt=$LABEL"
 echo "topology=$TOPOLOGY"
 echo "pbs_job_id=$PBS_JOBID"
@@ -87,17 +109,20 @@ date --iso-8601=seconds
 echo "expected_nodes=$EXPECTED_NNODES granted_nodes=$NNODES ranks_per_node=$GPUS_PER_NODE total_ranks=$NPROCS"
 echo "nodes=$GRANTED"
 echo "req_hosts=$REQ_HOSTS"
+echo "tests=$TESTS"
+echo "arms=$ARMS (ctrl=default NCCL; gdroff=NCCL_NET_GDR_LEVEL=LOC; sockfloor=NCCL_IB_DISABLE=1)"
+echo "result_tag=$RESULT_TAG"
 echo "scheduler_chunk=4 GPUs/node reserved for node isolation; $GPUS_PER_NODE rank(s)/node used"
 echo "mpirun=$(command -v mpirun)"
-echo "sendrecv_bin=$SRBIN"
+for t in $TESTS; do echo "test_bin[$t]=$(testbin_for "$t")"; done
 echo "source_commit=$(git -C "$BNT/nccl-tests" rev-parse HEAD 2>/dev/null || echo unknown)"
 echo "nccl_home=$NCCL_HOME"
 echo "nccl_lib=$(readlink -f "$NCCL_HOME/lib/libnccl.so.2" 2>/dev/null || echo unresolved)"
 echo "bridge=$BRIDGE"
 echo "binding=none"
-echo "controls=default NCCL; NCCL_NET_GDR_LEVEL=LOC; NCCL_IB_DISABLE=1"
-echo "nccl_debug=$NCCL_DEBUG subsys=$NCCL_DEBUG_SUBSYS"
-echo "sweep=8B..64MiB factor 2; one GPU/rank; warmup=5 iters=20"
+echo "nccl_debug=$NCCL_DEBUG subsys=$NCCL_DEBUG_SUBSYS file=$NCCL_DEBUG_FILE"
+echo "gpu_selection=one rank per GPU: CUDA_VISIBLE_DEVICES=local rank + NCCL_TESTS_DEVICE=0"
+echo "sweep=8B..64MiB factor 2; warmup=5 iters=20"
 echo "=== PBS_NODEFILE ==="
 cat "$PBS_NODEFILE"
 echo "=== hostfile ==="
@@ -106,7 +131,13 @@ cat "$HOSTFILE"
 launch_mpi() {
   local limit="$1"
   shift
-  timeout "$limit" mpirun -np "$NPROCS" --hostfile "$HOSTFILE"     --mca plm_rsh_agent "$BRIDGE"     --mca plm_rsh_no_tree_spawn 1     --mca plm_rsh_num_concurrent 1     --mca routed direct     --bind-to none "$@"
+  timeout "$limit" mpirun -np "$NPROCS" \
+    --hostfile "$HOSTFILE" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    --bind-to none "$@"
 }
 
 # Collect global/local rank and GPU assignment before the NCCL tests.
@@ -164,16 +195,21 @@ node_snapshot() {
   local tag="$1"
   local lockbase="$OUTDIR/.locks_"$LABEL"_"$PBS_JOBID"_"$tag
   echo "=== clean-node checkpoint: $tag (pbsdsh, once per node) ==="
-  /opt/pbs/bin/pbsdsh -- /bin/bash "$SNAPSHOT" "$OUTDIR" "$LABEL" "$tag" "$lockbase"     || echo "WARN: clean-node checkpoint $tag failed; preserving test execution"
+  /opt/pbs/bin/pbsdsh -- /bin/bash "$SNAPSHOT" "$OUTDIR" "$LABEL" "$tag" "$lockbase" \
+    || echo "WARN: clean-node checkpoint $tag failed; preserving test execution"
 }
 
 node_snapshot pre
 FAILS=0
 TOTAL=0
+ARM_COUNT=$(echo $ARMS | wc -w)
+TEST_COUNT=$(echo $TESTS | wc -w)
+EXPECTED_TOTAL=$((ARM_COUNT * TEST_COUNT))
 
+# Run one arm = one NCCL environment; every TESTS entry runs once inside it.
 run_suite() {
   local mode="$1"
-  local rc arm_log
+  local rc arm_log testname testbin xf
   case "$mode" in
     gdroff)
       export NCCL_NET_GDR_LEVEL=LOC
@@ -192,46 +228,69 @@ run_suite() {
       ;;
   esac
 
-  arm_log="$OUTDIR/$LABEL"_"$mode"_sendrecv.log
-  echo ""
-  echo "########## RUN: $mode (NCCL_NET_GDR_LEVEL=$(printenv NCCL_NET_GDR_LEVEL 2>/dev/null || echo unset) NCCL_IB_DISABLE=$(printenv NCCL_IB_DISABLE 2>/dev/null || echo unset)) ##########"
-  date --iso-8601=seconds
-  if [ "$mode" = "gdroff" ]; then
-    launch_mpi 600 -x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x SRBIN -x NCCL_NET_GDR_LEVEL       bash -c 'export CUDA_VISIBLE_DEVICES="$OMPI_COMM_WORLD_LOCAL_RANK"; exec "$SRBIN" -b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20' > "$arm_log"
-  elif [ "$mode" = "sockfloor" ]; then
-    launch_mpi 600 -x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x SRBIN -x NCCL_IB_DISABLE       bash -c 'export CUDA_VISIBLE_DEVICES="$OMPI_COMM_WORLD_LOCAL_RANK"; exec "$SRBIN" -b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20' > "$arm_log"
-  else
-    launch_mpi 600 -x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x SRBIN       bash -c 'export CUDA_VISIBLE_DEVICES="$OMPI_COMM_WORLD_LOCAL_RANK"; exec "$SRBIN" -b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20' > "$arm_log"
-  fi
-  rc=$?
-  cat "$arm_log"
+  for testname in $TESTS; do
+    testbin="$(testbin_for "$testname")" || return 1
+    export TESTBIN="$testbin"
+    arm_log="$OUTDIR/$LABEL"_"$mode"_"$testname".log
+    echo ""
+    echo "########## RUN: arm=$mode test=$testname (NCCL_NET_GDR_LEVEL=$(printenv NCCL_NET_GDR_LEVEL 2>/dev/null || echo unset) NCCL_IB_DISABLE=$(printenv NCCL_IB_DISABLE 2>/dev/null || echo unset)) ##########"
+    date --iso-8601=seconds
+    xf=(-x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x NCCL_DEBUG_FILE -x TESTBIN)
+    case "$mode" in
+      gdroff)    xf+=(-x NCCL_NET_GDR_LEVEL) ;;
+      sockfloor) xf+=(-x NCCL_IB_DISABLE) ;;
+    esac
+    # stdout+stderr to the arm log: with NCCL_DEBUG_FILE=/dev/stderr the NCCL
+    # evidence (channel 'via' lines) lands in the same evidence file.
+    launch_mpi 600 "${xf[@]}" bash -c '
+      export CUDA_VISIBLE_DEVICES="$OMPI_COMM_WORLD_LOCAL_RANK"
+      # nccl-tests defaults to cudaDev=localRank, which assumes every process
+      # sees all node GPUs; with one GPU visible per rank the index must be 0.
+      export NCCL_TESTS_DEVICE=0
+      exec "$TESTBIN" -b 8 -e 67108864 -f 2 -g 1 -w 5 -n 20
+    ' > "$arm_log" 2>&1
+    rc=$?
+    cat "$arm_log"
 
-  if [ "$rc" -eq 0 ] && ! grep -Fq "Out of bounds values : 0 OK" "$arm_log"; then
-    echo "WARN: $mode completed with rc=0 but the expected zero-error marker is absent"
-    rc=1
-  fi
-  echo "arm_"$mode"_sendrecv_rc=$rc (124=timeout)"
-  TOTAL=$((TOTAL+1))
-  [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+    if [ "$rc" -eq 0 ] && ! grep -Fq "Out of bounds values : 0 OK" "$arm_log"; then
+      echo "WARN: $mode/$testname completed with rc=0 but the expected zero-error marker is absent"
+      rc=1
+    fi
+    echo "arm_${mode}_${testname}_rc=$rc (124=timeout)"
+
+    # Data-path classification evidence from per-channel "via" lines only; the
+    # per-HCA "GPU Direct RDMA Enabled/Disabled" capability messages mix within
+    # one log and are not data-path evidence. Valid A/B: both arms via_ibext>0,
+    # ctrl gdrdma>=1, gdroff gdrdma=0; otherwise label the cell inconclusive.
+    ib_ch=$(grep -c "via NET/IBext" "$arm_log" || true)
+    gdr_ch=$(grep -c "GDRDMA" "$arm_log" || true)
+    sock_ch=$(grep -c "via NET/Socket" "$arm_log" || true)
+    echo "transport_summary arm=$mode test=$testname via_ibext_channels=$ib_ch gdrdma_channels=$gdr_ch via_socket_channels=$sock_ch"
+
+    TOTAL=$((TOTAL+1))
+    [ "$rc" -ne 0 ] && FAILS=$((FAILS+1))
+  done
   return 0
 }
 
 node_snapshot prectrl
-run_suite ctrl
-node_snapshot mid1
-run_suite gdroff
-node_snapshot mid2
-run_suite sockfloor
+arm_idx=0
+for mode in $ARMS; do
+  run_suite "$mode" || true
+  arm_idx=$((arm_idx+1))
+  if [ "$arm_idx" -lt "$ARM_COUNT" ]; then
+    node_snapshot "mid$arm_idx"
+  fi
+done
 node_snapshot post
 
 echo ""
-echo "=== Phase 1 Step 2 ($TOPOLOGY) summary ==="
-echo "total_arms=$TOTAL"
-echo "failed_arms=$FAILS"
-if [ "$TOTAL" -eq 3 ] && [ "$FAILS" -eq 0 ]; then
-  echo "STEP2_SENDRECV_RESULT=PASS"
+echo "=== Phase 1 Step 2 ($TOPOLOGY, tests=[$TESTS] arms=[$ARMS]) summary ==="
+echo "total_runs=$TOTAL failed_runs=$FAILS"
+if [ "$TOTAL" -eq "$EXPECTED_TOTAL" ] && [ "$FAILS" -eq 0 ]; then
+  echo "${RESULT_TAG}_RESULT=PASS"
   exit 0
 else
-  echo "STEP2_SENDRECV_RESULT=FAIL"
+  echo "${RESULT_TAG}_RESULT=FAIL"
   exit 1
 fi

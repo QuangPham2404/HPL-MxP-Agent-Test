@@ -1,0 +1,19 @@
+#!/bin/bash
+# Phase 1 Step 2 NCCL GDR A/B, P2P mode: sendrecv_perf on 3 nodes x 4 GPUs
+# (12 MPI/NCCL ranks; sendrecv ring mixes 6 intra-node NVLink and 6
+# inter-node IB legs). Two arms on the same allocation: ctrl (default NCCL)
+# then gdroff (NCCL_NET_GDR_LEVEL=LOC). Submit from debug-scripts/phase1-step2/
+# with host-pinned select chunks and attempt-specific PBS output names
+# documented in README.md.
+
+#PBS -N P1S2_GDRP2P_3X4
+#PBS -P hpc_ebslee
+#PBS -q gpu_ded
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+export TOPOLOGY=3x4 EXPECTED_NNODES=3 GPUS_PER_NODE=4
+export TESTS="sendrecv" ARMS="ctrl gdroff" RESULT_TAG=STEP2_GDR_P2P
+exec /bin/bash "$PBS_O_WORKDIR/run_phase1_step2_sendrecv_common.sh"
