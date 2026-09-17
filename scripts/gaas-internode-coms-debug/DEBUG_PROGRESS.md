@@ -928,3 +928,32 @@ default remains latent-broken for 12-rank default-GDR allreduce on
 bond-asymmetric node mixes (upstream-report-worthy; plugin aborts instead of
 excluding the incompatible rail). Full case: root
 `MANUAL_INSPECTION_ERROR.md` → `2026-09-17-A` (RESOLVED).
+
+### GDR confirmation evidence chain in the NCCL logs (2026-09-17, user question)
+
+Three layers, weakest to strongest (semantics verified against
+`libnccl.so.2.29.3` and `libnccl-net-ibext.so` strings):
+
+1. **Per-HCA capability probes (supporting only)**: `NET/IB : GPU Direct
+   RDMA (DMABUF) enabled for HCA N 'mlx5_X'` / `(nvidia-peermem)` /
+   `Disabled` — the plugin's registration capability per rank×HCA (via
+   `ibv_reg_dmabuf_mr`/`mlx5dv_reg_dmabuf_mr` or nvidia_peermem). Present
+   in BOTH arms (ctrl and gdroff) — capability, not usage; not
+   arm-discriminating.
+2. **Per-channel data-path tags (the direct analog of UCX's "rendezvous
+   zero-copy" line — the decisive artifact)**:
+   `Channel 04/0 : 1[1] -> 7[3] [send] via NET/IBext_v11/4/GDRDMA`. NCCL
+   2.29.3 core prints `via NET/%s/%d%s%s%s`; `/GDRDMA` = that inter-node
+   channel's network buffers are GPU-registered — NIC DMAs directly to/from
+   GPU memory, zero host staging; `/Shared` = NCCL_NET_SHARED_BUFFERS host
+   staging; bare suffix = per-connection host MR (also staged). Counts:
+   ctrl arms P2P 2x1 = 8/16 channels GDRDMA, 3x4 allreduce v2 = 224 lines,
+   3x4 broadcast = 24; **gdroff arms: zero `/GDRDMA` tags** (all channels
+   `/Shared` or bare). The v1 3x4 failure is incidental confirmation — its
+   broken channels were `via NET/IBext_v11/8/GDRDMA` on the RoCE bond.
+3. **Negative control + knob-reached proof**: every gdroff arm logs
+   `NCCL_NET_GDR_LEVEL set by environment to LOC` (NCCL_DEBUG_SUBSYS=ENV)
+   while still selecting `NET/IBext_v11` — same IB backend, GDR provably
+   disabled, so the A/B isolates exactly the GDR data path; the observed
+   deltas (+2.51× bcast, +2.33× allred, +1.54× sendrecv @64 MiB 3x4) are
+   attributable to it.
