@@ -218,17 +218,20 @@ inconclusive — a PASS marker alone does not certify the comparison.
   evidence is now correctly captured for g22 and g20 (nvidia_peermem loaded,
   8-HCA inventory, GPU topo). Evidence:
   `../../outputs/phase1-step2/step2_gdr_p2p_2x1_v2*` (byte-verified).
-- `step2_gdr_p2p_3x1_v1` / `step2_gdr_p2p_3x4_v1` — **not submitted (node
-  saturation; paused by user decision 2026-09-17 ~21:00 +08, resume later).**
-  Through the evening only g22 (pristine 8/8) and g20 (7/8, one co-tenant)
-  stayed feasible in `gpu_as`/`gpu_ded`; no third node reached
-  ≥4 GPUs + ≥48 CPUs + ≥1 TB simultaneously (g01 peaked at 3/8 GPUs,
-  40/100 CPUs, 765 GB behind the kng122 psm_s2 series and the 66066 array
-  treadmill; g02/g03 short on CPU/mem with 48h–1440h jobs; gpu_as all ≤3/8;
-  pristine g16–g19 are `gpu_aisg`, off-scope). ~3.5 h of bounded polling
-  (~5–15 min cycles), presched evidence in the 2x1 attempts' scheduler
-  snapshots. Resume: fresh `pbsnodes -aSj` probe, submit
-  `step2_gdr_p2p_3x1_v1` on the cleanest feasible trio (anchor g22+g20,
-  third node whichever frees first — g01 when one more of its 5 long jobs
-  ends), then `step2_gdr_p2p_3x4_v1` on the same trio if still feasible,
-  one job at a time with presched/postsched snapshots.
+- `step2_gdr_p2p_3x1_v1` — PBS job `67575.gaas`, 2026-09-17 22:33 +08 on
+  pinned gpu_ded g22 (pristine) + g20 (one co-tenant) + g02 (three
+  co-tenants: 67043, 67148[1], 67148[2]; 4/8 GPUs free — the third-node
+  slot g01 never freed, g02 substituted, documented), 41 s, exit 0,
+  `STEP2_GDR_P2P_RESULT=PASS`. **Valid GDR A/B**: ctrl 24 via-IBext
+  channels with 8 GDRDMA vs gdroff 24/0. GDR-on algbw (64 MiB: 24.54 vs
+  22.11 GB/s, +11%; 4 MiB: +10%; 1 MiB: +5%), neutral ≤64 KiB. Evidence:
+  `../../outputs/phase1-step2/step2_gdr_p2p_3x1_v1*` (byte-verified).
+- `step2_gdr_p2p_3x4_v1` — PBS job `67576.gaas`, 2026-09-17 22:35 +08, same
+  pinned trio, 12 ranks (4/node), 54 s, exit 0,
+  `STEP2_GDR_P2P_RESULT=PASS`. **Valid GDR A/B**: ctrl 24 via-IBext channels
+  with 8 GDRDMA vs gdroff 24/0. **Largest GDR gain of the ladder** (mixed
+  ring: 6 intra-node NVLink + 6 inter-node IB legs): algbw 64 MiB 40.78 vs
+  26.44 GB/s (**+54%**), 16 MiB +38%, 4 MiB +24%, 1 MiB +5%, neutral at
+  64 KiB. Evidence:
+  `../../outputs/phase1-step2/step2_gdr_p2p_3x4_v1*` (byte-verified,
+  fabric logs for all three nodes present).

@@ -803,15 +803,37 @@ rerun as v2 (`67488.gaas`): PASS, same transport evidence, numbers reproduce
 v1, fabric evidence captured (nvidia_peermem loaded, 8 HCAs). Both attempts'
 evidence retrieved byte-verified into `outputs/phase1-step2/`.
 
-**3x1/3x4 rungs: blocked on node saturation; PAUSED by user decision
-(2026-09-17 ~21:00 +08, resume later).** Only g22 (pristine) + g20 (7/8)
-feasible in gpu_as/gpu_ded all evening; no third node reached
-4 GPUs/48 CPUs/1 TB (g01 peaked 3/8 + 40 CPU + 765 GB behind the kng122
-series and 66066 array treadmill; g02/g03 CPU/mem-short with long jobs;
-gpu_as ≤3/8; gpu_aisg off-scope). ~3.5 h bounded polling. User declined
-queued-pinned submission; pause recorded. **Exact resume action:** fresh
-`pbsnodes -aSj`, submit `step2_gdr_p2p_3x1_v1` (runner
-`run_phase1_step2_gdr_p2p_3x1.pbs`, wrapper synced) on the cleanest feasible
-gpu_ded trio anchored on g22+g20 with whichever third node frees first, then
-`step2_gdr_p2p_3x4_v1`, one at a time, presched/postsched snapshots per
-attempt; then report P2P before the collective ladder (awaiting user go).
+**3x1/3x4 rungs: COMPLETE (2026-09-17 ~22:35 +08) — P2P LADDER DONE,
+GDR valid and winning at every rung.** The g02 window opened at ~22:30
+(67148[3]+66066[23] ended → 4/8 GPUs, 52 CPUs, 1 TB); submitted back-to-back
+on the pinned trio g22 (pristine) + g20 (7/8) + g02 (4/8, 3 co-tenants —
+documented substitution for g01, which never freed). `step2_gdr_p2p_3x1_v1`
+(job `67575.gaas`, 41 s): PASS; ctrl 24 via-IBext/8 GDRDMA vs gdroff 24/0.
+`step2_gdr_p2p_3x4_v1` (job `67576.gaas`, 54 s): PASS; same transport
+evidence; **largest GDR gain** on the mixed ring (6 intra-NVLink + 6 inter-IB
+legs). All 46 evidence files retrieved byte-verified (incl. fabric logs for
+all three nodes per rung).
+
+**P2P GDR A/B summary (algbw GB/s, out-of-place; `+N` = GDR-on N× faster):**
+
+| Rung | Job | 1 MiB | 4 MiB | 16 MiB | 64 MiB | Validity (ctrl IB/GDRDMA vs gdroff) |
+|---|---|---|---|---|---|---|
+| 2x1 | 67488 | 14.95 vs 13.87 (+1.08×) | 21.51 vs 17.60 (+1.22×) | 24.06 vs 21.09 (+1.14×) | 24.63 vs 21.74 (+1.13×) | 16/8 vs 16/0 ✓ |
+| 3x1 | 67575 | 14.93 vs 14.18 (+1.05×) | 21.46 vs 19.46 (+1.10×) | 24.14 vs 21.58 (+1.12×) | 24.54 vs 22.11 (+1.11×) | 24/8 vs 24/0 ✓ |
+| 3x4 | 67576 | 23.25 vs 22.06 (+1.05×) | 34.39 vs 27.76 (+1.24×) | 39.24 vs 28.52 (+1.38×) | **40.78 vs 26.44 (+1.54×)** | 24/8 vs 24/0 ✓ |
+
+Findings: GDR-on is uniformly ≥1.0× and gains grow with size and with
+intra/inter mixing; small messages (≤64 KiB) are latency-bound and neutral;
+2x1 and 3x1 are nearly identical (pure inter-node, single-link bound);
+3x4's parallel 6-link ring benefits most (+54% @64 MiB). Caveats per plan:
+ctrl arms use GDRDMA on only 8 of 16/24 IB channels (33–50% GDR fraction —
+recorded), so deltas are diluted lower bounds; 3x4 mixes NVLink+IB legs.
+No socket channels anywhere; no co-tenant entered any node during any run
+(in-job checkpoints pre/prectrl/mid/post).
+
+**Next:** P2P complete — report to user. Collective ladder
+(`step2_gdr_coll_{2x1,3x1,3x4}_v1`: `broadcast_perf` root 0 +
+`all_reduce_perf`, ctrl vs `NCCL_NET_GDR_LEVEL=LOC`) awaits user go; wrappers
+not yet created (per plan, added after P2P validates). Deferred follow-ups
+unchanged: Socket-control verification, Case A UCX scheme/chunk experiment,
+Track 2.2 in-container test.
