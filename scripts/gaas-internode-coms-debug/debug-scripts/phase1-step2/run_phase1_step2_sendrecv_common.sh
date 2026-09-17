@@ -125,6 +125,7 @@ echo "nccl_home=$NCCL_HOME"
 echo "nccl_lib=$(readlink -f "$NCCL_HOME/lib/libnccl.so.2" 2>/dev/null || echo unresolved)"
 echo "bridge=$BRIDGE"
 echo "binding=none"
+echo "ib_hca_filter=${NCCL_IB_HCA:-unset}"
 echo "nccl_debug=$NCCL_DEBUG subsys=$NCCL_DEBUG_SUBSYS file=$NCCL_DEBUG_FILE"
 echo "gpu_selection=one rank per GPU: CUDA_VISIBLE_DEVICES=local rank + NCCL_TESTS_DEVICE=0"
 echo "sweep=8B..64MiB factor 2; warmup=5 iters=20"
@@ -248,6 +249,9 @@ run_suite() {
     echo "########## RUN: arm=$mode test=$testname (NCCL_NET_GDR_LEVEL=$(printenv NCCL_NET_GDR_LEVEL 2>/dev/null || echo unset) NCCL_IB_DISABLE=$(printenv NCCL_IB_DISABLE 2>/dev/null || echo unset)) ##########"
     date --iso-8601=seconds
     xf=(-x LD_LIBRARY_PATH -x NCCL_HOME -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x NCCL_DEBUG_FILE -x TESTBIN -x TESTARGS)
+    # Optional NIC filter passthrough (e.g. NCCL_IB_HCA excluding the RoCE
+    # bond — Track 2 case 2026-09-17-A): forwarded to ranks only when set.
+    [ -n "${NCCL_IB_HCA:-}" ] && xf+=(-x NCCL_IB_HCA)
     case "$mode" in
       gdroff)    xf+=(-x NCCL_NET_GDR_LEVEL) ;;
       sockfloor) xf+=(-x NCCL_IB_DISABLE) ;;
