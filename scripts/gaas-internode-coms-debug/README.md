@@ -600,3 +600,86 @@ Remaining deferred/open items — none block this closure:
 4. GDR-channel fraction (33–50% in ctrl arms): NCCL engages GDR on only
    part of its IB channels by default; recorded — measured deltas are lower
    bounds of the GDR effect.
+
+---
+
+### Phase 2 plan (agreed 2026-09-18, user-directed): verify GPUDirect RDMA inside the HPL-MxP container (Track 2.2)
+
+Planning record for the next phase — execution awaits user go. This plan
+creates no files and submits no jobs.
+
+#### Scope and framing
+
+"Uses the correct path" means GPU buffers in container processes travel
+directly between GPU memory and the InfiniBand NIC. Seeing GPUs, NICs, or
+RDMA libraries inside the container is necessary but does not prove the data
+takes that route; the alternatives are GPU→host-memory staging or a
+different network backend. The test separates three questions:
+
+1. Can container processes access the required host devices and libraries?
+2. Do the container's MPI/UCX and NCCL stacks select GDR for real
+   GPU-buffer traffic?
+3. Does the HPL-MxP run itself use those paths?
+
+The 2026-09-03 probe's missing `gdrdrv` concerns the GDR-Copy path — treat
+it as a clue to revisit, not proof that GPUDirect RDMA fails: the host tests
+have since proven GDR through both CUDA-aware MPI and NCCL (Phase 1
+closure). NVIDIA documents HPL-MxP's panel-broadcast option as using MPI
+for a configured percentage of steps and NCCL otherwise, with a default of
+1. Capture the actual launch settings and test **both** container
+communication stacks instead of assuming a UCX setting controls NCCL too.
+
+#### Experiment design
+
+**1. Container and launch preflight** (per allocation): the existing SIF
+with the validated container `mpirun` + container `orted` +
+`rsh_pbsdsh_container.sh` launch path. Record image identity, module and
+MPI/UCX/NCCL versions, relevant environment, host GDR module state, and
+per-rank node/GPU mapping. Confirm each rank sees its intended GPU and the
+container can access the RDMA devices and libraries. **Do not make gdrdrv
+presence a pass condition.**
+
+**2. Container-native transport A/B tests**: use the container's packaged
+OSU MPI and NCCL microbenchmarks (NVIDIA includes both in the HPC
+Benchmarks package). Run a minimal 2-node × 1-GPU-per-node rung first, then
+repeat the key checks on the actual 3-node × 4-GPU topology. Keep each A/B
+pair on the same allocated nodes; run arms sequentially.
+
+| Stack | Control arm | Disabled arm | Tests | Required evidence |
+|---|---|---|---|---|
+| Container MPI/UCX | defaults | `UCX_IB_GPU_DIRECT_RDMA=n` | `osu_bw` + `osu_latency` GPU↔GPU (`D D`), plus host↔host negative controls | `UCX_PROTO_INFO` + `UCX_LOG_LEVEL=info` on every rank: zero-copy GPU-buffer traffic over `rc_mlx5` in the control, switching to staging in the disabled arm |
+| Container NCCL | defaults | `NCCL_NET_GDR_LEVEL=LOC` | `sendrecv`, `broadcast`, `all_reduce` over the host campaign's message range through 64 MiB | NCCL ENV/NET/GRAPH diagnostics: per-channel `/GDRDMA` tags — control ≥1 inter-node GDR channel; LOC arm zero tags while retaining the same IB backend; the knob provably reached every rank. Per-HCA capability messages alone do not prove a measured transfer used GDR |
+
+**3. HPL-MxP integration check**: first run a small 3x4 launch-validation
+case with the baseline's default communication settings and path
+diagnostics. If the logs identify the active paths, run a same-allocation
+A/B at the original 3x4 workload — N=480000, NB=1024, 3×4 row grid, same
+GPU affinity, container, launcher, and monitoring flags. The control uses
+defaults; the second arm disables GDR in **both UCX and NCCL** using the
+independently validated settings above. Forward diagnostic variables to all
+remote ranks. Preserve `3x4-baseline_v1` as the comparison reference;
+report both the paired A/B change and the percentage change versus that
+original baseline.
+
+Operational rules: group `hpc_ebslee`; allowed queue scope (`gpu_as` /
+`gpu_ded`); scattered nodes; one job at a time; attempt-specific outputs
+under this debug directory. **Do not change affinity, HCA selection,
+launcher, or other transport settings in this experiment.**
+
+#### Interpretation and acceptance
+
+| Outcome | Signature | Meaning / action |
+|---|---|---|
+| Container GDR confirmed | UCX protocol evidence and NCCL channel evidence show direct GPU-RDMA in their respective default arms, with the disabled controls switching to staging or zero GDR channels; the HPL-MxP run passes finite-residual verification | Both container stacks use GDR; the 2026-09-03 gdrdrv clue is superseded for the RDMA path |
+| Container integration gap | A default arm falls back to staging or has no usable GDR channels, while the matched disabled-control evidence and device/launch checks show the test is valid | Identify whether the gap is in UCX/MPI, NCCL, or both |
+| Capability works, HPL path unresolved | The microbenchmarks prove GDR, but HPL-MxP logs do not establish which path the app uses | Do not infer app-level use from a performance change alone |
+| GDR works but HPL remains slow | Direct-path evidence is present in the HPL-MxP run | The original performance gap needs investigation at a higher layer (HPL communication behavior, placement, rank-to-GPU/NIC affinity); performance is corroborating evidence, protocol selection is the primary path test |
+
+#### Assumptions
+
+- The 3x4 baseline inputs and the existing container launch path remain the
+  reference configuration.
+- Diagnostic and HPL A/B work belongs under this debug directory; this plan
+  itself creates no files or jobs.
+- The pre-existing untracked `hpl-mxp-runs-on-gaas/` directory is outside
+  scope and is preserved.

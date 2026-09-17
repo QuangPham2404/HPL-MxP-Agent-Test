@@ -986,6 +986,12 @@ Deferred items (none blocking): Case A UCX rendezvous-scheme/chunk
 experiment, Socket-floor control verification, upstream RoCE-bond report,
 GDR-channel-fraction note.
 
-**Resume point:** Phase 1 CLOSED. Next decision — begin Track 2.2 (minimal
-in-container HPL-MxP GDR A/B on clean 3x4 nodes) or address a deferred item;
-awaiting user direction.
+**Resume point:** Phase 1 CLOSED. **Phase 2 plan recorded (2026-09-18,
+user-directed): verify GPUDirect RDMA inside the HPL-MxP container
+(Track 2.2)** — three-stage design (container/launch preflight →
+container-native OSU/NCCL GDR A/B at 2x1 then 3x4 → HPL-MxP integration
+A/B at the original 3x4 workload N=480000/NB=1024 with GDR disabled in both
+UCX and NCCL, reported as paired A/B plus % vs `3x4-baseline_v1`). Full
+plan: `README.md` → "Phase 2 plan". Execution awaits user go; deferred
+items (Case A UCX experiment, Socket-floor control, upstream RoCE-bond
+report) unchanged.
