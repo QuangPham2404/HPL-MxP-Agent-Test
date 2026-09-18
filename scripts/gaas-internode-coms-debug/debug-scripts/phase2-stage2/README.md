@@ -113,4 +113,5 @@ Repeat per job with the matching script, attempt name, node count (three
 
 | Attempt | PBS job | Nodes / queue | Result | Notes |
 |---|---|---|---|---|
-| (pending) | | | | |
+| `phase2_stage2_osu_2x1_v1` | `67922.gaas` | g14+g15 / `gpu_as` (both pristine) | FAIL (fast, staging) | Track 1: `SHARED_STAGE` misspelled as `osu-microbenchmarks-cuda` (missing hyphen) — the shared tree exists at `osu-micro-benchmarks-cuda` and the host-source rsync actually merged into it, but the completeness check used the misspelled path and FATAL'd. Same typo class as smoke v3 (job `67820.gaas`). Evidence: `phase2_stage2_osu_2x1_v1.{o,e}` + pre snapshots + presched. Patch: fixed `SHARED_STAGE`; resubmit as `_v2`. |
+| `phase2_stage2_osu_2x1_v2` | | g14+g15 / `gpu_as` | pending | |
