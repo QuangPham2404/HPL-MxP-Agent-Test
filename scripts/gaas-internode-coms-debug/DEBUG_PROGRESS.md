@@ -995,3 +995,41 @@ UCX and NCCL, reported as paired A/B plus % vs `3x4-baseline_v1`). Full
 plan: `README.md` → "Phase 2 plan". Execution awaits user go; deferred
 items (Case A UCX experiment, Socket-floor control, upstream RoCE-bond
 report) unchanged.
+
+## Resource-allocation track: experiment 5 executed (2026-09-18)
+
+The host-contention mechanism study (resource-alloc experiment 5; see
+`resource-alloc/README.md` for the full record) ran to completion:
+preflight + 3 pristine/busy pairs, all PASSED, with 2 s cgroup/process/
+NUMA/IB/GPU telemetry (perf/pcm/PSI unavailable on GAAS compute nodes).
+
+- **Reproduced and refined the dose-response**: 2 pristine + 1 light
+  co-tenant = 44.8-45.9k GFLOPS/GPU (LU 15.0-15.3 s); 1 heavy-idle + 1
+  heavy-active + 1 light = 2.8-2.9k GFLOPS/GPU (LU 260-272 s, ~40x),
+  matching exp-2's dirty series. Even one light co-tenant on one of three
+  nodes costs the whole job ~35% of the fully-pristine rate.
+- **GPU starvation confirmed at 2 s resolution**: median util 0.5-2.8%
+  with SM clocks pegged at 1980 MHz during the 260-272 s LU.
+- **Ruled out**: CPU quota (idle-holder node collapses the same as a
+  43-CPU-active one), cgroup throttling/OOM, memory capacity, fabric
+  volume (identical ~20.3 GiB IB bytes per node in every run), NUMA
+  placement, GPU clock throttling.
+- **Idle-holder paradox replicated twice** (exp-2 finding 6): a ~0-CPU
+  co-tenant still makes its node the RNG/matgen-MAX node.
+- **New finding**: multi-minute pbsdsh/TM + container spawn delay on
+  heavy nodes (~11 min in r2) — node load also degrades the launch path.
+- **Verdict per interpretation gates: mechanism UNRESOLVED** — no
+  distinguishing counter signature in the available layers; surviving
+  candidates: DDR bandwidth, PCIe/LLC, sub-2 s bursts, kernel
+  auto-NUMA-balancing. A sampler defect (vmstat grep missing `)`, error
+  hidden by 2>/dev/null) cost the numa_hint_faults layer in all six runs;
+  script patched (no silent re-runs); a patched busy+pristine validation
+  pair is proposed, not executed.
+- **Ops note**: g05/g16/g17 have been reassigned by the admins to
+  `Qlist=gpu_aisg` — the exp-2 queue map is stale; recorded in the exp-5
+  presubmit evidence.
+
+**Next step (awaiting user decision)**: patched-sampler validation pair
+and/or synthetic co-tenant dose-response; re-test co-tenant sensitivity
+after the in-container GPUDirect fix (Phase 2), since the staged path is
+the sensitive element.
