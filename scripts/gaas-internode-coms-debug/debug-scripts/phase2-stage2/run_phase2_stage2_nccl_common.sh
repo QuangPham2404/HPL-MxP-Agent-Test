@@ -71,6 +71,9 @@ FABRIC_HELPER="$PBS_O_WORKDIR/fabric_capture.sh"
 SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
 NCCL_TESTS_DIR="/workspace/microbenchmarks/nccl_tests"
 OSU_MPI_TESTS_DIR="/workspace/microbenchmarks/osu_mpi_tests"
+# Packaged (non-CUDA) OSU v7.5 pt2pt binaries live under mpi/pt2pt/ (preflight
+# v3 inventory); used only for the cross-node MPI health gate.
+OSU_HEALTH_BIN="$OSU_MPI_TESTS_DIR/mpi/pt2pt/osu_bw"
 
 module purge || true
 module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0 \
@@ -149,10 +152,12 @@ apptainer exec --nv "$SIF" bash -c '
     p="'"$NCCL_TESTS_DIR"'/$b"
     if [ -x "$p" ]; then echo "nccl_bin_ok $b"; else echo "NCCL_BIN_MISSING $b"; fi
   done
-  p="'"$OSU_MPI_TESTS_DIR"'/osu_bw"
+  p="'"$OSU_HEALTH_BIN"'"
   if [ -x "$p" ]; then echo "osu_health_bin_ok"; else echo "OSU_HEALTH_BIN_MISSING"; fi
   echo "--- ldd all_reduce_perf_mpi (nccl/cuda linkage) ---"
-  ldd "'"$NCCL_TESTS_DIR"'/all_reduce_perf_mpi" 2>&1 | grep -iE "nccl|cuda|not found" || echo "(no nccl/cuda lines)"
+  # libverifiable.so.0 => not found is the documented benign container
+  # packaging quirk (preflight v3 Finding 1); it does not affect execution.
+  ldd "'"$NCCL_TESTS_DIR"'/all_reduce_perf_mpi" 2>&1 | grep -iE "nccl|cuda|not found" | grep -v "libverifiable" || echo "(no nccl/cuda lines)"
 ' 2>&1 | tee "$TOOL_LOG"
 echo "tool_check_rc=${PIPESTATUS[0]}"
 TOOLS_OK=0
@@ -233,7 +238,7 @@ echo "============================================================"
 echo "SECTION 3: MPI HEALTH GATE (packaged osu_bw H H, cross-node)"
 echo "============================================================"
 HEALTH_LOG="$OUTDIR/${ATTEMPT}_mpi_health.log"
-launch "$HF_PT2PT" 2 -- "$OSU_MPI_TESTS_DIR/osu_bw" H H > "$HEALTH_LOG" 2>&1
+launch "$HF_PT2PT" 2 -- "$OSU_HEALTH_BIN" H H > "$HEALTH_LOG" 2>&1
 HEALTH_RC=$?
 tail -20 "$HEALTH_LOG"
 HEALTH_ROWS=$(grep -cE "^[0-9]+[[:space:]]+[0-9]" "$HEALTH_LOG" || true)
