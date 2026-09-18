@@ -189,5 +189,12 @@ This report records validated raw result data only. No optimization analysis or 
 | matrix-placement-control | reg_sweep_4096_b3048 | 399360 | 3072 | 4x2 | column |  |  |  | PASSED | 2.1335e+06 | experiments/matrix-placement-control/outputs/reg_sweep_4096_b3048.o |
 | matrix-placement-control | reg_sweep_5012_b3048 | 399360 | 3072 | 4x2 | column |  |  |  | PASSED | 2.1634e+06 | experiments/matrix-placement-control/outputs/reg_sweep_5012_b3048.o |
 | 3x4-baseline | 3x4-baseline_v1 | 480000 | 1024 | 3x4 | row | unset | unset | unset | PASSED | 4.0092e+04 | experiments/3x4-baseline/outputs/3x4-baseline_v1.o |
+| 2x8-n-sweep | 2x8-n-sweep_n500k_v1 | 500000 | 3072 | 4x4 | row | unset | unset | unset | PASSED | 2.9133e+06 | experiments/2Nodes-8GPUs/outputs/2x8-n-sweep_n500k_v1.o |
+| 2x8-n-sweep | 2x8-n-sweep_n600k_v1 | 600000 | 3072 | 4x4 | row | unset | unset | unset | PASSED | 3.4441e+06 | experiments/2Nodes-8GPUs/outputs/2x8-n-sweep_n600k_v1.o |
+| 2x8-n-sweep | 2x8-n-sweep_n700k_v1 | 700000 | 3072 | 4x4 | row | unset | unset | unset | PASSED | 4.1061e+06 | experiments/2Nodes-8GPUs/outputs/2x8-n-sweep_n700k_v1.o |
+| 2x8-n-sweep | 2x8-n-sweep_n800k_v1 | 800000 | 3072 | 4x4 | row | unset | unset | unset | FAILED | unknown | experiments/2Nodes-8GPUs/outputs/2x8-n-sweep_n800k_v1.o |
+| 3x4-smoketest | smoketest_100k_v1 | 100000 | 1024 | 3x4 | row | unset | unset | unset | PASSED | 1.4438e+04 | experiments/3x4-smoketest/outputs/smoketest_100k_v1.o |
+| SingleNode-resweep | SingleNode-resweep_v1.1 | 356352 | 3072 | 4x2 | row | 8 | sockets | TRUE | PASSED | 2.7694e+06 | experiments/SingleNode-resweep/outputs/SingleNode-resweep_v1.1.o |
+| SingleNode-resweep | SingleNode-resweep_v1 | unknown | unknown | unknownxunknown | unknown | 8 | sockets | TRUE | UNKNOWN | unknown | experiments/SingleNode-resweep/outputs/SingleNode-resweep_v1.o |
 
 Source: `results/metrics.csv`.

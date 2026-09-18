@@ -69,3 +69,22 @@ Columns and semantics for the HPL-MxP sweeps:
 
 Extraction is performed by `scripts/extract_sweeps.py`; `RESULTS.md` is
 regenerated from the CSV by `scripts/generate_results.py`.
+
+## Extractor notes (updated 2026-09-18)
+
+- The rebuild is append-only and order-preserving: existing rows keep their
+  recorded order and reviewed metadata (node lists, gpu-affinity strings,
+  submission timestamps, queue/resources, verification verdicts) unless the
+  raw `.o` explicitly echoes a more authoritative value (`queue=`,
+  `resources=` echoes introduced with the `SingleNode-resweep` scripts).
+- `mpi_processes` is derived from the parsed `nprow x npcol` grid.
+- `experiments/2Nodes-8GPUs/` outputs are recorded under the historical
+  experiment ID `2x8-n-sweep` (directory was renamed after the rows were
+  recorded); the alias map lives in the extractor.
+- The 2026-09-18 rebuild also appended the previously unextracted
+  `3x4-smoketest/smoketest_100k_v1` row (PASSED, `1.4438e+04`); its
+  node list, gpu affinity (`0:1:2:3`), and resource string were corrected
+  manually from the experiment's PBS script and raw output.
+- `SingleNode-resweep_v1` is recorded as `failed` (launch argument-contract
+  defect, Track 1; see the experiment README); `SingleNode-resweep_v1.1`
+  is the valid scored attempt.

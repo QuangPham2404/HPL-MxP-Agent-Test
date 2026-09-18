@@ -62,6 +62,13 @@ CONTAINER = "/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
 GPU_AFFINITY = "0:1:2:3:4:5:6:7"
 MPI_PROCESSES = "8"
 
+# Directories renamed after their rows were recorded under the historical
+# experiment_id: keep the recorded ID so rebuilds append to, not duplicate,
+# the existing rows.
+EXPERIMENT_ALIASES = {
+    "2Nodes-8GPUs": "2x8-n-sweep",
+}
+
 SETTING = re.compile(r"^\s+--(\S+)\s+=\s+(\S+)\s*$")
 JOB_ID = re.compile(r"^pbs_job_id=(\S+)$")
 TIMESTAMP = re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2})$")
@@ -69,6 +76,8 @@ NODE = re.compile(r"^hpc-gaas-g\d+$")
 OMP_THREADS = re.compile(r"^omp_num_threads=(\S+)$")
 OMP_PLACES = re.compile(r"^omp_places=(\S+)$")
 OMP_BIND = re.compile(r"^omp_proc_bind=(\S+)$")
+QUEUE_ECHO = re.compile(r"^queue=(\S+)$")
+RESOURCES_ECHO = re.compile(r"^resources=(\S+)$")
 RESIDUAL = re.compile(r"^\s+\|\|Ax-b\|\|_oo .*=\s+([0-9.Ee+-]+)\s+\.\.\.\.\.\.\s+(PASSED|FAILED)")
 GFLOPS = re.compile(r"GFLOPS = ([0-9.eE+-]+), per GPU")
 
@@ -101,6 +110,8 @@ def parse_stdout(text: str) -> dict:
     omp_num_threads = "unset"
     omp_places = "unset"
     omp_proc_bind = "unset"
+    queue_echo = None
+    resources_echo = None
     for line in text.splitlines():
         m = SETTING.match(line)
         if m:
@@ -126,28 +137,46 @@ def parse_stdout(text: str) -> dict:
         ob = OMP_BIND.match(line)
         if ob:
             omp_proc_bind = ob.group(1)
-        rm = RESIDUAL.match(line)
-        if rm:
-            verification = rm.group(2)
-            residual = rm.group(1)
+        qm = QUEUE_ECHO.match(line)
+        if qm and queue_echo is None:
+            queue_echo = qm.group(1)
+        rm = RESOURCES_ECHO.match(line)
+        if rm and resources_echo is None:
+            resources_echo = rm.group(1)
+        rm2 = RESIDUAL.match(line)
+        if rm2:
+            verification = rm2.group(2)
+            residual = rm2.group(1)
         gm = GFLOPS.search(line)
         if gm and gflops == "unknown":
             gflops = gm.group(1)
     return {**settings, "pbs_job_id": pbs_job_id, "submission_time": submission_time,
             "node": node, "verification": verification, "residual": residual,
             "gflops": gflops, "omp_num_threads": omp_num_threads,
-            "omp_places": omp_places, "omp_proc_bind": omp_proc_bind}
+            "omp_places": omp_places, "omp_proc_bind": omp_proc_bind,
+            "queue_echo": queue_echo, "resources_echo": resources_echo}
 
 
 def build_rows() -> list[dict]:
     rows: list[dict] = []
     for stdout in sorted(OUTPUTS.glob("*/outputs/*.o")):
-        experiment = stdout.parents[1].name
+        experiment = EXPERIMENT_ALIASES.get(stdout.parents[1].name, stdout.parents[1].name)
         attempt = stdout.stem
         if attempt.startswith("hpl_mxp_"):
             continue
         stderr = stderr_for(stdout)
         data = parse_stdout(stdout.read_text(encoding="utf-8"))
+        # Rank count is observed truth when the grid parses: P x Q ranks.
+        mpi_processes = MPI_PROCESSES
+        try:
+            mpi_processes = str(int(data.get("nprow", "")) * int(data.get("npcol", "")))
+        except ValueError:
+            pass
+        # Queue/resources are observed when the run script echoes them
+        # (e.g. `queue=${PBS_O_QUEUE}`); otherwise fall back to the
+        # single-node sweep defaults. The *_echo markers are stripped
+        # before writing and used by merge_with_existing to decide whether
+        # the value is observed or a default.
         row = {
             "experiment_id": experiment,
             "attempt": attempt,
@@ -159,10 +188,12 @@ def build_rows() -> list[dict]:
             "completion_time": "unknown",
             "allocated_node": data["node"],
             "runtime": "unknown",
-            "queue": QUEUE,
-            "resources": RESOURCES,
+            "queue": data["queue_echo"] or QUEUE,
+            "resources": data["resources_echo"] or RESOURCES,
+            "queue_echo": data["queue_echo"],
+            "resources_echo": data["resources_echo"],
             "container_image": CONTAINER,
-            "mpi_processes": MPI_PROCESSES,
+            "mpi_processes": mpi_processes,
             "nprow": data.get("nprow", "unknown"),
             "npcol": data.get("npcol", "unknown"),
             "nporder": data.get("order", "unknown"),
@@ -187,19 +218,36 @@ def build_rows() -> list[dict]:
     return rows
 
 
-ACCOUNTING_FIELDS = ("pbs_state", "exit_status", "completion_time", "runtime")
+# Metadata fields preserved from an existing row when the existing value is
+# informative. The .o corpus for multinode or renamed-directory experiments
+# does not always expose these (multi-node host lists, per-node gpu-affinity
+# strings, manually verified submission timestamps), so a rebuild must not
+# clobber reviewed values. Queue/resources still defer to an explicit .o
+# echo, which is observed truth.
+PRESERVED_FIELDS = ("pbs_state", "exit_status", "completion_time", "runtime",
+                    "submission_time", "allocated_node", "gpu_affinity",
+                    "queue", "resources")
 
 
 def merge_with_existing(row: dict, existing: dict) -> dict:
-    """Keep manually recorded PBS-accounting metadata from an existing row.
+    """Keep reviewed metadata from an existing row; observed values win.
 
-    Values parsed from raw stdout replace parser-known fields; the four
-    accounting fields are preserved when the existing row records them
-    (they are not present in the .o files).
+    Values parsed from raw stdout fill or replace parser-known fields unless
+    the existing row already records an informative value for a preserved
+    metadata field. Queue/resources parsed from an explicit .o echo
+    (`queue=` / `resources=` echoes) always win over the existing row. A
+    reviewed verification verdict (PASSED/FAILED) also survives when the
+    rebuild can only parse UNKNOWN (e.g. the run died before the residual
+    marker, but the failure was confirmed from evidence).
     """
-    for field in ACCOUNTING_FIELDS:
+    for field in PRESERVED_FIELDS:
+        if field in ("queue", "resources") and row.get(f"{field}_echo"):
+            continue
         if existing.get(field) and existing.get(field) not in ("unknown", ""):
             row[field] = existing[field]
+    if row.get("verification") == "UNKNOWN" and existing.get("verification") in ("PASSED", "FAILED"):
+        row["verification"] = existing["verification"]
+        row["status"] = "completed" if existing["verification"] == "PASSED" else "failed"
     return row
 
 
@@ -211,21 +259,33 @@ def main() -> None:
     existing_by_key = {(r.get("experiment_id"), r.get("attempt")): r for r in existing}
 
     new_rows = build_rows()
-    final_rows: list[dict] = []
-    seen_keys: set[tuple[str, str]] = set()
+    new_by_key: dict[tuple[str, str], dict] = {}
     for row in new_rows:
         key = (row["experiment_id"], row["attempt"])
-        if key in existing_by_key:
-            row = merge_with_existing(row, existing_by_key[key])
-        final_rows.append(row)
-        seen_keys.add(key)
+        if key not in new_by_key:
+            new_by_key[key] = row
 
-    # Preserve existing rows whose raw-evidence files are no longer present so
-    # they would otherwise be dropped by the rebuild-from-.o pass. This keeps
-    # historical records while appending newly extracted attempts.
+    # Keep existing rows in their recorded order, updated with freshly
+    # parsed values, so a rebuild never reorders or drops the ledger.
+    final_rows: list[dict] = []
     for row in existing:
         key = (row.get("experiment_id"), row.get("attempt"))
-        if key not in seen_keys:
+        if key in new_by_key:
+            merged = merge_with_existing(new_by_key[key], row)
+            merged.pop("queue_echo", None)
+            merged.pop("resources_echo", None)
+            final_rows.append(merged)
+        else:
+            # Preserve existing rows whose raw-evidence files are no longer
+            # present so they would otherwise be dropped by the
+            # rebuild-from-.o pass. This keeps historical records.
+            final_rows.append(row)
+
+    # Append genuinely new attempts (no existing row) in glob order.
+    for key, row in new_by_key.items():
+        if key not in existing_by_key:
+            row.pop("queue_echo", None)
+            row.pop("resources_echo", None)
             final_rows.append(row)
 
     with METRICS.open("w", newline="", encoding="utf-8") as handle:

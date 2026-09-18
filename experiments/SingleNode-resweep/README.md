@@ -125,7 +125,7 @@ tolerance; and a finite HPL-MxP `GFLOPS` value is present.
 | Attempt | Config | PBS job | Node | Residual check | GFLOP/s | Evidence |
 |---|---|---|---|---|---|---|
 | `SingleNode-resweep_v1` | cmax 1x8, explicit `--preset-gemm-kernel 90` | 68348.gaas | hpc-gaas-g22 | FAILED (launch) | — | `outputs/SingleNode-resweep_v1.{o,e}` |
-| `SingleNode-resweep_v1.1` | cmax 1x8 (defaults for preset/sloppy/skip-tests/monitor) | pending | pending | pending | pending | `outputs/SingleNode-resweep_v1.1.{o,e}` |
+| `SingleNode-resweep_v1.1` | cmax 1x8 (defaults for preset/sloppy/skip-tests/monitor) | 68349.gaas | hpc-gaas-g22 | PASSED; ratio `3.449666E-04`, `\|\|Ax-b\|\|_oo = 7.416290E-14` | 2.7694e+06 | `outputs/SingleNode-resweep_v1.1.{o,e}` |
 
 ## Runtime error-patching records
 
@@ -158,4 +158,29 @@ tolerance; and a finite HPL-MxP `GFLOPS` value is present.
 
 ## Result
 
-Pending.
+`SingleNode-resweep_v1.1` completed on `hpc-gaas-g22` (queue `gpu_ded`,
+group `hpc_ebslee`) with the full cmax-effective settings block verified
+against the pod log. Verification `PASSED` with a finite residual
+(ratio `3.449666E-04`).
+
+- **HPL-MxP: `2.7694e+06` GFLOP/s** (per GPU `346,179.58`) — a new
+  single-node record:
+  - `+91.87%` vs the original single-node baseline `baseline-sweep_v1`
+    (`1.4432e+06`, N=370000, NB=1024, 2x4 row);
+  - `+14.43%` vs the previous best `factorization-priority` `fp_0_1`
+    (`2.4203e+06`, N=491520, NB=3072, 2x4 row, factorization 1, dgemv 0,
+    broadcast 50) — cross-node comparison (g22 vs g16), so the margin
+    exceeds the recorded 1-4% cross-node noise band but a paired same-node
+    control was not run (user decision, v1-only scope).
+- LU phase: `4.0464e+06` GFLOP/s (per GPU `505,794.42`).
+- Phase timings: RNG 33.50 s, matgen 42.94 s, LU 7.46 s, iterative solver
+  3.44 s; per-process host memory 48.3 GB (device-resident matrix:
+  per-process device consumption 135.7 GB of 138.6 GB available — full
+  FP64 residency at N=356352, unlike N=491520's 213 GB host consumption).
+
+The cmax configuration bundle (N=356352 + 4x2 row + dgemv 15360 +
+factorization 0 + broadcast 100 at NB=3072/fill-device 1) outperforms the
+GAAS-tuned stack as a whole. Which of the changed dimensions contribute how
+much is unresolved (five dimensions changed at once); per the dependency
+graph this reopens the closed conclusions listed above if the direction is
+pursued further.
