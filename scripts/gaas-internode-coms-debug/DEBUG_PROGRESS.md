@@ -1033,3 +1033,15 @@ NUMA/IB/GPU telemetry (perf/pcm/PSI unavailable on GAAS compute nodes).
 and/or synthetic co-tenant dose-response; re-test co-tenant sensitivity
 after the in-container GPUDirect fix (Phase 2), since the staged path is
 the sensitive element.
+
+**Addendum (2026-09-18, session close-out):** a plain-language explanation
+of the exp-5 results — why busy r1 stayed in the mixed band (dose: only
+one idle-heavy node vs two heavy in r2/r3), what was identified
+(GPU starvation on the staged path with clocks pegged; co-tenant dose
+response; idle-holder paradox), the ruled-out list with evidence, the
+surviving candidates (DDR bandwidth, PCIe, LLC, sub-2 s bursts,
+auto-NUMA-balancing), and the two evidence gaps (GAAS exposes no
+perf/pcm/PSI; the vmstat grep defect cost the numa_hint_faults layer) —
+is recorded in `resource-alloc/README.md` under "Experiment 5 —
+plain-language explanation". Session ends awaiting user direction on the
+proposed next probes.

@@ -616,6 +616,100 @@ re-test after the parent-track in-container GPUDirect fix lands — the
 staged path is the sensitive element, so GDR-on should shrink every
 co-tenant effect measured here.
 
+### Experiment 5 — plain-language explanation (2026-09-18 session close-out)
+
+Written from the session Q&A so the reasoning can be re-read without the
+raw tables. Numbers and evidence pointers live in the section above.
+
+**Why busy r1 was not slower than pristine.** r1's "busy" arm was not
+actually heavy: only one of its three nodes was loaded (g03), and that
+co-tenant is an *idle holder* (reserves 48 cpus + 4 GPUs + 1 TB but uses
+~0 CPU and ~0 network); the other two nodes were light and pristine. The
+catastrophic mode needs two heavy nodes. Dose table from this experiment:
+
+| composition (3 nodes) | LU s | band |
+|---|---:|---|
+| 2 pristine + 1 light (the "pristine" arm) | 15.0-15.3 | mixed |
+| 1 heavy-idle + 1 light + 1 pristine (busy r1) | 15.3 | mixed |
+| 2 heavy, one idle + one active (busy r2/r3) | 260-272 | catastrophic |
+
+So r1's pair was a weak contrast (both arms mixed-band); r2/r3 carry the
+real contrast. Also note the "pristine" arm itself is not fully pristine
+(g12 carries a light co-tenant), which is why it runs at ~45k GFLOPS/GPU
+instead of experiment 3's fully-pristine ~71k: one mildly-loaded node in
+three costs the whole job ~35% because the collectives couple all ranks.
+
+**What was identified (with evidence).**
+
+1. **The failure mode is GPU starvation on the host-staged comms path**
+   (container GPUDirect off): during the 260-272 s LU, GPU median
+   utilization was 0.5-2.8% with >50% utilization in only 4-8% of ticks
+   and power at 120-134 W, while SM clocks stayed pegged at 1980 MHz —
+   the GPUs were ready, there was simply no work. Every run moved the
+   same ~20.3 GiB of IB bytes per node: identical work, 17x slower.
+2. **The trigger is co-tenant dose**, including the idle-holder paradox:
+   g08's co-tenant uses ~0 CPU, yet g08 was the RNG-MAX node in both
+   catastrophic runs (40.7/42.5 s vs ~7.4 s on the light node). An
+   *inactive* neighbor still degrades its node's host-memory phases.
+3. **Host-memory phases are the sensitive element** (RNG/matgen slow ~5x
+   on the loaded node; the collective then paces the whole job to the
+   slowest rank).
+
+**What was ruled out (with evidence).**
+
+| Ruled out | Evidence |
+|---|---|
+| CPU starvation / quota | Idle-holder node collapses exactly like the ~43-CPU-active one; our app uses ~21-22 of its reserved 48 cpus |
+| cgroup CPU throttling / OOM | throttling and memory-event deltas = 0 everywhere; MemAvailable never below ~1.65 TB |
+| Fabric volume / congestion | identical IB bytes (20.27-20.37 GiB/node) in all six runs; no error/discard growth |
+| NUMA placement | remote-memory % is a stable per-node trait, uncorrelated with speed: pristine g11 runs 44-48% remote and is fast; slow g15 runs 0.3-2.1% remote |
+| GPU clock throttling | clocks pegged at max (1980 MHz) even while starved |
+| PCIe link health | gen5 x16 stable in every pre/post capture |
+
+**What remains and why it was not captured in this run.** Surviving
+candidates: **DDR memory bandwidth, PCIe bandwidth, LLC/cache pressure,
+sub-2 s bursts, kernel auto-NUMA-balancing**. Not captured because:
+the first four need hardware counters that GAAS compute nodes do not
+expose (see below); 2 s /proc-level telemetry has no per-socket bandwidth
+or cache counters; the auto-NUMA-balancing signal (`numa_hint_faults`)
+was in /proc/vmstat and *should* have been captured for free, but was
+lost to the sampler grep defect; and activity bursting shorter than the
+2 s sampling interval is invisible by design.
+
+**The "missing tool" elaborated — two separate gaps.**
+
+- **Gap 1, genuinely unavailable on GAAS (proven by the preflight, job
+  67780):** no `perf` binary on compute nodes, `perf_event_paranoid=2`
+  (a kernel setting that blocks system-wide counters even if perf
+  existed), no `pcm-memory`, no `/proc/pressure`. These are the only
+  tools that directly measure DDR bandwidth (uncore IMC counters), LLC
+  misses, and PCIe traffic — and site policy forbids installing them.
+  Those hypotheses therefore cannot be *observed* on GAAS today. Options:
+  admin-provided perf/PCM access, or *indirect inference* via a
+  synthetic co-tenant we control (run our own memory-bandwidth load on a
+  pristine node and see whether it reproduces the exact signature).
+- **Gap 2, fixable and cheap (the sampler defect):** the free kernel
+  signal for auto-NUMA-balancing (`numa_hint_faults` /
+  `numa_pages_migrated` from /proc/vmstat) was lost because the exp-5
+  sampler's grep pattern was missing one closing parenthesis — grep
+  failed with `Unmatched (` and the `2>/dev/null` hid the error, so the
+  layer is empty in all six runs. The script is patched (commit bedd599).
+  One extra busy+pristine pair would recover the signal. This hypothesis
+  matters because it best explains the idle-holder paradox: kernel
+  auto-NUMA-balancing periodically scans and migrates *all resident
+  memory on the node* — including an idle job's 1 TB — so its cost scales
+  with what co-tenants *hold*, not with what they *do*.
+
+**Bottom line.** Experiment 5 proved *where* the slowdown lives (the
+host-staged comms path, starved GPUs, dose-dependent on co-tenants) and
+cleared the cheap suspects (CPU, cgroup, capacity, fabric volume, NUMA
+placement, clocks). Naming the exact shared resource needs either the
+patched re-run (free; tests auto-NUMA-balancing) or a controlled
+synthetic co-tenant (tests DDR/PCIe directly). Both are proposals; the
+experiment-5 design's own rule applies: degrade-and-no-signature stays
+"unresolved" rather than over-interpreted.
+
+
 ### Experiment 4 results (2026-09-09) — final
 
 **All runs** (N as listed, NB=1024, 3x4 row grid, 12 ranks, pristine trio
