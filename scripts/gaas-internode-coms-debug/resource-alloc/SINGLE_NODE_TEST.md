@@ -131,17 +131,150 @@ phase (exp5 interpretation gates).
 - 2026-09-18: design approved (user). N=200k/mem=500GB, single pass, full
   execution chain authorized; coordination rule: avoid nodes carrying active
   phase-2 workstream jobs. Runner `debug-scripts/run_1n_contention.pbs`
-  prepared; this file created. (Results appended below as runs complete.)
+  prepared; this file created. (Results below.)
+- 2026-09-18 (execution, all times +08:00): all runs on the GAAS remote
+  clone at commit `1af2085` (runner env-forwarding hardening). Node
+  landscape shifted repeatedly during the session (recorded per attempt):
+  - `sn200k_ctrl_2r_v1` — first submission `67824` (09:44) could never
+    start: `host=g11` must be the full vnode name `hpc-gaas-g11`
+    (deterministic Track-1 submission defect; qdelt, never started, no
+    evidence lost; snapshot kept as `_presubmit_a1.log`). Resubmitted as
+    `67828` (09:49-09:55, g11 pristine, 5:42 walltime).
+  - `sn200k_ctrl_4r_v1` — `67835` (09:57-09:59, g11 pristine, 1:26).
+  - Heavy-node re-pick: original pick g10 (4 foreign jobs, 48 cpus + 4 GPUs
+    in use) lightened before submission — co-tenant 67564 ended between the
+    survey and the submit (g10 fell to 24 cpus + 2 GPUs used). Re-picked
+    **g03** (`gpu_ded`): the exp5 heavy idle-holder — job 67044 holding
+    48 cpus + 4 GPUs + 1000 GB, ~25 h into a 1440 h walltime (maximally
+    stable). g10 snapshot kept as `_presubmit_a1.log`; cross-queue caveat
+    (gpu_ded vs gpu_as controls) recorded as in exp5 r1.
+  - `sn200k_heavy_2r_v1` — `67837` (10:06-10:08, g03, 1:55).
+  - `sn200k_heavy_4r_v1` — `67841` (10:13-10:15, g03, 1:23).
+  - `sn200k_ctrl_2r_v2` — validation rerun (see anomaly below) `67842`
+    (10:16-10:18, g11, 1:33). PBS granted a *different* pristine carve-out
+    than v1 (GPUs cd/dc + cpuset 0-23 vs v1's 4b/5c + 48-49,56-77).
+  - `sn200k_light_2r_v1` — `67873` (10:36-10:39, g12 light co-tenant 67573:
+    24 cpus + 2 GPUs + 500 GB, ~12 h walltime remaining, 2:27).
+  - `sn200k_light_4r_v1` — **not fielded**. Attempt a1 (`67880`, g12)
+    could never start: new co-tenant 67869 (48 cpus + 4 GPUs + 1 TB) landed
+    on g12 between light_2r and light_4r (qdelt, never started; snapshot
+    kept as `_presubmit_a1_g12.log`). Attempt a2 (`67882`, g10) could
+    never start: g10 went **offline** minutes after submission (qdelt,
+    never started; snapshot kept as `_presubmit_a2_g10.log`). At that
+    moment no lightly-occupied gpu_as/gpu_ded/gpu_free node could host a
+    48-cpu + 4-GPU + 500 GB chunk (g09 also offline, g11 down, g08/g12/g25
+    full; only pristine g04/g14/g15/g22 had capacity). Cell left open
+    rather than substituting a pristine node (which would not be a
+    "light-occupied" test).
+- All qdels were of this experiment's own never-started submissions, each
+  with recorded reason (exp2/5 precedent policy).
 
 ## Results
 
-(to be filled from `outputs/sn200k_*` after runs complete)
+All six completed runs `PASSED` (finite residual within tolerance), exit 0,
+`N=200000, NB=1024`, single node, one rank per GPU, `--bind-to none`.
+Reference figures: original contaminated 3x4 baseline per-GPU = 3,340.96
+GFLOPS/GPU (job `57232.gaas`); multinode pristine bands for context
+(exp3 trio ~70.8-71.4k GF/GPU at N=250k).
+
+| attempt | job | node (condition) | granted GPUs (PCI) | cpuset | walltime | GFLOPS total | GFLOPS/GPU | ×baseline/GPU | RNG s | LU s | solver s |
+|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|
+| sn200k_ctrl_2r_v1 | 67828 | g11 pristine | 4b/5c (NUMA0) | 48-49,56-77 | 5:42 | 6.0661e+04 | 30,330 | 9.1x | 143.25 | 21.19 | 66.99 |
+| sn200k_ctrl_4r_v1 | 67835 | g11 pristine | 9a/bb/cd/dc (NUMA1) | 0-47 | 1:26 | 5.1391e+05 | 128,478 | 38.5x | 26.45 | 4.88 | 5.50 |
+| sn200k_ctrl_2r_v2 | 67842 | g11 pristine | cd/dc (NUMA1) | 0-23 | 1:33 | 4.1385e+05 | 206,923 | 61.9x | 40.13 | 7.26 | 5.62 |
+| sn200k_heavy_2r_v1 | 67837 | g03 heavy idle-holder | 9a/bb (NUMA1) | 24-47 | 1:55 | 3.3159e+05 | 165,794 | 49.6x | 53.20 | 7.38 | 8.71 |
+| sn200k_heavy_4r_v1 | 67841 | g03 heavy idle-holder | 1b/3c/9a/bb (mixed) | 24-47,78-101 | 1:23 | 5.2176e+05 | 130,440 | 39.0x | 19.82 | 4.85 | 5.37 |
+| sn200k_light_2r_v1 | 67873 | g12 light | 1b/3c (NUMA0) | 78-101 | 2:27 | 4.1849e+05 | 209,246 | 62.6x | 28.98 | 7.15 | 5.59 |
+
+LU-only rates (GFLOPS/GPU): ctrl_2r_v1 126,002; ctrl_4r 273,421;
+ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
+
+**Arm comparisons (primary denominator = matching control):**
+
+| comparison | headline GF/GPU | phase deltas (test vs control) |
+|---|---|---|
+| heavy 4r vs ctrl 4r | 130,440 vs 128,478 = **+1.5% (noise)** | RNG −25%, LU −1%, solver −2% (at or better than control) |
+| heavy 2r vs ctrl 2r_v2 | 165,794 vs 206,923 = −19.9% | RNG +33%, LU +2%, solver +55% — but vs the rank-scaling reference (2× the 4-rank control: RNG 52.9 s, LU 9.8 s, solver 11.0 s) heavy_2r is at or better on every phase (53.2/7.38/8.71); healthy 2r RNG varies 29-53 s across nodes (g12/g11/g03), so no reproducible degradation is demonstrable |
+| light 2r vs ctrl 2r_v2 | 209,246 vs 206,923 = **+1.1% (noise)** | all phases within noise (RNG 29.0 vs 40.1 — node variance, see below) |
+
+## Findings
+
+1. **The multinode co-tenant catastrophe does not reproduce on a single
+   node.** A heavy idle-holder co-tenant (48 cpus + 4 GPUs + 1 TB resident —
+   the exact exp5 idle-holder-paradox condition) cost the 4-rank run +1.5%
+   (noise) and produced at most a modest, non-reproducible 2-rank effect,
+   versus 1.6x-40x on the 3x4 topology. A light co-tenant cost +1.1%
+   (noise). **The co-tenant interference mechanism requires the inter-node
+   dimension** — it lives in the staged inter-node communication path
+   (and/or its interaction with node-local resources), not in local
+   resource sharing per se. This is the single most decisive single-node
+   result: it rules out "any local resource contention with a co-tenant is
+   catastrophic" and narrows the exp5 unresolved mechanism (DDR/PCIe/LLC/
+   auto-NUMA candidates) to effects that matter mainly through the
+   inter-node path.
+2. **The only pathological run was a pristine control** (`ctrl_2r_v1`):
+   RNG 3.6x the healthy 2r mean, LU 2.9x, solver 12x. Ruled out so far:
+   foreign co-tenants (pre/post captures + in-run sampler show none),
+   NUMA-direction placement (light_2r ran the same GPU-NUMA0 + cpuset-NUMA1
+   shape as the fastest run of the day), PCIe links (gen5 x16), GPU clocks,
+   cgroup memory limits. The healthy rerun (`ctrl_2r_v2`) got a different
+   PBS carve-out, so reproducibility of the exact v1 condition is untested.
+   Full 2 s telemetry is preserved for all layers (patched-sampler vmstat
+   incl. `numa_hint_faults`, numastat, /proc/stat, cgroup counters, GPU
+   telemetry — verified populated). Cause unresolved; candidates: transient
+   hidden host-side load, first-job-after-long-idle pathology, or a
+   reproducible allocation-specific effect (GPU 4b/5c "CPU affinity 48-49"
+   pair + 22-of-24 node-1 cpuset).
+3. **Healthy single-node band and node variance**: 4r headline 128.5-130.4k
+   GF/GPU (1.5% spread, two nodes); 2r headline 165.8-209.2k across three
+   nodes (26% spread) with RNG 29-53 s — single-node phase times carry
+   substantial node-to-node variance at n=1 per cell, wider than the
+   exp3 multinode trio noise band (0.85%).
+4. **Placement mixing again costs nothing** (confirms exp3): heavy_4r ran
+   a fully mixed allocation (GPUs from both sockets, cpuset spanning both
+   NUMA nodes) at full speed.
+
+## Limitations
+
+- Screening design: n=1 per cell; the 2r "heavy" readout is
+  reference-dependent (−20% vs the best control, ~0% vs the rank-scaling
+  reference) and cannot be resolved without repetitions.
+- Control and test arms ran on different nodes (node-identity confound,
+  as in exp5); heavy arm cross-queue (gpu_ded) vs controls/light (gpu_as).
+- The 2r control has two divergent attempts (v1 anomalous, v2 healthy);
+  v2 used as the 2r reference, v1 documented as an unresolved anomaly.
+- `sn200k_light_4r_v1` could not be fielded (cluster churn: g12 filled by
+  a new co-tenant, g10/g09 went offline, g11 down); the light arm is 2r
+  only. The 4r arm comparison (control vs heavy) is complete.
+- RNG scaling 2r-vs-4r is sublinear and node-dependent (29-53 s for 2r vs
+  19.8-26.5 s for 4r) — not investigated here.
+
+## Suggested next steps (not executed, user decision)
+
+1. Offline analysis of the `ctrl_2r_v1` anomaly (2 s telemetry vs v2 and
+   light_2r) — requires `ANALYSE_RESULTS` authorization; the evidence is
+   the strongest unexplained signal from this experiment.
+2. Reproduce the v1 allocation (repeated 2-GPU requests on a pristine node
+   until PBS grants the NUMA0-GPU + NUMA1-cpuset carve-out) to test whether
+   the pathology is reproducible — directly relevant to exp3's "affinity is
+   free" conclusion.
+3. Field `sn200k_light_4r_v1` when cluster churn settles (needs any
+   lightly-occupied gpu_as/gpu_ded/gpu_free node with ≥4 free GPUs, ≥48
+   free CPUs, ≥500 GB).
+4. Fold finding 1 into the parent-track mechanism question: the co-tenant
+   effect requires the inter-node staged path, so the in-container
+   GPUDirect fix (Track 2.2) should collapse it — a post-GDR multinode
+   pristine/busy pair would confirm.
 
 ## Provenance
 
 - Evidence: `outputs/sn200k_*` PBS `.o`/`.e` plus per-node `_pre_`/`_load_`/
-  `_post_` logs, attempt-specific names, never overwritten.
-- Runner: `debug-scripts/run_1n_contention.pbs`; instrumentation reused from
-  experiment 5 (`capture_node_alloc_mech.sh`, `sample_node_load_mech.sh`).
+  `_post_` logs and `_presubmit*` snapshots (40 files, attempt-specific
+  names, never overwritten; failed-submission snapshots kept as
+  `_presubmit_a*.log`). Jobs: 67828, 67835, 67837, 67841, 67842, 67873
+  (ran); 67824, 67880, 67882 (never started, qdelt with recorded reason).
+- Runner: `debug-scripts/run_1n_contention.pbs` (executed at `1af2085`);
+  instrumentation reused from experiment 5 (`capture_node_alloc_mech.sh`,
+  `sample_node_load_mech.sh` with the bedd599 vmstat fix).
 - Parent records: `README.md` (experiments 1-5), `DEBUG_PROGRESS.md`,
   `DEBUG_PROGRESS_P2.md`.

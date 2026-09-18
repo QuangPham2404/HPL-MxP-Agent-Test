@@ -462,13 +462,18 @@ variable that no placement or affinity tuning can compensate for.
 
 ### Experiment 6 — Single-node node-contention test (N=200k, 6 jobs)
 
-- **Status:** in execution (started 2026-09-18). Single-node isolation of
-  the co-tenant contention effect (2-rank and 4-rank HPL-MxP on one pristine
-  control node, one dirtiest, one lighter occupied node, reusing the exp5
-  instrumentation). Planned, logged, and analyzed **separately in
-  `SINGLE_NODE_TEST.md`** so it cannot clash with the experiment-5 records;
-  runner: `debug-scripts/run_1n_contention.pbs`, evidence under
-  `outputs/sn200k_*`.
+- **Status:** complete (2026-09-18), 5/6 matrix + one validation rerun; the
+  `light_4r` cell could not be fielded (cluster churn — recorded). Core
+  result: the multinode co-tenant catastrophe (1.6-40x) does **not**
+  reproduce on a single node (heavy idle-holder +1.5%, light +1.1%); the
+  interference requires the inter-node dimension. One unresolved pristine
+  control anomaly (`sn200k_ctrl_2r_v1`) with full telemetry preserved.
+  Single-node isolation of the co-tenant contention effect (2-rank and
+  4-rank HPL-MxP on one pristine control node, one dirtiest, one lighter
+  occupied node, reusing the exp5 instrumentation). Planned, logged, and
+  analyzed **separately in `SINGLE_NODE_TEST.md`** so it cannot clash with
+  the experiment-5 records; runner: `debug-scripts/run_1n_contention.pbs`,
+  evidence under `outputs/sn200k_*`.
 
 ## Analysis
 
