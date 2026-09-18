@@ -227,6 +227,21 @@ light_4r 275,543.
 2. **The only pathological run was a pristine control** (`ctrl_2r_v1`):
    **cause identified (2026-09-18 verification) — app-side CPU-affinity
    pinning to a tiny GPU-local CPU set**, not node condition.
+   - **Mechanism in plain words (user-confirmed understanding):** this is
+     an app-side behavior, not a scheduler defect — PBS granted the full
+     24-CPU chunk. The HPL-MxP/NCCL stack asks the topology "which CPUs
+     are local to my GPU?" and pins each rank to the answer *without
+     checking whether the set is big enough for the workload*. For g11's
+     4b/5c pair the answer is the 2-thread PCIe root-complex core
+     (48-49), so both ranks were clamped onto those 2 CPUs while the
+     other 22 granted CPUs sat idle. The host-side phases need ~12
+     cores/rank, hence the 3.6-11.9x starvation and the starved GPUs.
+     The failure criterion is the **size** of the resolved set relative
+     to the rank count — not its NUMA location (the 2 cores were
+     GPU-local, the "right" node) and not the scheduler's grant. Most
+     GPU pairs on GAAS resolve empty → no pinning → ranks roam the full
+     grant (healthy); large-set resolutions (≥22 CPUs, heavy_4r/light_4r)
+     are harmless.
    - Condition comparison vs the healthy rerun `ctrl_2r_v2`: **same node
      (g11), same pristine scheduler condition** (no foreign jobs pre/post,
      none arrived mid-run), same node config (THP always/madvise,
