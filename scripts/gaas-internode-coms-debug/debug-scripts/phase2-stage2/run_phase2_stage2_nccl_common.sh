@@ -114,6 +114,7 @@ echo "tests=$TESTS (container-native *_mpi binaries, fixed root 0 for broadcast)
 echo "arms=$ARMS (ctrl=NCCL defaults; gdroff=NCCL_NET_GDR_LEVEL=LOC)"
 echo "sweep=8B..64MiB factor 2; warmup=5 iters=20; one rank per GPU"
 echo "nccl_debug=INFO subsys=INIT,BOOTSTRAP,ENV,NET,GRAPH,P2P,COLL,SHM,TUNING file=/dev/stderr (both arms, -x forwarded)"
+echo "ib_hca_filter=${NCCL_IB_HCA:-unset}"
 echo "result_tag=$RESULT_TAG"
 echo "sif=$SIF size=$(stat -c %s "$SIF" 2>/dev/null || echo unknown)"
 echo "bridge=$BRIDGE"
@@ -278,6 +279,10 @@ run_nccl_arm() {
 
   local xf=(-x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x NCCL_DEBUG_FILE)
   [ "$mode" = "gdroff" ] && xf+=(-x NCCL_NET_GDR_LEVEL)
+  # Optional NIC filter passthrough (Track 2 case 2026-09-17-A analog): when
+  # NCCL_IB_HCA is set (e.g. bond exclusion), forwarded to ranks in both arms
+  # so the A/B stays device-symmetric — mirrors the host runner (commit 7cda615).
+  [ -n "${NCCL_IB_HCA:-}" ] && xf+=(-x NCCL_IB_HCA)
 
   for t in $TESTS; do
     testbin="$(testbin_for "$t")" || return 1
