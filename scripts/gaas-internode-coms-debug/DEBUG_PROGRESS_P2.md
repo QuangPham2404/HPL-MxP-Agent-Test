@@ -12,11 +12,11 @@ Stage overview (per the plan):
 
 | Stage | Scope | Status |
 |---|---|---|
-| 1 | Container/launch preflight (tooling inventory + versions + device access + launch-path check) | **COMPLETE 2026-09-18 — tooling gate PARTIAL → STOPPED for user decision** |
-| 2 | Container-native OSU/NCCL GDR A/B (2x1 then 3x4, full test set) | blocked on Stage 1 tooling decision |
+| 1 | Container/launch preflight (tooling inventory + versions + device access + launch-path check + option (a) OSU staging validation) | **COMPLETE 2026-09-18** |
+| 2 | Container-native OSU/NCCL GDR A/B (2x1 then 3x4, full test set) | ready (tooling validated; awaiting user go) |
 | 3 | HPL-MxP integration A/B at N=480000/NB=1024 vs `3x4-baseline_v1` | not started |
 
-## Phase 2 — Stage 1: container/launch preflight (2026-09-18) — COMPLETE; tooling gate PARTIAL (stop point)
+## Phase 2 — Stage 1, part 1: container/launch preflight (2026-09-18) — COMPLETE; tooling gate PARTIAL (resolved by option (a), see next section)
 
 **Scored attempt:** `phase2_preflight_v3` — PBS job `67795.gaas` (2026-09-18,
 ~4 min), pinned `gpu_ded` nodes hpc-gaas-g22 (pristine) + hpc-gaas-g20 (one
@@ -24,8 +24,9 @@ co-tenant, 67357), chunks `ngpus=4:ncpus=48:mem=1000GB`, group `hpc_ebslee`,
 script `debug-scripts/phase2-preflight/run_phase2_preflight.pbs`.
 **Final gates: `PHASE2_PREFLIGHT_TOOLING_GATE=PARTIAL`,
 `PHASE2_PREFLIGHT_LAUNCH_GATE=PASS`,
-`PHASE2_PREFLIGHT_RESULT=ACTION_REQUIRED`.** Per the agreed missing-tooling
-path (2026-09-18), Stage 2 is NOT started; options below await user decision.
+`PHASE2_PREFLIGHT_RESULT=ACTION_REQUIRED`.** The PARTIAL tooling verdict
+(nccl-tests complete; no CUDA-capable OSU in the container) was resolved by
+the user's option (a) decision — staging validation in the next section.
 
 Attempt chain (all Track 1 script-machinery fixes, evidence preserved):
 
@@ -129,36 +130,100 @@ considerations.
 
 ### Next-step options (awaiting user decision — agreed stop-and-report path)
 
-Stage 2 NCCL arm is unblocked either way; the decision concerns the MPI/UCX
-`D D` arm:
+**RESOLVED 2026-09-18: user chose option (a)** — bind/copy the host
+CUDA OSU binaries into container reach and validate with a scaling smoke
+(1x2 / 2x1 / 3x1 / 3x4, any available nodes). Executed below; the original
+option list is preserved for the record:
 
-- **(a) Bind-mount the host CUDA OSU binaries (recommended):** the host
-  nvhpc/26.3 HPC-X `osu-micro-benchmarks-cuda` binaries (Phase 1 Step 1
-  validated) bind-mounted into the container; host and container stacks are
-  the same HPC-X 2.25.1 OMPI 4.1.9a1 / UCX 1.20.0 family, so the dynamic
-  libs should resolve against the container's stack — to be verified in-job
-  (ldd + H H launch sanity) before any `D D` measurement. Deviation from
-  "container-packaged" tooling → needs explicit approval (pre-agreed to stop
-  and ask).
-- **(b) Build a CUDA OSU flavor inside the container** from
-  `/workspace/source_code/osu_mpi/osu_mpi.tar.gz` (nvcc 13.1 available);
-  heavier and needs build authorization; the tarball can also just be
-  enumerated first to see whether the `cuda-nvidia-alternative` flavor is
-  even provided.
-- **(c) Stage 2 NCCL arm first:** proceed with container-native
-  sendrecv/broadcast/all_reduce A/B now and decide the UCX arm separately.
-- **(d) Different/newer SIF** packaging a CUDA OSU — largest change,
-  reference-configuration impact; only if (a)/(b) are unacceptable.
+- (a) host OSU staged into container reach (CHOSEN — see next section);
+- (b) build a CUDA OSU flavor inside the container from
+  `/workspace/source_code/osu_mpi/osu_mpi.tar.gz`;
+- (c) Stage 2 NCCL arm only;
+- (d) different/newer SIF.
 
-### Evidence index
+## Phase 2 — Stage 1 completion: option (a) OSU staging + scaling smoke (2026-09-18) — ALL RUNGS PASS
 
-- All attempts: `outputs/phase2-preflight/phase2_preflight_v{1,2,3}*`
-  (PBS .o/.e, inventory/tooling-gate/versions/rdma/launch/msgflow logs,
-  NCCL version probe, osu_bw help, hostfiles, pre/post co-tenant snapshots,
-  pre/post scheduler snapshots; v1/v2 superseded only in their gate logic —
-  their version/device/identity/launch evidence is reproduced in v3).
-- Script: `debug-scripts/phase2-preflight/run_phase2_preflight.pbs`
-  (header documents the v1→v3 defect chain); submission/attempt log:
-  `debug-scripts/phase2-preflight/README.md`.
-- Jobs: `67791.gaas` (v1), `67793.gaas` (v2), `67795.gaas` (v3, scored),
-  all g22+g20, gpu_ded, hpc_ebslee.
+**Decision:** user-directed option (a) with a 1x2 → 2x1 → 3x1 → 3x4 scaling
+smoke on any available nodes (no pristine hunting), including a tiny
+container-native NCCL all-reduce per rung. 1x2 = 1 node × 2 GPUs (intra-node
+rung), confirmed by the user.
+
+**Staging mechanism (validated):** the host nvhpc/26.3
+`osu-micro-benchmarks-cuda` suite (flat layout, 64 entries, 26 MB,
+osu_bw sha256 `a62ddcb636f3ae6f4530a199f2d9ec7d14b05823e622ac225dc4c4796ec76227`)
+is copied once into `osu-cuda-host/osu-micro-benchmarks-cuda/` (shared
+source of truth, gitignored) and then copied per job into **node-local
+`/tmp/phase2_osu/`** on every allocated vnode (lock-guarded
+`stage_osu_tmp.sh` via `pbsdsh --`). Rationale: **apptainer on GAAS does NOT
+bind `/home` into containers** (1x2 v1 evidence: staged binary invisible)
+but **`/tmp` IS default-bound** (phase2_preflight_v3 evidence) — and the
+bridge-spawned remote `orted` containers ignore custom `-B` flags, so
+`/tmp` is the one path visible to every container instance in the job.
+
+**ABI policy (validated):** the staged binaries' host RPATH
+(`$ORIGIN/../../lib`) does not exist at the stage locations, so `libmpi.so.40`
+resolves to the container's `/opt/hpcx/ompi/lib` (in-container `ldd`:
+`libmpi.so.40 => /opt/hpcx/ompi/lib/libmpi.so.40`, cuda libs present, no
+missing libs) — the tests exercise the container MPI/UCX stack, made
+deterministic by prepending `/opt/hpcx/ompi/lib:/opt/hpcx/ucx/lib` to
+`LD_LIBRARY_PATH` scoped to the osu processes. Container-side sha256 of
+osu_bw matches the host-side hash.
+
+**Smoke results (final ladder; nodes g14+g11+g15, `gpu_as`, group
+`hpc_ebslee`, chunks `ngpus=4:ncpus=48:mem=1000GB`; jobs
+`67831/67836/67838/67840.gaas`; every rung: ABI clean, staged binary visible
+on every rank, per-rank mapping verified, 6/6 tests PASS):**
+
+| Rung (attempt) | osu_bw D D @4 MiB (MB/s) | osu_bw H H @4 MiB | osu_latency D D @8 B (µs) | NCCL allreduce 1 MiB busbw (GB/s) | NCCL channels (IBext/GDRDMA) |
+|---|---|---|---|---|---|
+| 1x2 (`phase2_osu_smoke_1x2_v5`) | 288,743 (NVLink) | 87,742 | 16.7 | 52.7 | intra-node (NVLink) |
+| 2x1 (`phase2_osu_smoke_2x1_v2`) | 37,839 | 88,166 | 14.9 | 4.84 | 16/8 |
+| 3x1 (`phase2_osu_smoke_3x1_v2`) | 37,844 | 88,335 | 14.3 | 4.70 | 24/16 |
+| 3x4 (`phase2_osu_smoke_3x4_v2`) | 37,274 | 88,329 | 14.3 | 15.5 | 512/384 |
+
+Smoke numbers are context only (default settings, no A/B, no numeric
+gates), but three observations matter for Stage 2:
+
+1. **Inter-node GPU-direct p2p runs at ~43% of the H H fabric ceiling**
+   (37.3-37.8 vs ~88.3 GB/s) in the container default arm — echoing the host
+   Phase 1 finding (host D D 50.4 vs H H 87.9 = 57%, rail-limited). Stage 2's
+   UCX arm must capture `UCX_PROTO_INFO` rail/protocol evidence to explain
+   the delta.
+2. **Container NCCL GDR is live at default settings**: every inter-node rung
+   shows per-channel `via NET/IBext_v11/N/GDRDMA` graph tags (8/16/384
+   GDRDMA channels at 2x1/3x1/3x4), and 2x1 allreduce 1 MiB busbw (4.84
+   GB/s) closely matches the host campaign's ctrl value (4.98 GB/s algbw
+   equivalent) — the container NCCL stack behaves like the host's.
+3. **The container's plain nccl-tests binaries are per-process singletons**
+   (each forms a `nranks 1` comm); cross-node collectives require the
+   `*_mpi` variants (MPI bootstrap). Stage 2's NCCL arm must use
+   `sendrecv_perf_mpi` / `broadcast_perf_mpi` / `all_reduce_perf_mpi`.
+
+**Stage 1 conclusion: COMPLETE.** Tooling validated for both Stage 2 arms:
+staged host OSU-CUDA (D D + `-d cuda`) through the container MPI/UCX stack,
+and container-native nccl-tests `*_mpi` binaries through container NCCL
+(IBext_v11 + GDRDMA). The launch path (container mpirun + bridge + container
+orted) is verified at 1/2/3 nodes and 12 ranks. Stage 2 awaits user go.
+
+Attempt chain (all Track 1, evidence preserved): 1x2 v1 (job `67817.gaas` —
+`/home` staging invisible in containers) → v2/v3 (`67819`/`67820.gaas` —
+remote-sync collision left a stale script for v2; v3 hit a path typo
+`osu-microbenchmarks-cuda`) → v4 (`67821.gaas`) PASS with `/tmp` staging;
+first full ladder v1 (`67822/67823/67827.gaas`) PASS but the NCCL test used
+the plain (per-process) `all_reduce_perf` → final ladder v5/v2/v2/v2
+(`67831/67836/67838/67840.gaas`) PASS with `all_reduce_perf_mpi`.
+
+### Evidence index (Stage 1)
+
+- Preflight: `outputs/phase2-preflight/phase2_preflight_v{1,2,3}*` (jobs
+  `67791/67793/67795.gaas`; v3 scored).
+- OSU smoke: `outputs/phase2-preflight/phase2_osu_smoke_*` (attempts listed
+  above; final ladder = `1x2_v5`, `2x1_v2`, `3x1_v2`, `3x4_v2`), including
+  per-rung ABI logs, rank maps, per-test logs, hostfiles, pre/post
+  co-tenant snapshots and scheduler snapshots.
+- Scripts: `debug-scripts/phase2-preflight/run_phase2_preflight.pbs`,
+  `run_phase2_osu_smoke.pbs`, `stage_osu_tmp.sh`; staging home:
+  `osu-cuda-host/` (README + gitignored tree).
+- Jobs (all g14/g11/g15-class `gpu_as` nodes, group `hpc_ebslee`):
+  preflight `67791/67793/67795.gaas`; smoke `67817/67819/67820/67821/
+  67822/67823/67827/67831/67836/67838/67840.gaas`.

@@ -73,6 +73,8 @@ modules, binds, or transport settings without user direction.
 
 ## Attempt log
 
+### Preflight (Stage 1, part 1)
+
 - `phase2_preflight_v1` — PBS job `67791.gaas` (2026-09-18, g22+g20, ~1 min,
   exit 1). Two Track 1 script defects: the OSU search never looked inside
   `osu_mpi_tests/` (checked the directory surface and depth≤5 from `/`;
@@ -93,12 +95,45 @@ modules, binds, or transport settings without user direction.
   based CUDA gate. Final: `TOOLING_GATE=PARTIAL` (nccl-tests complete; OSU
   packaged as non-CUDA OMB v7.5 only; **no CUDA-capable osu_bw/osu_latency
   anywhere; "osu-cuda-nvidia-alternative" not packaged**),
-  `LAUNCH_GATE=PASS`, `RESULT=ACTION_REQUIRED` → Stage 2 stopped for user
-  decision per the agreed missing-tooling path. Full results and options:
-  `../../DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1". Evidence:
-  `phase2_preflight_v3*`.
+  `LAUNCH_GATE=PASS`, `RESULT=ACTION_REQUIRED` → user chose option (a).
+  Full results: `../../DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1".
+  Evidence: `phase2_preflight_v3*`.
 
 Known limitation: the per-node host-GDR capture (lsmod/`/dev/gdrdrv`/topo)
 failed silently in all three attempts; compensating evidence is the
 in-container NCCL probe (nvidia_peermem GDR enablement lines, this run) plus
 the Phase 1 Step 2 fabric logs for the same node pair (2026-09-17).
+
+### OSU-mount scaling smoke (Stage 1 completion, option (a); user-directed 2026-09-18)
+
+Script `run_phase2_osu_smoke.pbs` (+ `stage_osu_tmp.sh` helper); staged tree
+home `../../osu-cuda-host/` (gitignored). Nodes g14+g11+g15 (`gpu_as`),
+group `hpc_ebslee`, any-node policy per user direction.
+
+- `phase2_osu_smoke_1x2_v1` — job `67817.gaas` (g14): shared `/home` staging
+  succeeded (64 files, sha256 recorded) but the staged binary was NOT
+  visible inside the container — **apptainer does not bind `/home` into
+  containers on GAAS**. Track 1: switched to node-local `/tmp` staging.
+- `phase2_osu_smoke_1x2_v2` — job `67819.gaas`: a remote-sync collision left
+  the stale (v1) script in place when this was submitted; failed like v1.
+  Not a script defect — the sync procedure now moves colliding untracked
+  outputs aside before `git pull --ff-only` (pre-sync dirs preserved).
+- `phase2_osu_smoke_1x2_v3` — job `67820.gaas`: FATAL on the host OSU source
+  check — path typo introduced in the `/tmp` edit round
+  (`osu-microbenchmarks-cuda`, missing hyphen) plus the check was
+  unconditional even though the shared stage already existed. Track 1 fix.
+- `phase2_osu_smoke_1x2_v4` — job `67821.gaas`: **PASS** — `/tmp` staging
+  works, ABI clean (libmpi → container /opt/hpcx), 6/6 tests PASS.
+- First full ladder: `1x2_v4` (`67821.gaas`), `2x1_v1` (`67822.gaas`),
+  `3x1_v1` (`67823.gaas`), `3x4_v1` (`67827.gaas`) — all 6/6 PASS, but the
+  NCCL test used the plain `all_reduce_perf`, which forms a **per-process
+  `nranks 1` comm** in this container packaging (no cross-node collective).
+  Track 1: switch to `all_reduce_perf_mpi`.
+- **Final ladder (all PASS, 6/6 each)**: `phase2_osu_smoke_1x2_v5`
+  (`67831.gaas`, true nranks-2 collective, NVLink), `2x1_v2` (`67836.gaas`,
+  NCCL 16 IBext / 8 GDRDMA channels), `3x1_v2` (`67838.gaas`, 24/16),
+  `3x4_v2` (`67840.gaas`, 12 ranks, 512/384). Results table and Stage 1
+  closure: `../../DEBUG_PROGRESS_P2.md` → "Phase 2 — Stage 1 completion".
+
+**Stage 2 note:** the container NCCL arm must use the `*_mpi` nccl-tests
+binaries (`sendrecv_perf_mpi`, `broadcast_perf_mpi`, `all_reduce_perf_mpi`).
