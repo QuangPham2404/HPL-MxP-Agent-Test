@@ -1,0 +1,390 @@
+=== CAPTURE-MECH BEGIN hpc-gaas-g22 phase=post ===
+2026-09-18T06:19:25+08:00
+kernel=5.14.0-611.36.1.el9_7.x86_64
+--- job cpuset / mems (this node) ---
+Cpus_allowed_list:	0-47
+Mems_allowed_list:	0-1
+--- numa node cpulists ---
+node0 cpus=0-55
+node1 cpus=56-111
+--- job cgroup (path + effective limits + counters) ---
+self_cgroup=0::/pbs_jobs.service/jobs/67783.1/2147483652
+resolved_cgroup_dir=/sys/fs/cgroup/pbs_jobs.service/jobs/67783.1/2147483652
+cpu.stat=usage_usec 131252 user_usec 58656 system_usec 72595 nice_usec 0 core_sched.force_idle_usec 0 
+cpu.max=UNAVAILABLE
+cpuset.cpus.effective=0-47 
+cpuset.mems.effective=0-1 
+memory.current=5054464 
+memory.max=max 
+memory.min=0 
+[memory.events]
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+[memory.stat]
+anon 581632
+file 12288
+kernel 724992
+kernel_stack 16384
+pagetables 90112
+sec_pagetables 0
+percpu 40128
+sock 0
+vmalloc 0
+shmem 0
+zswap 0
+zswapped 0
+file_mapped 0
+file_dirty 8192
+file_writeback 0
+swapcached 0
+anon_thp 0
+file_thp 0
+shmem_thp 0
+inactive_anon 0
+active_anon 491520
+inactive_file 12288
+active_file 0
+unevictable 0
+slab_reclaimable 103640
+slab_unreclaimable 260328
+slab 363968
+workingset_refault_anon 0
+workingset_refault_file 0
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+pgscan 0
+pgsteal 0
+pgscan_kswapd 0
+pgscan_direct 0
+pgscan_khugepaged 0
+pgsteal_kswapd 0
+pgsteal_direct 0
+pgsteal_khugepaged 0
+pgfault 16032
+pgmajfault 0
+pgrefill 0
+pgactivate 0
+pgdeactivate 0
+pglazyfree 0
+pglazyfreed 0
+zswpin 0
+zswpout 0
+zswpwb 0
+thp_fault_alloc 0
+thp_collapse_alloc 0
+thp_swpout 0
+thp_swpout_fallback 0
+--- transparent hugepage / VM state ---
+transparent_hugepage/enabled=[always] madvise never
+transparent_hugepage/defrag=always defer defer+madvise [madvise] never
+swappiness=10
+--- cgroup-visible GPU inventory (the allocated set; UUIDs) ---
+GPU 0: NVIDIA H200 (UUID: GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404)
+GPU 1: NVIDIA H200 (UUID: GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294)
+GPU 2: NVIDIA H200 (UUID: GPU-f70c775b-2f84-a567-767c-db349e8cacfa)
+GPU 3: NVIDIA H200 (UUID: GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f)
+--- per-GPU pci bus / uuid / memory used ---
+index, pci.bus_id, uuid, memory.used [MiB]
+0, 00000000:9A:00.0, GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404, 0 MiB
+1, 00000000:BB:00.0, GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294, 0 MiB
+2, 00000000:CD:00.0, GPU-f70c775b-2f84-a567-767c-db349e8cacfa, 0 MiB
+3, 00000000:DC:00.0, GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f, 0 MiB
+--- GPU PCIe link generation/width (current vs max) ---
+pci.bus_id, pcie.link.gen.current, pcie.link.width.current, pcie.link.gen.max, pcie.link.width.max
+00000000:9A:00.0, 5, 16, 5, 16
+00000000:BB:00.0, 5, 16, 5, 16
+00000000:CD:00.0, 5, 16, 5, 16
+00000000:DC:00.0, 5, 16, 5, 16
+--- GPU/NIC/NUMA topology matrix ---
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NODE	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE		1		N/A
+GPU1	NV18	 X 	NV18	NV18	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	PIX		1		N/A
+GPU2	NV18	NV18	 X 	NV18	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE		1		N/A
+GPU3	NV18	NV18	NV18	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE		1		N/A
+NIC0	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC1	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC2	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE	NODE				
+NIC3	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE	NODE				
+NIC4	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	NODE	NODE				
+NIC5	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE	PIX				
+NIC6	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE	NODE				
+NIC7	NODE	NODE	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	 X 	NODE				
+NIC8	NODE	PIX	NODE	NODE	NODE	NODE	NODE	NODE	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+--- ibdev2netdev ---
+mlx5_0 port 1 ==> ibp24s0 (Up)
+mlx5_1 port 1 ==> ibp58s0 (Up)
+mlx5_2 port 1 ==> ibp77s0 (Up)
+mlx5_3 port 1 ==> ibp93s0 (Up)
+mlx5_4 port 1 ==> ibp155s0 (Up)
+mlx5_5 port 1 ==> ibp186s0 (Up)
+mlx5_8 port 1 ==> ibp204s0 (Up)
+mlx5_9 port 1 ==> ibp219s0 (Up)
+mlx5_bond_0 port 1 ==> bond0 (Up)
+--- per-NIC numa node + port state/rate ---
+mlx5_0 port 1 numa_node=0 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_1 port 1 numa_node=0 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_2 port 1 numa_node=0 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_3 port 1 numa_node=0 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_4 port 1 numa_node=1 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_5 port 1 numa_node=1 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_8 port 1 numa_node=1 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_9 port 1 numa_node=1 state=4: ACTIVE rate=400 Gb/sec (4X NDR)
+mlx5_bond_0 port 1 numa_node=1 state=4: ACTIVE rate=200 Gb/sec (2X NDR)
+--- IB port counters (one-shot snapshot) ---
+[mlx5_0 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=226904417145
+port_rcv_errors=0
+port_rcv_packets=270503922
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=181598125172
+port_xmit_discards=0
+port_xmit_packets=226400133
+port_xmit_wait=4294967295
+symbol_error=0
+unicast_rcv_packets=270503922
+unicast_xmit_packets=226400133
+VL15_dropped=0
+[mlx5_1 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=132590493092
+port_rcv_errors=0
+port_rcv_packets=132780252
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=181960810957
+port_xmit_discards=0
+port_xmit_packets=179928221
+port_xmit_wait=4294967295
+symbol_error=0
+unicast_rcv_packets=132780252
+unicast_xmit_packets=179928221
+VL15_dropped=0
+[mlx5_2 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=6569697367
+port_rcv_errors=0
+port_rcv_packets=6696799
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=7321274693
+port_xmit_discards=0
+port_xmit_packets=7407261
+port_xmit_wait=160417
+symbol_error=0
+unicast_rcv_packets=6696799
+unicast_xmit_packets=7407261
+VL15_dropped=0
+[mlx5_3 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=7043497965
+port_rcv_errors=0
+port_rcv_packets=7158192
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=7218029135
+port_xmit_discards=0
+port_xmit_packets=7324420
+port_xmit_wait=175672
+symbol_error=0
+unicast_rcv_packets=7158192
+unicast_xmit_packets=7324420
+VL15_dropped=0
+[mlx5_4 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=79183829861
+port_rcv_errors=0
+port_rcv_packets=82838653
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=70910528443
+port_xmit_discards=0
+port_xmit_packets=75932390
+port_xmit_wait=4294967295
+symbol_error=0
+unicast_rcv_packets=82838653
+unicast_xmit_packets=75932390
+VL15_dropped=0
+[mlx5_5 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=60749855490
+port_rcv_errors=0
+port_rcv_packets=61485879
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=54313006567
+port_xmit_discards=0
+port_xmit_packets=55460323
+port_xmit_wait=4294967295
+symbol_error=0
+unicast_rcv_packets=61485879
+unicast_xmit_packets=55460323
+VL15_dropped=0
+[mlx5_8 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=12603117062
+port_rcv_errors=0
+port_rcv_packets=13671561
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=12696651957
+port_xmit_discards=0
+port_xmit_packets=13775404
+port_xmit_wait=215078
+symbol_error=0
+unicast_rcv_packets=13671561
+unicast_xmit_packets=13775404
+VL15_dropped=0
+[mlx5_9 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=19095972401
+port_rcv_errors=0
+port_rcv_packets=20476344
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=16194027269
+port_xmit_discards=0
+port_xmit_packets=17545920
+port_xmit_wait=200254
+symbol_error=0
+unicast_rcv_packets=20476344
+unicast_xmit_packets=17545920
+VL15_dropped=0
+[mlx5_bond_0 port 1]
+excessive_buffer_overrun_errors=0
+link_downed=0
+link_error_recovery=0
+local_link_integrity_errors=0
+multicast_rcv_packets=0
+multicast_xmit_packets=0
+port_rcv_constraint_errors=0
+port_rcv_data=0
+port_rcv_errors=0
+port_rcv_packets=0
+port_rcv_remote_physical_errors=0
+port_rcv_switch_relay_errors=0
+port_xmit_constraint_errors=0
+port_xmit_data=0
+port_xmit_discards=0
+port_xmit_packets=0
+port_xmit_wait=0
+symbol_error=0
+unicast_rcv_packets=0
+unicast_xmit_packets=0
+VL15_dropped=0
+--- numastat (per numa node) ---
+[node0] numa_hit 152983628 numa_miss 0 numa_foreign 0 interleave_hit 5607 local_node 146154346 other_node 6829282 
+[node1] numa_hit 141999106 numa_miss 0 numa_foreign 0 interleave_hit 4797 local_node 138515315 other_node 3483791 
+--- host load snapshot ---
+28.56 17.58 14.65 14/2171 1236951
+MemTotal:       2113277096 kB
+MemFree:        2018745780 kB
+MemAvailable:   2027575232 kB
+Buffers:         1149648 kB
+Cached:         19601080 kB
+SwapTotal:       8388604 kB
+SwapFree:        8388604 kB
+Dirty:               232 kB
+Writeback:           656 kB
+AnonPages:      23588916 kB
+PSI not available on this node
+--- co-tenant jobs on this node (in-job pbsnodes view, best effort) ---
+     state = free
+     jobs = 67783.gaas/0, 67783.gaas/1, 67783.gaas/2, 67783.gaas/3, 67783.gaas/4, 67783.gaas/5, 67783.gaas/6, 67783.gaas/7, 67783.gaas/8, 67783.gaas/9, 67783.gaas/10, 67783.gaas/11, 67783.gaas/12, 67783.gaas/13, 67783.gaas/14, 67783.gaas/15, 67783.gaas/16, 67783.gaas/17, 67783.gaas/18, 67783.gaas/19, 67783.gaas/20, 67783.gaas/21, 67783.gaas/22, 67783.gaas/23, 67783.gaas/24, 67783.gaas/25, 67783.gaas/26, 67783.gaas/27, 67783.gaas/28, 67783.gaas/29, 67783.gaas/30, 67783.gaas/31, 67783.gaas/32, 67783.gaas/33, 67783.gaas/34, 67783.gaas/35, 67783.gaas/36, 67783.gaas/37, 67783.gaas/38, 67783.gaas/39, 67783.gaas/40, 67783.gaas/41, 67783.gaas/42, 67783.gaas/43, 67783.gaas/44, 67783.gaas/45, 67783.gaas/46, 67783.gaas/47
+     resources_assigned.mem = 1048576000kb
+     resources_assigned.ncpus = 48
+     resources_assigned.ngpus = 4
+--- container GPU view (renumbered; what the run uses) ---
+WARNING: group: unknown groupid 1304617061
+GPU 0: NVIDIA H200 (UUID: GPU-3a2ff9ea-5b33-f558-0f4e-ef4cf691f404)
+GPU 1: NVIDIA H200 (UUID: GPU-52b02a2e-c2a1-ec95-3d28-54ed036a1294)
+GPU 2: NVIDIA H200 (UUID: GPU-f70c775b-2f84-a567-767c-db349e8cacfa)
+GPU 3: NVIDIA H200 (UUID: GPU-68b7e551-9d3e-87ad-c507-de936d0a8a4f)
+=== CAPTURE-MECH END hpc-gaas-g22 phase=post ===

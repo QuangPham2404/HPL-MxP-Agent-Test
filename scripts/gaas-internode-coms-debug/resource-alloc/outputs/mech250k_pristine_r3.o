@@ -1,0 +1,1665 @@
+experiment_id=resource-alloc-exp5
+attempt=mech250k_pristine_r3
+condition=pristine
+pbs_job_id=67790.gaas
+2026-09-18T06:46:43+08:00
+layout=3 nodes x 4 GPUs = 12 ranks
+grid=nprow=3 npcol=4 order=row
+n=250000 nb=1024
+nodes=hpc-gaas-g11,hpc-gaas-g12,hpc-gaas-g14
+req_hosts=hpc-gaas-g11+hpc-gaas-g14+hpc-gaas-g12
+gpu_affinity=0:1:2:3
+ucx_log_level=info
+nccl_debug=INFO
+perf_events=none
+sampler_interval=2s max_ticks=850
+=== PBS_NODEFILE (raw) ===
+hpc-gaas-g11
+hpc-gaas-g14
+hpc-gaas-g12
+=== hostfile ===
+hpc-gaas-g11 slots=4
+hpc-gaas-g14 slots=4
+hpc-gaas-g12 slots=4
+=== pre-run per-node capture (pbsdsh, once per node) ===
+=== CAPTURE-MECH pre hpc-gaas-g14 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_pre_hpc-gaas-g14.log ===
+=== CAPTURE-MECH pre hpc-gaas-g11 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_pre_hpc-gaas-g11.log ===
+=== CAPTURE-MECH pre hpc-gaas-g12 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_pre_hpc-gaas-g12.log ===
+=== start in-run per-node sampler (background, 2 s interval) ===
+[1789685221.208419] [hpc-gaas-g11:872363:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.208439] [hpc-gaas-g11:872363:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.208437] [hpc-gaas-g11:872333:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.208454] [hpc-gaas-g11:872333:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.208923] [hpc-gaas-g11:872395:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.208936] [hpc-gaas-g11:872395:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.208932] [hpc-gaas-g11:872347:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.208946] [hpc-gaas-g11:872347:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.210229] [hpc-gaas-g11:872363:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.210230] [hpc-gaas-g11:872395:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.210232] [hpc-gaas-g11:872347:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.210237] [hpc-gaas-g11:872333:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.214368] [hpc-gaas-g14:566008:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.214387] [hpc-gaas-g14:566008:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.214369] [hpc-gaas-g14:565993:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.214389] [hpc-gaas-g14:565993:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.214383] [hpc-gaas-g14:566094:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.214399] [hpc-gaas-g14:566094:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.214384] [hpc-gaas-g14:566022:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.214399] [hpc-gaas-g14:566022:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.216250] [hpc-gaas-g14:566008:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.216252] [hpc-gaas-g14:566094:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.216253] [hpc-gaas-g14:566022:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.216256] [hpc-gaas-g14:565993:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.455606] [hpc-gaas-g12:852294:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.455625] [hpc-gaas-g12:852294:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.455605] [hpc-gaas-g12:852352:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.455626] [hpc-gaas-g12:852352:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.458370] [hpc-gaas-g12:852352:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.458376] [hpc-gaas-g12:852294:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.458492] [hpc-gaas-g12:852280:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.458510] [hpc-gaas-g12:852280:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.458647] [hpc-gaas-g12:852280:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685221.458682] [hpc-gaas-g12:852309:f]        vfs_sock.c:63   UCX  DIAG  failed to create directory '/run/user/17252044/ucx': No such file or directory
+[1789685221.458703] [hpc-gaas-g12:852309:f]        vfs_fuse.c:440  UCX  DIAG  failed to watch on '/run/user/17252044/ucx/vfs.sock': Input/output error, VFS will be disabled
+[1789685221.458854] [hpc-gaas-g12:852309:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685222.640909] [hpc-gaas-g14:565993:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685222.719735] [hpc-gaas-g11:872333:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685222.815004] [hpc-gaas-g14:566008:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685222.879059] [hpc-gaas-g11:872395:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685222.961557] [hpc-gaas-g14:566022:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.011221] [hpc-gaas-g12:852280:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.123511] [hpc-gaas-g11:872347:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.140682] [hpc-gaas-g14:566094:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.247334] [hpc-gaas-g12:852294:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.320783] [hpc-gaas-g11:872363:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.509496] [hpc-gaas-g12:852352:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.740770] [hpc-gaas-g12:852309:0]          parser.c:2368 UCX  INFO  UCX_* env variables: UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info
+[1789685223.742443] [hpc-gaas-g11:872333:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.742481] [hpc-gaas-g11:872363:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.742496] [hpc-gaas-g11:872395:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.742558] [hpc-gaas-g11:872347:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.743181] [hpc-gaas-g14:566022:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.743183] [hpc-gaas-g14:565993:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.743368] [hpc-gaas-g12:852309:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.743214] [hpc-gaas-g14:566094:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.743237] [hpc-gaas-g14:566008:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.744068] [hpc-gaas-g12:852280:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.744139] [hpc-gaas-g12:852294:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.744155] [hpc-gaas-g12:852352:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685223.949855] [hpc-gaas-g11:872333:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.961578] [hpc-gaas-g14:566022:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.961826] [hpc-gaas-g14:566008:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.961882] [hpc-gaas-g14:565993:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.962330] [hpc-gaas-g14:566094:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.965714] [hpc-gaas-g11:872347:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.968019] [hpc-gaas-g12:852352:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.967334] [hpc-gaas-g11:872363:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.968033] [hpc-gaas-g11:872395:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.969397] [hpc-gaas-g12:852309:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.972752] [hpc-gaas-g12:852294:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685223.973438] [hpc-gaas-g12:852280:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 self cfg#1 tag(self/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_ml
+[1789685224.010676] [hpc-gaas-g11:872333:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.023901] [hpc-gaas-g14:566022:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.023968] [hpc-gaas-g14:566008:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.024087] [hpc-gaas-g14:565993:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.024145] [hpc-gaas-g14:566094:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.026173] [hpc-gaas-g11:872347:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.027645] [hpc-gaas-g11:872363:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.028687] [hpc-gaas-g12:852352:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.028328] [hpc-gaas-g11:872395:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.029339] [hpc-gaas-g12:852309:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.031109] [hpc-gaas-g12:852294:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.034320] [hpc-gaas-g12:852280:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#2 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.053072] [hpc-gaas-g11:872347:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.056332] [hpc-gaas-g11:872363:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.063356] [hpc-gaas-g12:852309:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.085075] [hpc-gaas-g14:566022:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 intra-node cfg#3 tag(sysv/memory rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1
+[1789685224.438237] [hpc-gaas-g11:872363:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.438237] [hpc-gaas-g11:872395:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.438240] [hpc-gaas-g11:872333:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.438241] [hpc-gaas-g11:872347:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.446037] [hpc-gaas-g14:566022:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.446039] [hpc-gaas-g14:565993:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.446041] [hpc-gaas-g14:566008:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.446042] [hpc-gaas-g14:566094:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.476502] [hpc-gaas-g12:852309:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.476507] [hpc-gaas-g12:852294:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.476503] [hpc-gaas-g12:852280:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685224.476503] [hpc-gaas-g12:852352:0]     ucp_context.c:2431 UCX  INFO  Version 1.20.0 (loaded from /opt/hpcx/ompi/lib/openmpi/../../../ucx/lib/libucp.so.0)
+[1789685225.322464] [hpc-gaas-g11:872363:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685225.335167] [hpc-gaas-g14:566094:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685225.339261] [hpc-gaas-g14:565993:a]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685225.349454] [hpc-gaas-g12:852280:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685225.349835] [hpc-gaas-g12:852294:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685225.361562] [hpc-gaas-g11:872333:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685225.386539] [hpc-gaas-g11:872395:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.386544] [hpc-gaas-g11:872347:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.386562] [hpc-gaas-g11:872363:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387220] [hpc-gaas-g14:566008:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387251] [hpc-gaas-g14:566094:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387281] [hpc-gaas-g14:565993:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.386684] [hpc-gaas-g11:872333:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387322] [hpc-gaas-g14:566022:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387446] [hpc-gaas-g12:852309:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387454] [hpc-gaas-g12:852352:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387480] [hpc-gaas-g12:852280:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.387615] [hpc-gaas-g12:852294:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#1 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.447823] [hpc-gaas-g12:852309:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448850] [hpc-gaas-g12:852294:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448721] [hpc-gaas-g14:566022:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448884] [hpc-gaas-g12:852352:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448733] [hpc-gaas-g14:566008:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448886] [hpc-gaas-g14:565993:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448685] [hpc-gaas-g11:872333:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448820] [hpc-gaas-g11:872395:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.448844] [hpc-gaas-g11:872363:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.463953] [hpc-gaas-g12:852280:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.464957] [hpc-gaas-g14:566094:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+[1789685225.469856] [hpc-gaas-g11:872347:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT intra-node cfg#2 tag(rc_mlx5/mlx5_0:1 sysv/memory rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2
+
+================================================================================
+HPL-MxP-NVIDIA 26.2.0  -- NVIDIA accelerated HPL-MxP benchmark benchmark -- NVIDIA
+================================================================================
+
+ ****** HPL MxP Settings ****** 
+
+   --nprow =  3 
+   --npcol =  4 
+   --order = row 
+   --n     = 250000 
+   --nb    = 1024 
+   --tolerance                        = 1.000000e-12 
+   --test-loop                        = 1 
+   --preset-gemm-kernel               = 90 
+   --u-panel-chunk-nbs                = 8 
+   --call-dgemv-with-multiple-threads = 0 
+   --prioritize-trsm                  = 0 
+   --prioritize-factorization         = 0 
+   --use-separate-stream-for-gemm     = 1 
+   --use-mpi-panel-broadcast          = 50 
+   --mpi-use-host-threads             = 1 
+   --sloppy-type                      = FP16 
+   --Anq-device                       = 0 
+   --cuda-host-register-step          = 2048 
+   --mpi-use-mpi                      = 0 
+   --use-host-mpi                     = 0 
+   --fill-device                      = 0 
+   --fill-device-buffer-size          = 3048 
+   --fp4-scaling-factor-a             = 1.000000e-05 
+   --skip-tests                       = 1 
+   --gemm-iterations                  = 100 
+
+
+
+ ****** Monitor GPU Settings ****** 
+
+   --monitor-gpu                      = 1 
+   --monitor-gpu-interval             = 10 
+   --monitor-gpu-clock-warning        = 0 
+   --monitor-gpu-power-warning        = 0 
+   --monitor-gpu-temp-warning         = 0 
+   --monitor-gpu-pcie-width-warning   = 16 
+   --monitor-gpu-pcie-gen-warning     = 5 
+
+
+[1789685225.906441] [hpc-gaas-g14:566008:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.909970] [hpc-gaas-g14:566094:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.911965] [hpc-gaas-g14:565993:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.914168] [hpc-gaas-g14:566022:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.917110] [hpc-gaas-g11:872395:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.917153] [hpc-gaas-g11:872347:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.917191] [hpc-gaas-g11:872333:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.921153] [hpc-gaas-g11:872363:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.946907] [hpc-gaas-g12:852352:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.946939] [hpc-gaas-g12:852309:0]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.950505] [hpc-gaas-g12:852294:a]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+[1789685225.950921] [hpc-gaas-g12:852280:a]      ucp_worker.c:1912 UCX  INFO    UCC_UCP_CONTEXT inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/m
+hpc-gaas-g12:852294:852294 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.13<0>
+hpc-gaas-g14:565993:565993 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g11:872333:872333 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g12:852294:852294 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g12:852294:852294 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g12:852294:852294 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.11<0>
+hpc-gaas-g12:852309:852309 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g12:852280:852280 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g12:852352:852352 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.14<0>
+hpc-gaas-g12:852309:852309 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g12:852280:852280 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g12:852352:852352 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g14:565993:565993 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g11:872333:872333 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g14:566022:566022 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g14:566094:566094 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g14:566022:566022 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g14:566008:566008 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g14:566094:566094 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g14:565993:565993 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g14:565993:565993 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g11:872363:872363 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g11:872395:872395 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g11:872347:872347 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+hpc-gaas-g11:872347:872347 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g11:872395:872395 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g11:872363:872363 [0] NCCL INFO cudaDriverVersion 13010
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.13<0>
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.13<0>
+hpc-gaas-g12:852352:852352 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g12:852352:852352 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.13<0>
+hpc-gaas-g12:852280:852280 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g12:852280:852280 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g12:852309:852309 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g12:852309:852309 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g11:872333:872333 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g11:872333:872333 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Stack size limit (unlimited) is unsafe; will use 8192KB for newly launched threads
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.11<0>
+hpc-gaas-g14:566022:566022 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g14:566022:566022 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.11<0>
+hpc-gaas-g14:566008:566008 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g14:566008:566008 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.11<0>
+hpc-gaas-g14:566094:566094 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g14:566094:566094 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.14<0>
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.14<0>
+hpc-gaas-g11:872395:872395 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g11:872395:872395 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g11:872347:872347 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g11:872347:872347 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Bootstrap: Using bond0.321:10.20.0.14<0>
+hpc-gaas-g11:872363:872363 [0] NCCL INFO NCCL version 2.29.2+cuda13.1
+hpc-gaas-g11:872363:872363 [0] NCCL INFO NCCL git version stable 07fa371c7
+hpc-gaas-g14:566022:566022 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g14:566022:566022 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g14:566008:566008 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g14:565993:565993 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g14:565993:565993 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:565993:565993 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:566022:566022 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g14:566094:566094 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g14:565993:565993 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.11<0>
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:566094:566094 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.11<0>
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:566008:566008 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.11<0>
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:566022:566022 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.11<0>
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852352:852352 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g12:852352:852352 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852352:852352 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g12:852294:852294 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g12:852294:852294 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852294:852294 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g12:852309:852309 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g12:852309:852309 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852309:852309 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g12:852280:852280 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g12:852280:852280 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g11:872347:872347 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872333:872333 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872363:872363 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g11:872363:872363 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872395:872395 [0] NCCL INFO NET/Plugin: Loaded net plugin NCCL RDMA Plugin v11 (v11)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO NET/Plugin: Loaded collnet plugin SHARP (v11)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Successfully loaded external network plugin /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872347:872347 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872333:872333 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872395:872395 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Plugin Path : /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so
+hpc-gaas-g11:872363:872363 [0] NCCL INFO P2P plugin v11 IBext_v11
+hpc-gaas-g12:852294:852294 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.13<0>
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852309:852309 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.13<0>
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852352:852352 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.13<0>
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852280:852280 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.13<0>
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872333:872333 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.14<0>
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872395:872395 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.14<0>
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872363:872363 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.14<0>
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872347:872347 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB/SHARP [1]mlx5_1:1/IB/SHARP [2]mlx5_2:1/IB/SHARP [3]mlx5_3:1/IB/SHARP [4]mlx5_4:1/IB/SHARP [5]mlx5_5:1/IB/SHARP [6]mlx5_8:1/IB/SHARP [7]mlx5_9:1/IB/SHARP [8]mlx5_bond_0:1/RoCE [RO]; OOB bond0.321:10.20.0.14<0>
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:566094:566094 [0] NCCL INFO [Rank 3] ncclCommInitRank comm 0x6d36010 rank 3 nranks 4 cudaDev 0 nvmlDev 3 busId dc000 commId 0x2610961b19a4777c - Init START
+hpc-gaas-g14:565993:565993 [0] NCCL INFO [Rank 0] ncclCommInitRank comm 0x67350b0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x2610961b19a4777c - Init START
+hpc-gaas-g14:566022:566022 [0] NCCL INFO [Rank 1] ncclCommInitRank comm 0x6de9010 rank 1 nranks 4 cudaDev 0 nvmlDev 1 busId bb000 commId 0x2610961b19a4777c - Init START
+hpc-gaas-g14:566008:566008 [0] NCCL INFO [Rank 2] ncclCommInitRank comm 0x5d1c010 rank 2 nranks 4 cudaDev 0 nvmlDev 2 busId cd000 commId 0x2610961b19a4777c - Init START
+hpc-gaas-g14:566022:566022 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g14:566008:566008 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g14:565993:565993 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g14:566094:566094 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Bootstrap timings total 0.001925 (create 0.000028, send 0.000091, recv 0.000081, ring 0.000048, delay 0.000000)
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Bootstrap timings total 0.003477 (create 0.000021, send 0.000080, recv 0.001090, ring 0.000129, delay 0.000001)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Bootstrap timings total 0.015624 (create 0.000034, send 0.000105, recv 0.012199, ring 0.000053, delay 0.000000)
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Bootstrap timings total 0.002446 (create 0.000025, send 0.000091, recv 0.000557, ring 0.000054, delay 0.000001)
+hpc-gaas-g14:566008:566008 [0] NCCL INFO MNNVL busId 0xcd000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:566094:566094 [0] NCCL INFO MNNVL busId 0xdc000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:565993:565993 [0] NCCL INFO MNNVL busId 0x9a000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:566022:566022 [0] NCCL INFO MNNVL busId 0xbb000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO [Rank 0] ncclCommInitRank comm 0x79500b0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 4b000 commId 0xf7a70e4b4ea2a9b2 - Init START
+hpc-gaas-g14:566094:566094 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 3 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:566094:566094 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g14:566008:566008 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:565993:565993 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:565993:565993 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g14:566008:566008 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g14:566022:566022 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:566022:566022 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO [Rank 0] ncclCommInitRank comm 0x64400b0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x2d0d87ae4f1252eb - Init START
+hpc-gaas-g11:872395:872395 [0] NCCL INFO [Rank 2] ncclCommInitRank comm 0x63b2010 rank 2 nranks 4 cudaDev 0 nvmlDev 2 busId cd000 commId 0x2d0d87ae4f1252eb - Init START
+hpc-gaas-g12:852352:852352 [0] NCCL INFO [Rank 1] ncclCommInitRank comm 0x6721f40 rank 1 nranks 4 cudaDev 0 nvmlDev 1 busId 5c000 commId 0xf7a70e4b4ea2a9b2 - Init START
+hpc-gaas-g12:852309:852309 [0] NCCL INFO [Rank 2] ncclCommInitRank comm 0x5a68010 rank 2 nranks 4 cudaDev 0 nvmlDev 2 busId 9a000 commId 0xf7a70e4b4ea2a9b2 - Init START
+hpc-gaas-g14:566022:566022 [0] NCCL INFO comm 0x6de9010 rank 1 nRanks 4 nNodes 1 localRanks 4 localRank 1 MNNVL 0
+hpc-gaas-g14:566094:566094 [0] NCCL INFO comm 0x6d36010 rank 3 nRanks 4 nNodes 1 localRanks 4 localRank 3 MNNVL 0
+hpc-gaas-g14:566008:566008 [0] NCCL INFO comm 0x5d1c010 rank 2 nRanks 4 nNodes 1 localRanks 4 localRank 2 MNNVL 0
+hpc-gaas-g14:565993:565993 [0] NCCL INFO comm 0x67350b0 rank 0 nRanks 4 nNodes 1 localRanks 4 localRank 0 MNNVL 0
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 00/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 01/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 02/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 03/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 04/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 05/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 06/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 07/24 : 0 1 2 3
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Trees [0] 2/-1/-1->1->0 [1] 2/-1/-1->1->0 [2] 2/-1/-1->1->0 [3] 2/-1/-1->1->0 [4] 2/-1/-1->1->0 [5] 2/-1/-1->1->0 [6] 2/-1/-1->1->0 [7] 2/-1/-1->1->0 [8] 2/-1/-1->1->0 [9] 2/-1/-1->1->0 [10] 2/-1/-1->1->0 [11] 2/-1/-1->1->0 [12] 2/-1/-1->1->0 [13] 2/-1/-1->1->0 [14] 2/-1/-1->1->0 [15] 2/-1/-1->1->0 [16] 2/-1/-1->1->0 [17] 2/-1/-1->1->0 [18] 2/-1/-1->1->0 [19] 2/-1/-1->1->0 [20] 2/-1/-1->1->0 [21] 2/-1/-1->1->0 [22] 2/-1/-1->1->0 [23] 2/-1/-1->1->0
+hpc-gaas-g14:566022:566022 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Trees [0] -1/-1/-1->3->2 [1] -1/-1/-1->3->2 [2] -1/-1/-1->3->2 [3] -1/-1/-1->3->2 [4] -1/-1/-1->3->2 [5] -1/-1/-1->3->2 [6] -1/-1/-1->3->2 [7] -1/-1/-1->3->2 [8] -1/-1/-1->3->2 [9] -1/-1/-1->3->2 [10] -1/-1/-1->3->2 [11] -1/-1/-1->3->2 [12] -1/-1/-1->3->2 [13] -1/-1/-1->3->2 [14] -1/-1/-1->3->2 [15] -1/-1/-1->3->2 [16] -1/-1/-1->3->2 [17] -1/-1/-1->3->2 [18] -1/-1/-1->3->2 [19] -1/-1/-1->3->2 [20] -1/-1/-1->3->2 [21] -1/-1/-1->3->2 [22] -1/-1/-1->3->2 [23] -1/-1/-1->3->2
+hpc-gaas-g14:566094:566094 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1 [2] 3/-1/-1->2->1 [3] 3/-1/-1->2->1 [4] 3/-1/-1->2->1 [5] 3/-1/-1->2->1 [6] 3/-1/-1->2->1 [7] 3/-1/-1->2->1 [8] 3/-1/-1->2->1 [9] 3/-1/-1->2->1 [10] 3/-1/-1->2->1 [11] 3/-1/-1->2->1 [12] 3/-1/-1->2->1 [13] 3/-1/-1->2->1 [14] 3/-1/-1->2->1 [15] 3/-1/-1->2->1 [16] 3/-1/-1->2->1 [17] 3/-1/-1->2->1 [18] 3/-1/-1->2->1 [19] 3/-1/-1->2->1 [20] 3/-1/-1->2->1 [21] 3/-1/-1->2->1 [22] 3/-1/-1->2->1 [23] 3/-1/-1->2->1
+hpc-gaas-g14:566008:566008 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 08/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 09/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 10/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 11/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 12/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 13/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 14/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 15/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 16/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 17/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 18/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 19/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 20/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 21/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 22/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 23/24 : 0 1 2 3
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->-1 [4] 1/-1/-1->0->-1 [5] 1/-1/-1->0->-1 [6] 1/-1/-1->0->-1 [7] 1/-1/-1->0->-1 [8] 1/-1/-1->0->-1 [9] 1/-1/-1->0->-1 [10] 1/-1/-1->0->-1 [11] 1/-1/-1->0->-1 [12] 1/-1/-1->0->-1 [13] 1/-1/-1->0->-1 [14] 1/-1/-1->0->-1 [15] 1/-1/-1->0->-1 [16] 1/-1/-1->0->-1 [17] 1/-1/-1->0->-1 [18] 1/-1/-1->0->-1 [19] 1/-1/-1->0->-1 [20] 1/-1/-1->0->-1 [21] 1/-1/-1->0->-1 [22] 1/-1/-1->0->-1 [23] 1/-1/-1->0->-1
+hpc-gaas-g14:565993:565993 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g11:872363:872363 [0] NCCL INFO [Rank 3] ncclCommInitRank comm 0x6f13010 rank 3 nranks 4 cudaDev 0 nvmlDev 3 busId dc000 commId 0x2d0d87ae4f1252eb - Init START
+hpc-gaas-g12:852280:852280 [0] NCCL INFO [Rank 3] ncclCommInitRank comm 0x5b8f010 rank 3 nranks 4 cudaDev 0 nvmlDev 3 busId bb000 commId 0xf7a70e4b4ea2a9b2 - Init START
+
+[2026-09-18 06:47:06] hpc-gaas-g12:852280:852280 [0] ras/client_support.cc:180 NCCL WARN Call to bind failed: Address already in use
+hpc-gaas-g12:852280:852280 [0] NCCL INFO RAS failed to establish a client listening socket at localhost:28028
+
+[2026-09-18 06:47:06] hpc-gaas-g12:852352:852352 [0] ras/client_support.cc:180 NCCL WARN Call to bind failed: Address already in use
+hpc-gaas-g12:852352:852352 [0] NCCL INFO RAS failed to establish a client listening socket at localhost:28028
+
+[2026-09-18 06:47:06] hpc-gaas-g12:852309:852309 [0] ras/client_support.cc:180 NCCL WARN Call to bind failed: Address already in use
+hpc-gaas-g12:852309:852309 [0] NCCL INFO RAS failed to establish a client listening socket at localhost:28028
+
+[2026-09-18 06:47:06] hpc-gaas-g12:852294:852294 [0] ras/client_support.cc:180 NCCL WARN Call to bind failed: Address already in use
+hpc-gaas-g12:852294:852294 [0] NCCL INFO RAS failed to establish a client listening socket at localhost:28028
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Bootstrap timings total 0.001587 (create 0.000027, send 0.000081, recv 0.000166, ring 0.000077, delay 0.000001)
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Bootstrap timings total 0.024090 (create 0.000040, send 0.000113, recv 0.018809, ring 0.000144, delay 0.000001)
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Bootstrap timings total 0.002639 (create 0.000027, send 0.000096, recv 0.001161, ring 0.000073, delay 0.000000)
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Bootstrap timings total 0.005438 (create 0.000038, send 0.000108, recv 0.002822, ring 0.000073, delay 0.000001)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO MNNVL busId 0xbb000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852309:852309 [0] NCCL INFO MNNVL busId 0x9a000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852352:852352 [0] NCCL INFO MNNVL busId 0x5c000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO MNNVL busId 0x4b000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g11:872363:872363 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g11:872347:872347 [0] NCCL INFO [Rank 1] ncclCommInitRank comm 0x70df010 rank 1 nranks 4 cudaDev 0 nvmlDev 1 busId bb000 commId 0x2d0d87ae4f1252eb - Init START
+hpc-gaas-g11:872347:872347 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g11:872395:872395 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g11:872333:872333 [0] NCCL INFO RAS client listening socket at ::1<28028>
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Bootstrap timings total 0.014562 (create 0.000029, send 0.000113, recv 0.013935, ring 0.000127, delay 0.000001)
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Bootstrap timings total 0.003573 (create 0.000025, send 0.000096, recv 0.000109, ring 0.001200, delay 0.000001)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Bootstrap timings total 0.000659 (create 0.000024, send 0.000091, recv 0.000088, ring 0.000053, delay 0.000001)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Bootstrap timings total 0.008194 (create 0.000024, send 0.000086, recv 0.004702, ring 0.000049, delay 0.000001)
+hpc-gaas-g11:872363:872363 [0] NCCL INFO MNNVL busId 0xdc000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g11:872395:872395 [0] NCCL INFO MNNVL busId 0xcd000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g11:872333:872333 [0] NCCL INFO MNNVL busId 0x9a000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g11:872347:872347 [0] NCCL INFO MNNVL busId 0xbb000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:566094:566094 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:566094:566954 [0] NCCL INFO [Proxy Service] Device 0 CPU core 29
+hpc-gaas-g14:566008:566955 [0] NCCL INFO [Proxy Service] Device 0 CPU core 41
+hpc-gaas-g14:566008:566956 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 34
+hpc-gaas-g14:566094:566957 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 4
+hpc-gaas-g14:566022:566022 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:565993:565993 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:566022:566958 [0] NCCL INFO [Proxy Service] Device 0 CPU core 43
+hpc-gaas-g14:565993:566959 [0] NCCL INFO [Proxy Service] Device 0 CPU core 8
+hpc-gaas-g14:566022:566960 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 1
+hpc-gaas-g14:565993:566961 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 9
+hpc-gaas-g12:852309:852309 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is 56-77. (GPU affinity = 56-111 ; CPU affinity = 24-49,56-77).
+hpc-gaas-g12:852309:852309 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 3 is 56-77. (GPU affinity = 56-111 ; CPU affinity = 24-49,56-77).
+hpc-gaas-g12:852352:852352 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is 24-49. (GPU affinity = 0-55 ; CPU affinity = 24-49,56-77).
+hpc-gaas-g12:852280:852280 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g12:852352:852352 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g12:852294:852294 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 24-49. (GPU affinity = 0-55 ; CPU affinity = 24-49,56-77).
+hpc-gaas-g12:852294:852294 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g11:872363:872363 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 3 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g11:872363:872363 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g11:872347:872347 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g11:872333:872333 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g11:872333:872333 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO NVLS multicast support is available on dev 0 (NVLS_NCHANNELS 16)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO comm 0x5b8f010 rank 3 nRanks 4 nNodes 1 localRanks 4 localRank 3 MNNVL 0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO comm 0x79500b0 rank 0 nRanks 4 nNodes 1 localRanks 4 localRank 0 MNNVL 0
+hpc-gaas-g12:852352:852352 [0] NCCL INFO comm 0x6721f40 rank 1 nRanks 4 nNodes 1 localRanks 4 localRank 1 MNNVL 0
+hpc-gaas-g12:852309:852309 [0] NCCL INFO comm 0x5a68010 rank 2 nRanks 4 nNodes 1 localRanks 4 localRank 2 MNNVL 0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 00/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 01/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 02/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 03/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 04/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 05/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 06/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 07/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 08/24 : 0 1 2 3
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Trees [0] -1/-1/-1->3->2 [1] -1/-1/-1->3->2 [2] -1/-1/-1->3->2 [3] -1/-1/-1->3->2 [4] -1/-1/-1->3->2 [5] -1/-1/-1->3->2 [6] -1/-1/-1->3->2 [7] -1/-1/-1->3->2 [8] -1/-1/-1->3->2 [9] -1/-1/-1->3->2 [10] -1/-1/-1->3->2 [11] -1/-1/-1->3->2 [12] -1/-1/-1->3->2 [13] -1/-1/-1->3->2 [14] -1/-1/-1->3->2 [15] -1/-1/-1->3->2 [16] -1/-1/-1->3->2 [17] -1/-1/-1->3->2 [18] -1/-1/-1->3->2 [19] -1/-1/-1->3->2 [20] -1/-1/-1->3->2 [21] -1/-1/-1->3->2 [22] -1/-1/-1->3->2 [23] -1/-1/-1->3->2
+hpc-gaas-g12:852280:852280 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1 [2] 3/-1/-1->2->1 [3] 3/-1/-1->2->1 [4] 3/-1/-1->2->1 [5] 3/-1/-1->2->1 [6] 3/-1/-1->2->1 [7] 3/-1/-1->2->1 [8] 3/-1/-1->2->1 [9] 3/-1/-1->2->1 [10] 3/-1/-1->2->1 [11] 3/-1/-1->2->1 [12] 3/-1/-1->2->1 [13] 3/-1/-1->2->1 [14] 3/-1/-1->2->1 [15] 3/-1/-1->2->1 [16] 3/-1/-1->2->1 [17] 3/-1/-1->2->1 [18] 3/-1/-1->2->1 [19] 3/-1/-1->2->1 [20] 3/-1/-1->2->1 [21] 3/-1/-1->2->1 [22] 3/-1/-1->2->1 [23] 3/-1/-1->2->1
+hpc-gaas-g12:852309:852309 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Trees [0] 2/-1/-1->1->0 [1] 2/-1/-1->1->0 [2] 2/-1/-1->1->0 [3] 2/-1/-1->1->0 [4] 2/-1/-1->1->0 [5] 2/-1/-1->1->0 [6] 2/-1/-1->1->0 [7] 2/-1/-1->1->0 [8] 2/-1/-1->1->0 [9] 2/-1/-1->1->0 [10] 2/-1/-1->1->0 [11] 2/-1/-1->1->0 [12] 2/-1/-1->1->0 [13] 2/-1/-1->1->0 [14] 2/-1/-1->1->0 [15] 2/-1/-1->1->0 [16] 2/-1/-1->1->0 [17] 2/-1/-1->1->0 [18] 2/-1/-1->1->0 [19] 2/-1/-1->1->0 [20] 2/-1/-1->1->0 [21] 2/-1/-1->1->0 [22] 2/-1/-1->1->0 [23] 2/-1/-1->1->0
+hpc-gaas-g12:852352:852352 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 09/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 10/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 11/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 12/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 13/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 14/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 15/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 16/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 17/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 18/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 19/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 20/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 21/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 22/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 23/24 : 0 1 2 3
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->-1 [4] 1/-1/-1->0->-1 [5] 1/-1/-1->0->-1 [6] 1/-1/-1->0->-1 [7] 1/-1/-1->0->-1 [8] 1/-1/-1->0->-1 [9] 1/-1/-1->0->-1 [10] 1/-1/-1->0->-1 [11] 1/-1/-1->0->-1 [12] 1/-1/-1->0->-1 [13] 1/-1/-1->0->-1 [14] 1/-1/-1->0->-1 [15] 1/-1/-1->0->-1 [16] 1/-1/-1->0->-1 [17] 1/-1/-1->0->-1 [18] 1/-1/-1->0->-1 [19] 1/-1/-1->0->-1 [20] 1/-1/-1->0->-1 [21] 1/-1/-1->0->-1 [22] 1/-1/-1->0->-1 [23] 1/-1/-1->0->-1
+hpc-gaas-g12:852294:852294 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g11:872347:872347 [0] NCCL INFO comm 0x70df010 rank 1 nRanks 4 nNodes 1 localRanks 4 localRank 1 MNNVL 0
+hpc-gaas-g11:872333:872333 [0] NCCL INFO comm 0x64400b0 rank 0 nRanks 4 nNodes 1 localRanks 4 localRank 0 MNNVL 0
+hpc-gaas-g11:872395:872395 [0] NCCL INFO comm 0x63b2010 rank 2 nRanks 4 nNodes 1 localRanks 4 localRank 2 MNNVL 0
+hpc-gaas-g11:872363:872363 [0] NCCL INFO comm 0x6f13010 rank 3 nRanks 4 nNodes 1 localRanks 4 localRank 3 MNNVL 0
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 00/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 01/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 02/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 03/24 : 0 1 2 3
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1 [2] 3/-1/-1->2->1 [3] 3/-1/-1->2->1 [4] 3/-1/-1->2->1 [5] 3/-1/-1->2->1 [6] 3/-1/-1->2->1 [7] 3/-1/-1->2->1 [8] 3/-1/-1->2->1 [9] 3/-1/-1->2->1 [10] 3/-1/-1->2->1 [11] 3/-1/-1->2->1 [12] 3/-1/-1->2->1 [13] 3/-1/-1->2->1 [14] 3/-1/-1->2->1 [15] 3/-1/-1->2->1 [16] 3/-1/-1->2->1 [17] 3/-1/-1->2->1 [18] 3/-1/-1->2->1 [19] 3/-1/-1->2->1 [20] 3/-1/-1->2->1 [21] 3/-1/-1->2->1 [22] 3/-1/-1->2->1 [23] 3/-1/-1->2->1
+hpc-gaas-g11:872395:872395 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Trees [0] -1/-1/-1->3->2 [1] -1/-1/-1->3->2 [2] -1/-1/-1->3->2 [3] -1/-1/-1->3->2 [4] -1/-1/-1->3->2 [5] -1/-1/-1->3->2 [6] -1/-1/-1->3->2 [7] -1/-1/-1->3->2 [8] -1/-1/-1->3->2 [9] -1/-1/-1->3->2 [10] -1/-1/-1->3->2 [11] -1/-1/-1->3->2 [12] -1/-1/-1->3->2 [13] -1/-1/-1->3->2 [14] -1/-1/-1->3->2 [15] -1/-1/-1->3->2 [16] -1/-1/-1->3->2 [17] -1/-1/-1->3->2 [18] -1/-1/-1->3->2 [19] -1/-1/-1->3->2 [20] -1/-1/-1->3->2 [21] -1/-1/-1->3->2 [22] -1/-1/-1->3->2 [23] -1/-1/-1->3->2
+hpc-gaas-g11:872363:872363 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Trees [0] 2/-1/-1->1->0 [1] 2/-1/-1->1->0 [2] 2/-1/-1->1->0 [3] 2/-1/-1->1->0 [4] 2/-1/-1->1->0 [5] 2/-1/-1->1->0 [6] 2/-1/-1->1->0 [7] 2/-1/-1->1->0 [8] 2/-1/-1->1->0 [9] 2/-1/-1->1->0 [10] 2/-1/-1->1->0 [11] 2/-1/-1->1->0 [12] 2/-1/-1->1->0 [13] 2/-1/-1->1->0 [14] 2/-1/-1->1->0 [15] 2/-1/-1->1->0 [16] 2/-1/-1->1->0 [17] 2/-1/-1->1->0 [18] 2/-1/-1->1->0 [19] 2/-1/-1->1->0 [20] 2/-1/-1->1->0 [21] 2/-1/-1->1->0 [22] 2/-1/-1->1->0 [23] 2/-1/-1->1->0
+hpc-gaas-g11:872347:872347 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 04/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 05/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 06/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 07/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 08/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 09/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 10/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 11/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 12/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 13/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 14/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 15/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 16/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 17/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 18/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 19/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 20/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 21/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 22/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 23/24 : 0 1 2 3
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->-1 [4] 1/-1/-1->0->-1 [5] 1/-1/-1->0->-1 [6] 1/-1/-1->0->-1 [7] 1/-1/-1->0->-1 [8] 1/-1/-1->0->-1 [9] 1/-1/-1->0->-1 [10] 1/-1/-1->0->-1 [11] 1/-1/-1->0->-1 [12] 1/-1/-1->0->-1 [13] 1/-1/-1->0->-1 [14] 1/-1/-1->0->-1 [15] 1/-1/-1->0->-1 [16] 1/-1/-1->0->-1 [17] 1/-1/-1->0->-1 [18] 1/-1/-1->0->-1 [19] 1/-1/-1->0->-1 [20] 1/-1/-1->0->-1 [21] 1/-1/-1->0->-1 [22] 1/-1/-1->0->-1 [23] 1/-1/-1->0->-1
+hpc-gaas-g11:872333:872333 [0] NCCL INFO P2P Chunksize set to 524288
+hpc-gaas-g12:852309:852309 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g12:852309:853631 [0] NCCL INFO [Proxy Service] Device 0 CPU core 71
+hpc-gaas-g12:852309:853632 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 60
+hpc-gaas-g12:852280:852280 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g12:852294:852294 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g12:852280:853633 [0] NCCL INFO [Proxy Service] Device 0 CPU core 64
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g12:852280:853634 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 74
+hpc-gaas-g12:852294:853635 [0] NCCL INFO [Proxy Service] Device 0 CPU core 25
+hpc-gaas-g12:852352:852352 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g12:852294:853636 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 27
+hpc-gaas-g12:852352:853637 [0] NCCL INFO [Proxy Service] Device 0 CPU core 31
+hpc-gaas-g12:852352:853638 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 32
+hpc-gaas-g11:872363:872363 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g11:872363:873326 [0] NCCL INFO [Proxy Service] Device 0 CPU core 3
+hpc-gaas-g11:872363:873327 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 4
+hpc-gaas-g11:872347:872347 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g11:872395:872395 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g11:872333:872333 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+hpc-gaas-g11:872347:873328 [0] NCCL INFO [Proxy Service] Device 0 CPU core 34
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g11:872395:873329 [0] NCCL INFO [Proxy Service] Device 0 CPU core 6
+hpc-gaas-g11:872347:873330 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 35
+hpc-gaas-g11:872395:873331 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 8
+hpc-gaas-g11:872333:873332 [0] NCCL INFO [Proxy Service] Device 0 CPU core 40
+hpc-gaas-g11:872333:873333 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 41
+hpc-gaas-g14:566008:566008 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g14:565993:565993 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g14:566094:566094 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g14:566008:566008 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g14:566094:566094 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g14:566094:566094 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g14:565993:565993 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g14:565993:565993 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g14:566022:566022 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g14:566022:566022 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g14:566022:566022 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g14:565993:565993 [0] NCCL INFO CC Off, workFifoBytes 1048576
+hpc-gaas-g14:566094:566094 [0] NCCL INFO ncclCommInitRank comm 0x6d36010 rank 3 nranks 4 cudaDev 0 nvmlDev 3 busId dc000 commId 0x2610961b19a4777c - Init COMPLETE
+hpc-gaas-g14:566022:566022 [0] NCCL INFO ncclCommInitRank comm 0x6de9010 rank 1 nranks 4 cudaDev 0 nvmlDev 1 busId bb000 commId 0x2610961b19a4777c - Init COMPLETE
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 4 total 0.62 (kernels 0.22, alloc 0.17, bootstrap 0.00, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.17, rest 0.01)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Init timings - ncclCommInitRank: rank 3 nranks 4 total 0.62 (kernels 0.22, alloc 0.15, bootstrap 0.02, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.17, rest 0.01)
+hpc-gaas-g14:566008:566008 [0] NCCL INFO ncclCommInitRank comm 0x5d1c010 rank 2 nranks 4 cudaDev 0 nvmlDev 2 busId cd000 commId 0x2610961b19a4777c - Init COMPLETE
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Init timings - ncclCommInitRank: rank 2 nranks 4 total 0.62 (kernels 0.22, alloc 0.17, bootstrap 0.00, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.17, rest 0.01)
+hpc-gaas-g14:565993:565993 [0] NCCL INFO ncclCommInitRank comm 0x67350b0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x2610961b19a4777c - Init COMPLETE
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nranks 4 total 0.62 (kernels 0.22, alloc 0.17, bootstrap 0.00, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.17, rest 0.01)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g11:872363:872363 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g11:872333:872333 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g11:872347:872347 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g11:872347:872347 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g11:872363:872363 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g11:872363:872363 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g11:872333:872333 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g11:872333:872333 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g11:872333:872333 [0] NCCL INFO CC Off, workFifoBytes 1048576
+hpc-gaas-g11:872395:872395 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g11:872395:872395 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g11:872395:872395 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g11:872347:872347 [0] NCCL INFO ncclCommInitRank comm 0x70df010 rank 1 nranks 4 cudaDev 0 nvmlDev 1 busId bb000 commId 0x2d0d87ae4f1252eb - Init COMPLETE
+hpc-gaas-g11:872363:872363 [0] NCCL INFO ncclCommInitRank comm 0x6f13010 rank 3 nranks 4 cudaDev 0 nvmlDev 3 busId dc000 commId 0x2d0d87ae4f1252eb - Init COMPLETE
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Init timings - ncclCommInitRank: rank 3 nranks 4 total 0.67 (kernels 0.26, alloc 0.18, bootstrap 0.00, allgathers 0.00, topo 0.04, graphs 0.01, connections 0.16, rest 0.01)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO ncclCommInitRank comm 0x64400b0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x2d0d87ae4f1252eb - Init COMPLETE
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nranks 4 total 0.67 (kernels 0.26, alloc 0.16, bootstrap 0.01, allgathers 0.00, topo 0.04, graphs 0.01, connections 0.16, rest 0.01)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 4 total 0.67 (kernels 0.26, alloc 0.18, bootstrap 0.00, allgathers 0.00, topo 0.04, graphs 0.01, connections 0.16, rest 0.01)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO ncclCommInitRank comm 0x63b2010 rank 2 nranks 4 cudaDev 0 nvmlDev 2 busId cd000 commId 0x2d0d87ae4f1252eb - Init COMPLETE
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Init timings - ncclCommInitRank: rank 2 nranks 4 total 0.67 (kernels 0.26, alloc 0.17, bootstrap 0.01, allgathers 0.00, topo 0.04, graphs 0.01, connections 0.16, rest 0.01)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g11:872333:872333 [0] NCCL INFO [Rank 0] ncclCommInitRank comm 0xe908c40 rank 0 nranks 3 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x8efe73730f87aa24 - Init START
+hpc-gaas-g11:872363:872363 [0] NCCL INFO [Rank 0] ncclCommInitRank comm 0xf3d6ca0 rank 0 nranks 3 cudaDev 0 nvmlDev 3 busId dc000 commId 0xb551394d61fd53cb - Init START
+hpc-gaas-g11:872347:872347 [0] NCCL INFO [Rank 0] ncclCommInitRank comm 0xf5a5e10 rank 0 nranks 3 cudaDev 0 nvmlDev 1 busId bb000 commId 0xd71861be25ea229a - Init START
+hpc-gaas-g11:872395:872395 [0] NCCL INFO [Rank 0] ncclCommInitRank comm 0xe874100 rank 0 nranks 3 cudaDev 0 nvmlDev 2 busId cd000 commId 0x26b07dbb51094209 - Init START
+hpc-gaas-g14:566094:566094 [0] NCCL INFO [Rank 1] ncclCommInitRank comm 0xf1fd050 rank 1 nranks 3 cudaDev 0 nvmlDev 3 busId dc000 commId 0xb551394d61fd53cb - Init START
+hpc-gaas-g14:565993:565993 [0] NCCL INFO [Rank 1] ncclCommInitRank comm 0xebffba0 rank 1 nranks 3 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x8efe73730f87aa24 - Init START
+hpc-gaas-g14:566008:566008 [0] NCCL INFO [Rank 1] ncclCommInitRank comm 0xe1dd650 rank 1 nranks 3 cudaDev 0 nvmlDev 2 busId cd000 commId 0x26b07dbb51094209 - Init START
+hpc-gaas-g14:566022:566022 [0] NCCL INFO [Rank 1] ncclCommInitRank comm 0xf2b2830 rank 1 nranks 3 cudaDev 0 nvmlDev 1 busId bb000 commId 0xd71861be25ea229a - Init START
+hpc-gaas-g12:852309:852309 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g12:852294:852294 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g12:852280:852280 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g12:852309:852309 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g12:852309:852309 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g12:852280:852280 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g12:852280:852280 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g12:852352:852352 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+hpc-gaas-g12:852294:852294 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g12:852294:852294 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g12:852352:852352 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 512 | 512
+hpc-gaas-g12:852352:852352 [0] NCCL INFO 24 coll channels, 24 collnet channels, 16 nvls channels, 32 p2p channels, 32 p2p channels per peer
+hpc-gaas-g12:852294:852294 [0] NCCL INFO CC Off, workFifoBytes 1048576
+hpc-gaas-g12:852294:852294 [0] NCCL INFO ncclCommInitRank comm 0x79500b0 rank 0 nranks 4 cudaDev 0 nvmlDev 0 busId 4b000 commId 0xf7a70e4b4ea2a9b2 - Init COMPLETE
+hpc-gaas-g12:852309:852309 [0] NCCL INFO ncclCommInitRank comm 0x5a68010 rank 2 nranks 4 cudaDev 0 nvmlDev 2 busId 9a000 commId 0xf7a70e4b4ea2a9b2 - Init COMPLETE
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Init timings - ncclCommInitRank: rank 2 nranks 4 total 0.69 (kernels 0.26, alloc 0.18, bootstrap 0.00, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.19, rest 0.01)
+hpc-gaas-g12:852352:852352 [0] NCCL INFO ncclCommInitRank comm 0x6721f40 rank 1 nranks 4 cudaDev 0 nvmlDev 1 busId 5c000 commId 0xf7a70e4b4ea2a9b2 - Init COMPLETE
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 4 total 0.69 (kernels 0.26, alloc 0.18, bootstrap 0.01, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.18, rest 0.01)
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nranks 4 total 0.69 (kernels 0.26, alloc 0.16, bootstrap 0.02, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.18, rest 0.01)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO ncclCommInitRank comm 0x5b8f010 rank 3 nranks 4 cudaDev 0 nvmlDev 3 busId bb000 commId 0xf7a70e4b4ea2a9b2 - Init COMPLETE
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Init timings - ncclCommInitRank: rank 3 nranks 4 total 0.69 (kernels 0.26, alloc 0.18, bootstrap 0.00, allgathers 0.00, topo 0.03, graphs 0.01, connections 0.18, rest 0.01)
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852294:852294 [0] NCCL INFO [Rank 2] ncclCommInitRank comm 0xfe14f10 rank 2 nranks 3 cudaDev 0 nvmlDev 0 busId 4b000 commId 0x8efe73730f87aa24 - Init START
+hpc-gaas-g12:852309:852309 [0] NCCL INFO [Rank 2] ncclCommInitRank comm 0xdf2f8c0 rank 2 nranks 3 cudaDev 0 nvmlDev 2 busId 9a000 commId 0x26b07dbb51094209 - Init START
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Initialized NET plugin IBext_v11
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Assigned NET plugin IBext_v11 to comm
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Using network IBext_v11
+hpc-gaas-g12:852280:852280 [0] NCCL INFO [Rank 2] ncclCommInitRank comm 0xe050f60 rank 2 nranks 3 cudaDev 0 nvmlDev 3 busId bb000 commId 0xb551394d61fd53cb - Init START
+hpc-gaas-g12:852352:852352 [0] NCCL INFO [Rank 2] ncclCommInitRank comm 0xebe58a0 rank 2 nranks 3 cudaDev 0 nvmlDev 1 busId 5c000 commId 0xd71861be25ea229a - Init START
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Bootstrap timings total 0.019856 (create 0.000012, send 0.000068, recv 0.000092, ring 0.000062, delay 0.000000)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Bootstrap timings total 0.019862 (create 0.000012, send 0.000044, recv 0.000167, ring 0.000063, delay 0.000000)
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Bootstrap timings total 0.000570 (create 0.000012, send 0.000090, recv 0.000217, ring 0.000117, delay 0.000000)
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Bootstrap timings total 0.019867 (create 0.000012, send 0.000089, recv 0.019444, ring 0.000173, delay 0.000000)
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Bootstrap timings total 0.019898 (create 0.000011, send 0.000060, recv 0.000150, ring 0.000060, delay 0.000000)
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Bootstrap timings total 0.000582 (create 0.000015, send 0.000082, recv 0.000258, ring 0.000112, delay 0.000000)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Bootstrap timings total 0.000502 (create 0.000013, send 0.000072, recv 0.000202, ring 0.000080, delay 0.000000)
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Bootstrap timings total 0.019896 (create 0.000012, send 0.000088, recv 0.019479, ring 0.000166, delay 0.000000)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Bootstrap timings total 0.019911 (create 0.000013, send 0.000096, recv 0.019560, ring 0.000098, delay 0.000000)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO MNNVL busId 0x9a000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g11:872395:872395 [0] NCCL INFO MNNVL busId 0xcd000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO MNNVL busId 0x4b000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:565993:565993 [0] NCCL INFO MNNVL busId 0x9a000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g11:872363:872363 [0] NCCL INFO MNNVL busId 0xdc000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:566094:566094 [0] NCCL INFO MNNVL busId 0xdc000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:566008:566008 [0] NCCL INFO MNNVL busId 0xcd000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Bootstrap timings total 0.020283 (create 0.000012, send 0.000062, recv 0.000149, ring 0.000234, delay 0.000000)
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Bootstrap timings total 0.020281 (create 0.000012, send 0.000084, recv 0.019649, ring 0.000404, delay 0.000000)
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Bootstrap timings total 0.000843 (create 0.000012, send 0.000089, recv 0.000321, ring 0.000108, delay 0.000000)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO MNNVL busId 0xbb000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852352:852352 [0] NCCL INFO MNNVL busId 0x5c000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g14:566022:566022 [0] NCCL INFO MNNVL busId 0xbb000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852280:852280 [0] NCCL INFO MNNVL busId 0xbb000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852309:852309 [0] NCCL INFO MNNVL busId 0x9a000 fabric UUID 0.0 cliqueId 0x0 state 3 healthMask 0x0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 24-49. (GPU affinity = 0-55 ; CPU affinity = 24-49).
+hpc-gaas-g11:872395:872395 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g11:872333:872333 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g11:872347:872347 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:566094:566094 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 3 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g12:852352:852352 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is 24-49. (GPU affinity = 0-55 ; CPU affinity = 24-49).
+hpc-gaas-g12:852280:852280 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 3 is 56-77. (GPU affinity = 56-111 ; CPU affinity = 56-77).
+hpc-gaas-g12:852309:852309 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is 56-77. (GPU affinity = 56-111 ; CPU affinity = 56-77).
+hpc-gaas-g11:872363:872363 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 3 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:566008:566008 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:566022:566022 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g14:565993:565993 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is empty, ignoring. (GPU affinity = 56-111 ; CPU affinity = 0-47).
+hpc-gaas-g11:872395:872395 [0] NCCL INFO comm 0xe874100 rank 0 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 00/04 : 0 1 2
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 01/04 : 0 1 2
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 02/04 : 0 1 2
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 03/04 : 0 1 2
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Trees [0] 2/-1/-1->0->-1 [1] 2/-1/-1->0->-1 [2] 2/-1/-1->0->1 [3] 2/-1/-1->0->1
+hpc-gaas-g11:872395:872395 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g12:852309:852309 [0] NCCL INFO comm 0xdf2f8c0 rank 2 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g14:566008:566008 [0] NCCL INFO comm 0xe1dd650 rank 1 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Trees [0] 1/-1/-1->2->0 [1] 1/-1/-1->2->0 [2] -1/-1/-1->2->0 [3] -1/-1/-1->2->0
+hpc-gaas-g12:852309:852309 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Trees [0] -1/-1/-1->1->2 [1] -1/-1/-1->1->2 [2] 0/-1/-1->1->-1 [3] 0/-1/-1->1->-1
+hpc-gaas-g14:566008:566008 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g11:872395:873339 [0] NCCL INFO [Proxy Service] Device 0 CPU core 7
+hpc-gaas-g12:852309:853640 [0] NCCL INFO [Proxy Service] Device 0 CPU core 73
+hpc-gaas-g11:872347:872347 [0] NCCL INFO comm 0xf5a5e10 rank 0 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 00/04 : 0 1 2
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 01/04 : 0 1 2
+hpc-gaas-g14:566008:566962 [0] NCCL INFO [Proxy Service] Device 0 CPU core 10
+hpc-gaas-g11:872395:873340 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 9
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 02/04 : 0 1 2
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 03/04 : 0 1 2
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Trees [0] 2/-1/-1->0->-1 [1] 2/-1/-1->0->-1 [2] 2/-1/-1->0->1 [3] 2/-1/-1->0->1
+hpc-gaas-g11:872347:872347 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:566022:566022 [0] NCCL INFO comm 0xf2b2830 rank 1 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Trees [0] -1/-1/-1->1->2 [1] -1/-1/-1->1->2 [2] 0/-1/-1->1->-1 [3] 0/-1/-1->1->-1
+hpc-gaas-g14:566022:566022 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g12:852352:852352 [0] NCCL INFO comm 0xebe58a0 rank 2 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g12:852309:853641 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 77
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Trees [0] 1/-1/-1->2->0 [1] 1/-1/-1->2->0 [2] -1/-1/-1->2->0 [3] -1/-1/-1->2->0
+hpc-gaas-g12:852352:852352 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:566008:566963 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 11
+hpc-gaas-g11:872347:873341 [0] NCCL INFO [Proxy Service] Device 0 CPU core 30
+hpc-gaas-g14:566022:566964 [0] NCCL INFO [Proxy Service] Device 0 CPU core 47
+hpc-gaas-g11:872347:873342 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 32
+hpc-gaas-g12:852352:853642 [0] NCCL INFO [Proxy Service] Device 0 CPU core 42
+hpc-gaas-g14:566022:566965 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 0
+hpc-gaas-g12:852352:853643 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 43
+hpc-gaas-g11:872333:872333 [0] NCCL INFO comm 0xe908c40 rank 0 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 00/04 : 0 1 2
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 01/04 : 0 1 2
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 02/04 : 0 1 2
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 03/04 : 0 1 2
+hpc-gaas-g14:565993:565993 [0] NCCL INFO comm 0xebffba0 rank 1 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Trees [0] 2/-1/-1->0->-1 [1] 2/-1/-1->0->-1 [2] 2/-1/-1->0->1 [3] 2/-1/-1->0->1
+hpc-gaas-g11:872333:872333 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Trees [0] -1/-1/-1->1->2 [1] -1/-1/-1->1->2 [2] 0/-1/-1->1->-1 [3] 0/-1/-1->1->-1
+hpc-gaas-g14:565993:565993 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g12:852294:852294 [0] NCCL INFO comm 0xfe14f10 rank 2 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Trees [0] 1/-1/-1->2->0 [1] 1/-1/-1->2->0 [2] -1/-1/-1->2->0 [3] -1/-1/-1->2->0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g11:872333:873343 [0] NCCL INFO [Proxy Service] Device 0 CPU core 36
+hpc-gaas-g12:852294:853644 [0] NCCL INFO [Proxy Service] Device 0 CPU core 26
+hpc-gaas-g14:565993:566966 [0] NCCL INFO [Proxy Service] Device 0 CPU core 6
+hpc-gaas-g11:872333:873344 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 38
+hpc-gaas-g12:852294:853645 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 28
+hpc-gaas-g14:565993:566967 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 12
+hpc-gaas-g11:872363:872363 [0] NCCL INFO comm 0xf3d6ca0 rank 0 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 00/04 : 0 1 2
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 01/04 : 0 1 2
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 02/04 : 0 1 2
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 03/04 : 0 1 2
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Trees [0] 2/-1/-1->0->-1 [1] 2/-1/-1->0->-1 [2] 2/-1/-1->0->1 [3] 2/-1/-1->0->1
+hpc-gaas-g11:872363:872363 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g12:852280:852280 [0] NCCL INFO comm 0xe050f60 rank 2 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Trees [0] 1/-1/-1->2->0 [1] 1/-1/-1->2->0 [2] -1/-1/-1->2->0 [3] -1/-1/-1->2->0
+hpc-gaas-g12:852280:852280 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g14:566094:566094 [0] NCCL INFO comm 0xf1fd050 rank 1 nRanks 3 nNodes 3 localRanks 1 localRank 0 MNNVL 0
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Trees [0] -1/-1/-1->1->2 [1] -1/-1/-1->1->2 [2] 0/-1/-1->1->-1 [3] 0/-1/-1->1->-1
+hpc-gaas-g14:566094:566094 [0] NCCL INFO P2P Chunksize set to 131072
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Check P2P Type isAllDirectP2p 1 directMode 0 isAllCudaP2p 1
+hpc-gaas-g11:872363:873345 [0] NCCL INFO [Proxy Service] Device 0 CPU core 10
+hpc-gaas-g12:852280:853646 [0] NCCL INFO [Proxy Service] Device 0 CPU core 58
+hpc-gaas-g14:566094:566968 [0] NCCL INFO [Proxy Service] Device 0 CPU core 13
+hpc-gaas-g11:872363:873346 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 11
+hpc-gaas-g12:852280:853647 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 59
+hpc-gaas-g14:566094:566969 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 14
+hpc-gaas-g12:852309:852309 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g12:852309:852309 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g14:566008:566008 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g14:566008:566008 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g14:565993:565993 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g14:565993:565993 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g14:566022:566022 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g14:566022:566022 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g12:852294:852294 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g12:852352:852352 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g12:852352:852352 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g14:566094:566094 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g14:566008:566008 [0] NCCL INFO ncclCommInitRank comm 0xe1dd650 rank 1 nranks 3 cudaDev 0 nvmlDev 2 busId cd000 commId 0x26b07dbb51094209 - Init COMPLETE
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g12:852309:852309 [0] NCCL INFO ncclCommInitRank comm 0xdf2f8c0 rank 2 nranks 3 cudaDev 0 nvmlDev 2 busId 9a000 commId 0x26b07dbb51094209 - Init COMPLETE
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Init timings - ncclCommInitRank: rank 2 nranks 3 total 0.03 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g14:565993:565993 [0] NCCL INFO ncclCommInitRank comm 0xebffba0 rank 1 nranks 3 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x8efe73730f87aa24 - Init COMPLETE
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.00, rest 0.00)
+hpc-gaas-g14:566022:566022 [0] NCCL INFO ncclCommInitRank comm 0xf2b2830 rank 1 nranks 3 cudaDev 0 nvmlDev 1 busId bb000 commId 0xd71861be25ea229a - Init COMPLETE
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g14:566094:566094 [0] NCCL INFO ncclCommInitRank comm 0xf1fd050 rank 1 nranks 3 cudaDev 0 nvmlDev 3 busId dc000 commId 0xb551394d61fd53cb - Init COMPLETE
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.00, rest 0.00)
+hpc-gaas-g12:852280:852280 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g12:852280:852280 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO ncclCommInitRank comm 0xfe14f10 rank 2 nranks 3 cudaDev 0 nvmlDev 0 busId 4b000 commId 0x8efe73730f87aa24 - Init COMPLETE
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Init timings - ncclCommInitRank: rank 2 nranks 3 total 0.03 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.01, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g12:852352:852352 [0] NCCL INFO ncclCommInitRank comm 0xebe58a0 rank 2 nranks 3 cudaDev 0 nvmlDev 1 busId 5c000 commId 0xd71861be25ea229a - Init COMPLETE
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Init timings - ncclCommInitRank: rank 2 nranks 3 total 0.03 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g11:872395:872395 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g11:872395:872395 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g12:852280:852280 [0] NCCL INFO ncclCommInitRank comm 0xe050f60 rank 2 nranks 3 cudaDev 0 nvmlDev 3 busId bb000 commId 0xb551394d61fd53cb - Init COMPLETE
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Init timings - ncclCommInitRank: rank 2 nranks 3 total 0.03 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g11:872347:872347 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g11:872347:872347 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g11:872395:872395 [0] NCCL INFO CC Off, workFifoBytes 1048576
+hpc-gaas-g11:872347:872347 [0] NCCL INFO CC Off, workFifoBytes 1048576
+hpc-gaas-g11:872363:872363 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g11:872363:872363 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g11:872333:872333 [0] NCCL INFO threadThresholds 8/8/64 | 24/8/64 | 512 | 512
+hpc-gaas-g11:872333:872333 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 4 p2p channels per peer
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 0
+hpc-gaas-g11:872363:872363 [0] NCCL INFO CC Off, workFifoBytes 1048576
+hpc-gaas-g11:872395:872395 [0] NCCL INFO ncclCommInitRank comm 0xe874100 rank 0 nranks 3 cudaDev 0 nvmlDev 2 busId cd000 commId 0x26b07dbb51094209 - Init COMPLETE
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO CC Off, workFifoBytes 1048576
+hpc-gaas-g11:872347:872347 [0] NCCL INFO ncclCommInitRank comm 0xf5a5e10 rank 0 nranks 3 cudaDev 0 nvmlDev 1 busId bb000 commId 0xd71861be25ea229a - Init COMPLETE
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g11:872363:872363 [0] NCCL INFO ncclCommInitRank comm 0xf3d6ca0 rank 0 nranks 3 cudaDev 0 nvmlDev 3 busId dc000 commId 0xb551394d61fd53cb - Init COMPLETE
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+hpc-gaas-g11:872333:872333 [0] NCCL INFO ncclCommInitRank comm 0xe908c40 rank 0 nranks 3 cudaDev 0 nvmlDev 0 busId 9a000 commId 0x8efe73730f87aa24 - Init COMPLETE
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nranks 3 total 0.05 (kernels 0.00, alloc 0.00, bootstrap 0.02, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.01, rest 0.00)
+
+ ****** test 1 of 1 starts ****** 
+
+   n      = 250000
+   nb     = 1024
+   nprow  = 3
+   npcol  = 4
+
+Device info:
+	Peak clock frequency 1980 MHz
+	SM 90
+	Number of SMs 132
+	Total memory available 139.80 GB
+
+---------------------------------------------------------------------------------------------
+[34m Per process host memory consumption MAX = 39.171 GB, available MIN = 47.859 GB[0m
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+[34m Per process device memory consumption MAX = 21.877 GB, available MIN = 138.843 GB[0m
+---------------------------------------------------------------------------------------------
+
+[1789685226.786027] [hpc-gaas-g14:566022:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.786357] [hpc-gaas-g11:872347:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.788189] [hpc-gaas-g12:852309:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.788188] [hpc-gaas-g12:852294:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.788334] [hpc-gaas-g12:852352:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.801558] [hpc-gaas-g14:566094:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.810057] [hpc-gaas-g11:872363:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.811853] [hpc-gaas-g14:566022:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685226.815959] [hpc-gaas-g11:872347:0]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+Constructor seconds: AVG = 0.05, MAX = 0.05 (10->hpc-gaas-g12), MIN = 0.04 (0->hpc-gaas-g11)
+
+
+ ****** Matrix Generation ****** 
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 47.846 GB, device = 116.804 GB[0m
+---------------------------------------------------------------------------------------------
+
+RNG seconds: AVG = 10.08, MAX = 15.10 (0->hpc-gaas-g11), MIN = 7.43 (9->hpc-gaas-g12)
+
+Set Diagonal seconds: AVG = 0.01, MAX = 0.01 (0->hpc-gaas-g11), MIN = 0.00 (6->hpc-gaas-g14)
+
+Get Anorm seconds: AVG = 0.08, MAX = 0.10 (4->hpc-gaas-g14), MIN = 0.06 (5->hpc-gaas-g14)
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 8.899 GB, device = 116.804 GB[0m
+---------------------------------------------------------------------------------------------
+
+Sp seconds: AVG = 5.49, MAX = 5.50 (11->hpc-gaas-g12), MIN = 5.48 (0->hpc-gaas-g11)
+
+matgen seconds: AVG = 20.80, MAX = 20.80 (2->hpc-gaas-g11), MIN = 20.80 (0->hpc-gaas-g11)
+
+
+ ****** test loop 1 of 1 starts ****** 
+
+2026-09-18 06:47:27.634
+hpc-gaas-g14:565993:570401 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 7
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[0] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[0] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[0] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[0] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 00/0 : 1[0] -> 2[0] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 01/0 : 1[0] -> 2[0] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852294:856360 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 27
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 00/0 : 1[0] -> 2[0] [receive] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 02/0 : 1[0] -> 2[0] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 01/0 : 1[0] -> 2[0] [receive] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 03/0 : 1[0] -> 2[0] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 02/0 : 1[0] -> 2[0] [receive] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 03/0 : 1[0] -> 2[0] [receive] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 00/0 : 2[0] -> 0[0] [send] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 01/0 : 2[0] -> 0[0] [send] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 02/0 : 2[0] -> 0[0] [send] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 03/0 : 2[0] -> 0[0] [send] via NET/IBext_v11/2/GDRDMA
+hpc-gaas-g11:872333:876365 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 40
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 00/0 : 2[0] -> 0[0] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 01/0 : 2[0] -> 0[0] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 02/0 : 2[0] -> 0[0] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 03/0 : 2[0] -> 0[0] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[0] [send] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[0] [send] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[0] [send] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[0] [send] via NET/IBext_v11/5
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+[1789685247.923945] [hpc-gaas-g11:872333:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685248.018971] [hpc-gaas-g11:872395:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685248.041243] [hpc-gaas-g14:565993:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685248.042576] [hpc-gaas-g14:566008:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#3 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685248.066961] [hpc-gaas-g12:852352:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685248.084250] [hpc-gaas-g14:566008:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+[1789685248.115153] [hpc-gaas-g12:852309:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#5 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+hpc-gaas-g12:852352:856483 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 43
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 00/0 : 1[1] -> 2[1] [receive] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 01/0 : 1[1] -> 2[1] [receive] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 02/0 : 1[1] -> 2[1] [receive] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 03/0 : 1[1] -> 2[1] [receive] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 00/0 : 2[1] -> 0[1] [send] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 01/0 : 2[1] -> 0[1] [send] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 02/0 : 2[1] -> 0[1] [send] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 03/0 : 2[1] -> 0[1] [send] via NET/IBext_v11/3/GDRDMA
+hpc-gaas-g11:872347:876367 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 32
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 00/0 : 2[1] -> 0[1] [receive] via NET/IBext_v11/6
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 01/0 : 2[1] -> 0[1] [receive] via NET/IBext_v11/6
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 02/0 : 2[1] -> 0[1] [receive] via NET/IBext_v11/6
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 03/0 : 2[1] -> 0[1] [receive] via NET/IBext_v11/6
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 00/0 : 0[1] -> 1[1] [send] via NET/IBext_v11/6
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 01/0 : 0[1] -> 1[1] [send] via NET/IBext_v11/6
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 02/0 : 0[1] -> 1[1] [send] via NET/IBext_v11/6
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 03/0 : 0[1] -> 1[1] [send] via NET/IBext_v11/6
+!!!! WARNING: Rank: 3 : hpc-gaas-g11 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 118 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g14 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 140 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g12 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+hpc-gaas-g14:566022:570456 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 26
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 00/0 : 0[1] -> 1[1] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 01/0 : 0[1] -> 1[1] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 02/0 : 0[1] -> 1[1] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 03/0 : 0[1] -> 1[1] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 00/0 : 1[1] -> 2[1] [send] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 01/0 : 1[1] -> 2[1] [send] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 02/0 : 1[1] -> 2[1] [send] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 03/0 : 1[1] -> 2[1] [send] via NET/IBext_v11/5/GDRDMA
+!!!! WARNING: Rank: 4 : hpc-gaas-g14 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 131 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g11 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 132 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g12 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 131 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g11 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 127 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g14 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 128 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g12 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 124 W [0m	PCIe  gen 5 	 x16 
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+!!!! WARNING: Rank: 1 : hpc-gaas-g11 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 119 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 5 : hpc-gaas-g14 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 32 C [0m	[0;31mPower: 120 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 9 : hpc-gaas-g12 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 125 W [0m	PCIe  gen 5 	 x16 
+[1789685248.457306] [hpc-gaas-g11:872395:1]      ucp_worker.c:1912 UCX  INFO    ucp_context_0 inter-node cfg#4 tag(rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx5_3:1 rc_mlx5/mlx5_4:1 rc_mlx5/mlx5_5:1 rc_mlx5/mlx5_8:1 rc_mlx5/mlx5_9:1 rc_mlx5/mlx5_bond_0:1 rc_mlx5/mlx5_0:1 rc_mlx5/mlx5_1:1 rc_mlx5/mlx5_2:1 rc_mlx5/mlx
+hpc-gaas-g14:566008:570715 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 13
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 00/0 : 0[2] -> 1[2] [receive] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 01/0 : 0[2] -> 1[2] [receive] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 02/0 : 0[2] -> 1[2] [receive] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 03/0 : 0[2] -> 1[2] [receive] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 00/0 : 1[2] -> 2[2] [send] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 01/0 : 1[2] -> 2[2] [send] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 02/0 : 1[2] -> 2[2] [send] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 03/0 : 1[2] -> 2[2] [send] via NET/IBext_v11/6/GDRDMA
+hpc-gaas-g11:872395:876368 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 6
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 00/0 : 2[2] -> 0[2] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 01/0 : 2[2] -> 0[2] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 02/0 : 2[2] -> 0[2] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 03/0 : 2[2] -> 0[2] [receive] via NET/IBext_v11/5
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 00/0 : 0[2] -> 1[2] [send] via NET/IBext_v11/5
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 01/0 : 0[2] -> 1[2] [send] via NET/IBext_v11/5
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 02/0 : 0[2] -> 1[2] [send] via NET/IBext_v11/5
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 03/0 : 0[2] -> 1[2] [send] via NET/IBext_v11/5
+hpc-gaas-g12:852309:856673 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 75
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 00/0 : 1[2] -> 2[2] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 01/0 : 1[2] -> 2[2] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 02/0 : 1[2] -> 2[2] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 03/0 : 1[2] -> 2[2] [receive] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 00/0 : 2[2] -> 0[2] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 01/0 : 2[2] -> 0[2] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 02/0 : 2[2] -> 0[2] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 03/0 : 2[2] -> 0[2] [send] via NET/IBext_v11/4/GDRDMA
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g12:852280:856674 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 61
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 00/0 : 1[3] -> 2[3] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 01/0 : 1[3] -> 2[3] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 02/0 : 1[3] -> 2[3] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 03/0 : 1[3] -> 2[3] [receive] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 00/0 : 2[3] -> 0[3] [send] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 01/0 : 2[3] -> 0[3] [send] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 02/0 : 2[3] -> 0[3] [send] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 03/0 : 2[3] -> 0[3] [send] via NET/IBext_v11/5/GDRDMA
+hpc-gaas-g14:566094:570716 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 23
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 00/0 : 0[3] -> 1[3] [receive] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 01/0 : 0[3] -> 1[3] [receive] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 02/0 : 0[3] -> 1[3] [receive] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 03/0 : 0[3] -> 1[3] [receive] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 00/0 : 1[3] -> 2[3] [send] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 01/0 : 1[3] -> 2[3] [send] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 02/0 : 1[3] -> 2[3] [send] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 03/0 : 1[3] -> 2[3] [send] via NET/IBext_v11/7/GDRDMA
+hpc-gaas-g11:872363:876657 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 17
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 00/0 : 2[3] -> 0[3] [receive] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 01/0 : 2[3] -> 0[3] [receive] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 02/0 : 2[3] -> 0[3] [receive] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 03/0 : 2[3] -> 0[3] [receive] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 00/0 : 0[3] -> 1[3] [send] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 01/0 : 0[3] -> 1[3] [send] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 02/0 : 0[3] -> 1[3] [send] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 03/0 : 0[3] -> 1[3] [send] via NET/IBext_v11/4
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+[0;31m Prog=   3.64% N_left=   246928 Time=     1.56 Time_left=      41.20 iTF=     243.64 TF=   243.64 iTF_per=    20.30 TF_per=    20.30[0m
+[0;31m Prog=   4.84% N_left=   245904 Time=     1.58 Time_left=      31.16 iTF=    4748.63 TF=   318.16 iTF_per=   395.72 TF_per=    26.51[0m
+[0;31m Prog=   6.02% N_left=   244880 Time=     1.78 Time_left=      27.76 iTF=     632.94 TF=   352.66 iTF_per=    52.74 TF_per=    29.39[0m
+[0;31m Prog=   7.19% N_left=   243856 Time=     1.99 Time_left=      25.69 iTF=     574.29 TF=   376.37 iTF_per=    47.86 TF_per=    31.36[0m
+[0;31m Prog=   9.51% N_left=   241808 Time=     2.21 Time_left=      20.99 iTF=    1119.29 TF=   449.02 iTF_per=    93.27 TF_per=    37.42[0m
+[0;31m Prog=  10.66% N_left=   240784 Time=     2.42 Time_left=      20.26 iTF=     568.16 TF=   459.37 iTF_per=    47.35 TF_per=    38.28[0m
+[0;31m Prog=  11.79% N_left=   239760 Time=     2.44 Time_left=      18.24 iTF=    5362.67 TF=   503.70 iTF_per=   446.89 TF_per=    41.97[0m
+[0;31m Prog=  12.92% N_left=   238736 Time=     2.64 Time_left=      17.77 iTF=     595.64 TF=   510.56 iTF_per=    49.64 TF_per=    42.55[0m
+[0;31m Prog=  15.14% N_left=   236688 Time=     2.86 Time_left=      16.02 iTF=    1041.03 TF=   551.84 iTF_per=    86.75 TF_per=    45.99[0m
+[0;31m Prog=  16.24% N_left=   235664 Time=     3.06 Time_left=      15.76 iTF=     577.22 TF=   553.48 iTF_per=    48.10 TF_per=    46.12[0m
+[0;31m Prog=  17.32% N_left=   234640 Time=     3.26 Time_left=      15.54 iTF=     564.57 TF=   554.16 iTF_per=    47.05 TF_per=    46.18[0m
+[0;31m Prog=  18.40% N_left=   233616 Time=     3.28 Time_left=      14.56 iTF=    4189.45 TF=   583.83 iTF_per=   349.12 TF_per=    48.65[0m
+[0;31m Prog=  19.47% N_left=   232592 Time=     3.46 Time_left=      14.33 iTF=     614.43 TF=   585.43 iTF_per=    51.20 TF_per=    48.79[0m
+[0;31m Prog=  21.58% N_left=   230544 Time=     3.68 Time_left=      13.38 iTF=    1013.74 TF=   610.65 iTF_per=    84.48 TF_per=    50.89[0m
+[0;31m Prog=  22.62% N_left=   229520 Time=     3.86 Time_left=      13.21 iTF=     603.89 TF=   610.33 iTF_per=    50.32 TF_per=    50.86[0m
+[0;31m Prog=  23.65% N_left=   228496 Time=     4.05 Time_left=      13.09 iTF=     551.84 TF=   607.52 iTF_per=    45.99 TF_per=    50.63[0m
+[0;31m Prog=  24.67% N_left=   227472 Time=     4.07 Time_left=      12.44 iTF=    5476.29 TF=   630.75 iTF_per=   456.36 TF_per=    52.56[0m
+[0;31m Prog=  26.69% N_left=   225424 Time=     4.44 Time_left=      12.20 iTF=     571.56 TF=   625.86 iTF_per=    47.63 TF_per=    52.15[0m
+[0;31m Prog=  27.68% N_left=   224400 Time=     4.46 Time_left=      11.66 iTF=    4798.29 TF=   646.04 iTF_per=   399.86 TF_per=    53.84[0m
+[0;31m Prog=  28.67% N_left=   223376 Time=     4.64 Time_left=      11.54 iTF=     592.39 TF=   644.03 iTF_per=    49.37 TF_per=    53.67[0m
+[0;31m Prog=  29.64% N_left=   222352 Time=     4.82 Time_left=      11.45 iTF=     543.09 TF=   640.12 iTF_per=    45.26 TF_per=    53.34[0m
+[0;31m Prog=  30.61% N_left=   221328 Time=     4.85 Time_left=      10.99 iTF=    4451.44 TF=   657.92 iTF_per=   370.95 TF_per=    54.83[0m
+[0;31m Prog=  32.52% N_left=   219280 Time=     5.20 Time_left=      10.79 iTF=     563.89 TF=   651.54 iTF_per=    46.99 TF_per=    54.30[0m
+[0;31m Prog=  33.46% N_left=   218256 Time=     5.22 Time_left=      10.38 iTF=    4953.44 TF=   667.85 iTF_per=   412.79 TF_per=    55.65[0m
+[0;31m Prog=  34.39% N_left=   217232 Time=     5.39 Time_left=      10.28 iTF=     567.69 TF=   664.68 iTF_per=    47.31 TF_per=    55.39[0m
+[0;31m Prog=  35.32% N_left=   216208 Time=     5.57 Time_left=      10.21 iTF=     528.00 TF=   660.21 iTF_per=    44.00 TF_per=    55.02[0m
+[0;31m Prog=  37.14% N_left=   214160 Time=     5.76 Time_left=       9.75 iTF=     999.24 TF=   671.38 iTF_per=    83.27 TF_per=    55.95[0m
+[0;31m Prog=  38.03% N_left=   213136 Time=     5.94 Time_left=       9.68 iTF=     523.33 TF=   666.92 iTF_per=    43.61 TF_per=    55.58[0m
+[0;31m Prog=  38.92% N_left=   212112 Time=     5.96 Time_left=       9.35 iTF=    5018.23 TF=   680.40 iTF_per=   418.19 TF_per=    56.70[0m
+[0;31m Prog=  39.80% N_left=   211088 Time=     6.12 Time_left=       9.26 iTF=     554.41 TF=   676.99 iTF_per=    46.20 TF_per=    56.42[0m
+[0;31m Prog=  40.68% N_left=   210064 Time=     6.30 Time_left=       9.19 iTF=     519.01 TF=   672.61 iTF_per=    43.25 TF_per=    56.05[0m
+[0;31m Prog=  42.39% N_left=   208016 Time=     6.48 Time_left=       8.81 iTF=     969.79 TF=   681.07 iTF_per=    80.82 TF_per=    56.76[0m
+[0;31m Prog=  43.24% N_left=   206992 Time=     6.66 Time_left=       8.74 iTF=     514.51 TF=   676.78 iTF_per=    42.88 TF_per=    56.40[0m
+[0;31m Prog=  44.08% N_left=   205968 Time=     6.67 Time_left=       8.47 iTF=    4518.08 TF=   687.90 iTF_per=   376.51 TF_per=    57.32[0m
+[0;31m Prog=  44.91% N_left=   204944 Time=     6.83 Time_left=       8.38 iTF=     539.77 TF=   684.43 iTF_per=    44.98 TF_per=    57.04[0m
+[0;31m Prog=  46.54% N_left=   202896 Time=     7.02 Time_left=       8.07 iTF=     897.93 TF=   690.19 iTF_per=    74.83 TF_per=    57.52[0m
+[0;31m Prog=  47.35% N_left=   201872 Time=     7.18 Time_left=       7.99 iTF=     531.19 TF=   686.70 iTF_per=    44.27 TF_per=    57.22[0m
+[0;31m Prog=  48.15% N_left=   200848 Time=     7.35 Time_left=       7.91 iTF=     499.57 TF=   682.46 iTF_per=    41.63 TF_per=    56.87[0m
+[0;31m Prog=  48.94% N_left=   199824 Time=     7.37 Time_left=       7.69 iTF=    4813.87 TF=   692.04 iTF_per=   401.16 TF_per=    57.67[0m
+[0;31m Prog=  50.49% N_left=   197776 Time=     7.69 Time_left=       7.54 iTF=     506.84 TF=   684.34 iTF_per=    42.24 TF_per=    57.03[0m
+[0;31m Prog=  51.25% N_left=   196752 Time=     7.70 Time_left=       7.33 iTF=    4064.85 TF=   692.95 iTF_per=   338.74 TF_per=    57.75[0m
+[0;31m Prog=  52.01% N_left=   195728 Time=     7.86 Time_left=       7.25 iTF=     524.02 TF=   689.71 iTF_per=    43.67 TF_per=    57.48[0m
+[0;31m Prog=  52.76% N_left=   194704 Time=     8.02 Time_left=       7.18 iTF=     483.25 TF=   685.55 iTF_per=    40.27 TF_per=    57.13[0m
+[0;31m Prog=  53.50% N_left=   193680 Time=     8.03 Time_left=       6.98 iTF=    4491.09 TF=   693.70 iTF_per=   374.26 TF_per=    57.81[0m
+[0;31m Prog=  54.96% N_left=   191632 Time=     8.34 Time_left=       6.84 iTF=     491.27 TF=   686.19 iTF_per=    40.94 TF_per=    57.18[0m
+[0;31m Prog=  55.68% N_left=   190608 Time=     8.36 Time_left=       6.65 iTF=    4747.03 TF=   693.84 iTF_per=   395.59 TF_per=    57.82[0m
+[0;31m Prog=  56.39% N_left=   189584 Time=     8.51 Time_left=       6.58 iTF=     500.82 TF=   690.49 iTF_per=    41.74 TF_per=    57.54[0m
+[0;31m Prog=  57.09% N_left=   188560 Time=     8.66 Time_left=       6.51 iTF=     470.05 TF=   686.53 iTF_per=    39.17 TF_per=    57.21[0m
+[0;31m Prog=  58.48% N_left=   186512 Time=     8.82 Time_left=       6.27 iTF=     897.38 TF=   690.36 iTF_per=    74.78 TF_per=    57.53[0m
+[0;31m Prog=  59.16% N_left=   185488 Time=     8.98 Time_left=       6.20 iTF=     461.37 TF=   686.45 iTF_per=    38.45 TF_per=    57.20[0m
+[0;31m Prog=  59.83% N_left=   184464 Time=     8.99 Time_left=       6.04 iTF=    3865.76 TF=   692.85 iTF_per=   322.15 TF_per=    57.74[0m
+[0;31m Prog=  60.49% N_left=   183440 Time=     9.13 Time_left=       5.97 iTF=     495.63 TF=   689.83 iTF_per=    41.30 TF_per=    57.49[0m
+[0;31m Prog=  61.15% N_left=   182416 Time=     9.28 Time_left=       5.90 iTF=     459.40 TF=   686.13 iTF_per=    38.28 TF_per=    57.18[0m
+[0;31m Prog=  62.45% N_left=   180368 Time=     9.44 Time_left=       5.68 iTF=     865.53 TF=   689.09 iTF_per=    72.13 TF_per=    57.42[0m
+[0;31m Prog=  63.08% N_left=   179344 Time=     9.59 Time_left=       5.61 iTF=     442.83 TF=   685.25 iTF_per=    36.90 TF_per=    57.10[0m
+[0;31m Prog=  63.71% N_left=   178320 Time=     9.61 Time_left=       5.47 iTF=    3883.68 TF=   690.86 iTF_per=   323.64 TF_per=    57.57[0m
+[0;31m Prog=  64.33% N_left=   177296 Time=     9.75 Time_left=       5.40 iTF=     459.98 TF=   687.53 iTF_per=    38.33 TF_per=    57.29[0m
+[0;31m Prog=  65.55% N_left=   175248 Time=     9.91 Time_left=       5.21 iTF=     793.02 TF=   689.24 iTF_per=    66.08 TF_per=    57.44[0m
+[0;31m Prog=  66.15% N_left=   174224 Time=    10.04 Time_left=       5.14 iTF=     467.66 TF=   686.29 iTF_per=    38.97 TF_per=    57.19[0m
+[0;31m Prog=  66.75% N_left=   173200 Time=    10.18 Time_left=       5.07 iTF=     433.70 TF=   682.75 iTF_per=    36.14 TF_per=    56.90[0m
+[0;31m Prog=  67.33% N_left=   172176 Time=    10.20 Time_left=       4.95 iTF=    3748.77 TF=   687.65 iTF_per=   312.40 TF_per=    57.30[0m
+[0;31m Prog=  67.91% N_left=   171152 Time=    10.33 Time_left=       4.88 iTF=     460.33 TF=   684.77 iTF_per=    38.36 TF_per=    57.06[0m
+[0;31m Prog=  69.05% N_left=   169104 Time=    10.48 Time_left=       4.70 iTF=     778.10 TF=   686.12 iTF_per=    64.84 TF_per=    57.18[0m
+[0;31m Prog=  69.61% N_left=   168080 Time=    10.61 Time_left=       4.63 iTF=     446.24 TF=   683.17 iTF_per=    37.19 TF_per=    56.93[0m
+!!!! WARNING: Rank: 5 : hpc-gaas-g14 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 34 C [0m	[0;31mPower: 207 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 4 : hpc-gaas-g14 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 202 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 8 : hpc-gaas-g12 : GPU 0000:4b:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 203 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 7 : hpc-gaas-g14 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 35 C [0m	[0;31mPower: 216 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 11 : hpc-gaas-g12 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 202 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 6 : hpc-gaas-g14 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 33 C [0m	[0;31mPower: 201 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 10 : hpc-gaas-g12 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 38 C [0m	[0;31mPower: 206 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 1 : hpc-gaas-g11 : GPU 0000:bb:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 221 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 0 : hpc-gaas-g11 : GPU 0000:9a:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 226 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  70.16% N_left=   167056 Time=    10.75 Time_left=       4.57 iTF=     417.14 TF=   679.76 iTF_per=    34.76 TF_per=    56.65[0m
+!!!! WARNING: Rank: 3 : hpc-gaas-g11 : GPU 0000:dc:00.0 	Clock: 1980 MHz 	[0;31mTemp: 39 C [0m	[0;31mPower: 226 W [0m	PCIe  gen 5 	 x16 
+!!!! WARNING: Rank: 2 : hpc-gaas-g11 : GPU 0000:cd:00.0 	Clock: 1980 MHz 	[0;31mTemp: 36 C [0m	[0;31mPower: 227 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  70.71% N_left=   166032 Time=    10.77 Time_left=       4.46 iTF=    3874.30 TF=   684.11 iTF_per=   322.86 TF_per=    57.01[0m
+!!!! WARNING: Rank: 9 : hpc-gaas-g12 : GPU 0000:5c:00.0 	Clock: 1980 MHz 	[0;31mTemp: 38 C [0m	[0;31mPower: 225 W [0m	PCIe  gen 5 	 x16 
+[0;31m Prog=  71.78% N_left=   163984 Time=    11.03 Time_left=       4.34 iTF=     424.06 TF=   677.91 iTF_per=    35.34 TF_per=    56.49[0m
+[0;31m Prog=  72.30% N_left=   162960 Time=    11.04 Time_left=       4.23 iTF=    3601.34 TF=   681.93 iTF_per=   300.11 TF_per=    56.83[0m
+[0;31m Prog=  72.82% N_left=   161936 Time=    11.17 Time_left=       4.17 iTF=     435.18 TF=   679.19 iTF_per=    36.26 TF_per=    56.60[0m
+[0;31m Prog=  73.33% N_left=   160912 Time=    11.30 Time_left=       4.11 iTF=     404.75 TF=   675.99 iTF_per=    33.73 TF_per=    56.33[0m
+[0;31m Prog=  73.84% N_left=   159888 Time=    11.32 Time_left=       4.01 iTF=    2494.12 TF=   679.38 iTF_per=   207.84 TF_per=    56.62[0m
+[0;31m Prog=  74.83% N_left=   157840 Time=    11.57 Time_left=       3.89 iTF=     416.36 TF=   673.74 iTF_per=    34.70 TF_per=    56.14[0m
+[0;31m Prog=  75.32% N_left=   156816 Time=    11.58 Time_left=       3.80 iTF=    3694.62 TF=   677.32 iTF_per=   307.88 TF_per=    56.44[0m
+[0;31m Prog=  75.80% N_left=   155792 Time=    11.70 Time_left=       3.74 iTF=     426.57 TF=   674.80 iTF_per=    35.55 TF_per=    56.23[0m
+[0;31m Prog=  76.27% N_left=   154768 Time=    11.83 Time_left=       3.68 iTF=     381.75 TF=   671.60 iTF_per=    31.81 TF_per=    55.97[0m
+[0;31m Prog=  77.20% N_left=   152720 Time=    11.96 Time_left=       3.53 iTF=     727.99 TF=   672.22 iTF_per=    60.67 TF_per=    56.02[0m
+[0;31m Prog=  77.66% N_left=   151696 Time=    12.09 Time_left=       3.48 iTF=     385.47 TF=   669.30 iTF_per=    32.12 TF_per=    55.78[0m
+[0;31m Prog=  78.11% N_left=   150672 Time=    12.10 Time_left=       3.39 iTF=    4137.47 TF=   672.55 iTF_per=   344.79 TF_per=    56.05[0m
+[0;31m Prog=  78.55% N_left=   149648 Time=    12.21 Time_left=       3.33 iTF=     398.46 TF=   669.95 iTF_per=    33.21 TF_per=    55.83[0m
+[0;31m Prog=  79.42% N_left=   147600 Time=    12.35 Time_left=       3.20 iTF=     675.11 TF=   670.00 iTF_per=    56.26 TF_per=    55.83[0m
+[0;31m Prog=  79.85% N_left=   146576 Time=    12.46 Time_left=       3.14 iTF=     400.19 TF=   667.60 iTF_per=    33.35 TF_per=    55.63[0m
+[0;31m Prog=  80.27% N_left=   145552 Time=    12.58 Time_left=       3.09 iTF=     363.65 TF=   664.70 iTF_per=    30.30 TF_per=    55.39[0m
+[0;31m Prog=  80.68% N_left=   144528 Time=    12.59 Time_left=       3.02 iTF=    3421.49 TF=   667.46 iTF_per=   285.12 TF_per=    55.62[0m
+[0;31m Prog=  81.09% N_left=   143504 Time=    12.70 Time_left=       2.96 iTF=     390.38 TF=   665.08 iTF_per=    32.53 TF_per=    55.42[0m
+[0;31m Prog=  81.88% N_left=   141456 Time=    12.83 Time_left=       2.84 iTF=     642.61 TF=   664.86 iTF_per=    53.55 TF_per=    55.40[0m
+[0;31m Prog=  82.28% N_left=   140432 Time=    12.94 Time_left=       2.79 iTF=     380.60 TF=   662.51 iTF_per=    31.72 TF_per=    55.21[0m
+[0;31m Prog=  82.66% N_left=   139408 Time=    13.05 Time_left=       2.74 iTF=     355.29 TF=   659.85 iTF_per=    29.61 TF_per=    54.99[0m
+[0;31m Prog=  83.04% N_left=   138384 Time=    13.06 Time_left=       2.67 iTF=    3696.44 TF=   662.34 iTF_per=   308.04 TF_per=    55.19[0m
+[0;31m Prog=  83.78% N_left=   136336 Time=    13.28 Time_left=       2.57 iTF=     358.40 TF=   657.40 iTF_per=    29.87 TF_per=    54.78[0m
+[0;31m Prog=  84.14% N_left=   135312 Time=    13.29 Time_left=       2.50 iTF=    3203.37 TF=   659.66 iTF_per=   266.95 TF_per=    54.97[0m
+[0;31m Prog=  84.50% N_left=   134288 Time=    13.39 Time_left=       2.46 iTF=     367.74 TF=   657.45 iTF_per=    30.65 TF_per=    54.79[0m
+[0;31m Prog=  84.85% N_left=   133264 Time=    13.50 Time_left=       2.41 iTF=     342.35 TF=   654.95 iTF_per=    28.53 TF_per=    54.58[0m
+[0;31m Prog=  85.20% N_left=   132240 Time=    13.51 Time_left=       2.35 iTF=    2656.93 TF=   656.97 iTF_per=   221.41 TF_per=    54.75[0m
+[0;31m Prog=  85.88% N_left=   130192 Time=    13.72 Time_left=       2.26 iTF=     335.18 TF=   652.03 iTF_per=    27.93 TF_per=    54.34[0m
+[0;31m Prog=  86.21% N_left=   129168 Time=    13.73 Time_left=       2.20 iTF=    2344.16 TF=   653.84 iTF_per=   195.35 TF_per=    54.49[0m
+[0;31m Prog=  86.53% N_left=   128144 Time=    13.83 Time_left=       2.15 iTF=     349.06 TF=   651.70 iTF_per=    29.09 TF_per=    54.31[0m
+[0;31m Prog=  86.85% N_left=   127120 Time=    13.93 Time_left=       2.11 iTF=     325.95 TF=   649.31 iTF_per=    27.16 TF_per=    54.11[0m
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Symmetric VA size=140GB
+[0;31m Prog=  87.48% N_left=   125072 Time=    14.04 Time_left=       2.01 iTF=     609.17 TF=   649.00 iTF_per=    50.76 TF_per=    54.08[0m
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Symmetric VA size=140GB
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 00/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 01/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 00/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 01/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 02/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 02/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 03/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 03/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 04/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 04/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 00/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 05/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 04/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 01/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 05/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 00/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 00/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 02/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 06/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 01/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 05/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 06/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 01/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 07/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 03/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 07/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 02/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 06/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 08/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 02/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 08/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 04/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 03/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 09/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 07/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 05/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 03/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 04/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 09/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 10/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 08/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 06/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 04/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 05/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 04/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 10/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 11/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 07/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 00/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 06/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 05/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 12/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 11/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 09/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 05/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 00/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 00/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 00/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 08/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 07/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 01/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 06/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 06/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 13/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 10/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 12/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 01/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 01/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 01/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 09/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 08/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 02/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 07/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 14/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 07/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 02/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 11/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 02/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 13/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 02/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 10/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 09/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 03/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 08/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 15/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 12/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 03/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 03/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 03/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 11/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 14/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 10/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 08/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 04/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 09/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 16/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 04/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 04/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 04/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 12/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 04/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 11/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 15/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 05/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 10/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 09/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 13/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 05/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 17/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 05/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 16/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 05/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 13/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 05/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 12/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 06/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 11/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 17/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 18/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 10/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 14/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 06/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 06/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 06/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 14/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 06/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 13/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 07/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 12/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 18/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 11/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 07/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 19/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 07/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 15/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 07/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 15/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 07/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 14/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 08/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 13/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 19/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 08/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 12/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 08/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 16/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 20/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 08/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 08/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 15/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 09/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 14/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 20/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 16/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 09/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 13/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 09/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 09/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 21/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 17/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 09/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 16/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 10/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 15/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 21/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 17/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 10/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 10/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 14/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 18/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 10/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 17/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 10/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 11/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 16/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 15/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 22/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 18/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 11/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 11/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 22/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 11/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 19/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 11/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 18/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 12/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 17/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Channel 23/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 12/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 12/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 16/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 20/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 12/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 19/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 12/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 19/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Channel 23/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 18/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 13/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 13/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 13/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 21/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 13/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 20/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 13/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 19/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 14/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 17/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 20/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 21/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 18/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 14/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 22/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 14/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 14/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 21/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 14/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 20/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 15/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 19/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 22/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 15/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Channel 23/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 15/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Channel 23/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 22/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 15/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 20/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 15/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 21/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 16/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 21/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 16/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 16/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 22/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 16/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Channel 23/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 16/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 22/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 17/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Channel 23/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Channel 23/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 18/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 17/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 17/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 17/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 17/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 19/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 18/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 20/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 18/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 18/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 18/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 21/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 19/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 19/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 19/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 19/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 20/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 20/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 20/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 20/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 21/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 21/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 21/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 21/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 22/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 22/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 22/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 22/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 22/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Channel 23/0 : 1[1] -> 2[2] via P2P/CUMEM
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Channel 23/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Channel 23/0 : 3[3] -> 0[0] via P2P/CUMEM
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Channel 23/0 : 0[0] -> 1[1] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Channel 23/0 : 2[2] -> 3[3] via P2P/CUMEM
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+[0;31m Prog=  87.78% N_left=   124048 Time=    14.42 Time_left=       2.01 iTF=      83.53 TF=   634.09 iTF_per=     6.96 TF_per=    52.84[0m
+[0;31m Prog=  89.23% N_left=   118928 Time=    14.46 Time_left=       1.74 iTF=    3663.19 TF=   642.73 iTF_per=   305.27 TF_per=    53.56[0m
+[0;31m Prog=  90.57% N_left=   113808 Time=    14.50 Time_left=       1.51 iTF=    3433.69 TF=   650.50 iTF_per=   286.14 TF_per=    54.21[0m
+[0;31m Prog=  91.55% N_left=   109712 Time=    14.54 Time_left=       1.34 iTF=    3046.39 TF=   656.04 iTF_per=   253.87 TF_per=    54.67[0m
+[0;31m Prog=  92.68% N_left=   104592 Time=    14.57 Time_left=       1.15 iTF=    3280.64 TF=   662.50 iTF_per=   273.39 TF_per=    55.21[0m
+[0;31m Prog=  93.70% N_left=    99472 Time=    14.61 Time_left=       0.98 iTF=    3202.39 TF=   668.29 iTF_per=   266.87 TF_per=    55.69[0m
+[0;31m Prog=  94.62% N_left=    94352 Time=    14.64 Time_left=       0.83 iTF=    3039.86 TF=   673.41 iTF_per=   253.32 TF_per=    56.12[0m
+[0;31m Prog=  95.45% N_left=    89232 Time=    14.67 Time_left=       0.70 iTF=    2933.82 TF=   677.95 iTF_per=   244.48 TF_per=    56.50[0m
+[0;31m Prog=  96.19% N_left=    84112 Time=    14.69 Time_left=       0.58 iTF=    2805.48 TF=   681.92 iTF_per=   233.79 TF_per=    56.83[0m
+[0;31m Prog=  96.85% N_left=    78992 Time=    14.73 Time_left=       0.48 iTF=    2144.85 TF=   685.07 iTF_per=   178.74 TF_per=    57.09[0m
+[0;31m Prog=  97.42% N_left=    73872 Time=    14.75 Time_left=       0.39 iTF=    2836.84 TF=   688.15 iTF_per=   236.40 TF_per=    57.35[0m
+[0;31m Prog=  99.23% N_left=    49296 Time=    14.84 Time_left=       0.11 iTF=    1994.15 TF=   696.49 iTF_per=   166.18 TF_per=    58.04[0m
+[0;31m Prog=  99.91% N_left=    23696 Time=    14.91 Time_left=       0.01 iTF=    1077.88 TF=   698.17 iTF_per=    89.82 TF_per=    58.18[0m
+2026-09-18 06:47:42.732
+LU seconds: AVG = 15.10, MAX = 15.10 (4->hpc-gaas-g14), MIN = 15.10 (10->hpc-gaas-g12)
+
+Solver iteration  0, L-infinite residual = 4.79582867e-04
+Solver iteration  1, L-infinite residual = 6.25513575e-10
+Solver iteration  2, L-infinite residual = 7.13172468e-14
+Iterative Solver seconds: AVG = 3.95, MAX = 3.95 (1->hpc-gaas-g11), MIN = 3.95 (0->hpc-gaas-g11)
+
+2026-09-18 06:47:46.712
+
+ ****** HPL MxP Result    ****** 
+
+    EPS           . . . . . . . . . . . . . . . . .          =    2.000000E-16
+    Threshold     . . . . . . . . . . . . . . . . .          =    1.600000E+01
+  ||Ax-b||_oo     . . . . . . . . . . . . . . . . .          =    7.131725E-14
+  ||A   ||_oo     . . . . . . . . . . . . . . . . .          =    2.513044E+05
+  ||x   ||_oo     . . . . . . . . . . . . . . . . .          =    8.034157E-06
+  ||b   ||_oo     . . . . . . . . . . . . . . . . .          =    9.999990E-01
+  ||Ax-b||_oo / (EPS * (||A||_oo * ||x||_oo + ||b||_oo) * N) =    4.724533E-04 ...... PASSED
+
+    N = 250000, NB = 1024, NPROW = 3, NPCOL = 4, SLOPPY-TYPE = FP16
+[0;31m       GFLOPS = 5.4702e+05, per GPU =   45584.63[0m[0;34m ------ The HPL-MxP performance to report[0m
+    LU GFLOPS = 6.8995e+05, per GPU =   57496.09[0;34m ------ The performance excluding the iterative solver part[0m
+
+ ****** HPL MxP Result    ****** 
+
+
+ ****** test loop 1 of 1 done   ****** 
+
+
+ ****** test 1 of 1 done   ****** 
+
+hpc-gaas-g14:566022:566022 [0] NCCL INFO comm 0xf2b2830 rank 1 nranks 3 cudaDev 0 busId bb000 - Destroy COMPLETE
+hpc-gaas-g12:852309:852309 [0] NCCL INFO comm 0xdf2f8c0 rank 2 nranks 3 cudaDev 0 busId 9a000 - Destroy COMPLETE
+hpc-gaas-g14:566008:566008 [0] NCCL INFO comm 0xe1dd650 rank 1 nranks 3 cudaDev 0 busId cd000 - Destroy COMPLETE
+hpc-gaas-g14:565993:565993 [0] NCCL INFO comm 0xebffba0 rank 1 nranks 3 cudaDev 0 busId 9a000 - Destroy COMPLETE
+hpc-gaas-g12:852352:852352 [0] NCCL INFO comm 0xebe58a0 rank 2 nranks 3 cudaDev 0 busId 5c000 - Destroy COMPLETE
+hpc-gaas-g14:566094:566094 [0] NCCL INFO comm 0xf1fd050 rank 1 nranks 3 cudaDev 0 busId dc000 - Destroy COMPLETE
+hpc-gaas-g12:852294:852294 [0] NCCL INFO comm 0xfe14f10 rank 2 nranks 3 cudaDev 0 busId 4b000 - Destroy COMPLETE
+hpc-gaas-g12:852280:852280 [0] NCCL INFO comm 0xe050f60 rank 2 nranks 3 cudaDev 0 busId bb000 - Destroy COMPLETE
+hpc-gaas-g14:565993:565993 [0] NCCL INFO comm 0x67350b0 rank 0 nranks 4 cudaDev 0 busId 9a000 - Destroy COMPLETE
+hpc-gaas-g14:565993:565993 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO comm 0x5d1c010 rank 2 nranks 4 cudaDev 0 busId cd000 - Destroy COMPLETE
+hpc-gaas-g14:566008:566008 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g14:566094:566094 [0] NCCL INFO comm 0x6d36010 rank 3 nranks 4 cudaDev 0 busId dc000 - Destroy COMPLETE
+hpc-gaas-g14:566094:566094 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g14:566022:566022 [0] NCCL INFO comm 0x6de9010 rank 1 nranks 4 cudaDev 0 busId bb000 - Destroy COMPLETE
+hpc-gaas-g14:566022:566022 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g12:852309:852309 [0] NCCL INFO comm 0x5a68010 rank 2 nranks 4 cudaDev 0 busId 9a000 - Destroy COMPLETE
+hpc-gaas-g12:852309:852309 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g12:852294:852294 [0] NCCL INFO comm 0x79500b0 rank 0 nranks 4 cudaDev 0 busId 4b000 - Destroy COMPLETE
+hpc-gaas-g12:852294:852294 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g12:852280:852280 [0] NCCL INFO comm 0x5b8f010 rank 3 nranks 4 cudaDev 0 busId bb000 - Destroy COMPLETE
+hpc-gaas-g12:852280:852280 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g12:852352:852352 [0] NCCL INFO comm 0x6721f40 rank 1 nranks 4 cudaDev 0 busId 5c000 - Destroy COMPLETE
+hpc-gaas-g12:852352:852352 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g11:872347:872347 [0] NCCL INFO comm 0xf5a5e10 rank 0 nranks 3 cudaDev 0 busId bb000 - Destroy COMPLETE
+hpc-gaas-g11:872395:872395 [0] NCCL INFO comm 0xe874100 rank 0 nranks 3 cudaDev 0 busId cd000 - Destroy COMPLETE
+hpc-gaas-g11:872333:872333 [0] NCCL INFO comm 0xe908c40 rank 0 nranks 3 cudaDev 0 busId 9a000 - Destroy COMPLETE
+hpc-gaas-g11:872363:872363 [0] NCCL INFO comm 0xf3d6ca0 rank 0 nranks 3 cudaDev 0 busId dc000 - Destroy COMPLETE
+hpc-gaas-g11:872347:872347 [0] NCCL INFO comm 0x70df010 rank 1 nranks 4 cudaDev 0 busId bb000 - Destroy COMPLETE
+hpc-gaas-g11:872347:872347 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g11:872363:872363 [0] NCCL INFO comm 0x6f13010 rank 3 nranks 4 cudaDev 0 busId dc000 - Destroy COMPLETE
+hpc-gaas-g11:872363:872363 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g11:872395:872395 [0] NCCL INFO comm 0x63b2010 rank 2 nranks 4 cudaDev 0 busId cd000 - Destroy COMPLETE
+hpc-gaas-g11:872395:872395 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g11:872333:872333 [0] NCCL INFO comm 0x64400b0 rank 0 nranks 4 cudaDev 0 busId 9a000 - Destroy COMPLETE
+hpc-gaas-g11:872333:872333 [0] NCCL INFO Unloading plugin libnccl-net.so
+hpc-gaas-g14:566008:566008 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g11:872395:872395 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g14:566094:566094 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g14:565993:565993 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g14:566022:566022 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g11:872333:872333 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g11:872347:872347 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g11:872363:872363 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g12:852280:852280 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g12:852309:852309 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g12:852352:852352 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+hpc-gaas-g12:852294:852294 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+=== stop in-run sampler ===
+=== SAMPLER-MECH DONE hpc-gaas-g12 ticks=27 ===
+=== SAMPLER-MECH DONE hpc-gaas-g14 ticks=27 ===
+=== SAMPLER-MECH DONE hpc-gaas-g11 ticks=26 ===
+=== post-run per-node capture (pbsdsh, once per node) ===
+=== CAPTURE-MECH post hpc-gaas-g14 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_post_hpc-gaas-g14.log ===
+=== CAPTURE-MECH post hpc-gaas-g11 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_post_hpc-gaas-g11.log ===
+=== CAPTURE-MECH post hpc-gaas-g12 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_post_hpc-gaas-g12.log ===
+app_exit_code=0
+=== attempt evidence files ===
+-rw-r--r-- 1 pham0094 1304617061 519965 Sep 18 06:47 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_load_hpc-gaas-g11.log
+-rw-r--r-- 1 pham0094 1304617061 470756 Sep 18 06:47 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_load_hpc-gaas-g12.log
+-rw-r--r-- 1 pham0094 1304617061 463455 Sep 18 06:47 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_load_hpc-gaas-g14.log
+-rw-r--r-- 1 pham0094 1304617061  12592 Sep 18 06:48 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_post_hpc-gaas-g11.log
+-rw-r--r-- 1 pham0094 1304617061  12675 Sep 18 06:48 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_post_hpc-gaas-g12.log
+-rw-r--r-- 1 pham0094 1304617061  12356 Sep 18 06:48 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_post_hpc-gaas-g14.log
+-rw-r--r-- 1 pham0094 1304617061  12590 Sep 18 06:46 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_pre_hpc-gaas-g11.log
+-rw-r--r-- 1 pham0094 1304617061  12672 Sep 18 06:46 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_pre_hpc-gaas-g12.log
+-rw-r--r-- 1 pham0094 1304617061  12345 Sep 18 06:46 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_pre_hpc-gaas-g14.log
+-rw-r--r-- 1 pham0094 1304617061    482 Sep 18 06:46 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/scripts/gaas-internode-coms-debug/resource-alloc/outputs/mech250k_pristine_r3_presubmit.log
+=== resource-alloc exp5 attempt mech250k_pristine_r3 (pristine) complete ===
