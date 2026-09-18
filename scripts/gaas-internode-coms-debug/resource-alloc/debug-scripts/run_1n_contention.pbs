@@ -117,6 +117,7 @@ SAMPLER_PID=$!
 set +e
 apptainer exec --nv \
   "$SIF" \
+  env UCX_LOG_LEVEL="$UCX_LOG_LEVEL" NCCL_DEBUG="$NCCL_DEBUG" \
   /usr/local/mpi/bin/mpirun -np "$RANKS" \
     -x UCX_LOG_LEVEL \
     -x NCCL_DEBUG \
