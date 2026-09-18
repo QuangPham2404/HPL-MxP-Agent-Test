@@ -108,7 +108,7 @@ while [ "$tick" -lt "$MAX_TICKS" ]; do
     grep -E "^(MemTotal|MemFree|MemAvailable|Buffers|Cached|SwapTotal|SwapFree|AnonPages|Active|Inactive|Dirty|Writeback):" /proc/meminfo 2>/dev/null
 
     echo "-- vmstat --"
-    grep -E "^(pgfault|pgmajfault|pswpin|pswpout|pgpgin|pgpgout|pgmigrate|numa_" /proc/vmstat 2>/dev/null
+    grep -E "^(pgfault|pgmajfault|pswpin|pswpout|pgpgin|pgpgout|pgmigrate|numa_)" /proc/vmstat 2>/dev/null
 
     if [ -d /proc/pressure ]; then
       for r in cpu memory io; do
