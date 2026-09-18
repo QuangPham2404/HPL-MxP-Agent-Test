@@ -13,7 +13,7 @@ Stage overview (per the plan):
 | Stage | Scope | Status |
 |---|---|---|
 | 1 | Container/launch preflight (tooling inventory + versions + device access + launch-path check + option (a) OSU staging validation) | **COMPLETE 2026-09-18** |
-| 2 | Container-native OSU/NCCL GDR A/B (2x1 then 3x4, full test set) | ready (tooling validated; awaiting user go) |
+| 2 | Container-native OSU/NCCL GDR A/B (2x1 then 3x4, full test set) | **COMPLETE 2026-09-18** (GDR confirmed on both stacks; 3x4 NCCL cells carry the HCA bond-excluded condition) |
 | 3 | HPL-MxP integration A/B at N=480000/NB=1024 vs `3x4-baseline_v1` | not started |
 
 ## Phase 2 — Stage 1, part 1: container/launch preflight (2026-09-18) — COMPLETE; tooling gate PARTIAL (resolved by option (a), see next section)
@@ -227,3 +227,134 @@ the plain (per-process) `all_reduce_perf` → final ladder v5/v2/v2/v2
 - Jobs (all g14/g11/g15-class `gpu_as` nodes, group `hpc_ebslee`):
   preflight `67791/67793/67795.gaas`; smoke `67817/67819/67820/67821/
   67822/67823/67827/67831/67836/67838/67840.gaas`.
+
+## Phase 2 — Stage 2: container-native GDR A/B (2026-09-18) — COMPLETE: GDR CONFIRMED on both container stacks
+
+**Design (user-confirmed):** 4 jobs (one per stack × rung), both GDR arms in
+the same job on the same allocation; cleanest-eligible node hunting in
+`gpu_as`/`gpu_ded` with contention recorded; one job at a time; ladder
+OSU-2x1 → NCCL-2x1 → OSU-3x4 → NCCL-3x4. OSU arm: staged host OSU-CUDA
+through the container HPC-X stack — `osu_bw` D D + H H, `osu_latency` D D +
+H H (np=2 inter-node pair), ctrl vs `UCX_IB_GPU_DIRECT_RDMA=n`,
+`UCX_LOG_LEVEL=info` + `UCX_PROTO_INFO=y` in both arms. NCCL arm:
+container-native `*_mpi` binaries — sendrecv/broadcast(root 0)/all_reduce at
+the full rank count, host-campaign sweep 8 B→64 MiB, ctrl vs
+`NCCL_NET_GDR_LEVEL=LOC`, full NCCL diagnostics. Scripts:
+`debug-scripts/phase2-stage2/` (parameterized runners + 4 wrappers + HCA
+contingency wrapper; README with the full attempt log).
+
+**Attempts (jobs, all group `hpc_ebslee`):** `phase2_stage2_osu_2x1_v2`
+(`67956.gaas`, g14+g15 pristine `gpu_as`), `phase2_stage2_nccl_2x1_v3`
+(`67965.gaas`, g20+g22 `gpu_ded`; g22 pristine, g20 one 12-cpu+1-GPU
+tenant), `phase2_stage2_osu_3x4_v1` (`67969.gaas`, g22+g20+g03 `gpu_ded`;
+pt2pt pair g22+g20), `phase2_stage2_nccl_3x4_v2` (`67974.gaas`, same trio,
+**HCA bond-excluded both arms** — pre-authorized contingency, see below).
+Track 1 failures preserved: `osu_2x1_v1` (`67922`, `SHARED_STAGE` hyphen
+typo — the smoke-v3 typo class), `nccl_2x1_v1` (`67958`, health-gate OSU
+path missing `mpi/pt2pt/` + over-strict `libverifiable` ldd gate),
+`nccl_2x1_v2` (`67963`, never started, qdelt — g13 misjudged as
+near-pristine because `pbsnodes -aSj` f/t columns are FREE/total, g13 was
+fully occupied). Failed `nccl_3x4_v1` (`67973`) triggered the contingency:
+the ctrl allreduce aborted rc=3 with the exact case `2026-09-17-A`
+signature (ib_plugin.c mixed RoCE/IB link warnings + connection closed) on
+the g22+g20+g03 mix — the same bond-rail misalignment as the host case,
+reproduced in-container.
+
+### NCCL arm results (algbw GB/s, out-of-place; `+N` = ctrl N× gdroff; container-vs-host-ctrl % in the last column)
+
+**2x1 (g20+g22; ctrl 8/16 GDRDMA channels = 50%, gdroff 0/16; all 3 tests AB_VALID):**
+
+| Test @64 MiB | ctrl | gdroff | ratio | vs host ctrl (host numbers) |
+|---|---|---|---|---|
+| sendrecv | 25.08 | 21.80 | +15.0% | +1.8% (24.63) |
+| broadcast | 48.15 | 44.51 | +8.2% | −0.3% (48.28) |
+| allreduce | 29.71 | 24.52 | +21.2% | +4.5% (28.43) |
+
+**3x4 (g22+g20+g03, NCCL_IB_HCA bond-excluded both arms; GDR fractions: sendrecv 16/24, broadcast 48/72, allreduce 448/616 = 67–73%; gdroff 0 in every arm; all 3 tests AB_VALID):**
+
+| Test @64 MiB | ctrl | gdroff | ratio | vs host ctrl (host, same condition) |
+|---|---|---|---|---|
+| sendrecv | 38.83 | 27.29 | +42.3% | −4.8% (40.78) |
+| broadcast | 69.56 | 27.94 | **+149% (2.49×)** | −1.9% (70.88, +151% host) |
+| allreduce (algbw) | 44.20 | 18.24 | **+142% (2.42×)** | +0.6% (43.92, +133% host) |
+| allreduce (busbw) | 81.03 | 33.45 | +142% | +0.6% (80.51) |
+
+Per-size allreduce 3x4 algbw: 1 MiB 7.66 vs 7.95 (−3.6%, noise), 4 MiB
+24.18 vs 14.05 (+72%), 16 MiB 34.45 vs 17.90 (+92%), 64 MiB +142%. The
+container NCCL stack matches the host campaign within ±5% on every 3x4 cell
+and every 2x1 cell; the 2x1 allreduce 1 MiB busbw (5.03 GB/s ctrl) also
+matches the smoke (4.84) and host ctrl (≈4.98 algbw-equivalent) context.
+
+### OSU (MPI/UCX) arm results
+
+**2x1 (g14+g15, both pristine):**
+
+| Test | ctrl | gdroff | ctrl advantage | H H control |
+|---|---|---|---|---|
+| osu_bw D D @4 MiB (MB/s) | 50,969 | 38,585 | **+32.1%** | 88,339 vs 88,315 (−0.03%) |
+| osu_latency D D @8 B (µs) | 9.34 | 19.39 | **2.08× faster** | 1.78 vs 1.77 |
+| osu_bw D D as % of H H ceiling | 57.7% | 43.7% | — | (host Phase 1: 57.3%) |
+
+**3x4 (pt2pt pair g22+g20):**
+
+| Test | ctrl | gdroff | delta | H H control |
+|---|---|---|---|---|
+| osu_bw D D @4 MiB (MB/s) | 37,855 | 40,702 | **−7.0%** (gdroff faster) | 88,210 vs 88,827 (−0.7%) |
+| osu_latency D D @8 B (µs) | 14.82 | 19.69 | 1.33× faster | 1.93 vs 1.93 |
+| osu_latency D D @1/4 MiB (µs) | 729.9 / 2837.8 | 76.7 / 169.9 | **9.5×/16.7× SLOWER (ctrl pathological)** | 56.5 vs 56.6 @4 MiB |
+
+**Protocol evidence (both rungs, per-arm logs):** ctrl D D selects
+`rendezvous zero-copy read from remote` / `zero-copy fenced write to remote`
+over `rc_mlx5` (2x1: 74/26 on mlx5_4/mlx5_5; gdroff switches to
+`rendezvous cuda_copy, fenced write to remote, frag host` staging on 50/50
+rails) — the same evidence chain as the host Phase 1 closure, reproduced
+in-container. The gdroff knob provably reached every rank (per-rank
+`ucx_env_check` echo). H H negative controls unchanged at both rungs.
+
+### Verdicts
+
+1. **Container NCCL GDR: CONFIRMED.** All six A/B cells valid (2x1 + 3x4);
+   ctrl engages GDRDMA on 50–73% of IB channels (same as host), gdroff = 0
+   with the same `NET/IBext_v11` backend; uniform GDR-on gains up to +142%.
+   The bond-rail abort reproduced in-container and is fixed by the same
+   host-validated `NCCL_IB_HCA` bond exclusion (upstream-report-worthy).
+2. **Container MPI/UCX GDR: CONFIRMED FUNCTIONAL.** Zero-copy GPU-buffer
+   rendezvous over `rc_mlx5` in ctrl vs cuda_copy staging in gdroff, clean
+   H H controls, healthy +32%/2.08× at the 2x1 pair (g14+g15) — D D at
+   57.7% of the H H ceiling, matching the host's 57.3%.
+3. **New in-container performance anomaly (recorded, deferred):** on the
+   g22+g20 pair (the 3x4 OSU rung), GDR-on rendezvous latency is
+   pathological at ≥1 MiB (up to 16.7× slower than staged) and D D
+   bandwidth shows no GDR benefit (−7% @4 MiB) — a Case-A-like residual on
+   a *working* GDR path, now observed in-container and pair-dependent (the
+   g14+g15 pair is healthy; smoke g14+g11 measured 37.8 GB/s D D). Same
+   handling as host Case A: performance issue, not a GDR failure; deferred
+   UCX follow-up, do not block Stage 3.
+
+**Stage 2 conclusion:** per the plan's interpretation table — "Container GDR
+confirmed" for BOTH stacks; the 2026-09-03 gdrdrv clue is superseded for
+the RDMA path. The container communication infrastructure delivers working
+GPUDirect RDMA through both CUDA-aware MPI and NCCL, at host-equivalent
+performance. Remaining question is Stage 3: whether the HPL-MxP run itself
+uses those paths (integration A/B at N=480000/NB=1024 vs `3x4-baseline_v1`,
+default vs GDR disabled in both UCX and NCCL — the Stage 2-validated knobs).
+
+### Evidence index (Stage 2)
+
+- All raw evidence: `outputs/phase2-stage2/` (149 files, 107 MB) — per-arm
+  per-test logs (OSU + NCCL), `.o/.e` per attempt, rank maps, ABI log,
+  per-node fabric logs, pre/prectrl/mid/post co-tenant checkpoints,
+  hostfiles, per-attempt presched snapshots. Postsched snapshots were not
+  captured between jobs (documented deviation; in-job post checkpoints
+  carry the end-state pbsnodes view).
+- Scripts: `debug-scripts/phase2-stage2/` (`run_phase2_stage2_{osu,nccl}_common.sh`,
+  4 topology wrappers, `run_phase2_stage2_nccl_3x4_hca.pbs`,
+  `fabric_capture.sh`, README with the attempt log).
+- Jobs: `67922` (osu_2x1_v1, Track 1 fail), `67956` (osu_2x1_v2, PASS),
+  `67958` (nccl_2x1_v1, Track 1 fail), `67963` (nccl_2x1_v2, never
+  started), `67965` (nccl_2x1_v3, PASS), `67969` (osu_3x4_v1, PASS),
+  `67973` (nccl_3x4_v1, bond-abort contingency), `67974` (nccl_3x4_v2,
+  PASS, HCA bond-excluded).
+- Commits: `e8e06da` (scripts), `6fd2aee` (SHARED_STAGE fix), `c4c227b`
+  (OSU health path + quirk gate fix), `528b918` (HCA contingency wrapper +
+  passthrough).

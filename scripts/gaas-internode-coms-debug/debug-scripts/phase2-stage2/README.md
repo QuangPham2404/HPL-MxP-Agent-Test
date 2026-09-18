@@ -120,4 +120,10 @@ Repeat per job with the matching script, attempt name, node count (three
 | `phase2_stage2_nccl_2x1_v3` | `67965.gaas` | g20+g22 / `gpu_ded` (g22 pristine; g20 one light co-tenant: 12 cpus + 1 GPU) | **PASS** (6/6 runs; all 3 tests AB_VALID) | ctrl 16 IBext / 8 GDRDMA vs gdroff 16 / 0 on all three tests — same IB backend in both arms, knob reach proven (ENV lines). Container NCCL GDR engaged by default at 2x1. |
 | `phase2_stage2_osu_3x4_v1` | `67969.gaas` | g22+g20+g03 / `gpu_ded` (g22 pristine; g20 12cpu+1GPU tenant; g03 idle-holder 48cpu+4GPU) | **PASS** (8/8 tests, ~7 min) | pt2pt pair g22+g20; 12/12 ranks mapped, ABI clean. Marker counts recorded (D D arms show cuda_copy asymmetry; H H symmetric). Formal GDR classification at analysis. |
 | `phase2_stage2_nccl_3x4_v1` | `67973.gaas` | g22+g20+g03 / `gpu_ded` | FAIL (5/6 runs; **pre-authorized contingency triggered**) | ctrl allreduce aborted rc=3 with the case 2026-09-17-A signature (ib_plugin.c mixed RoCE/IB link warnings + connection closed) on this node mix — the same bond-rail misalignment as the host case. All other cells valid: sendrecv ctrl 24 IB/16 GDRDMA vs gdroff 24/0; broadcast 72/48 vs 48/0; gdroff allreduce 610/0. Rerun as `_v2` with `NCCL_IB_HCA` bond-excluded (both arms), full test set, per the pre-authorization. |
-| `phase2_stage2_nccl_3x4_v2` | | g22+g20+g03 / `gpu_ded` | pending | HCA-filtered rerun (`run_phase2_stage2_nccl_3x4_hca.pbs`, commit `c4c227b`+). |
+| `phase2_stage2_nccl_3x4_v2` | `67974.gaas` | g22+g20+g03 / `gpu_ded` (same trio as v1) | **PASS** (6/6 runs; all 3 tests AB_VALID, HCA bond-excluded both arms) | `ib_hca_filter=mlx5_0..5,8,9` recorded; sendrecv ctrl 24 IB/16 GDRDMA vs gdroff 24/0; broadcast 72/48 vs 48/0; allreduce ctrl 616 IB/448 GDRDMA vs gdroff 610/0. Condition documented: 3x4 NCCL cells carry "NCCL_IB_HCA bond-excluded, both arms". |
+
+Evidence note: per-job `postsched.txt` snapshots were not captured between
+jobs (deviation from the submission sequence); the in-job post checkpoints
+(`*_post_hpc-gaas-g*.log`, which include each node's pbsnodes co-tenant
+view) plus the per-attempt `presched.txt` files serve as the scheduler-state
+evidence for this session.

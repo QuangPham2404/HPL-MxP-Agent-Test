@@ -1,0 +1,90 @@
+=== FABRIC_CAPTURE BEGIN hpc-gaas-g03 ===
+2026-09-18T12:31:30+08:00
+--- nvidia-smi topo -m ---
+	[4mGPU0	GPU1	GPU2	GPU3	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	24-47	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	24-47	0		N/A
+GPU2	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	78-101	1		N/A
+GPU3	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	78-101	1		N/A
+NIC0	PIX	NODE	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	PIX	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	NODE	PIX	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	NODE	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	NODE	NODE	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	NODE	PIX	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+--- GPU inventory ---
+GPU 0: NVIDIA H200 (UUID: GPU-d57764cb-1d20-834d-5464-e71c7c526df1)
+GPU 1: NVIDIA H200 (UUID: GPU-ccf373b6-295a-3d5e-04d0-1b51d9b0f15b)
+GPU 2: NVIDIA H200 (UUID: GPU-e6b94235-b259-2ec7-29d2-b750b07ff478)
+GPU 3: NVIDIA H200 (UUID: GPU-12410a82-0544-c88e-a1b7-ed75329b987d)
+--- GDR kernel modules ---
+nvidia_peermem         20480  0
+nvidia              104202240  678 nvidia_uvm,nvidia_peermem,nvidia_modeset
+ib_uverbs             225280  39 nvidia_peermem,rdma_ucm,mlx5_ib
+--- ibv_devices ---
+    device          	   node GUID
+    ------          	----------------
+    mlx5_0          	605e650300934a60
+    mlx5_1          	605e650300934b14
+    mlx5_2          	605e650300753398
+    mlx5_3          	605e6503007532e4
+    mlx5_4          	605e650300934a64
+    mlx5_5          	605e650300753110
+    mlx5_8          	605e650300934b2c
+    mlx5_9          	605e6503007530f4
+    mlx5_bond_0     	d894240300bbface
+--- /dev/infiniband ---
+issm0
+issm1
+issm2
+issm3
+issm4
+issm5
+issm8
+issm9
+rdma_cm
+umad0
+umad1
+umad2
+umad3
+umad4
+umad5
+umad6
+umad8
+umad9
+uverbs0
+uverbs1
+uverbs2
+uverbs3
+uverbs4
+uverbs5
+uverbs6
+uverbs8
+uverbs9
+=== FABRIC_CAPTURE END hpc-gaas-g03 ===
