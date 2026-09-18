@@ -225,18 +225,52 @@ light_4r 275,543.
    (DDR/PCIe/LLC/auto-NUMA candidates) to effects that matter mainly
    through the inter-node path.
 2. **The only pathological run was a pristine control** (`ctrl_2r_v1`):
-   RNG 3.6x the healthy 2r mean, LU 2.9x, solver 12x. Ruled out so far:
-   foreign co-tenants (pre/post captures + in-run sampler show none),
-   NUMA-direction placement (light_2r ran the same GPU-NUMA0 + cpuset-NUMA1
-   shape as the fastest run of the day), PCIe links (gen5 x16), GPU clocks,
-   cgroup memory limits. The healthy rerun (`ctrl_2r_v2`) got a different
-   PBS carve-out, so reproducibility of the exact v1 condition is untested.
-   Full 2 s telemetry is preserved for all layers (patched-sampler vmstat
-   incl. `numa_hint_faults`, numastat, /proc/stat, cgroup counters, GPU
-   telemetry — verified populated). Cause unresolved; candidates: transient
-   hidden host-side load, first-job-after-long-idle pathology, or a
-   reproducible allocation-specific effect (GPU 4b/5c "CPU affinity 48-49"
-   pair + 22-of-24 node-1 cpuset).
+   **cause identified (2026-09-18 verification) — app-side CPU-affinity
+   pinning to a tiny GPU-local CPU set**, not node condition.
+   - Condition comparison vs the healthy rerun `ctrl_2r_v2`: **same node
+     (g11), same pristine scheduler condition** (no foreign jobs pre/post,
+     none arrived mid-run), same node config (THP always/madvise,
+     swappiness 10, Mems_allowed 0-1, same ~13-16 background loadavg), same
+     request/script/commit/flags/GPU hardware state. **The only material
+     difference is the granted carve-out**: v1 = GPUs 4b/5c + cpuset
+     48-49,56-77; v2 = GPUs cd/dc + cpuset 0-23. Both pristine — but not
+     the same condition.
+   - Decisive difference — NCCL's topology CPU-affinity resolution of the
+     granted GPUs (`NCCL_DEBUG=INFO`): v1's 4b/5c resolve to **48-49**, and
+     the app applied it — both ranks pinned to those 2 CPUs (confirmed
+     three ways: the NCCL log's second comm-init shows the narrowed cpuset;
+     `/proc/<pid>/status Cpus_allowed_list=48-49` on all 54 sampler rank
+     samples; cpus 48/49 at **100% busy for the entire app window**). v2's
+     cd/dc resolve *empty* ("ignoring") — no pinning, ranks floated over
+     the full 24-CPU grant on all 12 samples.
+   - Consequence: 1 CPU per rank instead of ~12 → host-phase starvation
+     (RNG 143.25 vs 40.13 s = 3.6x; solver 66.99 vs 5.62 s = 11.9x; LU
+     21.19 vs 7.26 s = 2.9x) + GPU starvation with full clocks (median
+     util 0%, >50% util in 4.8% of samples vs 11.7% in v2, SM 1980 MHz —
+     the same "starved-but-full-clocks" signature as exp5's multinode
+     catastrophic mode) + a secondary auto-NUMA-balancing thrash signature
+     (`numa_hint_faults` 46.6k/s, `numa_pages_migrated` 23.5k/s vs
+     428/0.3 in v2) — direct proof the balancer machinery exp5 hypothesized
+     can run hot, here triggered by the pinning rather than co-tenants.
+   - Ruled out: co-tenancy, node condition, warmup, PCIe links, GPU clocks,
+     cgroup limits, and NUMA-direction placement (light_2r ran the same
+     GPU-NUMA0 + cpuset-NUMA1 shape at full speed — its GPUs resolve
+     empty).
+   - **Pinning per se is not harmful**: heavy_4r (GPUs resolved 24-47 /
+     78-101) and light_4r (24-49 / 56-77) also pinned, but to ≥22-CPU sets
+     per rank pair — the two fastest 4r runs. The failure mode is
+     specifically resolution to a set tiny relative to the rank count
+     (here 2 CPUs for 2 ranks).
+   - **Blast radius on exp1-5 (checked)**: the same mechanism fired in the
+     multinode runs but at most one rank per job (the local GPU-3 rank on
+     the node whose GPUs resolved non-empty): 56-65 = 10 cpus
+     (clean250k v1.1-v3 — fast, no harm), 56-77/78-101 = 22-24 cpus (mech
+     runs — no harm), and **48-49 = 2 cpus (dirty250k v1/v2, the g11 rank
+     — catastrophic runs)**. exp5's busy r2/r3 reproduced the same ~40x
+     without any tiny-set pinning, so the exp2 co-tenant conclusion stands;
+     the pinned g11 rank plausibly contributed to g11 being the RNG-MAX
+     node in those runs. Future multinode rank-skew analyses should check
+     per-rank `Cpus_allowed_list`.
 3. **Healthy single-node band and node variance**: 4r headline 128.5-157.6k
    GF/GPU (22.7% spread across three nodes g11/g03/g12); 2r headline
    165.8-209.2k across three nodes (26% spread) with RNG 29-53 s —
@@ -256,7 +290,9 @@ light_4r 275,543.
 - Control and test arms ran on different nodes (node-identity confound,
   as in exp5); heavy arm cross-queue (gpu_ded) vs controls/light (gpu_as).
 - The 2r control has two divergent attempts (v1 anomalous, v2 healthy);
-  v2 used as the 2r reference, v1 documented as an unresolved anomaly.
+  v2 remains the 2r reference. v1's anomaly is identified in finding 2
+  (tiny-set CPU pinning), so v1 is a valid data point *for the pinning
+  failure mode* rather than for the contention comparison.
 - `sn200k_light_4r_v1` was fielded only on attempt a3 (user-approved): its
   "light" condition is really **moderate** — 3 co-tenants holding 48 cpus +
   4 GPUs + 1 TB on g12, heavier than light_2r's single co-tenant. It
@@ -268,17 +304,22 @@ light_4r 275,543.
 
 ## Suggested next steps (not executed, user decision)
 
-1. Offline analysis of the `ctrl_2r_v1` anomaly (2 s telemetry vs v2 and
-   light_2r) — requires `ANALYSE_RESULTS` authorization; the evidence is
-   the strongest unexplained signal from this experiment.
-2. Reproduce the v1 allocation (repeated 2-GPU requests on a pristine node
-   until PBS grants the NUMA0-GPU + NUMA1-cpuset carve-out) to test whether
-   the pathology is reproducible — directly relevant to exp3's "affinity is
-   free" conclusion.
-3. Fold finding 1 into the parent-track mechanism question: the co-tenant
+1. Reproduce the v1 trigger: obtain a 2-GPU grant whose GPUs resolve to a
+   tiny CPU-affinity set (the g11 4b/5c pair or equivalent) and confirm the
+   pinning and degradation are deterministic — then test mitigation (the
+   wrapper's explicit CPU-affinity input, per `APPLICATION.md`, to override
+   the auto-pin). Directly relevant to exp3's "affinity is free"
+   conclusion, which now needs the caveat: affinity is free *while the app
+   does not self-pin to a tiny set*.
+2. Fold finding 1 into the parent-track mechanism question: the co-tenant
    effect requires the inter-node staged path, so the in-container
    GPUDirect fix (Track 2.2) should collapse it — a post-GDR multinode
    pristine/busy pair would confirm.
+3. Retrospective per-rank affinity audit of the multinode evidence
+   (exp1-5 `.o` files now grepped for `ncclTopoGetCpuAffinity`; the
+   per-rank `Cpus_allowed_list` was not captured by the exp2-5 samplers) —
+   quantify whether any historical run beyond dirty250k v1/v2 carried a
+   tiny-set rank.
 
 ## Provenance
 

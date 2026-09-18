@@ -468,8 +468,11 @@ variable that no placement or affinity tuning can compensate for.
   caveat). Core result: the multinode co-tenant catastrophe (1.6-40x) does
   **not** reproduce on a single node (heavy idle-holder +1.5%, light/moderate
   +22.7% *above* control — node variance, light 2r +1.1%); the interference
-  requires the inter-node dimension. One unresolved pristine-control
-  anomaly (`sn200k_ctrl_2r_v1`) with full telemetry preserved.
+  requires the inter-node dimension. The one pathological pristine-control
+  run (`sn200k_ctrl_2r_v1`) is **explained**: the granted GPU pair's NCCL
+  topology resolved to a 2-CPU affinity set and the app pinned both ranks
+  to it (1 CPU/rank → 3.6-11.9x phase slowdowns; see SINGLE_NODE_TEST.md
+  finding 2, incl. the exp1-5 blast-radius check).
   Single-node isolation of the co-tenant contention effect (2-rank and
   4-rank HPL-MxP on one pristine control node, one dirtiest, one lighter
   occupied node, reusing the exp5 instrumentation). Planned, logged, and
