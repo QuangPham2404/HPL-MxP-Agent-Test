@@ -7,11 +7,14 @@
 # Per rung (one job, submitted one at a time, any available gpu_as/gpu_ded
 # nodes — no pristine hunting per user direction 2026-09-18):
 #   0. (first job only) stage the host osu-micro-benchmarks-cuda copy into
-#      ../../osu-cuda-host/ (guarded rsync; provenance recorded). The stage
-#      lives under /home, which apptainer binds into every container instance
-#      by default — including the bridge-spawned remote orted containers,
-#      which ignore custom -B flags. Per-rank visibility is verified as
-#      evidence; fallback if it fails: export APPTAINER_BINDPATH.
+#      ../../osu-cuda-host/ (guarded rsync; provenance recorded) — the shared
+#      source of truth. THEN every job copies that tree into node-local
+#      /tmp/phase2_osu on every allocated vnode via pbsdsh (lock-guarded,
+#      stage_osu_tmp.sh): apptainer on GAAS does NOT bind /home into
+#      containers (1x2 v1 evidence) but /tmp IS default-bound
+#      (phase2_preflight_v3 evidence), and the bridge-spawned remote orted
+#      containers ignore custom -B flags — so /tmp is the one path visible to
+#      every container instance in the job.
 #   1. In-container ABI validation of the staged osu_bw (mother node): the
 #      staged binaries' host RPATH ($ORIGIN/../../lib) does not exist at the
 #      stage location, so libmpi resolves to the container's /opt/hpcx stack
@@ -61,12 +64,15 @@ OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase2-preflight"
 mkdir -p "$OUTDIR"
 DEBUG_DIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)"
 OSU_HOME="$DEBUG_DIR/osu-cuda-host"
-STAGE="$OSU_HOME/osu-micro-benchmarks-cuda"
+SHARED_STAGE="$OSU_HOME/osu-microbenchmarks-cuda"
+TMP_STAGE_ROOT="/tmp/phase2_osu"
+STAGE="$TMP_STAGE_ROOT/osu-microbenchmarks-cuda"
+STAGE_HELPER="$PBS_O_WORKDIR/stage_osu_tmp.sh"
 REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
 BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
 SNAPSHOT="$PBS_O_WORKDIR/../phase1-step1/collb2_node_snapshot.sh"
 SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
-HOST_OSU_SRC="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/tests/osu-micro-benchmarks-cuda"
+HOST_OSU_SRC="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/tests/osu-microbenchmarks-cuda"
 NCCL_TESTS_DIR="/workspace/microbenchmarks/nccl_tests"
 export STAGE
 
@@ -127,27 +133,42 @@ node_snapshot pre
 
 echo
 echo "============================================================"
-echo "SECTION 0: OSU STAGING (host copy, guarded, once)"
+echo "SECTION 0: OSU STAGING (shared copy + per-node /tmp copy)"
 echo "============================================================"
-if [ ! -x "$STAGE/osu_bw" ]; then
-  echo "staged tree absent — copying from $HOST_OSU_SRC"
+if [ ! -x "$SHARED_STAGE/osu_bw" ]; then
+  echo "shared staged tree absent — copying from $HOST_OSU_SRC"
   mkdir -p "$OSU_HOME"
   rsync -a "$HOST_OSU_SRC" "$OSU_HOME/" \
     || { echo "FATAL: rsync of host OSU-CUDA tree failed" >&2; exit 1; }
   echo "staging_done=yes"
 else
-  echo "staged tree already present — reusing"
+  echo "shared staged tree already present — reusing"
 fi
-[ -x "$STAGE/osu_bw" ] && [ -x "$STAGE/osu_latency" ] && [ -x "$STAGE/osu_allreduce" ] || {
-  echo "FATAL: staged OSU tree incomplete at $STAGE" >&2; exit 1;
+[ -x "$SHARED_STAGE/osu_bw" ] && [ -x "$SHARED_STAGE/osu_latency" ] && [ -x "$SHARED_STAGE/osu_allreduce" ] || {
+  echo "FATAL: shared OSU tree incomplete at $SHARED_STAGE" >&2; exit 1;
 }
-echo "--- staging provenance ---"
+echo "--- staging provenance (shared source of truth) ---"
 echo "source=$HOST_OSU_SRC"
-echo "file_count=$(find "$STAGE" -type f | wc -l)"
-du -sh "$STAGE"
-stat -c "osu_bw size=%s mtime=%y" "$STAGE/osu_bw"
-echo "host_sha256_osu_bw=$(sha256sum "$STAGE/osu_bw" | cut -d' ' -f1)"
-ls "$STAGE" | grep -E "^osu_(bw|latency|allreduce|bcast|hello)$" || true
+echo "file_count=$(find "$SHARED_STAGE" -type f | wc -l)"
+du -sh "$SHARED_STAGE"
+stat -c "osu_bw size=%s mtime=%y" "$SHARED_STAGE/osu_bw"
+echo "host_sha256_osu_bw=$(sha256sum "$SHARED_STAGE/osu_bw" | cut -d' ' -f1)"
+ls "$SHARED_STAGE" | grep -E "^osu_(bw|latency|allreduce|bcast|hello)$" || true
+
+# Per-node /tmp copy on every allocated vnode (lock-guarded, once per node).
+# /tmp is default-bound into every apptainer container instance on GAAS —
+# the one path both the mother's mpirun container and the bridge-spawned
+# remote orted containers can see (1x2 v1: /home staging was NOT visible).
+echo "--- per-node /tmp staging ($TMP_STAGE_ROOT) via pbsdsh ---"
+[ -f "$STAGE_HELPER" ] || { echo "FATAL: staging helper missing: $STAGE_HELPER" >&2; exit 1; }
+chmod +x "$STAGE_HELPER"
+/opt/pbs/bin/pbsdsh -- /bin/bash "$STAGE_HELPER" "$SHARED_STAGE" "$TMP_STAGE_ROOT" "$PBS_JOBID" \
+  || { echo "FATAL: pbsdsh /tmp staging launch failed" >&2; exit 1; }
+if ! ls "$STAGE/osu_bw" >/dev/null 2>&1; then
+  echo "FATAL: mother-node /tmp staging incomplete ($STAGE/osu_bw missing)" >&2
+  exit 1
+fi
+echo "mother_node_tmp_sha256_osu_bw=$(sha256sum "$STAGE/osu_bw" | cut -d' ' -f1)"
 
 echo
 echo "============================================================"
@@ -178,7 +199,7 @@ if printf "%s\n" "$ABI_RUN_BLOCK" | grep -q 'libmpi.so.40 => /opt/hpcx' \
 fi
 echo "staged_binary_visible_in_container=$STAGED_VISIBLE"
 echo "abi_clean=$ABI_CLEAN (libmpi resolves to container /opt/hpcx; no missing libs)"
-[ "$STAGED_VISIBLE" -eq 1 ] || { echo "FATAL: staged binary not visible in container (default /home bind assumption failed)" >&2; exit 1; }
+[ "$STAGED_VISIBLE" -eq 1 ] || { echo "FATAL: staged binary not visible in container (/tmp default-bind assumption failed)" >&2; exit 1; }
 [ "$ABI_CLEAN" -eq 1 ] || { echo "FATAL: staged osu_bw does not resolve cleanly against the container stack" >&2; exit 1; }
 
 echo
