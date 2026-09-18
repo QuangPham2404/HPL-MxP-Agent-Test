@@ -1,0 +1,127 @@
+#!/bin/bash
+# HPL-MxP single-node resweep: evaluate the externally sourced "cmax"
+# 1-node x 8-GPU configuration on one GAAS 8xH200 node.
+#
+# Expected working directory: this experiment directory
+# (experiments/SingleNode-resweep/) on GAAS. Submit with:
+#   qsub -v "ATTEMPT=SingleNode-resweep_v1" \
+#        -o outputs/SingleNode-resweep_v1.o -e outputs/SingleNode-resweep_v1.e \
+#        run_single_node_resweep.pbs
+# The queue defaults to gpu_as; override with `qsub -q gpu_ded` if the
+# cleanest eligible node lives there (both allowed, user decision
+# 2026-09-18). Accounting group hpc_ebslee (project override).
+#
+# Inputs: ATTEMPT (output stem / attempt label) via environment.
+# Outputs: attempt-specific PBS stdout and stderr under outputs/.
+# Assumptions: the approved container and required modules exist on GAAS; one
+# GPU per MPI process (8 processes, 8 GPUs); the GAAS-established OMP host
+# control (8 threads, socket places, TRUE bind) — the cmax pod's host OpenMP
+# environment is unknown. Measurement controls replicate the cmax settings
+# block literally (--skip-tests 0, --monitor-gpu 0), per user decision
+# 2026-09-18.
+
+#PBS -N hplmxp_1n8g_resweep
+#PBS -q gpu_as
+#PBS -P hpc_ebslee
+#PBS -l select=1:ngpus=8
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+
+# --- Experiment metadata ------------------------------------------------------
+cd "$PBS_O_WORKDIR"
+EXPERIMENT_ID="SingleNode-resweep"
+
+echo "experiment_id=${EXPERIMENT_ID}"
+echo "attempt=${ATTEMPT:-unknown}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "queue=${PBS_O_QUEUE:-unknown}"
+echo "project=hpc_ebslee"
+echo "config=cmax_1n8g_literal"
+echo "n=356352"
+echo "nb=3072"
+echo "nprow=4"
+echo "npcol=2"
+echo "nporder=row"
+echo "gpu_affinity=0:1:2:3:4:5:6:7"
+echo "preset_gemm_kernel=90"
+echo "u_panel_chunk_nbs=8"
+echo "call_dgemv_with_multiple_threads=15360"
+echo "prioritize_trsm=0"
+echo "prioritize_factorization=0"
+echo "use_separate_stream_for_gemm=1"
+echo "use_mpi_panel_broadcast=100"
+echo "mpi_use_host_threads=1"
+echo "sloppy_type=FP16"
+echo "Anq_device=0"
+echo "cuda_host_register_step=2048"
+echo "fill_device=1"
+echo "fill_device_buffer_size=3048"
+echo "skip_tests=0"
+echo "monitor_gpu=0"
+echo "tolerance=1e-12"
+echo "test_loop=1"
+echo "submitted_workdir=$PWD"
+date --iso-8601=seconds
+hostname
+
+# --- Environment (validated minimal module set) --------------------------------
+module purge
+module load apptainer/1.4.1
+module load nvhpc/26.3
+module load squashfuse/0.5.2
+module load gocryptfs/2.5.0
+
+# PBS clobbers OMP_NUM_THREADS with the allocated core count, so re-export
+# the fixed GAAS host-thread configuration after `module purge`.
+export OMP_NUM_THREADS=8
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=TRUE
+
+echo "omp_num_threads=${OMP_NUM_THREADS:-unset}"
+echo "omp_places=${OMP_PLACES:-unset}"
+echo "omp_proc_bind=${OMP_PROC_BIND:-unset}"
+
+# --- Preflight: container image and single-node allocation ---------------------
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+[ -f "$SIF" ] || { echo "FATAL: container image not found: ${SIF}" >&2; exit 1; }
+
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+[ "$NNODES" -eq 1 ] || { echo "FATAL: expected 1 node, got ${NNODES}" >&2; exit 1; }
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "container=${SIF}"
+
+# Record the allocated GPU topology before launching the container workload.
+nvidia-smi topo -m
+
+# --- Execute HPL-MxP: literal cmax 1x8 configuration ---------------------------
+apptainer exec --nv "$SIF" \
+  mpirun -np 8 \
+    --bind-to none \
+    -x OMP_NUM_THREADS \
+    -x OMP_PLACES \
+    -x OMP_PROC_BIND \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity 0:1:2:3:4:5:6:7 \
+      --nprow 4 \
+      --npcol 2 \
+      --nporder row \
+      --n 356352 \
+      --nb 3072 \
+      --tolerance 1e-12 \
+      --test-loop 1 \
+      --preset-gemm-kernel 90 \
+      --u-panel-chunk-nbs 8 \
+      --call-dgemv-with-multiple-threads 15360 \
+      --prioritize-trsm 0 \
+      --prioritize-factorization 0 \
+      --use-separate-stream-for-gemm 1 \
+      --use-mpi-panel-broadcast 100 \
+      --mpi-use-host-threads 1 \
+      --sloppy-type FP16 \
+      --Anq-device 0 \
+      --cuda-host-register-step 2048 \
+      --fill-device 1 \
+      --fill-device-buffer-size 3048 \
+      --skip-tests 0 \
+      --monitor-gpu 0
