@@ -64,15 +64,15 @@ OUTDIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)/outputs/phase2-preflight"
 mkdir -p "$OUTDIR"
 DEBUG_DIR="$(cd "$PBS_O_WORKDIR/../.." && pwd)"
 OSU_HOME="$DEBUG_DIR/osu-cuda-host"
-SHARED_STAGE="$OSU_HOME/osu-microbenchmarks-cuda"
+SHARED_STAGE="$OSU_HOME/osu-micro-benchmarks-cuda"
 TMP_STAGE_ROOT="/tmp/phase2_osu"
-STAGE="$TMP_STAGE_ROOT/osu-microbenchmarks-cuda"
+STAGE="$TMP_STAGE_ROOT/osu-micro-benchmarks-cuda"
 STAGE_HELPER="$PBS_O_WORKDIR/stage_osu_tmp.sh"
 REPO_ROOT="$(cd "$PBS_O_WORKDIR/../../../.." && pwd)"
 BRIDGE="$REPO_ROOT/multi-node-test/rsh_pbsdsh_container.sh"
 SNAPSHOT="$PBS_O_WORKDIR/../phase1-step1/collb2_node_snapshot.sh"
 SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
-HOST_OSU_SRC="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/tests/osu-microbenchmarks-cuda"
+HOST_OSU_SRC="/usr/local/nvhpc/Linux_x86_64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi/tests/osu-micro-benchmarks-cuda"
 NCCL_TESTS_DIR="/workspace/microbenchmarks/nccl_tests"
 export STAGE
 
@@ -91,9 +91,13 @@ done
 chmod +x "$BRIDGE"
 [ -f "$SNAPSHOT" ] || { echo "FATAL: snapshot helper missing: $SNAPSHOT" >&2; exit 1; }
 [ -f "$SIF" ] || { echo "FATAL: SIF not found: $SIF" >&2; exit 1; }
-[ -d "$HOST_OSU_SRC" ] && [ -x "$HOST_OSU_SRC/osu_bw" ] || {
-  echo "FATAL: host OSU-CUDA source missing: $HOST_OSU_SRC" >&2; exit 1;
-}
+# Pre-flight: staging is possible if the shared staged tree (source of truth
+# from a prior job) is already present, OR the host source is available.
+# The host source alone is not required when the shared stage exists.
+if [ ! -x "$SHARED_STAGE/osu_bw" ] && [ ! -x "$HOST_OSU_SRC/osu_bw" ]; then
+  echo "FATAL: neither the shared stage ($SHARED_STAGE) nor the host source ($HOST_OSU_SRC) is available" >&2
+  exit 1
+fi
 
 normalize_list() {
   printf '%s\n' "$1" | tr ',+' '\n\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
