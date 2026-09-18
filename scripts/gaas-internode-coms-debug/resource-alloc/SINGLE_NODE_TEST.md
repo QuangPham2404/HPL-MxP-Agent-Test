@@ -175,6 +175,23 @@ phase (exp5 interpretation gates).
   the light_2r condition (single co-tenant); caveat recorded here, in the
   presubmit log, and in the limitations. Job `67895` (11:15-11:17, g12,
   1:20 walltime, `PASSED`). This completes the 6-run matrix.
+- 2026-09-18 (pinning verification runs, user-approved; "no logging unless
+  said" during execution, recorded here after user sign-off): verify
+  whether the ctrl_2r_v1 tiny-set pinning reproduces, using the identical
+  2-rank setup (`COND=pinverify`, same runner/config/instrumentation,
+  attempts `snver200k_2r_*`). A live resolution map built first from the
+  exp1-6 `.o` corpus showed only g11 and g08 had ever produced the tiny
+  (2-CPU) resolution — which proved to be a grant-lottery artifact (see
+  finding 2): g11 was filled by foreign jobs during the first attempt
+  (submission `68008` never started, qdelt with recorded reason, snapshot
+  `_presubmit_a1.log`), and the pristine g14 contrast shot then drew the
+  same socket-0 pair and reproduced the failure directly.
+  - `snver200k_2r_g14_v1` — job `68009` (g14 pristine, 5:59 walltime,
+    `PASSED`): granted 4b/5c → NCCL resolved 48-49 and applied it →
+    **REPRODUCED** (see the finding-2 verification block).
+  - `snver200k_2r_g15_v1` — job `68017` (g15 pristine, `PASSED`): granted
+    9a/bb → resolved empty → ranks on the full 24-CPU grant, healthy
+    205,778 GF/GPU.
 
 ## Results
 
@@ -286,6 +303,30 @@ light_4r 275,543.
      the pinned g11 rank plausibly contributed to g11 being the RNG-MAX
      node in those runs. Future multinode rank-skew analyses should check
      per-rank `Cpus_allowed_list`.
+   - **Verification runs (2026-09-18, `snver200k_2r_*`): REPRODUCED.** The
+     identical 2-rank setup was re-shot on pristine nodes; pristine g14
+     drew the same socket-0 pair and reproduced the failure; pristine g15
+     drew a socket-1 pair and stayed healthy:
+
+     | run | node / granted pair | NCCL resolution | rank CPUs | RNG / LU / solver s | GFLOPS/GPU |
+     |---|---|---|---|---|---:|
+     | `snver200k_2r_g14_v1` (job 68009) | g14 / **4b/5c** | **48-49, applied** | **2** | 75.3 / 20.5 / 42.6 | **42,251** |
+     | `snver200k_2r_g15_v1` (job 68017) | g15 / 9a/bb | empty, ignoring | 24 (full) | 29.5 / 7.3 / 5.7 | 205,778 |
+
+     The g14 run shows the full three-way confirmation again (narrowed
+     second-init NCCL cpuset; `Cpus_allowed_list=48-49` on all 30 sampler
+     rank samples; cpus 48/49 at 100% busy for all 75 in-app samples).
+     Three refinements from the verification: (a) **the trigger follows
+     the granted GPU pair (4b/5c), not the node** — g11 and g14 both
+     collapse, any node can hit it; (b) **v1's auto-NUMA thrash was a
+     co-symptom, not a cause** — the g14 reproduction collapses with
+     near-zero migration (25 pages/s vs v1's 23.5k), so CPU starvation
+     alone is sufficient; (c) the pre-run expectation that g14 could not
+     trigger (its entire historical corpus resolves empty) was a
+     grant-lottery artifact — historical g14 grants were always socket-1
+     sets. Operational hazard: any 2-GPU HPL-MxP job on GAAS that lands
+     the 4b/5c pair silently loses ~4-5x headline performance; the
+     wrapper's explicit CPU-affinity input is the untested mitigation.
 3. **Healthy single-node band and node variance**: 4r headline 128.5-157.6k
    GF/GPU (22.7% spread across three nodes g11/g03/g12); 2r headline
    165.8-209.2k across three nodes (26% spread) with RNG 29-53 s —
@@ -319,13 +360,14 @@ light_4r 275,543.
 
 ## Suggested next steps (not executed, user decision)
 
-1. Reproduce the v1 trigger: obtain a 2-GPU grant whose GPUs resolve to a
-   tiny CPU-affinity set (the g11 4b/5c pair or equivalent) and confirm the
-   pinning and degradation are deterministic — then test mitigation (the
-   wrapper's explicit CPU-affinity input, per `APPLICATION.md`, to override
-   the auto-pin). Directly relevant to exp3's "affinity is free"
-   conclusion, which now needs the caveat: affinity is free *while the app
-   does not self-pin to a tiny set*.
+1. Test the pinning mitigation (reproduction is confirmed — see the
+   finding-2 verification block): rerun the 2-rank setup with the
+   wrapper's explicit CPU-affinity input (per `APPLICATION.md`) on a
+   4b/5c grant and confirm the collapse disappears; also map whether
+   other grant shapes (1-GPU grants, or socket-0 4-GPU sets like
+   1b/3c/4b/5c) can resolve to sets small relative to their rank count.
+   exp3's "affinity is free" conclusion carries the caveat: affinity is
+   free *while the app does not self-pin to a tiny set*.
 2. Fold finding 1 into the parent-track mechanism question: the co-tenant
    effect requires the inter-node staged path, so the in-container
    GPUDirect fix (Track 2.2) should collapse it — a post-GDR multinode
@@ -344,6 +386,10 @@ light_4r 275,543.
   `_presubmit_a*.log`). Jobs: 67828, 67835, 67837, 67841, 67842, 67873,
   67895 (ran); 67824, 67880, 67882 (never started, qdelt with recorded
   reason).
+- Verification evidence (pinning reproduction, 2026-09-18):
+  `outputs/snver200k_2r_*` (13 files: g14 reproduction, g15 healthy
+  contrast, g11 stuck-submission snapshot). Jobs: 68009, 68017 (ran);
+  68008 (never started, qdelt with recorded reason).
 - Runner: `debug-scripts/run_1n_contention.pbs` (executed at `1af2085`);
   instrumentation reused from experiment 5 (`capture_node_alloc_mech.sh`,
   `sample_node_load_mech.sh` with the bedd599 vmstat fix).
