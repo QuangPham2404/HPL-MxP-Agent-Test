@@ -358,7 +358,12 @@ variable that no placement or affinity tuning can compensate for.
 
 ### Experiment 5 — Host-contention mechanism investigation (N=250k, 3+3 jobs)
 
-- **Status:** planned, not executed (design recorded 2026-09-14).
+- **Status:** complete (2026-09-18). Preflight + 6 runs, all `PASSED`;
+  results under "Experiment 5 results" in the Analysis section. One
+  pre-authorized qdel (job 67782, Qlist-blocked pinned host, never started);
+  one Track-1 telemetry defect (vmstat grep, patched); arm compositions
+  adapted to live node availability (no fully-pristine trio fieldable —
+  recorded per attempt).
 - **Purpose:** identify which host-side resource signals distinguish the
   established slow co-tenant condition from the reproducible pristine
   condition. This is a mechanism-screening experiment: it is intended to
@@ -456,6 +461,140 @@ variable that no placement or affinity tuning can compensate for.
   accounting group `hpc_ebslee` (current project convention).
 
 ## Analysis
+
+### Experiment 5 results (2026-09-18) — mechanism screening, first pass
+
+**Execution record.** Preflight (job 67780, g07): 2 s sampler cadence holds
+(tick wall 2-3 s); `perf`/`pcm-memory`/PSI **unavailable** on GAAS compute
+nodes (perf binary absent, `perf_event_paranoid=2`, no pcm) — the direct
+hardware-counter layer is empty by design ("recorded unavailable, never
+fatal"), so the mechanism evidence is the 2 s cgroup/process/NUMA/IB/GPU
+telemetry. One stuck submission was qdelt under the pre-authorized policy:
+job 67782 (busy r1, hosts g08+g15+g16) could never start because **g16 and
+g17 (and later g05) have been reassigned by the admins to `Qlist=gpu_aisg`**
+— the experiment-2-era queue map (g06-g17 = gpu_as) is stale; current map
+recorded in `outputs/mech250k_busy_r1_presubmit*.log`. No run evidence was
+lost (job never started); the first presubmit record is preserved as
+`_presubmit_a1.log`.
+
+**Arm compositions actually fielded** (no fully-pristine trio exists in
+either queue: gpu_as has only g11+g14, gpu_ded only g22, and a job's chunks
+cannot span Qlist pools — user-approved adaptations recorded per attempt):
+
+- "pristine" arm = g11+g14 (strict pristine) + g12 (light co-tenant
+  67573: 24 cpus + 2 GPUs + 500 GB) — identical across r1/r2/r3.
+- busy r1 (gpu_ded) = g03 (heavy **idle** holder 67044: 48 cpus + 4 GPUs +
+  1 TB) + g20 (light: 12 cpus + 1 GPU) + g22 (pristine) — mixed band.
+- busy r2/r3 (gpu_as) = g08 (heavy **idle** holder 67775: 48 cpus + 4 GPUs +
+  1 TB) + g15 (heavy **active** co-tenant 67410: 48 cpus + 4 GPUs + 1 TB,
+  ~43 busy CPUs) + g12 (light) — catastrophic band.
+
+**Results** (N=250000, NB=1024, 3x4 row, 12 ranks; all `PASSED`, exit 0;
+reference = original contaminated baseline 4.0092e+04 total):
+
+| attempt | job | queue | nodes (condition) | walltime | GFLOPS total | GFLOPS/GPU | vs baseline | LU s | RNG MAX s (node) | matgen s | solver s |
+|---|---|---|---|---|---:|---:|---:|---:|---|---:|---:|
+| mech250k_pristine_r1 | 67781 | gpu_as | g11+g14+g12(L) | 1:30 | 5.3784e+05 | 44,820 | +1242% | 15.34 | 18.63 (g11) | 24.36 | 4.03 |
+| mech250k_busy_r1 | 67783 | gpu_ded | g03(H-idle)+g20(L)+g22(P) | 1:27 | 4.9849e+05 | 41,541 | +1144% | 15.31 | 13.89 (g03) | 19.14 | 5.59 |
+| mech250k_busy_r2 | 67784 | gpu_as | g08(H-idle)+g15(H-active)+g12(L) | 21:11 | 3.4312e+04 | 2,859 | −14% | 260.70 | 40.69 (g08) | 53.02 | 43.01 |
+| mech250k_pristine_r2 | 67789 | gpu_as | g11+g14+g12(L) | 1:22 | 5.5062e+05 | 45,885 | +1273% | 15.04 | 14.85 (g11) | 20.43 | 3.88 |
+| mech250k_pristine_r3 | 67790 | gpu_as | g11+g14+g12(L) | 1:21 | 5.4702e+05 | 45,585 | +1264% | 15.10 | 15.10 (g11) | 20.43 | 3.88 |
+| mech250k_busy_r3 | 67792 | gpu_as | g08(H-idle)+g15(H-active)+g12(L) | 14:33 | 3.3691e+04 | 2,808 | −16% | 272.04 | 42.50 (g08) | 58.78 | 37.49 |
+
+Reproducibility is tight: "pristine" arm 44.8-45.9k GFLOPS/GPU (2.4%
+spread), catastrophic arm 2,808-2,859 (1.8%), matching experiment 2's
+dirty v1/v2 (2,772-2,891, LU 263-270) and dirty v3 mixed band (40,356).
+
+**Findings:**
+
+1. **Dose-response refined with a per-node resolution inside each run.**
+   Fully-pristine trio (experiment 3 reference): ~71k GFLOPS/GPU, LU
+   ~6.8 s. Two pristine + one light: 44.8-45.9k, LU 15.0-15.3 (LU 2.2x).
+   One heavy-idle holder + light + pristine: 41.5k, LU 15.3. One
+   heavy-idle + one heavy-active + light: 2.8-2.9k, LU 260-272 (**~40x**).
+   Even a single light co-tenant on one node of three costs the whole job
+   ~35% of the fully-pristine rate — collectives couple all ranks.
+2. **GPU starvation confirmed at 2 s resolution in the catastrophic runs**:
+   median GPU utilization 0.5-2.8%, p90 7.5-27.2%, >50%-utilization in only
+   3.6-7.8% of ticks, power 120-134 W — while SM clocks stayed **pegged at
+   1980 MHz** (no clock throttling). The GPUs simply had no work during the
+   260-272 s LU that takes ~6.8 s when healthy.
+3. **The idle-holder paradox replicated twice**: g08's co-tenant shows ~0
+   CPU and ~0 fabric activity (node busy CPUs ≈ our app only), yet g08's
+   ranks were the RNG-MAX (40.7/42.5 s vs 7.4-7.5 on g12) and matgen-MAX
+   node in both catastrophic runs — exactly experiment 2's finding 6. An
+   active CPU-burning heavy co-tenant (g15, ~43 busy CPUs) produces the
+   same LU collapse as an idle holder — CPU-quota starvation is ruled out.
+4. **Ruled out (within the measurable layers)**: cgroup CPU throttling and
+   cgroup OOM/limit events (zero, though sampler-scope — see limitations);
+   host memory capacity (MemAvailable >= ~1.65 TB at all times on every
+   node); fabric volume (per-node IB bytes identical, 20.27-20.37 GiB, in
+   every run and every node — same bytes, 17x slower); NUMA placement
+   (remote-memory fraction is node-stable and uncorrelated with the slow
+   mode — pristine g11 runs 44-48% remote and is fast; slow g15 runs
+   0.3-2.1% remote); GPU clock throttling; PCIe link degradation (gen 5 /
+   x16 stable in all captures).
+5. **Our app's host footprint**: ~21-22 busy CPUs per node in fast mode
+   (matches experiment 2), per-rank RSS ~41.5 GB (4 ranks = 166 GB/node =
+   the expected FP64 host-matrix share), rank major-fault totals 2.1-3.5k
+   (first-touch warmup). The job cpuset (48 CPUs) was never saturated.
+6. **New observation — multi-minute pre-app spawn delay on heavy nodes**:
+   the busy r2/r3 walltimes (21:11, 14:33) decompose into ~11/~7 minutes
+   between sampler start and the first app output (pbsdsh/TM spawn +
+   container start crawling under load; pristine/mixed runs: ~25 s). Node
+   load degrades not only the benchmark but the PBS TM launch path itself.
+7. **Interpretation-gate verdict: mechanism retained as UNRESOLVED.** The
+   degradation repeats (2 catastrophic + 3 mixed reps) with **no
+   distinguishing counter signature** in the available layers. The residue
+   — DDR memory-bandwidth contention, PCIe/LLC contention, sub-2 s bursts,
+   or kernel auto-NUMA-balancing overhead over co-tenant resident memory —
+   cannot be separated without the missing vmstat/counter layer (below) or
+   a controlled synthetic co-tenant.
+
+**Telemetry defect (Track 1, patched, no silent re-runs).** The exp-5
+sampler's vmstat grep pattern was missing its closing parenthesis
+(`"^(...|numa_"`), so grep failed with `Unmatched ( or \(` and the
+`2>/dev/null` hid the error — the node-global `/proc/vmstat` layer (fault,
+swap, pgmigrate, and crucially `numa_hint_faults`/`numa_pages_migrated`,
+the auto-NUMA-balancing signal for the idle-holder hypothesis) is empty in
+all six runs. Diagnosed on 2026-09-18 via three read-only probe jobs
+(67814/67815/67818: direct grep OK, in-script grep fails, patched copy
+prints the error). Script fixed in
+`debug-scripts/sample_node_load_mech.sh` (commit bedd599); all other
+telemetry layers verified intact. A single patched busy+pristine
+validation pair to recover the vmstat layer is proposed but **not
+executed** — awaiting user approval.
+
+**Limitations.** (a) No fully-pristine trio was fieldable — the "pristine"
+arm is a "2 pristine + 1 light" condition, so the fast-mode reference at
+2 s resolution comes from the pristine NODES (g11/g14) inside those runs
+plus experiment 3's historical trio; (b) the cgroup counters resolved by
+the sampler measure the sampler's own cgroup scope, not the app session
+cgroup (usage ≈ 0.3 s/tick = the sampler itself) — app-scope cgroup
+telemetry was not captured; (c) the vmstat layer is missing (defect
+above); (d) r1's two arms ran in different queues on different node sets
+(gpu_ded vs gpu_as) — recorded, and the r2/r3 pairs do not have this
+caveat; (e) perf/pcm/PSI unavailable on GAAS.
+
+**Conclusion.** Experiment 5 met its screening goal: it eliminated CPU
+quota, cgroup throttling, memory capacity, fabric volume, GPU clocks, and
+NUMA placement as causes; confirmed starvation of the staged (GPUDirect-
+off) communication path at 2 s resolution with full clocks; refined the
+dose-response (one light co-tenant among three nodes ≈ 1.6x, two heavy
+≈ 40x LU); and replicated the idle-holder paradox. The specific contended
+resource remains unidentified — the candidates that survive are DDR
+bandwidth, PCIe/LLC, sub-2 s bursts, and kernel auto-NUMA-balancing over
+idle co-tenants' resident memory.
+
+**Suggested next steps (not executed, user decision):** (1) one patched
+sampler busy+pristine pair to capture the `numa_hint_faults` layer and
+test the auto-NUMA-balancing hypothesis directly; (2) a bounded synthetic
+co-tenant dose-response (vary DDR/PCIe load on otherwise-pristine nodes)
+as the definitive mechanism experiment; (3) fold the Qlist-shift finding
+(g05/g16/g17 now gpu_aisg) into any future node-selection guidance; (4)
+re-test after the parent-track in-container GPUDirect fix lands — the
+staged path is the sensitive element, so GDR-on should shrink every
+co-tenant effect measured here.
 
 ### Experiment 4 results (2026-09-09) — final
 
