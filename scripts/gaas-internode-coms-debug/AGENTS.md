@@ -9,6 +9,11 @@ About the structure:
   built binaries live in `debug-scripts/` with evidence in `outputs/`,
   planned and recorded like every other step. Do not place nccl-tests
   build artifacts in any outer directory (`builds/`, repo root).
+- `osu-cuda-host/` is the self-contained home for the staged copy of the host
+  nvhpc `osu-micro-benchmarks-cuda` suite (tree gitignored; provenance in its
+  README and the staging job's evidence) — the container ships no CUDA-capable
+  OSU (Phase 2 Stage 1 finding). Same containment rules as
+  `build-nccl-tests/`.
 - `outputs/` is where to store all of the output files from jobs.
 - `DEBUG_PROGRESS.md` is the file that records the results, analysis from test/phases AND next steps based on analysis. Throughout the session, the user will instruct the agent to update this file accordingly. When user ends the session and ask agent to write progress.md as per workflow, check if this file is already updated. If yes, proceed with the normal progress.md file. If not, update accordingly based on progress in that session.
 - From Phase 2 (in-container GDR verification) onward, the same recording
