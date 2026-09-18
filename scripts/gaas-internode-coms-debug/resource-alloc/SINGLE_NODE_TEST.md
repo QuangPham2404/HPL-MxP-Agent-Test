@@ -283,7 +283,7 @@ light_4r 275,543.
 ## Provenance
 
 - Evidence: `outputs/sn200k_*` PBS `.o`/`.e` plus per-node `_pre_`/`_load_`/
-  `_post_` logs and `_presubmit*` snapshots (48 files, attempt-specific
+  `_post_` logs and `_presubmit*` snapshots (46 files, attempt-specific
   names, never overwritten; failed-submission snapshots kept as
   `_presubmit_a*.log`). Jobs: 67828, 67835, 67837, 67841, 67842, 67873,
   67895 (ran); 67824, 67880, 67882 (never started, qdelt with recorded
