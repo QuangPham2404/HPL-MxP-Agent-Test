@@ -168,10 +168,17 @@ phase (exp5 interpretation gates).
     "light-occupied" test).
 - All qdels were of this experiment's own never-started submissions, each
   with recorded reason (exp2/5 precedent policy).
+- `sn200k_light_4r_v1` attempt a3 (user-approved option 1, 11:15): g12
+  re-accepted with a **moderate** composition — 3 co-tenants (67573: the
+  original light 24 cpus + 2 GPUs + 500 GB, ~13 h of its 24 h walltime
+  used; 67885/67886 fresh) totaling 48 cpus + 4 GPUs + 1 TB — heavier than
+  the light_2r condition (single co-tenant); caveat recorded here, in the
+  presubmit log, and in the limitations. Job `67895` (11:15-11:17, g12,
+  1:20 walltime, `PASSED`). This completes the 6-run matrix.
 
 ## Results
 
-All six completed runs `PASSED` (finite residual within tolerance), exit 0,
+All seven completed runs `PASSED` (finite residual within tolerance), exit 0,
 `N=200000, NB=1024`, single node, one rank per GPU, `--bind-to none`.
 Reference figures: original contaminated 3x4 baseline per-GPU = 3,340.96
 GFLOPS/GPU (job `57232.gaas`); multinode pristine bands for context
@@ -185,9 +192,11 @@ GFLOPS/GPU (job `57232.gaas`); multinode pristine bands for context
 | sn200k_heavy_2r_v1 | 67837 | g03 heavy idle-holder | 9a/bb (NUMA1) | 24-47 | 1:55 | 3.3159e+05 | 165,794 | 49.6x | 53.20 | 7.38 | 8.71 |
 | sn200k_heavy_4r_v1 | 67841 | g03 heavy idle-holder | 1b/3c/9a/bb (mixed) | 24-47,78-101 | 1:23 | 5.2176e+05 | 130,440 | 39.0x | 19.82 | 4.85 | 5.37 |
 | sn200k_light_2r_v1 | 67873 | g12 light | 1b/3c (NUMA0) | 78-101 | 2:27 | 4.1849e+05 | 209,246 | 62.6x | 28.98 | 7.15 | 5.59 |
+| sn200k_light_4r_v1 | 67895 | g12 moderate (3 co-tenants) | 4b/5c/9a/bb (mixed) | 24-49,56-77 | 1:20 | 6.3053e+05 | 157,631 | 47.2x | 14.44 | 4.84 | 3.62 |
 
 LU-only rates (GFLOPS/GPU): ctrl_2r_v1 126,002; ctrl_4r 273,421;
-ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
+ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994;
+light_4r 275,543.
 
 **Arm comparisons (primary denominator = matching control):**
 
@@ -196,6 +205,7 @@ ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
 | heavy 4r vs ctrl 4r | 130,440 vs 128,478 = **+1.5% (noise)** | RNG −25%, LU −1%, solver −2% (at or better than control) |
 | heavy 2r vs ctrl 2r_v2 | 165,794 vs 206,923 = −19.9% | RNG +33%, LU +2%, solver +55% — but vs the rank-scaling reference (2× the 4-rank control: RNG 52.9 s, LU 9.8 s, solver 11.0 s) heavy_2r is at or better on every phase (53.2/7.38/8.71); healthy 2r RNG varies 29-53 s across nodes (g12/g11/g03), so no reproducible degradation is demonstrable |
 | light 2r vs ctrl 2r_v2 | 209,246 vs 206,923 = **+1.1% (noise)** | all phases within noise (RNG 29.0 vs 40.1 — node variance, see below) |
+| light/moderate 4r vs ctrl 4r | 157,631 vs 128,478 = **+22.7% (faster than control)** | RNG −45%, LU −1%, solver −34% — every phase at or better than the pristine control; the +23% headline is cross-node variance (g12 vs g11), the same band as the healthy 2r spread; zero contention signature |
 
 ## Findings
 
@@ -203,15 +213,17 @@ ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
    node.** A heavy idle-holder co-tenant (48 cpus + 4 GPUs + 1 TB resident —
    the exact exp5 idle-holder-paradox condition) cost the 4-rank run +1.5%
    (noise) and produced at most a modest, non-reproducible 2-rank effect,
-   versus 1.6x-40x on the 3x4 topology. A light co-tenant cost +1.1%
-   (noise). **The co-tenant interference mechanism requires the inter-node
-   dimension** — it lives in the staged inter-node communication path
-   (and/or its interaction with node-local resources), not in local
-   resource sharing per se. This is the single most decisive single-node
-   result: it rules out "any local resource contention with a co-tenant is
-   catastrophic" and narrows the exp5 unresolved mechanism (DDR/PCIe/LLC/
-   auto-NUMA candidates) to effects that matter mainly through the
-   inter-node path.
+   versus 1.6x-40x on the 3x4 topology. The light/moderate 4-rank run
+   (g12, 3 co-tenants holding 48 cpus + 4 GPUs + 1 TB) was +22.7% *faster*
+   than its pristine control (cross-node variance), and the light 2-rank
+   run cost +1.1% (noise). **The co-tenant interference mechanism requires
+   the inter-node dimension** — it lives in the staged inter-node
+   communication path (and/or its interaction with node-local resources),
+   not in local resource sharing per se. This is the single most decisive
+   single-node result: it rules out "any local resource contention with a
+   co-tenant is catastrophic" and narrows the exp5 unresolved mechanism
+   (DDR/PCIe/LLC/auto-NUMA candidates) to effects that matter mainly
+   through the inter-node path.
 2. **The only pathological run was a pristine control** (`ctrl_2r_v1`):
    RNG 3.6x the healthy 2r mean, LU 2.9x, solver 12x. Ruled out so far:
    foreign co-tenants (pre/post captures + in-run sampler show none),
@@ -225,14 +237,16 @@ ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
    hidden host-side load, first-job-after-long-idle pathology, or a
    reproducible allocation-specific effect (GPU 4b/5c "CPU affinity 48-49"
    pair + 22-of-24 node-1 cpuset).
-3. **Healthy single-node band and node variance**: 4r headline 128.5-130.4k
-   GF/GPU (1.5% spread, two nodes); 2r headline 165.8-209.2k across three
-   nodes (26% spread) with RNG 29-53 s — single-node phase times carry
-   substantial node-to-node variance at n=1 per cell, wider than the
-   exp3 multinode trio noise band (0.85%).
-4. **Placement mixing again costs nothing** (confirms exp3): heavy_4r ran
-   a fully mixed allocation (GPUs from both sockets, cpuset spanning both
-   NUMA nodes) at full speed.
+3. **Healthy single-node band and node variance**: 4r headline 128.5-157.6k
+   GF/GPU (22.7% spread across three nodes g11/g03/g12); 2r headline
+   165.8-209.2k across three nodes (26% spread) with RNG 29-53 s —
+   single-node phase times carry substantial node-to-node variance at n=1
+   per cell, wider than the exp3 multinode trio noise band (0.85%). No
+   occupied-node run fell below this healthy band.
+4. **Placement mixing again costs nothing** (confirms exp3): heavy_4r and
+   light_4r both ran fully mixed allocations (GPUs from both sockets,
+   cpusets spanning both NUMA nodes) at full speed — light_4r was the
+   fastest 4r run of the day.
 
 ## Limitations
 
@@ -243,9 +257,12 @@ ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
   as in exp5); heavy arm cross-queue (gpu_ded) vs controls/light (gpu_as).
 - The 2r control has two divergent attempts (v1 anomalous, v2 healthy);
   v2 used as the 2r reference, v1 documented as an unresolved anomaly.
-- `sn200k_light_4r_v1` could not be fielded (cluster churn: g12 filled by
-  a new co-tenant, g10/g09 went offline, g11 down); the light arm is 2r
-  only. The 4r arm comparison (control vs heavy) is complete.
+- `sn200k_light_4r_v1` was fielded only on attempt a3 (user-approved): its
+  "light" condition is really **moderate** — 3 co-tenants holding 48 cpus +
+  4 GPUs + 1 TB on g12, heavier than light_2r's single co-tenant. It
+  therefore completes the 4r dose row but is not dose-matched to light_2r.
+  (Attempts a1/a2 failed before start: g12 filled by co-tenant 67869;
+  g10 went offline. Both qdelt with recorded reason.)
 - RNG scaling 2r-vs-4r is sublinear and node-dependent (29-53 s for 2r vs
   19.8-26.5 s for 4r) — not investigated here.
 
@@ -258,10 +275,7 @@ ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
    until PBS grants the NUMA0-GPU + NUMA1-cpuset carve-out) to test whether
    the pathology is reproducible — directly relevant to exp3's "affinity is
    free" conclusion.
-3. Field `sn200k_light_4r_v1` when cluster churn settles (needs any
-   lightly-occupied gpu_as/gpu_ded/gpu_free node with ≥4 free GPUs, ≥48
-   free CPUs, ≥500 GB).
-4. Fold finding 1 into the parent-track mechanism question: the co-tenant
+3. Fold finding 1 into the parent-track mechanism question: the co-tenant
    effect requires the inter-node staged path, so the in-container
    GPUDirect fix (Track 2.2) should collapse it — a post-GDR multinode
    pristine/busy pair would confirm.
@@ -269,10 +283,11 @@ ctrl_2r_v2 367,067; heavy_2r 361,519; heavy_4r 274,936; light_2r 372,994.
 ## Provenance
 
 - Evidence: `outputs/sn200k_*` PBS `.o`/`.e` plus per-node `_pre_`/`_load_`/
-  `_post_` logs and `_presubmit*` snapshots (40 files, attempt-specific
+  `_post_` logs and `_presubmit*` snapshots (48 files, attempt-specific
   names, never overwritten; failed-submission snapshots kept as
-  `_presubmit_a*.log`). Jobs: 67828, 67835, 67837, 67841, 67842, 67873
-  (ran); 67824, 67880, 67882 (never started, qdelt with recorded reason).
+  `_presubmit_a*.log`). Jobs: 67828, 67835, 67837, 67841, 67842, 67873,
+  67895 (ran); 67824, 67880, 67882 (never started, qdelt with recorded
+  reason).
 - Runner: `debug-scripts/run_1n_contention.pbs` (executed at `1af2085`);
   instrumentation reused from experiment 5 (`capture_node_alloc_mech.sh`,
   `sample_node_load_mech.sh` with the bedd599 vmstat fix).

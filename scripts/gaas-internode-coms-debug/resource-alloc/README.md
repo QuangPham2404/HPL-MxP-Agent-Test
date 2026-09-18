@@ -462,12 +462,14 @@ variable that no placement or affinity tuning can compensate for.
 
 ### Experiment 6 — Single-node node-contention test (N=200k, 6 jobs)
 
-- **Status:** complete (2026-09-18), 5/6 matrix + one validation rerun; the
-  `light_4r` cell could not be fielded (cluster churn — recorded). Core
-  result: the multinode co-tenant catastrophe (1.6-40x) does **not**
-  reproduce on a single node (heavy idle-holder +1.5%, light +1.1%); the
-  interference requires the inter-node dimension. One unresolved pristine
-  control anomaly (`sn200k_ctrl_2r_v1`) with full telemetry preserved.
+- **Status:** complete (2026-09-18), full 6-run matrix + one validation
+  rerun, all `PASSED` (the light_4r cell needed a third submission —
+  fielded on g12 with a moderate 3-co-tenant composition, recorded as a
+  caveat). Core result: the multinode co-tenant catastrophe (1.6-40x) does
+  **not** reproduce on a single node (heavy idle-holder +1.5%, light/moderate
+  +22.7% *above* control — node variance, light 2r +1.1%); the interference
+  requires the inter-node dimension. One unresolved pristine-control
+  anomaly (`sn200k_ctrl_2r_v1`) with full telemetry preserved.
   Single-node isolation of the co-tenant contention effect (2-rank and
   4-rank HPL-MxP on one pristine control node, one dirtiest, one lighter
   occupied node, reusing the exp5 instrumentation). Planned, logged, and
