@@ -1,0 +1,158 @@
+#!/bin/bash
+# HPL-MxP single-node node-contention run — resource-alloc experiment 6
+# (see resource-alloc/SINGLE_NODE_TEST.md).
+#
+# One run of the single-node contention matrix (2 or 4 ranks on one
+# host-pinned node). Fixed configuration across all arms: N=200000, NB=1024,
+# row order, --bind-to none, no affinity flags, --skip-tests 1, GPU
+# monitoring, UCX_LOG_LEVEL=info, NCCL_DEBUG=INFO. The launch pattern is the
+# proven single-node one (experiments/N-* sweeps: container mpirun directly,
+# no multinode rsh bridge), while the instrumentation is reused unchanged
+# from experiment 5:
+#   - capture_node_alloc_mech.sh  pre/post capture (v2 superset + cgroup
+#     limits, THP/VM state, GPU PCIe link state, co-tenant pbsnodes view);
+#   - sample_node_load_mech.sh    ~2 s in-run sampler (vmstat incl. the
+#     numa_hint_faults layer, cgroup/NUMA/IB/GPU telemetry, per-rank
+#     affinity/RSS/faults every 5th tick).
+#
+# Expected working directory: the resource-alloc directory on GAAS. Submit
+# each attempt (from that directory) with — host from a live pbsnodes -aSj
+# check; ncpus/mem must be present in the chunk or the server-default
+# cgroup memory limit kills the run (clean250k_v1 failure record); the
+# queue may be overridden at submission (e.g. -q gpu_ded) when the chosen
+# dirty node lives there:
+#   qsub -l "select=1:host=gXX:ngpus=2:ncpus=24:mem=500GB" \
+#        -v "ATTEMPT=sn200k_ctrl_2r_v1,COND=control,REQ_HOST=gXX,RANKS=2,NPROW=2,NPCOL=1" \
+#        -o outputs/sn200k_ctrl_2r_v1.o -e outputs/sn200k_ctrl_2r_v1.e \
+#        debug-scripts/run_1n_contention.pbs
+# 4-rank runs use ngpus=4:ncpus=48:mem=500GB and RANKS=4,NPROW=2,NPCOL=2.
+
+#PBS -N hpl_mxp_sn
+#PBS -q gpu_as
+#PBS -P hpc_ebslee
+#PBS -l place=scatter
+#PBS -l walltime=01:00:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+
+: "${ATTEMPT:?submit with -v ATTEMPT=<attempt label, e.g. sn200k_ctrl_2r_v1>}"
+: "${REQ_HOST:?submit with -v REQ_HOST=<host>}"
+: "${RANKS:?submit with -v RANKS=<2 or 4>}"
+NPROW="${NPROW:-2}"
+NPCOL="${NPCOL:-1}"
+N="${N:-200000}"
+NB="${NB:-1024}"
+COND="${COND:-unknown}"
+NPORDER=row
+
+UCX_LOG_LEVEL=info
+NCCL_DEBUG=INFO
+export UCX_LOG_LEVEL NCCL_DEBUG
+
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+CAPTURE="$PBS_O_WORKDIR/debug-scripts/capture_node_alloc_mech.sh"
+SAMPLER="$PBS_O_WORKDIR/debug-scripts/sample_node_load_mech.sh"
+
+PREFIX="$PWD/outputs/${ATTEMPT}"
+LOCK_PRE="$PWD/outputs/.locks_precap_${ATTEMPT}"
+LOCK_POST="$PWD/outputs/.locks_postcap_${ATTEMPT}"
+LOCK_SAMP="$PWD/outputs/.locks_sampler_${ATTEMPT}"
+STOP_FILE="$PWD/outputs/.sampler_stop_${ATTEMPT}"
+SAMPLER_INTERVAL=2
+SAMPLER_MAX_TICKS=1700                  # 1700 x 2 s = ~56.7 min < 1 h walltime
+
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+
+# Single-node guard: exactly one distinct host, matching the request.
+GRANTED=$(sort -u "$PBS_NODEFILE" | paste -sd,)
+if [ "$GRANTED" != "$REQ_HOST" ]; then
+  echo "ERROR: granted nodes (${GRANTED}) != requested (${REQ_HOST})" >&2
+  exit 1
+fi
+if [ "$((NPROW * NPCOL))" -ne "$RANKS" ]; then
+  echo "ERROR: grid ${NPROW}x${NPCOL}=$((NPROW * NPCOL)) != ${RANKS} ranks" >&2
+  exit 1
+fi
+
+GPU_AFFINITY=$(seq -s: 0 $((RANKS - 1)))
+
+# Fresh per-attempt lock bases and sentinel for this attempt only.
+rm -rf "$LOCK_PRE" "$LOCK_POST" "$LOCK_SAMP"
+rm -f "$STOP_FILE"
+mkdir -p "$LOCK_PRE" "$LOCK_POST" "$LOCK_SAMP"
+
+echo "experiment_id=resource-alloc-exp6-single-node"
+echo "attempt=${ATTEMPT}"
+echo "condition=${COND}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+date --iso-8601=seconds
+echo "layout=1 node x ${RANKS} GPUs = ${RANKS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} order=${NPORDER}"
+echo "n=${N} nb=${NB}"
+echo "node=${GRANTED}"
+echo "req_host=${REQ_HOST}"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "ucx_log_level=${UCX_LOG_LEVEL}"
+echo "nccl_debug=${NCCL_DEBUG}"
+echo "sampler_interval=${SAMPLER_INTERVAL}s max_ticks=${SAMPLER_MAX_TICKS}"
+echo "=== PBS_NODEFILE (raw) ==="
+cat "$PBS_NODEFILE"
+
+# Pre-run capture: best-effort instrumentation, must not block.
+echo "=== pre-run capture (pbsdsh, single node) ==="
+/opt/pbs/bin/pbsdsh -- /bin/bash "$CAPTURE" "$PREFIX" "$LOCK_PRE" pre \
+  || echo "WARN: pre-run capture returned nonzero; continuing"
+
+# In-run sampler in the background; stopped via sentinel after the
+# application finishes (bounded wait), with the tick cap as failsafe.
+echo "=== start in-run sampler (background, ${SAMPLER_INTERVAL} s interval) ==="
+/opt/pbs/bin/pbsdsh -- /bin/bash "$SAMPLER" "$PREFIX" "$LOCK_SAMP" \
+  "$SAMPLER_INTERVAL" "$STOP_FILE" "$SAMPLER_MAX_TICKS" &
+SAMPLER_PID=$!
+
+# Application launch: single-node pattern (container mpirun locally).
+set +e
+apptainer exec --nv \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$RANKS" \
+    -x UCX_LOG_LEVEL \
+    -x NCCL_DEBUG \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --gpu-affinity "$GPU_AFFINITY" \
+      --nprow "$NPROW" \
+      --npcol "$NPCOL" \
+      --nporder "$NPORDER" \
+      --n "$N" \
+      --nb "$NB" \
+      --skip-tests 1 \
+      --monitor-gpu 1 \
+      --monitor-gpu-interval 10 \
+      --monitor-gpu-pcie-width-warning 16 \
+      --monitor-gpu-pcie-gen-warning 5
+APPRC=$?
+set -e
+
+# Stop the sampler: sentinel file, then bounded wait for the pbsdsh client.
+echo "=== stop in-run sampler ==="
+touch "$STOP_FILE"
+for _ in $(seq 1 12); do
+  kill -0 "$SAMPLER_PID" 2>/dev/null || break
+  sleep 5
+done
+kill "$SAMPLER_PID" 2>/dev/null || true
+wait "$SAMPLER_PID" 2>/dev/null || true
+
+# Post-run capture (separate lock base so it always runs).
+echo "=== post-run capture (pbsdsh, single node) ==="
+/opt/pbs/bin/pbsdsh -- /bin/bash "$CAPTURE" "$PREFIX" "$LOCK_POST" post \
+  || echo "WARN: post-run capture returned nonzero; continuing"
+
+echo "app_exit_code=${APPRC}"
+echo "=== attempt evidence files ==="
+ls -la "$PWD/outputs/${ATTEMPT}"* 2>/dev/null || true
+echo "=== resource-alloc exp6 single-node attempt ${ATTEMPT} (${COND}) complete ==="
+exit "$APPRC"

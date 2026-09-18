@@ -7,6 +7,10 @@
   parent `debug-scripts/`).
 - `README.md` records the motivation, the list of experiments (experiment 1
   onward), and the analysis of results once runs are done.
+- `SINGLE_NODE_TEST.md` is the dedicated planning + execution log for the
+  single-node node-contention test (experiment 6). It is kept separate from
+  `README.md`'s experiment records so the experiment-5 workstream is never
+  touched; read it before working on anything `sn200k_*`/single-node.
 - `debug-scripts/` stores all scripts used by these experiments.
 - `outputs/` stores the raw job outputs (PBS `.o`/`.e` and per-attempt
   evidence) with attempt-specific filenames that are never overwritten.

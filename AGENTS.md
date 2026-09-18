@@ -138,3 +138,12 @@ Update on some new directories that might not be mention in the workflow package
 - `workflow/08-Workflow-Multinode-Tuning.md` is the operational adapter for
   multinode launch, evidence, authorization, and checkpoint rules; it does not
   replace the general numbered workflow.
+- `scripts/gaas-internode-coms-debug/resource-alloc/` also hosts the
+  single-node node-contention test (its "experiment 6"). Its planning and
+  execution log live in `resource-alloc/SINGLE_NODE_TEST.md` — separate from
+  the resource-alloc `README.md` experiment records by design, so sessions
+  working on experiment 5 records and sessions working on the single-node
+  test do not clash. Runner: `resource-alloc/debug-scripts/run_1n_contention.pbs`;
+  evidence: `resource-alloc/outputs/sn200k_*`. Read
+  `resource-alloc/SINGLE_NODE_TEST.md` and that directory's `AGENTS.md`
+  before touching anything single-node.

@@ -460,6 +460,16 @@ variable that no placement or affinity tuning can compensate for.
   `gpu_as`, walltime 00:30:00, chunk `ngpus=4:ncpus=48:mem=1000GB`,
   accounting group `hpc_ebslee` (current project convention).
 
+### Experiment 6 — Single-node node-contention test (N=200k, 6 jobs)
+
+- **Status:** in execution (started 2026-09-18). Single-node isolation of
+  the co-tenant contention effect (2-rank and 4-rank HPL-MxP on one pristine
+  control node, one dirtiest, one lighter occupied node, reusing the exp5
+  instrumentation). Planned, logged, and analyzed **separately in
+  `SINGLE_NODE_TEST.md`** so it cannot clash with the experiment-5 records;
+  runner: `debug-scripts/run_1n_contention.pbs`, evidence under
+  `outputs/sn200k_*`.
+
 ## Analysis
 
 ### Experiment 5 results (2026-09-18) — mechanism screening, first pass
