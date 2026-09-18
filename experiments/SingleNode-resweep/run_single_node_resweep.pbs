@@ -17,8 +17,12 @@
 # GPU per MPI process (8 processes, 8 GPUs); the GAAS-established OMP host
 # control (8 threads, socket places, TRUE bind) — the cmax pod's host OpenMP
 # environment is unknown. Measurement controls replicate the cmax settings
-# block literally (--skip-tests 0, --monitor-gpu 0), per user decision
-# 2026-09-18.
+# block literally via launcher defaults (--skip-tests 0, --monitor-gpu 0,
+# effective preset 90, FP16; user decision 2026-09-18). The v26.02 binary
+# accepts --preset-gemm-kernel values {0,80} only, so effective preset 90 is
+# obtained by NOT passing the flag (v1 failure, Track 1; see README). Every
+# flag passed below is proven accepted on GAAS v26.02 by earlier committed
+# experiments.
 
 #PBS -N hplmxp_1n8g_resweep
 #PBS -q gpu_as
@@ -44,23 +48,23 @@ echo "nprow=4"
 echo "npcol=2"
 echo "nporder=row"
 echo "gpu_affinity=0:1:2:3:4:5:6:7"
-echo "preset_gemm_kernel=90"
+echo "preset_gemm_kernel=effective90_default"
 echo "u_panel_chunk_nbs=8"
 echo "call_dgemv_with_multiple_threads=15360"
 echo "prioritize_trsm=0"
 echo "prioritize_factorization=0"
 echo "use_separate_stream_for_gemm=1"
 echo "use_mpi_panel_broadcast=100"
-echo "mpi_use_host_threads=1"
-echo "sloppy_type=FP16"
-echo "Anq_device=0"
+echo "mpi_use_host_threads=1_default"
+echo "sloppy_type=FP16_default"
+echo "Anq_device=0_default"
 echo "cuda_host_register_step=2048"
 echo "fill_device=1"
 echo "fill_device_buffer_size=3048"
-echo "skip_tests=0"
-echo "monitor_gpu=0"
-echo "tolerance=1e-12"
-echo "test_loop=1"
+echo "skip_tests=0_default"
+echo "monitor_gpu=0_default"
+echo "tolerance=1e-12_default"
+echo "test_loop=1_default"
 echo "submitted_workdir=$PWD"
 date --iso-8601=seconds
 hostname
@@ -95,6 +99,9 @@ echo "container=${SIF}"
 nvidia-smi topo -m
 
 # --- Execute HPL-MxP: literal cmax 1x8 configuration ---------------------------
+# Proven-accepted, non-default or explicit flags only; every other cmax
+# setting (preset 90, FP16, skip-tests 0, monitor-gpu 0, tolerance, test-loop,
+# mpi-use-host-threads, Anq-device) is left at its effective default.
 apptainer exec --nv "$SIF" \
   mpirun -np 8 \
     --bind-to none \
@@ -108,20 +115,12 @@ apptainer exec --nv "$SIF" \
       --nporder row \
       --n 356352 \
       --nb 3072 \
-      --tolerance 1e-12 \
-      --test-loop 1 \
-      --preset-gemm-kernel 90 \
       --u-panel-chunk-nbs 8 \
       --call-dgemv-with-multiple-threads 15360 \
       --prioritize-trsm 0 \
       --prioritize-factorization 0 \
       --use-separate-stream-for-gemm 1 \
       --use-mpi-panel-broadcast 100 \
-      --mpi-use-host-threads 1 \
-      --sloppy-type FP16 \
-      --Anq-device 0 \
-      --cuda-host-register-step 2048 \
       --fill-device 1 \
       --fill-device-buffer-size 3048 \
-      --skip-tests 0 \
-      --monitor-gpu 0
+      --cuda-host-register-step 2048
