@@ -1,0 +1,26 @@
+#!/bin/bash
+# Phase 2 Stage 2 container NCCL GDR A/B at 3x4 (the HPL-MxP baseline
+# topology): container-native nccl-tests *_mpi binaries through the container
+# NCCL stack, two arms on the same allocation — ctrl (NCCL defaults) then
+# gdroff (NCCL_NET_GDR_LEVEL=LOC). Tests per arm: sendrecv_perf_mpi (ring:
+# 6 NVLink + 6 IB legs — host-campaign caveat), broadcast_perf_mpi (root 0),
+# all_reduce_perf_mpi at 12 ranks (one rank per GPU), host-campaign sweep
+# 8 B -> 64 MiB, full NCCL diagnostics in both arms. Pre-authorized
+# contingency only: if the ctrl allreduce shows the case 2026-09-17-A
+# signature (mixed RoCE/IB link warnings + ib_plugin reject), rerun with
+# NCCL_IB_HCA bond-excluded in both arms as a separate documented attempt.
+# Submit from debug-scripts/phase2-stage2/ with host-pinned select chunks,
+# attempt-specific PBS output names, and the node-hunting procedure
+# documented in README.md.
+
+#PBS -N P2S2_NCCL_3X4
+#PBS -P hpc_ebslee
+#PBS -q gpu_ded
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+export TOPOLOGY=3x4 EXPECTED_NNODES=3 RANKS_PER_NODE=4
+export TESTS="sendrecv broadcast allreduce" ARMS="ctrl gdroff" RESULT_TAG=PHASE2_STAGE2_NCCL
+exec /bin/bash "$PBS_O_WORKDIR/run_phase2_stage2_nccl_common.sh"

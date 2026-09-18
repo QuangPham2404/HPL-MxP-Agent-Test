@@ -1,0 +1,22 @@
+#!/bin/bash
+# Phase 2 Stage 2 container OSU (MPI/UCX) GDR A/B at 3x4: staged host
+# OSU-CUDA binaries through the container HPC-X stack, two arms on the same
+# allocation — ctrl (container defaults) then gdroff
+# (UCX_IB_GPU_DIRECT_RDMA=n). Tests per arm: osu_bw D D/H H and
+# osu_latency D D/H H at np=2 (inter-node pair, first two nodes; the
+# full-rank mapping check runs at 12 ranks), OSU default sweep, UCX tracing
+# in both arms. Submit from debug-scripts/phase2-stage2/ with host-pinned
+# select chunks, attempt-specific PBS output names, and the node-hunting
+# procedure documented in README.md.
+
+#PBS -N P2S2_OSU_3X4
+#PBS -P hpc_ebslee
+#PBS -q gpu_ded
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR"
+export TOPOLOGY=3x4 EXPECTED_NNODES=3 RANKS_PER_NODE=4
+export ARMS="ctrl gdroff" RESULT_TAG=PHASE2_STAGE2_OSU
+exec /bin/bash "$PBS_O_WORKDIR/run_phase2_stage2_osu_common.sh"
