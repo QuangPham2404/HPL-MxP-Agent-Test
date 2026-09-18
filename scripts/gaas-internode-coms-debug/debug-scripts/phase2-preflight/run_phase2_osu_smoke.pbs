@@ -25,8 +25,10 @@
 #   3. osu_bw D D + H H and osu_latency D D (np=2; inter-node pair via the
 #      slots=1 hostfile on multi-node rungs; intra-node pair at 1x2).
 #   4. osu_allreduce -d cuda + H H at the full rank count (12 ranks at 3x4).
-#   5. One tiny container-native NCCL all_reduce_perf (1 MiB, w1 n2,
-#      NCCL_DEBUG=INFO) at the full rank count.
+#   5. One tiny container-native NCCL all_reduce_perf_mpi (1 MiB, w1 n2,
+#      NCCL_DEBUG=INFO) at the full rank count. The *_mpi variant is
+#      required: the container's plain nccl-tests binaries form per-process
+#      nranks-1 comms (v1 ladder evidence).
 #
 # PASS per rung: ABI clean + mapping OK + visibility YES + every test rc=0
 # with the expected output shape (osu table rows / NCCL zero-error marker).
@@ -305,24 +307,29 @@ run_osu osu_latency_dd osu_latency 2 "$HF_PT2PT" D D
 run_osu osu_allreduce_cuda osu_allreduce "$TOTAL_RANKS" "$HF_FULL" -d cuda
 run_osu osu_allreduce_hh   osu_allreduce "$TOTAL_RANKS" "$HF_FULL"
 
-# tiny container-native NCCL smoke at full rank count
+# Tiny container-native NCCL smoke at full rank count. IMPORTANT: the
+# container's plain nccl-tests binaries are the non-MPI builds — each process
+# forms a nranks-1 comm (v1 ladder evidence). Cross-node collectives require
+# the *_mpi variants (MPI bootstrap), so all_reduce_perf_mpi is used here and
+# must also be used by the Stage 2 NCCL arm.
 NCCL_LOG="$OUTDIR/${ATTEMPT}_nccl_allreduce.log"
 TOTAL=$((TOTAL+1))
 echo ""
-echo "########## TEST: nccl_allreduce_1mib (np=$TOTAL_RANKS) ##########"
+echo "########## TEST: nccl_allreduce_1mib (np=$TOTAL_RANKS, all_reduce_perf_mpi) ##########"
 date --iso-8601=seconds
 launch "$HF_FULL" "$TOTAL_RANKS" \
   -x NCCL_DEBUG -x NCCL_DEBUG_SUBSYS -x NCCL_DEBUG_FILE \
   bash -c '
     export CUDA_VISIBLE_DEVICES=$OMPI_COMM_WORLD_LOCAL_RANK
     export NCCL_TESTS_DEVICE=0
-    exec '"$NCCL_TESTS_DIR"'/all_reduce_perf -b 1048576 -e 1048576 -g 1 -w 1 -n 2
+    exec '"$NCCL_TESTS_DIR"'/all_reduce_perf_mpi -b 1048576 -e 1048576 -g 1 -w 1 -n 2
   ' > "$NCCL_LOG" 2>&1
 NCCL_RC=$?
 cat "$NCCL_LOG"
 echo "test_nccl_allreduce_rc=$NCCL_RC"
 NCCL_OK=0
-if [ "$NCCL_RC" -eq 0 ] && grep -Fq "Out of bounds values : 0" "$NCCL_LOG"; then NCCL_OK=1; fi
+if [ "$NCCL_RC" -eq 0 ] && grep -Fq "Out of bounds values : 0" "$NCCL_LOG" \
+   && ! grep -q "nranks 1 " "$NCCL_LOG"; then NCCL_OK=1; fi
 if grep -q "via NET/IBext" "$NCCL_LOG"; then
   echo "nccl_via_ibext_channels=$(grep -c 'via NET/IBext' "$NCCL_LOG") gdrdma_channels=$(grep -c GDRDMA "$NCCL_LOG")"
 fi
