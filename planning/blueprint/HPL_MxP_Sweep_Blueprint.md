@@ -51,6 +51,14 @@ but it receives no privileged status. The reusable evidence is:
 The new topology must establish its own control, safe operating region, noise
 floor, and tuning conclusions.
 
+The same non-transfer principle applies within one topology after a major
+operating-regime change. A conclusion obtained at one materially different
+`N`/`NB`/process-grid/FP64-residency regime is conditional on that tested
+envelope; do not automatically carry it into another regime. A major upstream
+change may reopen downstream conclusions through the dependency checkpoint.
+This complements, and does not weaken, the rule that a new hardware topology
+starts from Phase 0 rather than from any 8×H200 optimum.
+
 ### Two baselines, only one of which ranks the new system
 
 - The old 8×H200 `baseline-sweep_v1` result is historical evidence only. Do
@@ -110,19 +118,24 @@ Follow the project workflow and preserve attempt-specific PBS stdout/stderr.
 For optimization runs, use the required project controls:
 
 ```text
---skip-tests 1
---monitor-gpu 1
---monitor-gpu-interval 10
---monitor-gpu-pcie-width-warning 16
---monitor-gpu-pcie-gen-warning 5
+--skip-tests 0
+--monitor-gpu 0
 ```
 
-The one-time installation/environment validation in Phase 0 may retain the
-package's internal tests; the comparable timed baseline and all optimization
-sweeps use the fixed controls above. Keep tolerance, monitoring, package,
-executable, CUDA/MPI environment, and measurement procedure constant unless
-the experiment explicitly studies one of them. Never loosen tolerance to make
-an unstable precision setting pass.
+`--skip-tests 0` means that the package's internal test phase is enabled. The
+tests provide a consistent pre-run initialization workload, but this blueprint
+does not claim that NVIDIA formally defines them as a warm-up. Use the same
+test behavior for the comparable original baseline, controls, and optimization
+runs.
+
+The benchmark's continuous GPU monitor is normally disabled for scored runs.
+Establish hardware health in Phase 0 and use pre/post-run diagnostics or
+targeted diagnostic experiments when needed. If continuous monitoring is
+enabled for troubleshooting, label the attempt as a diagnostic condition; do
+not silently rank it against monitor-off scored runs. Keep tolerance, test and
+monitor behavior, package, executable, CUDA/MPI environment, and measurement
+procedure constant unless the experiment explicitly studies one of them.
+Never loosen tolerance to make an unstable precision setting pass.
 
 Every run must be classified by normal application output, a finite residual,
 the documented tolerance, and `PASSED` verification—not process exit status
@@ -141,10 +154,11 @@ metrics named in that phase:
 | Percentage change vs in-sweep control | Isolates the candidate's effect |
 | LU GFLOP/s and/or LU time | Separates the factorization/update path |
 | Iterative-solver/refinement time and iterations | Detects displaced cost from LU or precision changes |
+| `IR/LU ratio = T_IR / T_LU` | Quantifies the iterative-refinement penalty relative to LU |
 | Final residual, tolerance, and verification | Correctness gate before ranking |
 | Run/node/job identity and repeated-control drift | Defines the actual resolution of the sweep |
 | Maximum/worst-rank host and GPU memory use and headroom | Detects capacity and imbalance risks |
-| GPU monitoring warnings | Distinguishes topology/link/clock anomalies from flag effects |
+| Phase-0 or pre/post-run hardware-health evidence | Distinguishes topology/link/clock anomalies from flag effects without changing the scored protocol |
 
 Prefer same-allocation interleaving or bracketing controls when practical.
 Differences below measured drift are ties, not winners.
@@ -154,7 +168,8 @@ Differences below measured drift are ties, not winners.
 | Phase | Decision to establish | Main controls | Normal result |
 |---|---|---|---|
 | 0. Characterization and baseline | What resources and paths actually exist, and how noisy is an unchanged run? | Hardware/software inventory, launcher, rank map, correctness, original baseline | Trusted evidence envelope and new-system original baseline |
-| 1. Core problem geometry | What coupled `N`/`NB` region is fast, valid, and safely inside memory limits? | `--n`, `--nb` | Several geometry candidates, then a verified region/control |
+| 1A. N/residency operating regime | Which `N` region best balances credited cubic work, LU efficiency, FP64 residency, and IR cost? | `--n` with `--fill-device 1`; other tunables fixed | Several bounded operating-regime candidates around the residency transition |
+| 1B. Block size within retained regime(s) | Which `NB` region best organizes LU work within the useful `N` regime(s), and does it change their ranking? | `--nb` at retained `N` controls | A verified `N`/`NB` region plus a dependency decision on targeted N reopening |
 | 2A. Process grid/order | How should 12 or another number of ranks form logical rows/columns? | `--nprow`, `--npcol`, `--nporder` | Shortlist of useful logical decompositions |
 | 2B. GPU placement | How should logical ranks map to local GPUs and node boundaries? | `--gpu-affinity`, launcher rank order | Verified rank↔GPU map for shortlisted grids |
 | 2C. Remaining placement | Are NIC/rail and launcher placement controls materially relevant? | `--ucx-affinity` and site launcher mapping, conditionally | Minimal topology-aware placement policy |
@@ -216,16 +231,18 @@ Phase 0 is characterization, not tuning:
 4. **Run initial correctness validation.** Choose conservative, provisional
    required values for `N`, `NB`, and a valid process grid from package/site
    guidance and the measured memory envelope. They are baseline inputs, not
-   tuned winners. Run internal validation once if needed, then require normal
-   HPL-MxP output, finite residual, and `PASSED`.
-5. **Create the timed new-system original baseline.** Use the fixed monitoring
-   and `--skip-tests 1` controls. After installation validation/warm-up,
-   designate the first valid comparable timed attempt as the immutable
-   original baseline before tuning begins. Repeat that exact configuration
-   enough times to estimate variability; three valid timed attempts are a
-   useful minimum, and bracket longer sequences if drift is visible. Repeats
-   define noise and confidence; they do not replace the identified baseline
-   run as the percentage denominator.
+   tuned winners. Require normal HPL-MxP output, a finite residual, and
+   `PASSED`; keep the internal test phase enabled with `--skip-tests 0` for the
+   comparable campaign protocol.
+5. **Create the timed new-system original baseline.** Use the common scored-run
+   protocol (`--skip-tests 0`, `--monitor-gpu 0`) after Phase-0 hardware-health
+   validation. Designate the first valid comparable timed attempt as the
+   immutable original baseline before tuning begins. Repeat that exact
+   configuration enough times to estimate variability; three valid timed
+   attempts are a useful minimum, and bracket longer sequences if drift is
+   visible. Repeats define noise and confidence; they do not replace the
+   identified baseline run as the percentage denominator. If a monitored
+   diagnostic is needed, keep it separate from the scored baseline series.
 
 Required evidence before Phase 1:
 
@@ -268,7 +285,10 @@ or timing question. Do not tune around a broken or unidentified platform.
 
 ## 4. Phase 1 — Core Problem Geometry
 
-Primary controls: `--n` and `--nb`. Treat them as a coupled domain.
+Primary controls: `--n` and `--nb`. They are coupled, but tune them
+sequentially: discover the useful `N`/FP64-residency operating regime first,
+then tune `NB`, review the dependency, and reopen only a bounded local `N`
+region if the evidence requires it.
 
 ### A. Mechanism and 8×H200 Prior Knowledge
 
@@ -277,6 +297,37 @@ cubically, while principal matrix storage grows quadratically. Larger problems
 can improve GEMM efficiency and amortize panel, synchronization, and startup
 costs, but increase FP64 refinement work and eventually cross host- or
 device-memory limits.
+
+For large `N`, the central scoring intuition is:
+
+```text
+R_MxP ≈ ((2/3) * N^3) / (T_LU + T_IR)
+```
+
+The exact benchmark work expression may include a lower-order `N^2` term, but
+the cubic approximation is sufficient for operating-regime discovery at these
+matrix sizes. An equivalent useful form is:
+
+```text
+R_MxP ≈ P_LU / (1 + T_IR / T_LU)
+P_LU  ≈ ((2/3) * N^3) / T_LU
+```
+
+HPL-MxP tuning is therefore not purely an LU-throughput optimization problem.
+The objective balances credited `N^3` work, LU efficiency, and
+iterative-refinement (IR) time. A larger `N` can improve LU/GEMM efficiency but
+lose overall when IR grows faster; a smaller `N` can lose LU efficiency and
+still win when total solve time falls faster than credited work. Record
+`IR/LU ratio = T_IR / T_LU` to show how strongly refinement discounts the LU
+rate.
+
+HPL-MxP retains the original FP64 matrix for residual and iterative-refinement
+work. Greater device residency of that matrix can reduce host-device staging
+during refinement, but consumes GPU memory also needed by low-precision
+factors, panels, communication buffers, cuBLAS/runtime workspaces, and other
+benchmark state. The raw FP64 matrix alone requires approximately `8*N^2`
+bytes globally; that estimate is a candidate-generation aid, not a complete
+memory model.
 
 `NB` is the blocked-LU panel/tile size. It changes panel count and duration,
 trailing-GEMM shapes, synchronization/communication frequency, available
@@ -287,12 +338,40 @@ On 8×H200, larger `N` improved amortization until an abrupt memory wall;
 changing `NB` strongly changed LU time and also moved that wall. The best grid
 later reversed between two `N` contexts. One specific non-aligned `N` produced
 a repeatable pathology, but the later aligned sweep disproved exact
-`N % NB == 0` as a general performance rule. Smaller `N` under stronger device
-residency shortened refinement but lost LU efficiency, producing no net gain.
+`N % NB == 0` as a general performance rule.
+
+The earlier matrix-placement N resweep established a real residency mechanism:
+under `--fill-device 1`, reducing `N` strongly reduced solver time as more of
+the original FP64 matrix became device-resident. Under that experiment's fixed
+`NB=3072`, `2x4` row grid, host runtime, and downstream controls, the gain was
+cancelled by lower LU efficiency. That result was conditional on its tested
+configuration; it does not establish that small `N` cannot win.
+
+The later `SingleNode-resweep_v1.1` is the counterexample that changes the
+blueprint's operating intuition. Its `N=356352`, `NB=3072`, `4x2` row bundle
+reported approximately `2.7694e+06` HPL-MxP GFLOP/s, `4.0464e+06` LU GFLOP/s,
+`7.46 s` LU, and `3.44 s` IR (`IR/LU ≈ 0.46`), with approximately
+`135.7/138.6 GB` worst-rank device consumption and much lower host-memory use.
+The previous large-`N` record at `N=491520`, `NB=3072`, `2x4` row reported
+approximately `2.4203e+06` HPL-MxP GFLOP/s, `4.1396e+06` LU GFLOP/s,
+`19.12 s` LU, and `13.58 s` IR (`IR/LU ≈ 0.71`). Thus the new bundle won
+despite slightly lower LU throughput because its IR penalty fell sharply.
+
+The two records are not a one-variable comparison: process grid, DGEMV
+partition, factorization priority, MPI panel-broadcast policy, fill buffer,
+and other context differ, and the newer run had no paired same-node control.
+Do not attribute its gain to any one downstream flag. The transferable result
+is the LU/IR balance and operating-regime insight:
+
+> Small-N / high-residency regimes can become globally competitive if the surrounding configuration recovers enough LU efficiency.
 
 Old values—including the previous `N`, `NB=3072`, and the old memory boundary—
 are only optional safe-to-check hypotheses. They are not the center or endpoint
-of the new sweep.
+of the new sweep. Historical values such as `2x4` row, DGEMV `0`,
+factorization priority `1`, or MPI panel broadcast `50` are conditional on the
+tested N/NB/grid/residency/host-runtime regime. They are historical controls,
+not transferable optima, and may reopen after a material upstream regime
+change.
 
 Relevant dependencies include E01, E05, E07–E10, E14–E16, E18, E22–E24,
 E28, E34, and E36 in [edges.csv](../dependency-graph/edges.csv).
@@ -301,55 +380,112 @@ E28, E34, and E36 in [edges.csv](../dependency-graph/edges.csv).
 
 ### B. Sweep Procedure
 
-Use an adaptive broad→refine sequence:
+Use the following adaptive broad→refine sequence. Do not turn it into a large
+`N×NB` Cartesian sweep.
 
-1. **Set a safe provisional `N`.** Derive it from the Phase 0 worst-node and
-   worst-rank memory evidence, not aggregate advertised RAM/VRAM. Leave a
-   declared reserve for MPI/NCCL/UCX, cuBLAS, panels, conversion buffers, and
-   run variability.
-2. **Broadly screen `NB`.** Include the installed default, values spanning
-   meaningfully smaller and larger panels, and optionally one old 8×H200
-   candidate. Do not assume powers, alignment, or the old winner are special.
-   Stop extending a direction after repeated clear degradation, a safety
-   threshold, or invalidity.
-3. **Retain several `NB` candidates.** Keep distinct useful regions or
-   plateaus, not only the numerical maximum. Eliminate clearly dominated,
-   invalid, or headroom-poor points.
-4. **Coarsely bracket `N` for each retained `NB`.** Increase `N` in safe,
-   meaningful steps while watching worst-rank host/VRAM headroom. Do not run
-   every `N×NB` pair. Stop before a predicted unsafe point; a carefully bounded
-   boundary probe is justified only when it answers whether capacity or
-   performance is limiting.
-5. **Revisit `NB` near the useful `N` region.** A materially different `N`
-   fully reopens `NB`. Refine only around two or three promising combinations
-   and around any unexplained cliff.
-6. **Verify candidates and controls.** Repeat or bracket the leading region,
-   its neighbors, and a stable control. Confirm that the result is not an
-   allocation, warm-up, or memory-pressure artifact.
+#### Phase 1A — Initial N / FP64-residency sweep
 
-If the feasible boundary changes with `NB`, report it as part of the coupled
-result. Do not select the largest fitting `N` if its headroom is unreliable or
-its end-to-end rate is on a lower plateau.
+1. **Derive a mechanism-based sweep center.** With one rank per GPU, calculate
+   the heuristic residency pivot from the actual rank count and measured
+   usable memory per GPU:
+
+   ```text
+   N_pivot = sqrt(ranks * GPU_memory_bytes * 0.85 / 8)
+   ```
+
+   This estimates where the distributed original FP64 matrix occupies roughly
+   85% of aggregate GPU memory, leaving approximate device headroom for other
+   benchmark/runtime state. The `0.85` factor is a heuristic sweep-center
+   value, not a universal optimum. `N_pivot` is not an automatically selected
+   winner, and a numerical pivot must never be transferred between hardware
+   topologies. Recompute it from the actual new-system ranks and measured
+   usable GPU memory.
+2. **Freeze provisional controls.** Use `--fill-device 1` so that changing `N`
+   exposes the FP64-residency transition directly. Hold every other tunable at
+   a safe provisional value: `NB`; process grid and `nporder`; GPU/rank
+   mapping; OpenMP policy; CPU/memory affinity; DGEMV partition; MPI/NCCL
+   broadcast mix; U-panel chunk; factorization/TRSM priority; separate GEMM
+   stream; precision; GEMM kernel; fill-device buffer; and other relevant
+   controls. Do not use an `N`-dependent formula that simultaneously changes
+   grid, DGEMV, `NB`, broadcast, or another downstream setting. An old value
+   may serve only as a supported, safe provisional control under the
+   non-transfer rule.
+3. **Run a coarse 10%-step sweep.** Generate safe/legal `N` candidates near
+   `70%`, `80%`, `90%`, `100%`, `110%`, and `120%` of `N_pivot`. Alignment can
+   be a convenient clean candidate-generation rule, but do not encode
+   `N % NB == 0` as a universal performance requirement. Truncate the upper
+   range when Phase-0 memory evidence predicts that a candidate is unsafe;
+   invalid or OOM evidence defines a boundary and is not a scored point.
+4. **Interpret the operating regimes.** For every point, compare final score,
+   LU efficiency, IR time and `IR/LU`, FP64 residency/staging evidence, and
+   host/GPU headroom. Do not select the largest `N`, the fastest LU, or the
+   largest single HPL-MxP number without explaining the LU-versus-IR balance.
+5. **Refine at approximately 5% steps.** Refine around both (a) the best
+   performing region and (b) any clear residency/IR transition if it lies
+   elsewhere. For example, a coarse maximum near 100% suggests approximately
+   95%, 100%, and 105%; a sharp IR change between 100% and 110% requires enough
+   boundary points to understand that transition. Do not blindly refine one
+   noisy maximum.
+6. **Retain distinct regimes when justified.** Keep more than one `N` regime
+   if final scores are close but residency, LU efficiency, IR cost, memory
+   headroom, or communication/geometry behavior differs meaningfully. Repeat
+   or bracket leading regions and a stable control before promoting one.
+
+#### Phase 1B — NB tuning within retained N regime(s)
+
+1. **Screen `NB` only after Phase 1A.** At a representative `N` from each
+   retained, meaningfully distinct regime, include the installed default,
+   values spanning smaller and larger panels, and optionally an old 8×H200
+   value as a historical control. Keep all non-`NB` controls fixed. Use a
+   bounded staged design rather than every `N×NB` pair.
+2. **Retain useful `NB` regions.** Preserve plateaus or mechanism-distinct
+   candidates, not just the numerical maximum. Stop extending a direction
+   after repeated clear degradation, a safety threshold, or invalidity.
+   Report any `NB`-dependent capacity boundary as part of the result.
+3. **Perform the mandatory dependency review.** Ask whether `NB` materially
+   changed the ranking, residency boundary, LU/IR balance, or feasibility of
+   the retained `N` regimes. If not, keep `N` closed. If it did, run only a
+   targeted/local N resweep—normally the old control, the affected boundary,
+   and a few neighboring 5–10% candidates—under the retained `NB`. Do not
+   restart a full joint matrix.
+4. **Verify the retained geometry.** Repeat or bracket the leading `N`/`NB`
+   region, its meaningful neighbors, and a stable control. Confirm that the
+   result is not allocation drift, test-protocol drift, or memory pressure.
+
+The intended flow is `N discovery → NB sweep → dependency review → targeted N
+resweep if justified`. Do not select the largest fitting `N` if its headroom
+is unreliable or its IR penalty places it on a lower end-to-end plateau.
 
 ### C. Metrics to Observe
 
 Use the common scorecard, emphasizing:
 
-- end-to-end GFLOP/s and timed phase;
-- LU GFLOP/s/time versus refinement time and iteration count;
-- maximum host memory, maximum GPU memory, minimum headroom, and the worst
-  rank/node rather than only averages;
+- `N` and `N` as a percentage of `N_pivot`;
+- HPL-MxP GFLOP/s;
+- LU time and LU GFLOP/s;
+- iterative-refinement/solver time and `T_IR / T_LU`;
+- refinement iteration count and residual trajectory where available;
+- verification status, finite residual, and tolerance;
+- maximum/worst-rank GPU-memory consumption and minimum GPU headroom;
+- host-memory consumption and evidence of host-resident or staged FP64 data
+  when exposed;
+- run/node/job identity and control drift/noise information;
 - allocation/OOM point and the phase in which failure occurs;
 - panel-count/GEMM-shape clues exposed by normal output;
-- repeated-control drift and any N- or NB-specific discontinuity; and
+- any N- or NB-specific discontinuity; and
 - correctness/residual behavior near the memory boundary.
+
+The Phase-1 analysis must explain performance through both LU and IR. A table
+that ranks only HPL-MxP GFLOP/s without phase attribution is incomplete.
 
 ### D. Closing Condition vs Investigation
 
-Close Phase 1 when a valid, safely feasible `N`/`NB` region is established; a
-clear winner or useful plateau survives control/repetition; neighboring points
-bound the region; and further geometry search has lower expected payoff than
-untested decomposition and placement.
+Close Phase 1 when Phase 1A has bounded the useful N/residency regime(s), Phase
+1B has established an `NB` region within them, the dependency review has
+either kept N closed or completed its targeted reopening, and a valid, safely
+feasible winner or plateau survives control/repetition. Neighboring points
+must bound the retained region, and further geometry search must have lower
+expected payoff than untested decomposition and placement.
 
 Do not require a unique one-value optimum when a plateau is real. Retain more
 than one geometry candidate for Phase 2 if their performance is
@@ -357,11 +493,12 @@ indistinguishable but their panel counts, memory headroom, or communication
 characteristics differ.
 
 Investigate rather than close when performance changes discontinuously without
-matching memory evidence, a valid point is roughly isolated from its
+matching residency/memory evidence, a valid point is roughly isolated from its
 neighbors, ranks use memory asymmetrically, refinement changes unexpectedly,
 or the boundary moves contrary to the `N`/`NB` workspace mechanism. First
 repeat the point and inspect ordinary logs. Trace only a specific unresolved
-question such as whether an anomalous `NB` changes the LU critical path.
+question such as whether an anomalous `NB` changes the LU critical path or why
+an IR transition does not match the observed FP64-residency evidence.
 
 ## 5. Phase 2 — Parallel Decomposition and Placement
 
@@ -377,12 +514,16 @@ fan-out, and update concurrency. `nporder` changes which global ranks occupy
 those logical rows and columns, so it can change which traffic crosses node,
 GPU-fabric, NUMA, and NIC boundaries without changing the abstract grid.
 
-The old grid preference reversed when `N` changed, and the later advantage was
-close to the noise floor. That is direct evidence against transfer. For 12
-ranks, valid shapes include `1×12`, `2×6`, `3×4`, `4×3`, `6×2`, and
-`12×1`. A `3×4` or `4×3` shape may align naturally with three nodes or four
-GPUs/node under a particular rank order, but that is only a candidate
-mechanism, never a presumed winner.
+The old grid preference reversed when `N` changed: around `N=399360`, the
+earlier study favored a `4x2` grid, while at `N=491520` the later study favored
+`2x4` row, with the latter spread close to the noise floor. The new
+`N=356352` record used `4x2` row, but also changed several other controls, so
+it is not isolated causal evidence for that grid. Together these results are
+direct evidence against transferring a grid conclusion outside its tested
+N/NB/residency regime. For 12 ranks, valid shapes include `1×12`, `2×6`,
+`3×4`, `4×3`, `6×2`, and `12×1`. A `3×4` or `4×3` shape may align naturally
+with three nodes or four GPUs/node under a particular rank order, but that is
+only a candidate mechanism, never a presumed winner.
 
 Relevant dependencies include E02, E09–E12, E24, and E29.
 
@@ -390,8 +531,9 @@ Relevant dependencies include E02, E09–E12, E24, and E29.
 
 #### B. Sweep Procedure
 
-1. Hold one or more Phase 1 geometry candidates fixed and begin with one
-   explicit, verified rank order/mapping.
+1. Hold the retained Phase 1 geometry candidate(s) fixed and begin with one
+   explicit, verified rank order/mapping. Do not merge grid testing into the
+   initial Phase-1 N sweep.
 2. Screen process-grid **shapes** first. Include balanced/topology-aligned
    candidates and at least one meaningfully different shape if safe. Skinny
    extremes are diagnostic rather than mandatory when they obviously create
@@ -404,8 +546,13 @@ Relevant dependencies include E02, E09–E12, E24, and E29.
    geometries remain tied, carry both to 2B because physical mapping may break
    the tie.
 
-If multiple Phase 1 `N`/`NB` candidates remain close, test the leading grids on
-only those distinct regions needed to detect a geometry×grid interaction.
+If materially different Phase 1 N/residency regimes remain close, test the
+leading grids on enough representative regimes to detect an N×grid
+interaction, but only on those distinct regions; do not create a full
+N×NB×grid matrix. After selecting a materially different grid, perform the
+normal dependency review. If the grid changes the LU/IR balance or reverses
+the N ranking, reopen N with a small targeted resweep around the affected
+regime rather than launching a full joint search.
 
 #### C. Metrics to Observe
 
@@ -643,19 +790,25 @@ Key controls: `--fill-device`, `--Anq-device`,
 
 #### A. Mechanism and 8×H200 Prior Knowledge
 
-The original FP64 matrix is needed during residual/refinement work. Greater
-device residency can reduce host↔device staging but consumes VRAM needed by
-low-precision factors, panels, communication buffers, cuBLAS, and runtime
-workspaces. `--fill-device 1` is the automatic/full-fill policy and overrides
-`--Anq-device`; partial `Anq-device` values are meaningful only with
+HPL-MxP retains the original FP64 matrix for residual/refinement work. Greater
+device residency can reduce host↔device staging during IR but consumes VRAM
+needed by low-precision factors, panels, communication buffers, cuBLAS, and
+runtime workspaces. `--fill-device 1` is the automatic/full-fill policy and
+overrides `--Anq-device`; partial `Anq-device` values are meaningful only with
 `--fill-device 0`. The fill buffer reserves VRAM headroom and is primarily a
 safety/residency boundary, not guaranteed to be a smooth performance knob.
+Phase 1 discovers the broad N/residency operating regime; this subgroup tunes
+residency details within the retained geometry rather than repeating a broad
+N sweep.
 
 On 8×H200, fill-device produced a modest defensible gain, but its direct pair
 was node-confounded. A broad buffer region was flat, and smaller reserves
 caused refinement to stall and verification to fail. The exact old MB
 threshold cannot be transferred because `N`, `NB`, ownership, communication
-workspaces, package, and topology have changed.
+workspaces, package, and topology have changed. The old small-N study showed
+that higher FP64 residency can sharply reduce IR; the later bundled record
+shows such a regime can win globally when enough LU efficiency is recovered.
+Neither result identifies a universal `N` or buffer setting.
 
 Relevant dependencies include E05, E14–E17, E21, and E36.
 
@@ -712,9 +865,11 @@ can add synchronization, cache/NUMA traffic, and contention with MPI progress.
 
 On 8×H200, register-step sweeps were below the noise floor in two residency
 contexts. Every tested nonzero DGEMV partition slowed only the solver under one
-specific OpenMP/residency/precision regime. These negative results are useful
-priors, not universal defaults, because ranks/node and host/refinement balance
-have changed.
+specific large-N OpenMP/residency/precision regime. The later small-N record
+used a much larger nonzero partition but changed several controls at once, so
+it neither proves a DGEMV benefit nor preserves `0` as a universal optimum.
+These results are conditional priors because ranks/node, N/residency, and the
+host/refinement balance can change.
 
 Relevant dependencies include E17 and E20–E21; precision later invokes E35.
 
@@ -730,8 +885,10 @@ Relevant dependencies include E17 and E20–E21; precision later invokes E35.
    mechanism-distinct values. Change one host/memory mechanism at a time.
 3. Retain several values only when a clear region appears; then refine and
    repeat with the current OpenMP/affinity/residency control.
-4. Reopen DGEMV after Phase 5 precision only if refinement work changes
-   materially; otherwise preserve the Phase 3 conclusion.
+4. Reopen DGEMV after Phase 5 precision, or after any later material
+   N/residency/host-runtime change, only if refinement work changes
+   materially; otherwise preserve the Phase 3 conclusion within its tested
+   operating regime.
 
 #### C. Metrics to Observe
 
@@ -785,6 +942,10 @@ On the single NVSwitch-connected 8×H200 node, broadcast and chunk clean scores
 were inside measured drift. Traces still proved that they changed execution:
 MPI-heavy broadcast reduced NCCL work but increased MPI/stream waits, and a
 smaller chunk increased launch count without shortening the critical path.
+The later small-N record used broadcast `100` rather than the historical `50`,
+but changed multiple controls simultaneously; it does not isolate a broadcast
+effect. `50` is therefore only a historical control conditional on the old
+N/NB/grid/residency regime, not a generally optimal percentage.
 Crossing two network boundaries on the 3-node target fully reopens all of
 these conclusions. Single-node flatness must never be projected onto
 multinode scaling.
@@ -891,9 +1052,11 @@ On 8×H200, factorization priority shortened LU in a same-job 2×2 factorial
 test, TRSM priority was neutral, and disabling the separate GEMM stream
 regressed LU. However, the stream×priority interaction was not fully crossed.
 All scored work used FP16, and the effective SM90 kernel was observed rather
-than compared against alternatives. Therefore there is no old precision or
-kernel winner, and the old scheduling result is conditional on its single-node
-communication, `NB`, and precision regime.
+than compared against alternatives. The later small-N record used
+factorization priority `0` as part of a multi-parameter bundle, so it does not
+isolate a reversal or establish `0` as the winner. Therefore there is no old
+precision or kernel winner, and every scheduling result is conditional on its
+N/NB/grid/residency, host-runtime, communication, and precision regime.
 
 Relevant dependencies include E28–E36. In particular, precision is upstream of
 communication, residency, refinement, and scheduling; kernel selection is
@@ -972,9 +1135,9 @@ which synchronization prevents separate streams from overlapping.
 
 ## 9. Mandatory Dependency Review After Every Phase/Subgroup
 
-The checkpoint is mandatory after Phase 0, Phase 1, each of 2A/2B/2C, each of
-3A/3B/3C/3D, and each major sweep or later-created subgroup in Phases 4 and 5.
-It is not a separate final phase.
+The checkpoint is mandatory after Phase 0, after Phase 1B (covering the Phase
+1A→1B sequence), each of 2A/2B/2C, each of 3A/3B/3C/3D, and each major sweep
+or later-created subgroup in Phases 4 and 5. It is not a separate final phase.
 
 At the checkpoint, the agent must pause and ask the user:
 
@@ -1024,8 +1187,10 @@ Do not automatically reopen everything. Examples that justify reopening
 include a major `N`/`NB` change, a grid crossing node boundaries differently,
 a new rank/GPU/NIC map, a residency mode that moves the memory boundary, a
 multinode transport change, or a precision/kernel change that shifts LU versus
-refinement. A small numerical winner inside noise does not by itself justify a
-campaign-wide reset.
+refinement. In particular, a grid change that materially shifts LU/IR balance
+or reverses the N ranking calls for a bounded targeted N resweep, not a full
+N×grid matrix. A small numerical winner inside noise does not by itself justify
+a campaign-wide reset.
 
 ## 10. Tracing / Investigation Decision Rules
 
@@ -1068,7 +1233,8 @@ should not be expanded into broader tracing.
 | Stage | Next bounded action | Move-on condition |
 |---|---|---|
 | 0. Characterize | Inventory every node/fabric/CPU/NUMA/NIC/cpuset; freeze software; prove rank↔GPU↔NIC mapping; validate and repeat one conservative run. | New-system original baseline, noise floor, valid mapping, and safe headroom exist. |
-| 1. `N` + `NB` | Broad-screen `NB` at safe `N`; bracket `N` only for retained `NB`s; recheck `NB` near useful `N`; repeat controls. | A correct, safe, bounded region or plateau survives noise. |
+| 1A. N/residency | Derive `N_pivot`; with `--fill-device 1` and fixed provisional controls, sweep about 70–120% in 10% steps; refine the best and IR-transition regions in about 5% steps. | One or more correct, safe N/residency regimes survive LU/IR attribution and noise checks. |
+| 1B. NB within regime(s) | Broad-screen `NB` at representative retained N controls; review whether NB changes N ranking; run only a targeted local N resweep if justified. | A correct, safe, bounded N/NB region or plateau survives noise and its dependency review. |
 | 2A. Grid/order | Screen grid shapes under one verified map; test order only for retained shapes. | A repeatable shortlist exists; sub-noise candidates remain tied. |
 | 2B. GPU placement | Overlay shortlisted grids on node/GPU fabric; test only mechanism-distinct maps. | Every rank uses the intended GPU and useful maps are bounded. |
 | 2C. Other placement | If NIC/rail or launcher placement creates a real choice, compare a few verified policies; otherwise close as inapplicable. | Mapping is stable and has no unexplained node/rail skew. |
@@ -1079,11 +1245,16 @@ should not be expanded into broader tracing.
 | 4. Communication | Verify UCX/NIC/GPU-direct; screen panel policy; test valid chunks only on retained policies; use fallbacks diagnostically. | Mapping-stable communication policy/plateau and scaling are understood. |
 | 5. Compute/final scheduling | Screen supported precision by valid end-to-end time; screen supported kernels; then test stream/priorities with a small interaction design. | Correct, repeatable final stack passes targeted dependency revalidation. |
 
-After every row—and after every later-created subgroup in Phases 4/5—ask the
-user whether to perform or explicitly skip the dependency review, record the
-decision, and obtain human review before continuing. At any stage, treat
-invalid/OOM/non-finite runs as boundaries, differences inside measured drift
-as ties, and traces as hypothesis tests rather than routine data collection.
+After Phase 0, after the combined 1A→1B sequence, after every subsequent table
+row, and after every later-created subgroup in Phases 4/5, ask the user whether
+to perform or explicitly skip the dependency review, record the decision, and
+obtain human review before continuing. At any stage, treat invalid/OOM/
+non-finite runs as boundaries, differences inside measured drift as ties, and
+traces as hypothesis tests rather than routine data collection.
+
+The campaign rule remains: do not solve dependencies by brute-force Cartesian
+search. Solve them with sequential phase sweeps, explicit dependency review,
+and bounded targeted resweeps.
 
 The campaign is complete when the final configuration is correct, repeatable,
 above noise, compared against the unchanged new-system original baseline, and
@@ -1100,17 +1271,22 @@ measurements separate from new-topology decisions:
 - [First consolidation](../consolidate_1.md)
 - [Mechanism consolidation](../consolidate_m1.md)
 - [Communication/scheduling consolidation](../consolidate_m2.md)
-- Geometry analyses: [N](../n-sweep-370k-510k.md),
-  [NB](../nb-sweep.md), and [coupled N/NB](../N-NB-resweep.md)
-- Decomposition and host analyses: [grid/order](../np-sweep.md),
-  [affinity](../affinity-491k.md), and [OpenMP](../omp-sweep.md)
-- Residency analyses: [fill/buffer/register](../matrix-placement-491k.md) and
-  [N/residency interaction](../matrix-placement-N-resweep.md)
+- Geometry analyses: [N](../analysis/n-sweep-370k-510k.md),
+  [NB](../analysis/nb-sweep.md), and
+  [coupled N/NB](../analysis/N-NB-resweep.md)
+- Decomposition and host analyses: [grid/order](../analysis/np-sweep.md),
+  [affinity](../analysis/affinity-491k.md), and
+  [OpenMP](../analysis/omp-sweep.md)
+- Residency analyses:
+  [fill/buffer/register](../analysis/matrix-placement-491k.md) and
+  [N/residency interaction](../analysis/matrix-placement-N-resweep.md)
+- New bundled operating-regime evidence:
+  [`SingleNode-resweep_v1.1`](../../experiments/SingleNode-resweep/README.md)
 - Communication and scheduling analyses:
-  [MPI/NCCL and chunking](../mpi-nccl-coms-sweep.md),
-  [factorization/TRSM priority](../factorization-priority.md),
-  [separate GEMM stream](../separate-stream-for-gemm.md), and
-  [DGEMV host threading](../dgemv-with-multiple-threads.md)
+  [MPI/NCCL and chunking](../analysis/mpi-nccl-coms-sweep.md),
+  [factorization/TRSM priority](../analysis/factorization-priority.md),
+  [separate GEMM stream](../analysis/separate-stream-for-gemm.md), and
+  [DGEMV host threading](../analysis/dgemv-with-multiple-threads.md)
 - [Dependency model](../dependency-graph/README.md)
 - [Machine-readable dependency edges](../dependency-graph/edges.csv)
 - [HPL-MxP tuning-parameter guide](../../HPL_MxP_TuningParam_Guide.md)
