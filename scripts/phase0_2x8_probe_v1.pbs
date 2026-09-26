@@ -1,0 +1,430 @@
+#!/bin/bash
+# Read-only comprehensive GAAS Phase-0 probe for the 2x8 HPL-MxP campaign
+# (TASK-000, Strategic Specification deliverable A).
+#
+# Purpose: characterize one real select=2:ngpus=8, place=scatter allocation
+# (2 GAAS nodes x 8 H200 GPUs, no mpiprocs) on BOTH allocated nodes, and
+# freeze the current NVIDIA/container/software provenance. Observation only:
+# no configuration changes, no installs, no MPI launch, no benchmark run.
+#
+# Expected working directory: scripts/ in the project repository on GAAS.
+# Submit from scripts/ (as documented in scripts/README.md) so the relative
+# PBS -o/-e paths resolve under scripts/outputs/:
+#   qsub phase0_2x8_probe_v1.pbs            (default queue gpu_ded)
+#   qsub -q gpu_as phase0_2x8_probe_v1.pbs  (approved alternative queue)
+#
+# Inputs: none; one PBS allocation, all parameters baked in.
+# Outputs (all under scripts/outputs/, attempt phase0_2x8_probe_v1):
+#   phase0_2x8_probe_v1.o / .e           PBS job stdout/stderr
+#   phase0_2x8_probe_v1_node_<host>.log  one comprehensive capture per node
+#                                        (written by the lock-guarded pbsdsh
+#                                        per-node body)
+#   phase0_2x8_probe_v1_node_body.sh     exact per-node body executed
+#   .locks_phase0_2x8_probe_v1_<jobid>/  once-per-node runtime guard dirs
+#
+# Assumptions (from recorded evidence): GAAS batch nodes expose nvidia-smi,
+# ibstat, and ibdev2netdev in the base batch PATH (compute_node_hardware_probe
+# v1.1); pbsdsh task stdout does NOT reliably return to the job stdout
+# (phase2-preflight v1), so the per-node body writes its own log file; scripts/
+# is on a filesystem shared with all allocated nodes (validated multinode
+# launch contract); /workspace/hpl-mxp.sh --help prints usage only and is
+# bounded by timeout. nvidia-smi '-q -d PCI' and the per-GPU 'nvlink --status'
+# forms are not accepted by the installed driver (v1 probe, exit 2/255), so
+# the topology matrix, full -q record, and lspci are the PCIe/NVLink evidence.
+#
+# Retries: every retry must use a new attempt name and new output filenames;
+# this script aborts before capturing if same-attempt evidence already exists.
+
+#PBS -N phase0_2x8_probe_v1
+#PBS -q gpu_ded
+#PBS -P hpc_ebslee
+#PBS -l select=2:ngpus=8
+#PBS -l place=scatter
+#PBS -l walltime=00:30:00
+#PBS -o outputs/phase0_2x8_probe_v1.o
+#PBS -e outputs/phase0_2x8_probe_v1.e
+
+set -uo pipefail
+
+# --- Probe configuration ------------------------------------------------------
+ATTEMPT="phase0_2x8_probe_v1"
+EXPECTED_NODES=2
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+MODULE_SET="apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0"
+
+cd "${PBS_O_WORKDIR:?PBS_O_WORKDIR is not set}"
+: "${PBS_JOBID:?PBS_JOBID is not set}"
+: "${PBS_NODEFILE:?PBS_NODEFILE is not set}"
+
+OUTDIR="$PWD/outputs"
+LOCK_BASE="${OUTDIR}/.locks_${ATTEMPT}_${PBS_JOBID}"
+NODE_BODY="${OUTDIR}/${ATTEMPT}_node_body.sh"
+mkdir -p "$OUTDIR"
+
+run_optional() {
+    # Run an optional diagnostic without making its availability a fatal
+    # preflight requirement; the command and its exit status stay visible
+    # in the raw evidence for later interpretation.
+    local label="$1"
+    shift
+    echo
+    echo "### ${label}"
+    if command -v "$1" >/dev/null 2>&1; then
+        echo "+ $*"
+        "$@"
+        echo "[exit_status=$?]"
+    else
+        echo "[unavailable: command '$1' was not found]"
+    fi
+}
+
+# --- Preflight: tools and inputs the probe directly depends on ----------------
+for tool in bash awk grep sort mkdir timeout date ls cat stat chmod paste; do
+    command -v "$tool" >/dev/null 2>&1 || {
+        echo "FATAL: required tool '$tool' not found" >&2
+        exit 1
+    }
+done
+[ -x /opt/pbs/bin/pbsdsh ] || { echo "FATAL: /opt/pbs/bin/pbsdsh not executable" >&2; exit 1; }
+[ -r "$PBS_NODEFILE" ] || { echo "FATAL: PBS_NODEFILE unreadable" >&2; exit 1; }
+[ -f "$SIF" ] || { echo "FATAL: SIF not found: $SIF" >&2; exit 1; }
+
+# Evidence-preservation guard: refuse to run over an existing same-attempt
+# capture. Every retry must use a new attempt name and new output filenames.
+if ls "${OUTDIR}/${ATTEMPT}"_node_*.log >/dev/null 2>&1 || [ -e "$NODE_BODY" ]; then
+    echo "FATAL: same-attempt evidence already exists under ${OUTDIR}; use a new attempt name" >&2
+    exit 1
+fi
+
+# --- Probe metadata -------------------------------------------------------------
+echo "probe_id=${ATTEMPT}"
+echo "probe_scope=read-only 2x8 Phase-0 characterization (TASK-000 deliverable A)"
+echo "pbs_job_id=${PBS_JOBID}"
+echo "queue=${PBS_O_QUEUE:-unknown}"
+echo "project=hpc_ebslee"
+echo "resource_request=select=2:ngpus=8 place=scatter walltime=00:30:00 (no mpiprocs)"
+echo "submitted_workdir=${PBS_O_WORKDIR:-unknown}"
+date --iso-8601=seconds
+echo "mother_superior=$(hostname)"
+echo "sif=${SIF}"
+echo "modules=${MODULE_SET}"
+echo "repo_revision=$(git rev-parse HEAD 2>/dev/null || echo git-unavailable)"
+
+echo
+echo "============================================================"
+echo "SECTION 1: PBS ALLOCATION IDENTITY"
+echo "============================================================"
+echo "--- raw PBS_NODEFILE ---"
+cat "$PBS_NODEFILE"
+GRANTED_HOSTS="$(awk '{gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 != "" && !seen[$0]++) print $0}' "$PBS_NODEFILE")"
+NNODES="$(printf '%s\n' "$GRANTED_HOSTS" | grep -c . || true)"
+echo "distinct_nodes=${NNODES} (expected ${EXPECTED_NODES})"
+echo "granted_hosts=$(printf '%s\n' "$GRANTED_HOSTS" | paste -sd' ' -)"
+echo "--- qstat -f allocation fields (whitelisted; env excluded) ---"
+/opt/pbs/bin/qstat -f "$PBS_JOBID" 2>&1 \
+    | grep -E '^(Job Id:|    (Job_Name|job_owner|job_state|queue|project|exec_vnode|submit_args|Resource_List\.[A-Za-z_]+) =)' \
+    | head -40 \
+    || echo "[qstat -f fields unavailable]"
+echo "--- PBS environment variables ---"
+env | sort | grep "^PBS_" || echo "[no PBS_ variables]"
+if [ "$NNODES" -ne "$EXPECTED_NODES" ]; then
+    echo "FATAL: expected ${EXPECTED_NODES} distinct nodes from select=2:ngpus=8 + place=scatter, got ${NNODES}" >&2
+    exit 1
+fi
+
+# --- Per-node capture body (written under outputs/, run once per node) ---------
+# Quoted heredoc: the body below is stored verbatim and executed by /bin/bash
+# on every allocated vnode via pbsdsh. A per-host lock directory guarantees a
+# single capture per node; the body writes its own per-node log file because
+# pbsdsh task stdout does not reliably return to the job stdout on GAAS.
+cat > "$NODE_BODY" <<'PHASE0_NODE_BODY_EOF'
+#!/bin/bash
+# Per-node capture body for the 2x8 Phase-0 probe. Invoked on every allocated
+# vnode by the PBS script via:
+#     pbsdsh -- /bin/bash <this-body> <outdir> <attempt> <lock_base> <sif>
+# Read-only observation: no configuration changes, no installs, no benchmarks.
+set -u
+
+OUTDIR="${1:?usage: node body <outdir> <attempt> <lock_base> <sif>}"
+ATTEMPT="${2:?missing attempt}"
+LOCK_BASE="${3:?missing lock_base}"
+SIF="${4:?missing sif}"
+
+NODE="$(hostname)"
+mkdir -p "$LOCK_BASE" 2>/dev/null || true
+LOCK_DIR="${LOCK_BASE}/${NODE}"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo "PHASE0_NODE_CAPTURE SKIP ${NODE} (already captured)"
+    exit 0
+fi
+OUT="${OUTDIR}/${ATTEMPT}_node_${NODE}.log"
+
+run_optional() {
+    local label="$1"
+    shift
+    echo
+    echo "### ${label}"
+    if command -v "$1" >/dev/null 2>&1; then
+        echo "+ $*"
+        "$@"
+        echo "[exit_status=$?]"
+    else
+        echo "[unavailable: command '$1' was not found]"
+    fi
+}
+
+{
+    echo "=== PHASE0_NODE_CAPTURE BEGIN ${NODE} attempt=${ATTEMPT} ==="
+    echo "capture_start=$(date --iso-8601=seconds)"
+    echo "pbs_job_id=${PBS_JOBID:-unset}"
+    echo "node=${NODE}"
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 1: HOST IDENTITY AND OPERATING SYSTEM"
+    echo "============================================================"
+    run_optional "Kernel and architecture" uname -a
+    run_optional "Operating-system release" bash -c "head -5 /etc/os-release"
+    run_optional "Uptime and load" uptime
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 2: CPU TOPOLOGY AND FEATURES"
+    echo "============================================================"
+    run_optional "CPUs visible to this job task" nproc
+    run_optional "All logical CPUs on the node" nproc --all
+    run_optional "Detailed CPU topology" lscpu
+    run_optional "CPU-to-core/socket/NUMA mapping" bash -c "lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE"
+    run_optional "CPU feature flags" bash -c "grep -m 1 '^flags' /proc/cpuinfo"
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 3: ALLOCATION-VISIBLE CPUSET AND AFFINITY"
+    echo "============================================================"
+    run_optional "Job-task cpuset and memory nodes" bash -c "grep -E 'Cpus_allowed_list|Mems_allowed_list' /proc/self/status"
+    run_optional "Cpuset membership" bash -c "cat /proc/self/cpuset"
+    run_optional "Task CPU affinity" taskset -cp "$$"
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 4: NUMA TOPOLOGY AND HOST MEMORY"
+    echo "============================================================"
+    run_optional "NUMA hardware summary" numactl -H
+    run_optional "NUMA memory statistics" bash -c "numastat -m 2>&1 | head -30"
+    run_optional "NUMA node memory files" bash -c 'for f in /sys/devices/system/node/node*/meminfo; do echo --- "$f"; head -4 "$f"; done'
+    run_optional "Host memory summary" free -h
+    run_optional "Key host-memory counters" bash -c "grep -E '^(MemTotal|MemFree|MemAvailable|SwapTotal|SwapFree):' /proc/meminfo"
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 5: GPU INVENTORY, DRIVER, MEMORY, CLOCKS, POWER, PCIE"
+    echo "============================================================"
+    run_optional "GPU summary table (driver and CUDA banner)" bash -c "nvidia-smi 2>&1 | head -20"
+    run_optional "GPU inventory" nvidia-smi -L
+    run_optional "GPU state query (clocks, power, temperature, PCIe, VRAM)" nvidia-smi --query-gpu=index,name,uuid,pci.bus_id,driver_version,vbios_version,memory.total,memory.used,memory.free,pstate,temperature.gpu,fan.speed,power.draw,power.limit,clocks.current.graphics,clocks.current.memory,clocks.max.graphics,clocks.max.memory,pcie.link.gen.current,pcie.link.gen.max,pcie.link.width.current,pcie.link.width.max --format=csv
+    run_optional "Detailed GPU information (full record)" nvidia-smi -q
+    run_optional "GPU process accounting (probe-time contamination view)" nvidia-smi pmon -c 1
+    run_optional "Compute processes using GPUs" nvidia-smi --query-compute-apps=pid,process_name,used_gpu_memory --format=csv
+    run_optional "Kernel NVIDIA driver record" bash -c "head -5 /proc/driver/nvidia/version"
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 6: GPU, PCIE, NVLINK, NVSWITCH, AND NIC TOPOLOGY"
+    echo "============================================================"
+    run_optional "GPU topology matrix (GPU/NIC/CPU/NUMA locality)" nvidia-smi topo -m
+    run_optional "PCI devices relevant to GPU and fabric" bash -c "lspci -nn 2>/dev/null | grep -Ei 'NVIDIA|Mellanox|InfiniBand|Ethernet'"
+    run_optional "Ethernet netdev NUMA locality" bash -c 'for d in /sys/class/net/*; do printf "%s numa_node=" "$(basename "$d")"; cat "$d/device/numa_node" 2>/dev/null || echo unknown; done'
+    run_optional "InfiniBand device NUMA locality" bash -c 'for d in /sys/class/infiniband/*; do printf "%s numa_node=" "$(basename "$d")"; cat "$d/device/numa_node" 2>/dev/null || echo unknown; done'
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 7: INFINIBAND AND RDMA FABRIC STATE"
+    echo "============================================================"
+    run_optional "InfiniBand device-to-network mapping" ibdev2netdev
+    run_optional "InfiniBand device and port status (state/link layer/rate)" ibstat
+    run_optional "RDMA link inventory" rdma link
+    run_optional "Network interfaces" ip -br link
+    run_optional "InfiniBand class devices" bash -c "ls -la /sys/class/infiniband"
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 8: GPUDIRECT PEER-MEMORY AND GDR MODULE STATE"
+    echo "============================================================"
+    run_optional "Loaded GPU/RDMA kernel modules" bash -c "grep -iE 'nvidia_peermem|nv_peer_mem|gdrdrv|nv_rdma|mlx5_ib|mlx5_core|ib_uverbs|ib_core|rdma_ucm' /proc/modules || echo '[no matching modules loaded]'"
+    run_optional "Peer-memory and GDR module sysfs state" bash -c "ls -d /sys/module/nvidia_peermem /sys/module/nv_peer_mem /sys/module/gdrdrv /sys/module/nv_rdma 2>&1"
+    run_optional "nvidia_peermem version" bash -c "cat /sys/module/nvidia_peermem/version 2>&1"
+    run_optional "NVIDIA peermem proc entry" bash -c "ls -la /proc/driver/nvidia/peermem 2>&1; cat /proc/driver/nvidia/peermem/version 2>&1"
+    run_optional "GDR and NVIDIA capability devices" bash -c "ls -la /dev/gdrdrv 2>&1; ls -la /dev/nvidia-caps 2>&1"
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 9: CONTAINER RUNTIME AND STACK (THIS NODE)"
+    echo "============================================================"
+    if [ -x /usr/local/apptainer/1.4.1/bin/apptainer ]; then
+        run_optional "Apptainer version (this node)" /usr/local/apptainer/1.4.1/bin/apptainer --version
+    else
+        run_optional "Apptainer version (this node)" apptainer --version
+    fi
+    run_optional "SIF image file (this node view)" bash -c "ls -la '$SIF' 2>&1; stat -c 'size=%s bytes mtime=%y' '$SIF' 2>&1"
+    if [ -f "$SIF" ]; then
+        # Same absolute-path preamble as the validated container bridge
+        # (multi-node-test/rsh_pbsdsh_container.sh) so the encrypted-SIF
+        # mount helpers are found without modules; bounded by timeout.
+        export PATH="/usr/local/apptainer/1.4.1/bin:/usr/local/squashfuse/0.5.2/bin:/usr/local/gocryptfs/2.5.0/bin:${PATH}"
+        export LD_LIBRARY_PATH="/usr/local/squashfuse/0.5.2/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+        echo
+        echo "### Bounded in-container stack check (this node)"
+        timeout 120 /usr/local/apptainer/1.4.1/bin/apptainer exec --nv "$SIF" bash -c '
+            echo "container_hostname=$(hostname)"
+            echo "--- container OS ---"
+            head -3 /etc/os-release 2>/dev/null
+            echo "--- container CUDA ---"
+            head -8 /usr/local/cuda/version.json 2>/dev/null || cat /usr/local/cuda/version.txt 2>/dev/null || echo "[no cuda version file]"
+            echo "--- container MPI ---"
+            /usr/local/mpi/bin/mpirun --version 2>&1 | head -3
+        '
+        echo "[container_check_exit_status=$?]"
+    else
+        echo "[SIF not found from this node: $SIF]"
+    fi
+
+    echo
+    echo "============================================================"
+    echo "NODE SECTION 10: IN-JOB NODE STATE (CO-TENANT VIEW, BEST EFFORT)"
+    echo "============================================================"
+    run_optional "pbsnodes view of this node" bash -c "/opt/pbs/bin/pbsnodes '$NODE' 2>&1 | grep -E '^[[:space:]]*(state|np|gpus|jobs|resources_assigned\.(ncpus|ngpus|mem)|status) =' || echo '[pbsnodes fields unavailable]'"
+
+    echo
+    echo "capture_end=$(date --iso-8601=seconds)"
+    echo "=== PHASE0_NODE_CAPTURE END ${NODE} ==="
+} > "$OUT" 2>&1
+
+echo "PHASE0_NODE_CAPTURE ${NODE} wrote ${OUT}"
+PHASE0_NODE_BODY_EOF
+chmod +x "$NODE_BODY"
+
+# --- Per-node capture: run the body once per allocated node --------------------
+echo
+echo "============================================================"
+echo "SECTION 2: PER-NODE CAPTURE VIA pbsdsh (ONCE PER NODE)"
+echo "============================================================"
+echo "node_body=${NODE_BODY}"
+echo "lock_base=${LOCK_BASE}"
+# pbsdsh fires once per vnode; the per-host lock in the body deduplicates.
+# pbsdsh return status is advisory only: the per-node log files written by
+# the body are the authoritative evidence (GAAS pbsdsh-stdout limitation).
+/opt/pbs/bin/pbsdsh -- /bin/bash "$NODE_BODY" "$OUTDIR" "$ATTEMPT" "$LOCK_BASE" "$SIF" \
+    || echo "WARN: pbsdsh returned non-zero; verifying evidence from per-node log files"
+
+# --- Validated module environment (required by the container sections) ---------
+echo
+echo "============================================================"
+echo "SECTION 3: MODULE ENVIRONMENT AND HOST TOOLS"
+echo "============================================================"
+module purge || true
+module load $MODULE_SET || { echo "FATAL: cannot load the validated module set: $MODULE_SET" >&2; exit 1; }
+module list 2>&1 || true
+echo "--- currently available versions of the validated module set ---"
+module avail apptainer 2>&1 | head -20 || true
+module avail nvhpc 2>&1 | head -20 || true
+module avail squashfuse 2>&1 | head -10 || true
+module avail gocryptfs 2>&1 | head -10 || true
+run_optional "Apptainer version (mother superior)" apptainer --version
+run_optional "Host MPI launcher version (nvhpc HPC-X)" mpirun --version
+
+# --- Container image identity ---------------------------------------------------
+echo
+echo "============================================================"
+echo "SECTION 4: CONTAINER IMAGE IDENTITY"
+echo "============================================================"
+ls -la "$SIF"
+stat -c "size=%s bytes mtime=%y" "$SIF" || true
+echo "--- apptainer inspect (labels) ---"
+timeout 120 apptainer inspect "$SIF" 2>&1 | head -40 || echo "[apptainer inspect unavailable]"
+echo "--- apptainer sif list (descriptors, head) ---"
+timeout 120 apptainer sif list "$SIF" 2>&1 | head -10 || echo "[apptainer sif list unavailable]"
+echo "--- sha256 (guarded, optional) ---"
+timeout 600 sha256sum "$SIF" || echo "[sha256sum did not complete within 600s; non-fatal, stat+inspect recorded above]"
+
+# --- Container software stack provenance ----------------------------------------
+echo
+echo "============================================================"
+echo "SECTION 5: CONTAINER SOFTWARE STACK PROVENANCE"
+echo "============================================================"
+timeout 180 apptainer exec --nv "$SIF" bash -c '
+    echo "--- container OS ---"
+    head -3 /etc/os-release 2>/dev/null
+    echo "--- container MPI (mpirun) ---"
+    /usr/local/mpi/bin/mpirun --version 2>&1 | head -5
+    echo "--- container MPI (ompi_info) ---"
+    ompi_info --version 2>&1 | head -15
+    echo "--- CUDA-aware MPI evidence ---"
+    ompi_info 2>/dev/null | grep -i "opal_built_with_cuda_support" | head -3
+    ompi_info --param btl all 2>/dev/null | grep -i "smcuda" | head -3
+    echo "--- container UCX ---"
+    ucx_info -v 2>&1 | head -8
+    echo "--- container NCCL libraries ---"
+    ldconfig -p 2>/dev/null | grep -i nccl | head -5
+    timeout 60 find /usr /opt -maxdepth 5 -name "libnccl.so*" 2>/dev/null | head -8
+    echo "--- container CUDA ---"
+    head -8 /usr/local/cuda/version.json 2>/dev/null || cat /usr/local/cuda/version.txt 2>/dev/null || echo "[no cuda version file]"
+    nvcc --version 2>&1 | tail -2
+'
+echo "[container_stack_exit_status=$?]"
+
+# --- Effective installed HPL-MxP release and accepted flags ---------------------
+echo
+echo "============================================================"
+echo "SECTION 6: EFFECTIVE INSTALLED HPL-MxP RELEASE AND ACCEPTED FLAGS"
+echo "============================================================"
+# Usage output only: no problem size is supplied, so no benchmark phase runs;
+# the invocation is bounded by timeout. This records the effective installed
+# release and the exact accepted flag spellings for TASK-000 deliverable B.
+timeout 180 apptainer exec --nv "$SIF" bash -c '
+    echo "--- /workspace benchmark layout ---"
+    ls -la /workspace 2>&1 | head -15
+    echo "--- hpl-mxp-linux-x86_64 directory ---"
+    ls -la /workspace/hpl-mxp-linux-x86_64 2>&1 | head -15
+    echo "--- hpl-mxp.sh --help (usage output only) ---"
+    timeout 120 /workspace/hpl-mxp.sh --help 2>&1 | head -400
+    echo "[help_pipeline_status=${PIPESTATUS[0]}]"
+'
+echo "[hplmxp_release_exit_status=$?]"
+
+# --- Verify both allocated nodes are represented in the evidence ----------------
+echo
+echo "============================================================"
+echo "SECTION 7: PER-NODE EVIDENCE VERIFICATION"
+echo "============================================================"
+ls -la "${OUTDIR}/${ATTEMPT}"_node_*.log 2>/dev/null || echo "[no per-node logs found]"
+LOG_COUNT="$(ls "${OUTDIR}/${ATTEMPT}"_node_*.log 2>/dev/null | wc -l)"
+MISSING=0
+for f in "${OUTDIR}/${ATTEMPT}"_node_*.log; do
+    [ -e "$f" ] || continue
+    if ! grep -q "PHASE0_NODE_CAPTURE END" "$f"; then
+        echo "FATAL: per-node capture incomplete (no END marker): $f" >&2
+        MISSING=1
+    fi
+done
+if [ "$LOG_COUNT" -lt "$EXPECTED_NODES" ]; then
+    echo "FATAL: expected at least ${EXPECTED_NODES} per-node logs, found ${LOG_COUNT}" >&2
+    MISSING=1
+fi
+echo "--- captured node identities ---"
+grep -H "node=" "${OUTDIR}/${ATTEMPT}"_node_*.log 2>/dev/null | head -5 || true
+if [ "$MISSING" -ne 0 ]; then
+    echo "FATAL: per-node evidence incomplete; preserving collected evidence" >&2
+    exit 1
+fi
+echo "per_node_logs_verified=${LOG_COUNT} (expected >= ${EXPECTED_NODES})"
+
+# --- Probe completion -----------------------------------------------------------
+echo
+echo "============================================================"
+echo "SECTION 8: PROBE COMPLETION"
+echo "============================================================"
+echo "--- evidence manifest ---"
+ls -la "${OUTDIR}/${ATTEMPT}"* 2>/dev/null || true
+ls -lad "${LOCK_BASE}" 2>/dev/null || true
+echo "probe_end_time=$(date --iso-8601=seconds)"
+echo "probe_status=completed_read_only_observation"

@@ -1,7 +1,7 @@
 ---
 task_id: TASK-000
 title: Phase 0 — 2x8 GAAS Characterization and Baseline
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: none
 analysis_id: 2x8-gaas-phase0
