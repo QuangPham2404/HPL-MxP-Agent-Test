@@ -63,7 +63,11 @@ owns:
 - causal reasoning;
 - experiment design;
 - Strategic Specification creation;
-- strategic analysis under `planning/analysis/`.
+- strategic analysis under `planning/analysis/`;
+- sweep design from `planning/blueprint/` and interpretation of
+  `planning/dependency-graph/`, including dependency-checkpoint reopen
+  decisions (full re-sweep, light revalidation, or keep closed) and the
+  single next-action recommendation.
 
 The Strategic Analyst drafts new tasks from `workflow/TASK-TEMPLATE.md` for
 Human Leader review. With authorized direct GitHub access, it may write the
@@ -104,6 +108,8 @@ Codex must not:
 - infer campaign-level root cause;
 - choose a new optimization direction;
 - promote new baselines;
+- reopen closed tuning conclusions through the dependency graph or
+  automatically derive and launch revalidation sweeps from graph edges;
 - perform the Strategic Analyst's role.
 
 Codex may calculate mechanical derived values and state directly observed
@@ -194,7 +200,7 @@ current request: committing or pushing changes, remote `git pull`, module or
 package changes, PBS submission, scheduler monitoring beyond a bounded check,
 output retrieval, resource/launcher/transport changes, and any new tuning
 direction. Remote work must use the exact rules in `workflow/00-General-SSH-Rules.md`
-and the multinode gates in `workflow_old/08-Workflow-Multinode-Tuning.md`.
+and the multinode gates in `workflow/08-Workflow-Multinode-Tuning.md`.
 
 The workflow pack does not grant permission to install packages, modify shared
 software, change source code, change resource policy, delete material, cancel
@@ -230,14 +236,15 @@ only after the human explicitly authorizes `ANALYSE_RESULTS`.
 
 ## Notes
 
-For optimization runs, use the flag `--skip-tests 1` to skip test and save time. Also add the following params for monitoriring:
-
-```txt
---monitor-gpu 1 \
---monitor-gpu-interval 10 \
---monitor-gpu-pcie-width-warning 16 \
---monitor-gpu-pcie-gen-warning 5
-```
+For future optimization and scored comparison runs, use `--skip-tests 0` and
+`--monitor-gpu 0`: the package's internal test phase stays enabled and the
+benchmark's continuous GPU monitoring stays disabled. This supersedes the
+earlier `--skip-tests 1` plus GPU-monitoring policy for future runs.
+Diagnostic monitoring is permitted only as a separately labelled, justified,
+and authorized condition; do not silently rank diagnostic monitor-on runs
+against monitor-off scored runs. Phase-0 or pre/post-run hardware-health
+evidence remains part of ordinary runs. Historical PBS scripts and recorded
+evidence are unchanged.
 
 For analysis step in the workflow, always include: (1) the baseline from the baseline run (the original baseline), and (2) the data tables must have a column to show the percentage increase compared to that baseline run
 
@@ -251,10 +258,11 @@ Update on some new directories that might not be mention in the workflow package
   analysis area.
 - `planning/blueprint` is the directory for the general sweeping methodology for HPL-MxP on any hardware topology.
 - `planning/dependency-graph` details the dependency of flags with each other to help structure experiments and determine if resweeps are needed.
-- `workflow_old/08-Workflow-Multinode-Tuning.md` retains the project-specific
-  multinode launch, evidence, authorization, and checkpoint rules. Those gates
-  remain required alongside Workflow v2 until the adapter is migrated; the
-  historical workflow sequence does not replace the active numbered workflow.
+- `workflow/08-Workflow-Multinode-Tuning.md` is the project-specific GAAS
+  HPL-MxP multinode operational adapter inside Workflow v2; it references the
+  `workflow/07-Workflow.md` lifecycle and is not a second workflow.
+  `workflow_old/` is entirely historical, including its copy of the previous
+  multinode adapter.
 - `scripts/gaas-internode-coms-debug/resource-alloc/` also hosts the
   single-node node-contention test (its "experiment 6"). Its planning and
   execution log live in `resource-alloc/SINGLE_NODE_TEST.md` — separate from

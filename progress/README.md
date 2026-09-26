@@ -31,3 +31,32 @@ Unresolved guidance conflicts preserved at the user's request:
 
 Resolve these documentation conflicts only when the user authorizes edits to
 those areas. Setup does not certify the excluded guidance as consistent.
+
+## Resolution — 2026-09-26
+
+The user authorized a bounded documentation reconciliation that resolves both
+conflicts recorded above:
+
+- The GAAS/HPL-MxP multinode adapter now lives at
+  `workflow/08-Workflow-Multinode-Tuning.md` as a project-specific numbered
+  file alongside the general workflow `00`–`07`. `workflow_old/` is entirely
+  historical, including its copy of `08`.
+- For future optimization and scored comparison runs, the user supersedes the
+  earlier root test/monitor policy: use `--skip-tests 0 --monitor-gpu 0`
+  (internal tests enabled, continuous GPU monitoring disabled). Diagnostic
+  monitoring is permitted only as a separately labelled, justified, and
+  authorized condition and is not silently ranked against monitor-off scored
+  runs. Phase-0 or pre/post-run hardware-health evidence remains part of
+  ordinary runs. Historical PBS scripts and recorded evidence are unchanged.
+
+Ownership was resolved in the same reconciliation: the Strategic Analyst owns
+the blueprint and dependency-graph interpretation, the dependency-checkpoint
+reopen decisions (full re-sweep, light revalidation, keep closed), and the
+single next-action recommendation; Codex orchestrates approved task
+execution, validates evidence operationally, and cannot reopen closed tuning
+conclusions, promote baselines, or derive revalidation sweeps from graph
+edges on its own. The historical prior-policy original baseline
+`3x4-baseline_v1` remains immutable; any protocol mismatch against it must be
+disclosed and paired with an appropriate same-protocol in-sweep control. No
+optimization task was created and no cluster work was authorized by this
+reconciliation.

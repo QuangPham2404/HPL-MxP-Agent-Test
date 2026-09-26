@@ -1,5 +1,15 @@
 # Optimization Plan 1: Compute and Scheduling Controls
 
+> **Historical context (2026-09-26).** This is a preserved, completed
+> historical single-node campaign plan, retained as evidence referenced by
+> the dependency graph and sweep blueprint. Its `--skip-tests 1` and
+> continuous GPU-monitoring instructions and its generic
+> "staging/analysis agent" handoff are historical records of that campaign,
+> not authority for future execution. New work follows the current root
+> `AGENTS.md` scored-run controls (`--skip-tests 0`, `--monitor-gpu 0`) and
+> the Workflow v2 task process in `workflow/`. No scientific text, recorded
+> commands, or conclusions below have been changed.
+
 ## Objective and scope
 
 This plan uses the Nsight Systems SQLite exports from the best-configuration

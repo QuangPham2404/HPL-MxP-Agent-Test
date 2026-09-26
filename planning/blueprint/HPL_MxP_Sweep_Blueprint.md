@@ -7,10 +7,12 @@
 ### Purpose
 
 This is an execution blueprint for tuning NVIDIA HPL-MxP on a hardware
-topology that has not yet been characterized. It tells a human and an
-autonomous agent which broad tuning domain to address next, which controls
+topology that has not yet been characterized. It tells the Human Leader and
+Strategic Analyst which broad tuning domain to address next, which controls
 belong to that domain, how to design the next bounded sweep, what evidence to
-collect, and when to refine, investigate, close, or reopen work.
+collect, and when to refine, investigate, close, or reopen work. Its sweep
+procedures are design guidance for the Strategic Analyst; they become
+executable only through a human-approved task that Codex orchestrates.
 
 The immediate target is a competition system with three nodes and four H200
 GPUs per node (12 GPUs total). The method also applies to other node counts,
@@ -26,11 +28,18 @@ decide and execute the next experiment.
 
 This blueprint supplies the optimization decision logic; it does not replace
 the numbered repository workflow. Use `workflow/07-Workflow.md` for the
-Step-2-to-Step-7 execution sequence, `workflow/08-Workflow-Multinode-Tuning.md`
+Step-1-to-Step-7 lifecycle, including the specification-to-task handoff,
+`workflow/08-Workflow-Multinode-Tuning.md`
 for the GAAS multinode launch contract, and the error/authorization files for
-their respective boundaries. A blueprint sweep proposal is not permission to
-submit a job. Creating or updating analysis conclusions still requires the
-general workflow's explicit `ANALYSE_RESULTS` authorization.
+their respective boundaries. A sweep becomes executable only as a
+human-approved, synchronized `tasks/TASK-XXX.md` meeting the front-matter and
+`### 1.11 Authorization` gates defined in `workflow/07-Workflow.md`. The
+Strategic Analyst designs sweeps from this blueprint and interprets the
+dependency graph; Codex executes only the approved task scope and cannot
+reopen closed conclusions or promote baselines on its own. A blueprint sweep
+proposal is not permission to submit a job. Creating or updating analysis
+conclusions still requires the general workflow's explicit `ANALYSE_RESULTS`
+authorization.
 
 ### The non-transfer rule
 
@@ -71,28 +80,38 @@ starts from Phase 0 rather than from any 8×H200 optimum.
   configuration. Report change against that control separately. It isolates
   the tested flag but never replaces the original-baseline column.
 - A fastest single run is a candidate, not a new baseline. Promote a setting
-  only after it passes correctness and the applicable repetition/noise test.
+  only after it passes correctness and the applicable repetition/noise test,
+  and only through an explicit human decision.
 
 ### Campaign operating loop
 
-For every phase or subgroup, the agent works interactively:
+For every phase or subgroup, the Strategic Analyst works interactively with
+the Human Leader, and Codex executes only the approved task scope:
 
 ```text
-Select one current phase/subgroup
+Blueprint + dependency graph
         ↓
-State one decision question and propose a bounded sweep
+Strategic Analyst designs bounded specification
         ↓
-Human reviews/authorizes the proposed experiment
+Human reviews/modifies/approves
         ↓
-Run, validate, and preserve every attempt
+Synchronized tasks/TASK-XXX.md
         ↓
-Analyze against the original baseline, local control, and noise floor
+Codex decomposition and OpenCode execution
         ↓
-Mandatory checkpoint: ask whether to perform or skip dependency review
+Codex evidence validation and Execution Report → EXECUTED
         ↓
-Refine, investigate, close, or reopen only what the evidence justifies
+Human explicit ANALYSE_RESULTS
         ↓
-Human final review before the next sweep/subgroup
+Strategic Analyst raw-evidence analysis
+        ↓
+Checkpoint: perform or explicitly skip dependency review
+        ↓
+Strategic Analyst recommends exactly ONE next action
+        ↓
+Human decision
+        ↓
+New approved task for further execution
 ```
 
 Do not submit an entire phase as one predetermined experiment. Do not build a
@@ -101,7 +120,7 @@ test only the interactions needed to choose among them, and refine locally.
 
 ### What every sweep proposal must state
 
-Before execution, record:
+Before execution, the Strategic Analyst records for human review:
 
 1. the decision question and mechanism-based hypothesis;
 2. the original baseline, in-sweep control, candidates, and fixed controls;
@@ -136,6 +155,14 @@ not silently rank it against monitor-off scored runs. Keep tolerance, test and
 monitor behavior, package, executable, CUDA/MPI environment, and measurement
 procedure constant unless the experiment explicitly studies one of them.
 Never loosen tolerance to make an unstable precision setting pass.
+
+Historical comparability: an original baseline recorded before this common
+protocol was adopted remains immutable and is never recreated or replaced.
+The 3-node × 4-GPU `3x4-baseline_v1`, for example, was recorded under the
+earlier `--skip-tests 1` plus GPU-monitoring policy. When such a historical
+baseline is used as a comparison denominator, disclose the protocol mismatch
+and pair it with the appropriate same-protocol in-sweep control; never
+silently treat monitor-on and monitor-off runs as interchangeable.
 
 Every run must be classified by normal application output, a finite residual,
 the documented tolerance, and `PASSED` verification—not process exit status
@@ -1138,20 +1165,24 @@ which synchronization prevents separate streams from overlapping.
 The checkpoint is mandatory after Phase 0, after Phase 1B (covering the Phase
 1A→1B sequence), each of 2A/2B/2C, each of 3A/3B/3C/3D, and each major sweep
 or later-created subgroup in Phases 4 and 5. It is not a separate final phase.
+The checkpoint is strategic analysis: it occurs after the
+`workflow/07-Workflow.md` `EXECUTED` handoff and explicit human
+`ANALYSE_RESULTS` authorization, not during Codex execution.
 
-At the checkpoint, the agent must pause and ask the user:
+At the checkpoint, the Strategic Analyst must pause and ask the user:
 
 > Should I proceed with the dependency review for this checkpoint, or explicitly skip it?
 
-The agent must not silently omit the checkpoint. If the user chooses to skip,
-record that choice and its scope in the experiment/analysis handoff, then wait
-for the human's final decision before proceeding. If the user chooses to
-proceed:
+The checkpoint must not be silently omitted. If the user chooses to skip,
+record that choice and its scope in the experiment/analysis handoff, and the
+Strategic Analyst still recommends exactly one next action before the
+human's final decision; nothing executes automatically. If the user chooses
+to proceed:
 
 1. Read the relevant entries in the
    [dependency-graph README](../dependency-graph/README.md) and
-   [edges.csv](../dependency-graph/edges.csv). The agent need not reproduce
-   or manually restate every edge.
+   [edges.csv](../dependency-graph/edges.csv). The Strategic Analyst need not
+   reproduce or manually restate every edge.
 2. Ask and answer:
 
    - Did the newly selected setting materially change an upstream variable
@@ -1171,8 +1202,12 @@ proceed:
 4. Recommend exactly one next action: refine the current sweep, run a bounded
    revalidation, investigate a named anomaly, close the subgroup, or proceed
    to the next subgroup.
-5. Present the record for human final review. Do not execute the next action
-   until the user confirms it under the project workflow.
+5. Present the record for human final review. The recommendation is the
+   Strategic Analyst's. Codex may execute an explicitly prespecified approved
+   revalidation, never one derived automatically from graph edges. The next
+   action is executable only through a materialized, synchronized,
+   human-approved task; a conversation recommendation alone authorizes
+   nothing.
 
 Use these interpretations:
 
@@ -1248,7 +1283,9 @@ should not be expanded into broader tracing.
 After Phase 0, after the combined 1A→1B sequence, after every subsequent table
 row, and after every later-created subgroup in Phases 4/5, ask the user whether
 to perform or explicitly skip the dependency review, record the decision, and
-obtain human review before continuing. At any stage, treat invalid/OOM/
+obtain human review before continuing. The Strategic Analyst owns the
+checkpoint record and the single next-action recommendation; Codex executes
+only explicitly approved follow-up work. At any stage, treat invalid/OOM/
 non-finite runs as boundaries, differences inside measured drift as ties, and
 traces as hypothesis tests rather than routine data collection.
 

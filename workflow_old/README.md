@@ -2,16 +2,14 @@
 
 ## Historical status
 
-This directory preserves the previous workflow for reference. Workflow v2
-in `../workflow/` and root `../AGENTS.md` govern all new work; the older
-startup, ownership, analysis, and permission descriptions below are historical.
-
-Exception: `08-Workflow-Multinode-Tuning.md` remains the required GAAS
-multinode adapter alongside Workflow v2 until migrated. Its launch, evidence,
-authorization, and checkpoint gates remain active, subject to root project
-overrides and Workflow v2 role boundaries. Its strategic decisions belong to
-the Strategic Analyst and user; it grants no additional execution authority.
-Use `../workflow/00-General-SSH-Rules.md` for active SSH configuration.
+This directory preserves the previous workflow entirely for historical
+reference, including `08-Workflow-Multinode-Tuning.md`. Nothing in this tree,
+including the multinode adapter copy, is active guidance. Workflow v2 in
+`../workflow/`—with the project-specific multinode adapter
+`../workflow/08-Workflow-Multinode-Tuning.md`—and root `../AGENTS.md` govern
+all new work. The startup, reading-order, ownership, analysis, and permission
+descriptions below are historical. Use
+`../workflow/00-General-SSH-Rules.md` for active SSH configuration.
 
 ## What this package is
 
@@ -144,6 +142,7 @@ instructions and the applicable workflow step.
 - `06-Workflow-Automation-and-Authorization.md`: routine authorization
   boundaries and project-specific permission handoff.
 - `07-Workflow.md`: the complete Step 1 through Step 7 workflow.
-- `08-Workflow-Multinode-Tuning.md`: GAAS multinode HPL-MxP launch, evidence,
-  authorization, and dependency-checkpoint adapter.
+- `08-Workflow-Multinode-Tuning.md`: historical copy of the GAAS multinode
+  HPL-MxP launch, evidence, authorization, and dependency-checkpoint adapter;
+  the active adapter is `../workflow/08-Workflow-Multinode-Tuning.md`.
 - `clusters/`: optional cluster reference material, not mandatory reading.

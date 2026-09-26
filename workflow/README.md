@@ -60,6 +60,12 @@ Read in this order:
 6. `05-Workflow-Error-Patching-Procedures.md`
 7. `06-Workflow-Automation-and-Authorization.md`
 8. `07-Workflow.md`
+9. `08-Workflow-Multinode-Tuning.md`
+
+Files `00`–`07` are the general reusable workflow. `08-Workflow-Multinode-Tuning.md`
+is different: it is the project-specific GAAS HPL-MxP multinode operational
+adapter, added as a numbered file for this project. It extends, and does not
+replace, the `07-Workflow.md` lifecycle.
 
 For normal execution, also read the project root `AGENTS.md`, `APPLICATION.md`,
 the approved `tasks/TASK-XXX.md`, and the latest progress report. During
@@ -191,6 +197,10 @@ instructions and the applicable task.
 - `06-Workflow-Automation-and-Authorization.md`: routine authorization
   boundaries, task-scope inheritance, and project-specific permission handoff.
 - `07-Workflow.md`: the complete task-based Step 1 through Step 7 workflow.
+- `08-Workflow-Multinode-Tuning.md`: project-specific GAAS multinode HPL-MxP
+  operational adapter. Unlike the general files `00`–`07`, this is active
+  project guidance rather than reusable template content; it references the
+  `07-Workflow.md` lifecycle and is not a second workflow.
 - `clusters/`: optional cluster reference material, not mandatory reading.
 
 Task files are persistent project-root handoffs between the Strategic Analyst

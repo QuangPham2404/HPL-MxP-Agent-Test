@@ -71,18 +71,26 @@ the container's `/usr/local/mpi/bin/mpirun`, `/workspace/hpl-mxp.sh`, and
 `multi-node-test/rsh_pbsdsh_container.sh`, with `/opt/pbs` and
 `/var/spool/pbs` bound into the container. Use `place=scatter`, explicit
 per-node hostfile slots, and one rank per GPU; do not set `mpiprocs`.
-Follow `workflow/00-General-SSH-Rules.md` and the retained multinode adapter
-for the complete launch gates. These references do not authorize submission.
+Follow `workflow/00-General-SSH-Rules.md` and the active multinode adapter
+`workflow/08-Workflow-Multinode-Tuning.md` for the complete launch gates.
+These references do not authorize submission.
 
-New optimization runs use the root `AGENTS.md` controls:
+Future optimization and scored comparison runs use the root `AGENTS.md`
+controls:
 
 ```text
---skip-tests 1
---monitor-gpu 1
---monitor-gpu-interval 10
---monitor-gpu-pcie-width-warning 16
---monitor-gpu-pcie-gen-warning 5
+--skip-tests 0
+--monitor-gpu 0
 ```
+
+The package's internal test phase stays enabled and the benchmark's
+continuous GPU monitoring stays disabled; this supersedes the earlier
+`--skip-tests 1` plus GPU-monitoring policy for future runs. Diagnostic
+monitoring is permitted only as a separately labelled, justified, and
+authorized condition; do not silently rank diagnostic monitor-on runs
+against monitor-off scored runs. Phase-0 or pre/post-run hardware-health
+evidence remains part of ordinary runs, and historical PBS scripts and
+recorded evidence are unchanged.
 
 New PBS scripts use accounting group `hpc_ebslee`. Preserve historical job
 metadata as recorded rather than rewriting it to the current group.
@@ -146,6 +154,15 @@ recorded as `3x4-baseline_v1`, PBS job `57232.gaas`: `N=480000`, `NB=1024`,
 verification. Its complete command and monitoring controls are preserved in
 `experiments/3x4-baseline/run_3x4_baseline.pbs`, with raw `.o`/`.e` evidence
 in that experiment's `outputs/` directory.
+
+`3x4-baseline_v1` was recorded under the earlier project policy
+(`--skip-tests 1` with continuous GPU monitoring enabled) and predates the
+current `--skip-tests 0 --monitor-gpu 0` scored-run protocol. It remains the
+immutable original baseline for that topology: do not recreate, replace, or
+promote any run in its place. Disclose this protocol mismatch in any
+comparison against it and use the appropriate same-protocol in-sweep control
+alongside it; never silently treat monitor-on and monitor-off runs as
+interchangeable.
 
 These are original baseline references, not new baseline selections or
 performance conclusions. Keep comparisons topology-specific and include the

@@ -6,6 +6,18 @@ an optimization-dependency model, not a new optimization blueprint. An arrow
 material change to X can invalidate Y's tuning conclusion. It does not assert
 strict mathematical causality.
 
+Ownership: the Strategic Analyst owns the interpretation and use of this
+model—deciding whether a material upstream change reopens an earlier
+conclusion (full re-sweep, light revalidation, or keep closed) and presenting
+the single next-action recommendation after the strategic checkpoint, which
+follows explicit human `ANALYSE_RESULTS` authorization. Any graph-driven
+re-sweep or revalidation is executable only through a human-approved,
+synchronized `tasks/TASK-XXX.md`. Codex executes only explicitly
+prespecified, human-approved revalidations and must not automatically derive
+or launch resweeps from these edges. This note clarifies ownership only; it
+changes no inventory row, edge, evidence classification, or revisit rule
+below.
+
 Numerical optima do not transfer between materially different hardware
 topologies. The same rule applies to a materially different operating regime
 on one topology: a downstream conclusion is closed only inside its tested
