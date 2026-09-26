@@ -41,18 +41,48 @@ new cluster. Preserve the universal rules when adapting this file.
 - Do not perform computational workloads on login nodes.
 - Do not poll the scheduler excessively; use bounded monitoring.
 
-## Cluster configuration — complete before use
+## Cluster configuration — GAAS
 
-Replace every placeholder below. This section is the active cluster adapter.
+This section is the active cluster adapter. Command forms do not grant
+authorization; follow the project-specific permissions in `AGENTS.md`.
 
 - Cluster name: `GAAS`
-- SSH command: `ssh gaas`
+- SSH alias: `gaas`
+- Persistent connection check: `ssh -O check gaas`
+- If unavailable, user recovery command: run `ssh -MNf gaas` locally and
+  complete any authentication personally, then repeat the connection check.
+- Required SSH form: `ssh -o BatchMode=yes gaas '<remote-command>'`
+- Required SCP form: `scp -o BatchMode=yes gaas:<remote-file> <local-file>`
+  (reverse source and destination for an authorized upload).
+- Required rsync form, if used: not currently authorized; use SCP for
+  explicitly authorized transfers.
+- Remote project root:
+  `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test`
 - Scheduler: `PBS`
-- Scheduler submission command: `qsub`
-- Scheduler monitoring command and polling limit: `qstat -u $USER`
-- Module policy: use `module avail` to check
-- Login-node restrictions: `Do not run builds/experiments on login-node`
-- Approved project remote path: `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test`
+- Scheduler submission command: `qsub <reviewed-script.pbs>`, only with
+  explicit authorization in the current request.
+- PBS accounting group: `hpc_ebslee` (not `hpc_admin`).
+- Queue scope for clean-node selection: only `gpu_as`, `gpu_ded`, and
+  `gpu_free`; all other queues are off-limits. The 2026-09-15 probe recorded
+  `gpu_free` as disabled and `gpu_free_normal`/`gpu_free_high` as successors
+  serving `g25`; this observation does not authorize additional queues.
+- Scheduler monitoring command and polling limit: `qstat -u $USER` for a
+  bounded check; repeated monitoring requires explicit authorization and a
+  bounded polling plan. Do not poll excessively.
+- MPI or application launcher: HPL-MxP's container launcher inside PBS.
+  For multinode runs, follow `multi-node-test/GAAS_MULTINODE_SETUP.md` and
+  `multi-node-test/HPL-MxP/`: use the container's own `mpirun` and `orted`,
+  one rank per GPU, and the tested PBS remote-spawn bridge
+  `multi-node-test/rsh_pbsdsh_container.sh`. Submit multinode jobs one at a
+  time. Resource, launcher, and transport changes require explicit approval.
+- Module policy: use `module avail` to inspect available modules; module or
+  package changes require explicit authorization. Do not modify shared software.
+- Login-node restrictions: do not run builds, experiments, or computational
+  workloads on login nodes.
+- Compute-node execution restrictions: run approved workloads through PBS
+  batch jobs, using reviewed scripts and the approved allocation.
+- Approved remote paths: only the remote project root above and its
+  designated project subdirectories; another path requires explicit approval.
 
 ## Cluster adaptation checks
 
