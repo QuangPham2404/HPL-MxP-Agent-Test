@@ -19,8 +19,7 @@ Before starting work in either environment:
 
 1. run `git status`;
 2. run `git pull --ff-only` when synchronization is required;
-3. inspect unexpected changes;
-4. stop if fast-forward synchronization fails or the clones diverge.
+3. inspect unexpected changes if needed;
 
 Before Codex executes an approved task or remote execution after local script
 changes:
