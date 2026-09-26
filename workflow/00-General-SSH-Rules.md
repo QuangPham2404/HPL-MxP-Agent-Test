@@ -16,7 +16,7 @@ new cluster. Preserve the universal rules when adapting this file.
 
 ## Persistent connection rules
 
-- Use the cluster's documented persistent-connection check before remote work.
+- Use the cluster's documented connection check before remote work.
 - If the connection is unavailable, stop and tell the user exactly how to
   restore it.
 - Do not initiate a normal interactive SSH login.
@@ -48,9 +48,7 @@ authorization; follow the project-specific permissions in `AGENTS.md`.
 
 - Cluster name: `GAAS`
 - SSH alias: `gaas`
-- Persistent connection check: `ssh -O check gaas`
-- If unavailable, user recovery command: run `ssh -MNf gaas` locally and
-  complete any authentication personally, then repeat the connection check.
+- Agent is allowed to ssh into GAAS directly using `ssh gaas` command if needed
 - Required SSH form: `ssh -o BatchMode=yes gaas '<remote-command>'`
 - Required SCP form: `scp -o BatchMode=yes gaas:<remote-file> <local-file>`
   (reverse source and destination for an authorized upload).
