@@ -1,23 +1,54 @@
-# Codex HPC Optimization Workflow Pack
+# Codex HPC Optimization Workflow Pack v2
 
 ## What this package is
 
-This directory is a reusable workflow pack for Codex-assisted optimization of
+This directory is the v2 reusable workflow pack for agentic optimization of
 applications on HPC clusters. It defines the repository structure, safe remote
-execution rules, Git synchronization policy, build and experiment lifecycle,
-probing rules, error handling, result logging, analysis, and session handoff.
+execution rules, Git synchronization policy, task-based handoff, Codex
+orchestration, build and experiment lifecycle, probing rules, error handling,
+result logging, strategic analysis, and session handoff.
 
 The pack is intentionally written as a project-adaptation template. It is
 based on the tested LULESH workflow, but application facts, cluster facts,
 resource syntax, compiler environments, launcher behavior, correctness
 criteria, and project-specific permissions must be adapted for each project.
+The v2 architecture keeps the proven HPC execution safeguards while separating
+strategic analysis from bounded execution.
+
+The operating model is:
+
+```text
+Human Leader ↔ Strategic Analyst
+                    │ draft task content
+                    ▼
+              Human review / approval
+                    │ Strategic Analyst writes directly when authorized;
+                    │ otherwise approved fallback materializes
+                    │ commit, push under Git policy
+                    ▼
+              tasks/TASK-XXX.md
+                    ▼
+              Codex Orchestrator
+                    ↕
+              execution workers
+                    ▼
+           Codex operational validation
+                    ▼
+              Codex Execution Report
+                    ▼
+             human-authorized analysis
+                    ▼
+              Strategic Analyst → Human decision
+```
 
 ## Mandatory reading and precedence
 
 When this package is active in a project, Codex must read every numbered file
 in this directory in numerical order before taking workflow action. The files
 are deliberately related; do not selectively task-route them or assume that
-one file is sufficient.
+one file is sufficient. For normal execution, the active task must also be
+explicitly identified; Codex must not infer it from file modification time.
+`SETUP` is the exception before an active task exists.
 
 Read in this order:
 
@@ -29,11 +60,12 @@ Read in this order:
 6. `05-Workflow-Error-Patching-Procedures.md`
 7. `06-Workflow-Automation-and-Authorization.md`
 8. `07-Workflow.md`
-9. `08-Workflow-Multinode-Tuning.md`
 
-Also read the project root `AGENTS.md`, `APPLICATION.md`, and the latest
-progress report before acting. The project `AGENTS.md` identifies the active
-application, cluster, project-specific permissions, and any exceptions.
+For normal execution, also read the project root `AGENTS.md`, `APPLICATION.md`,
+the approved `tasks/TASK-XXX.md`, and the latest progress report. During
+`SETUP`, inspect whichever project guidance and configuration files exist.
+The project `AGENTS.md` identifies the active application, cluster,
+project-specific permissions, and any exceptions.
 
 Instruction precedence is:
 
@@ -49,19 +81,42 @@ the conflict before taking the affected action.
 
 ## User guide
 
-### Starting a new project
+### Setting up a fresh or existing project
 
-1. Clone or copy this package into the new project repository.
-2. Copy or adapt `AGENTS_EXAMPLE.md` into the project root as `AGENTS.md`.
-3. Read every numbered workflow file in this directory in order.
-4. Edit the clearly marked placeholders in
-   `00-General-SSH-Rules.md` for the target cluster.
-5. Add the application-specific `APPLICATION.md`.
-6. Add project-specific automation permissions and approved command prefixes
-   to the project root `AGENTS.md`.
-7. Ask Codex to initialize or validate the repository skeleton described in
-   `02-Repo-Structure.md`.
-8. Review the adapted instructions before any remote execution.
+Make this package available to Codex. If an existing root `AGENTS.md` predates
+v2, follow the bootstrap below first. Then ask Codex from the project
+repository:
+
+```text
+SETUP
+```
+
+Codex inspects the repository and proposes the minimum setup, including adding
+`workflow/` if needed. A fresh project may use the canonical skeleton in
+`02-Repo-Structure.md`; an existing project reuses compatible structures and
+preserves historical work. Review the proposal, then give final confirmation
+after Codex summarizes the exact change set. The command alone is read-only.
+The authoritative procedure is in `07-Workflow.md` under `SETUP`.
+
+For a fresh project without meaningful root instructions, copy or adapt
+`AGENTS_EXAMPLE.md` as root `AGENTS.md` before normal task execution. New task
+files come from `TASK-TEMPLATE.md`, not a project-invented format.
+
+For an existing project whose root `AGENTS.md` predates v2, first bootstrap
+the active instructions:
+
+1. Install or make this package available as the project's `workflow/`.
+2. With human approval, surgically adapt the existing root `AGENTS.md` against
+   `workflow/AGENTS_EXAMPLE.md`. Preserve project-specific cluster, SSH,
+   scheduler, Git, safety, application, and stricter operational rules; replace
+   only obsolete architecture, role, and startup logic. Do not overwrite the
+   mature file with the generic example.
+3. Restart or reload Codex so the updated `AGENTS.md` is read from session
+   start, then invoke `SETUP`.
+
+`SETUP` then performs the normal repository-wide proposal and confirmation
+procedure, including a final check for conflicting active guidance and
+migration residue.
 
 Do not begin cluster work until all placeholders in
 `00-General-SSH-Rules.md` have been replaced and the SSH, remote-root,
@@ -108,17 +163,22 @@ unrelated permissions into a new project.
 
 ### Normal use
 
-For every session, Codex should read the complete pack, inspect the latest
-progress report, identify the current workflow step, and follow `07-Workflow.md`.
-The pack is not permission to submit jobs, change source code, install
-packages, modify shared software, change resources, or choose an optimization
-direction. Those actions require the permissions described in the project
-instructions and the applicable workflow step.
+After setup, for every execution session the Human Leader or approved
+automation must identify the active task. Codex should read the complete pack,
+verify that task's status is permitted for execution, inspect the latest
+progress report, and follow `07-Workflow.md`. Codex may orchestrate and
+validate work within that approved task, but it is not the Strategic Analyst
+and may not choose a new optimization direction. The pack is not permission to
+submit jobs, change source code,
+install packages, modify shared software, change resources, or expand task
+scope. Those actions require the permissions described in the project
+instructions and the applicable task.
 
 ## Package files
 
 - `AGENTS_EXAMPLE.md`: example project-root instructions that activate this
-  pack without modifying an existing project `AGENTS.md`.
+  pack; adapt an existing project `AGENTS.md` surgically.
+- `TASK-TEMPLATE.md`: the sole canonical template for new task files.
 - `00-General-SSH-Rules.md`: universal safe SSH/execution policy and cluster
   adaptation placeholders.
 - `01-Git-Sync-Policy.md`: local/cluster clone synchronization and Git rules.
@@ -129,8 +189,17 @@ instructions and the applicable workflow step.
 - `05-Workflow-Error-Patching-Procedures.md`: Track 1, Track 2, correctness
   exceptions, and override handling.
 - `06-Workflow-Automation-and-Authorization.md`: routine authorization
-  boundaries and project-specific permission handoff.
-- `07-Workflow.md`: the complete Step 1 through Step 7 workflow.
-- `08-Workflow-Multinode-Tuning.md`: GAAS multinode HPL-MxP launch, evidence,
-  authorization, and dependency-checkpoint adapter.
+  boundaries, task-scope inheritance, and project-specific permission handoff.
+- `07-Workflow.md`: the complete task-based Step 1 through Step 7 workflow.
 - `clusters/`: optional cluster reference material, not mandatory reading.
+
+Task files are persistent project-root handoffs between the Strategic Analyst
+and Codex. They contain the Strategic Specification and the Codex Execution
+Report. Raw evidence remains in the canonical project locations, and strategic
+analysis remains under `planning/analysis/`; neither is duplicated in the task
+file. After human approval, the Strategic Analyst may write the task directly
+in GitHub when authorized; otherwise the Human Leader or a mechanical
+repository agent materializes the exact approved content. After
+`ANALYSE_RESULTS`, the Strategic Analyst may directly write the analysis and
+applicable `planning/PLANS.md` update under project Git policy. Codex executes
+only synchronized, approved repository state.

@@ -5,8 +5,6 @@ scripts unless a more specific section states otherwise.
 
 ## Naming
 
-- Task files use stable uppercase identifiers such as `TASK-001.md`,
-  `TASK-002.md`, and `TASK-003.md`.
 - Use one stable build or experiment name throughout the README, script names,
   PBS job names, output names, and build or binary paths.
 - Use kebab-case for directories.

@@ -62,12 +62,6 @@ For Track 2:
 9. after resolution, update the same case with authorization, action, retry,
    outcome, remaining concerns, and final status.
 
-When a Track 2 condition blocks an active strategic task, Codex must record the
-blocked state and the relevant evidence in that task's `CODEX EXECUTION REPORT`.
-Strategic interpretation of the failure remains outside Codex's role. Codex
-must not widen the task scope to resolve a Track 2 issue unless the broader
-action is separately authorized.
-
 Maintain the case log as append-only. Use statuses such as `OPEN`,
 `USER_ACTION_REQUIRED`, `AUTHORIZED_FOR_PATCH`, `RESOLVED`, or `CLOSED`.
 Recording a proposed fix never authorizes it.
