@@ -1,8 +1,8 @@
 ---
 task_id: TASK-000
 title: Phase 0 — 2x8 GAAS Characterization and Baseline
-status: APPROVED
-current_owner: codex
+status: BLOCKED
+current_owner: user
 parent_task: none
 analysis_id: 2x8-gaas-phase0
 created: 2026-09-27
@@ -536,40 +536,62 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
+status: BLOCKED
 
 ### 2.2 Orchestration Summary
 
-*Workers, responsibilities, dependencies, and follow-ups.*
+No OpenCode worker was dispatched. The required persistent-connection preflight
+failed before substantive execution, so no worker or Codex performed remote
+work. Worker orchestration can resume after GAAS connectivity is restored.
 
 ### 2.3 Work Executed
 
-*Factual work performed.*
+Read Workflow v2 files `00`–`08`, `APPLICATION.md`, this explicitly selected
+task, and the latest progress report (`progress/2026-09-26-progress.md`).
+Verified the task's approved front matter and Authorization section. Checked
+local Git state at `3aad619` (`main`, tracking `origin/main`); the pre-existing
+untracked `hpl-mxp-runs-on-gaas/` directory was left untouched. Attempted the
+required read-only connection check `ssh -O check gaas`; it returned
+`No ControlPath specified for "-O" command`.
 
 ### 2.4 Operational Validation
 
-*Evidence, correctness, provenance, consistency, and scope checks.*
+The local task is approved for the stated scope. The required GAAS persistent
+connection preflight did not pass. No remote synchronization, probe, scheduler
+submission, monitoring, or output retrieval was attempted. No benchmark or
+correctness evidence was produced.
 
 ### 2.5 Evidence and Artifacts
 
-*Reference raw evidence paths and revisions; do not duplicate outputs.*
+Preflight result: `ssh -O check gaas` →
+`No ControlPath specified for "-O" command`. Local starting revision:
+`3aad619`. No probe or experiment evidence exists for this execution attempt.
 
 ### 2.6 Files Changed
 
-*List files or state None.*
+`tasks/TASK-000.md`; `progress/2026-09-27-progress.md`.
 
 ### 2.7 Missing / Unavailable Evidence
 
-*List gaps or state None.*
+All Phase-0 probe and baseline evidence is unavailable because the required
+GAAS persistent SSH connection could not be verified.
 
 ### 2.8 Execution Errors / Exceptions
 
-*List failures and exceptions or state None.*
+Remote execution is blocked by the failed persistent-connection preflight.
+Workflow 00 specifies user recovery: run `ssh -MNf gaas` locally and complete
+any authentication personally, then repeat `ssh -O check gaas`. No remote
+action should resume until that check succeeds.
 
 ### 2.9 Scope Compliance
 
-*State whether work stayed within the approved scope.*
+Stayed within the approved scope. No external OpenMxP access, remote command,
+probe, PBS job, tuning, or analysis was performed. The pre-existing untracked
+`hpl-mxp-runs-on-gaas/` directory was not modified.
 
 ### 2.10 Handoff to Strategic Analyst
 
-*Give factual reading guidance, without strategic interpretation.*
+TASK-000 remains blocked before Phase 0. After the Human Leader restores the
+documented GAAS persistent connection and `ssh -O check gaas` succeeds, resume
+at repository synchronization and task verification, then continue the
+approved probe-first execution order. No benchmark conclusion is available.
