@@ -612,3 +612,17 @@ TASK-000 remains blocked before Phase 0. After the Human Leader resolves the
 existing GAAS clone changes and synchronizes the approved repository revision
 so `tasks/TASK-000.md` is present, resume at task verification and continue the
 approved probe-first order. No benchmark conclusion is available.
+
+#### 2026-09-27 resume check
+
+The Human Leader authorized direct GAAS access and synchronization. The
+documented control-socket check `ssh -O check gaas` still fails with
+`No ControlPath specified for "-O" command`; the user-authorized non-interactive
+check `ssh -o BatchMode=yes gaas` reaches `hpc-gaas-hn2`. Read-only inspection
+inside the approved project root confirms the remote clone remains at
+`87fb61e`, does not contain `tasks/TASK-000.md`, and still has two modified
+tracked scripts plus numerous untracked evidence/runtime artifacts. No pull or
+other remote mutation was performed because the dirty clone cannot be safely
+fast-forwarded without affecting or disregarding that material. Task execution
+remains blocked pending preservation/resolution of the remote changes and
+restoration of the approved task revision there.
