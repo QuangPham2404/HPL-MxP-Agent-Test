@@ -1,8 +1,8 @@
 ---
 task_id: TASK-000
 title: Phase 0 — 2x8 GAAS Characterization and Baseline
-status: BLOCKED
-current_owner: user
+status: APPROVED
+current_owner: codex
 parent_task: none
 analysis_id: 2x8-gaas-phase0
 created: 2026-09-27
@@ -355,7 +355,8 @@ Within this approved task, Codex may orchestrate and delegate to OpenCode worker
 - create/update the required progress handoff;
 - perform required local syntax/path/diff validation;
 - commit and push approved task-execution artifacts to the current project repository;
-- perform the corresponding authorized remote `git pull --ff-only` synchronization inside the configured GAAS project root.
+- perform non-destructive synchronization inside the configured GAAS project root using direct SSH (`ssh -o BatchMode=yes gaas '<remote-command>'`, or direct SSH when appropriate), `git status`, `git fetch origin`, `git rev-parse`, `git worktree list`, and `git worktree add --detach`;
+- use clean-primary `git pull --ff-only` or, when the primary is dirty, create/use `.codex-worktrees/TASK-000-*` at the exact approved origin commit and execute from that isolated tree; preserve all pre-existing primary content and worktree evidence untouched. This is operational recovery only and does not expand scientific scope.
 
 The approved resource shape for this task is 2 nodes × 8 GPUs.
 
@@ -532,6 +533,22 @@ approved_by: user
 
 ## 2. CODEX EXECUTION REPORT
 
+### 2.0 Previous Startup Attempts
+
+The following archived report records the previous 2026-09-27 attempts under
+the old operational policy (local revisions `3aad619`, `6ba66f9`, and the
+resume check recorded at `fe3939d`; GAAS primary revision `87fb61e`). Missing
+ControlPath was followed by successful direct SSH to `hpc-gaas-hn2`; inspection
+found 167 pre-existing entries including two tracked modifications. No worker,
+probe, scheduler job, or HPL-MxP run occurred. These attempts correctly preserved
+existing material. Their manual-blocker/handoff instructions are historical,
+superseded by the direct-SSH and automatic clean-worktree policy. They are not
+unresolved Human blockers for the rearmed task.
+
+<details>
+<summary>Historical blocked-attempt report (preserved verbatim)</summary>
+
+
 <!-- Codex completes this section after execution; do not rewrite section 1. -->
 
 ### 2.1 Execution Status
@@ -626,3 +643,60 @@ other remote mutation was performed because the dirty clone cannot be safely
 fast-forwarded without affecting or disregarding that material. Task execution
 remains blocked pending preservation/resolution of the remote changes and
 restoration of the approved task revision there.
+
+</details>
+
+### 2.1 Execution Status
+
+status: PARTIAL
+
+TASK-000 is rearmed as `APPROVED / codex` by explicit human authorization in
+the workflow-maintenance request. Approved task execution has not begun.
+
+### 2.2 Orchestration Summary
+
+No worker was dispatched during maintenance. The next execution session must
+use the existing OpenCode execution layer within the approved task scope.
+
+### 2.3 Work Executed
+
+Workflow-maintenance documentation only; no TASK-000 execution.
+
+### 2.4 Operational Validation
+
+Section 1.11 approval and exact scope are unchanged. The fixed baseline,
+scientific stop conditions, and approved probe-first order are unchanged.
+
+### 2.5 Evidence and Artifacts
+
+Previous startup evidence is preserved above and in the historical progress
+records. Maintenance handoff: `progress/2026-09-27-progress_s4.md`.
+
+### 2.6 Files Changed
+
+Workflow-maintenance files are listed in the maintenance progress record.
+
+### 2.7 Missing / Unavailable Evidence
+
+All Phase-0 probe and baseline execution evidence is still pending.
+
+### 2.8 Execution Errors / Exceptions
+
+No current manual blocker is established by the previous dirty-clone or
+missing-ControlPath conditions. Use documented Track 1 recovery; escalate
+only actual unresolved authority, authentication, content, or external issues.
+
+### 2.9 Scope Compliance
+
+No GAAS connection, worker, probe, scheduler action, HPL-MxP run, OpenMxP
+access, tuning, or analysis was performed during this maintenance patch.
+
+### 2.10 Handoff to Strategic Analyst
+
+Next action is a fresh Codex execution session explicitly selecting TASK-000:
+verify approved local/origin revision and unchanged Section 1.11, connect by
+direct SSH, inspect/preserve primary state, fetch and create/reuse a clean
+isolated worktree if needed, verify the actual execution tree, and continue
+the approved probe-first sequence. Set `EXECUTING / codex` on initial start;
+subsequent sessions may resume that state without new approval. No strategic
+or benchmark conclusion is available.

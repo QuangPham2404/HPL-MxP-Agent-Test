@@ -15,9 +15,17 @@ approved, synchronized execution, validates it operationally, and reports
 facts in its Execution Report; **OpenCode workers** perform the substantive
 execution. A conversation approval alone is never executable: execution
 requires a synchronized `tasks/TASK-XXX.md` whose front matter records
-`status: APPROVED` and `current_owner: codex`, and whose
+`status: APPROVED` for a fresh start or `status: EXECUTING` for resume,
+with `current_owner: codex` in either case, and whose
 `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
 and the exact approved scope.
+
+`APPROVED / codex` means ready to begin. `EXECUTING / codex` means work has
+started and may resume across sessions under the unchanged approved Section
+1.11; it needs no new approval. Recoverable workflow mechanics keep execution
+with Codex: direct SSH is sufficient, and dirty primary GAAS content is left
+untouched while a clean isolated task worktree is used. `BLOCKED / user`
+means actual human/external action, judgment, or new authority is required.
 
 ## Quick-start workflow
 

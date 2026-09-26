@@ -128,8 +128,11 @@ and approves the exact scope; and the approved content is materialized as a
 synchronized `tasks/TASK-XXX.md` whose front matter records
 `status: APPROVED` and `current_owner: codex` and whose
 `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
-and the exact approved scope. Codex decomposes the approved scope, delegates
-substantive execution to OpenCode workers bounded by Codex and by the task,
+and the exact approved scope for the initial start. Once started,
+`EXECUTING / codex` may continue/resume submission already contained in the
+unchanged human-approved scope across sessions; Section 1.11 remains approved.
+No new approval is required for that resume. Codex decomposes the approved
+scope, delegates substantive execution to OpenCode workers bounded by Codex and by the task,
 validates evidence, and completes the Execution Report; successful completion
 sets the task `EXECUTED` with `current_owner: strategic-analyst`. Only then
 may the Human explicitly authorize `ANALYSE_RESULTS`, after which the
@@ -163,9 +166,14 @@ specific override. Preserve all output and record a manual-inspection case;
 do not automatically retry a hang, failed `MPI_Init`, rank misplacement,
 transport fallback, or uncertain correctness result.
 
-Only deterministic defects in workflow machinery—such as a wrong path,
-output filename, or missing designated directory—may use Track 1, with a new
-attempt label and preserved evidence.
+Deterministic workflow mechanics—such as wrong paths, output filenames,
+missing designated directories, missing optional SSH reuse while direct SSH
+works, or stale/dirty primary checkout recovery through fetch and a clean
+isolated worktree—may use Track 1 under Workflow 01 and 05. Preserve evidence
+and use new attempt labels for job retries; keep `EXECUTING / codex` during
+already-authorized recovery. `BLOCKED / user` requires genuine human/external
+judgment or authority. These operational rules do not change launch or
+scientific gates.
 
 Respect the scientific-correctness exception in
 `05-Workflow-Error-Patching-Procedures.md`: a completed run with failed,

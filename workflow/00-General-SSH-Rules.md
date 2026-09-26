@@ -14,16 +14,20 @@ new cluster. Preserve the universal rules when adapting this file.
 - Never install tools merely to bypass interactive authentication.
 - Never store cluster credentials or GitHub credentials on the cluster.
 
-## Persistent connection rules
+## Direct SSH and optional connection reuse
 
-- Use the cluster's documented connection check before remote work.
-- If the connection is unavailable, stop and tell the user exactly how to
-  restore it.
-- Do not initiate a normal interactive SSH login.
-- Every Codex-controlled remote command must use the documented non-interactive
-  SSH form.
-- Every Codex-controlled file transfer must use the documented non-interactive
-  SCP or rsync form.
+- Ordinary direct SSH is sufficient. Prefer
+  `ssh -o BatchMode=yes gaas '<remote-command>'` for automated commands;
+  `ssh gaas '<remote-command>'` is also valid when appropriate.
+- A persistent ControlMaster or ControlPath is not a prerequisite.
+  `ssh -O check gaas` is only an optional check when a ControlMaster is
+  already configured. `ssh -MNf gaas` is never required before remote work.
+- `No ControlPath specified for "-O" command` does not block work when
+  direct SSH succeeds. Continue with direct SSH under the approved scope.
+- If direct SSH cannot authenticate and human interaction is required,
+  stop the affected work and ask the user to authenticate personally.
+  Never automate password entry or modify authentication configuration.
+- Use the documented non-interactive SCP or rsync form for authorized transfers.
 
 ## Remote scope and execution rules
 
@@ -48,8 +52,8 @@ authorization; follow the project-specific permissions in `AGENTS.md`.
 
 - Cluster name: `GAAS`
 - SSH alias: `gaas`
-- Agent is allowed to ssh into GAAS directly using `ssh gaas` command if needed
-- Required SSH form: `ssh -o BatchMode=yes gaas '<remote-command>'`
+- Direct SSH is sufficient; use `ssh gaas '<remote-command>'` when appropriate.
+- Preferred automated SSH form: `ssh -o BatchMode=yes gaas '<remote-command>'`
 - Required SCP form: `scp -o BatchMode=yes gaas:<remote-file> <local-file>`
   (reverse source and destination for an authorized upload).
 - Required rsync form, if used: not currently authorized; use SCP for
@@ -58,7 +62,7 @@ authorization; follow the project-specific permissions in `AGENTS.md`.
   `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test`
 - Scheduler: `PBS`
 - Scheduler submission command: `qsub <reviewed-script.pbs>`, only with
-  explicit authorization in the current request.
+  explicit authorization in the human-approved active task or current request.
 - PBS accounting group: `hpc_ebslee` (not `hpc_admin`).
 - Queue scope for clean-node selection: only `gpu_as`, `gpu_ded`, and
   `gpu_free`; all other queues are off-limits. The 2026-09-15 probe recorded
@@ -87,8 +91,9 @@ authorization; follow the project-specific permissions in `AGENTS.md`.
 Before the first remote action, verify that:
 
 1. all placeholders have been replaced;
-2. the connection check is read-only and correct;
-3. SSH and file-transfer commands are non-interactive;
+2. direct SSH can authenticate without Codex handling credentials; an optional
+   ControlMaster check is not a gate;
+3. automated SSH commands prefer BatchMode and file transfers are non-interactive;
 4. the remote root is exact and sufficiently narrow;
 5. scheduler commands use batch execution;
 6. launcher, modules, and resource syntax match the cluster;

@@ -11,6 +11,11 @@ last_updated: YYYY-MM-DD
 
 # TASK-XXX — <Task Title>
 
+<!-- Lifecycle: APPROVED / codex = ready to begin; EXECUTING / codex =
+     started and resumable across sessions under unchanged approved Section
+     1.11. Recoverable Track 1 mechanics keep EXECUTING / codex. BLOCKED / user
+     requires actual human/external action or new authority. -->
+
 ## 1. STRATEGIC SPECIFICATION
 
 ### 1.1 Objective
@@ -106,7 +111,9 @@ status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
 
 ### 2.8 Execution Errors / Exceptions
 
-*List failures and exceptions or state None.*
+*List failures and exceptions or state None. Record authorized Track 1
+recovery and the exact resume action if incomplete; do not mark a recoverable
+operational condition BLOCKED or transfer ownership to the user.*
 
 ### 2.9 Scope Compliance
 

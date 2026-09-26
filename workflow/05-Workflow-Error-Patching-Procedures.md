@@ -13,6 +13,22 @@ incorrect PBS output names, stale expected-binary paths, shell quoting or
 control-flow defects, unnecessarily strict preflight checks, inconsistent
 metadata, and extraction parsing or duplicate-handling defects.
 
+Track 1 also covers documented non-destructive operational recovery:
+
+- missing optional SSH ControlMaster/ControlPath while direct SSH works;
+- a stale cluster checkout recoverable by `git fetch origin`;
+- a dirty primary cluster working tree recoverable through a clean isolated
+  worktree under Workflow 01;
+- deterministic task-worktree creation or recreation at a new unique path,
+  preserving existing worktrees and evidence;
+- other already-authorized non-destructive synchronization mechanics.
+
+These cases do not become Track 2 merely because the primary tree is dirty.
+Record the issue and evidence, keep `EXECUTING / codex`, recover automatically,
+and continue within the unchanged approved scope. If no job ran, record the
+startup recovery in the task/progress record; PBS retry steps below apply only
+when a job/script retry is needed and already authorized.
+
 Track 1 is limited to reversible changes to workflow scripts, documentation,
 metadata, and output handling. It must not patch source code, choose compiler
 or MPI strategies, change optimization flags or resources, modify shared
@@ -44,6 +60,13 @@ compiler/source compatibility errors, unavailable dependencies or modules,
 MPI initialization failures or hangs, scheduler/resource/hardware/filesystem
 problems, possible compiler or MPI correctness issues, source or input changes,
 resource or launcher changes, and uncertain causes.
+
+Track 2 applies when recovery requires overwriting user work, resolving a
+real content conflict involving required files that cannot be isolated,
+deleting/resetting material, new authority, changed scientific execution,
+human authentication, strategic judgment, or external administrator action.
+`BLOCKED / user` means such human/external action is genuinely required;
+a documented automatic recovery does not transfer ownership to the user.
 
 For Track 2:
 

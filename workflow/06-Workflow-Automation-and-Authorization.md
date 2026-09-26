@@ -13,9 +13,17 @@ only the synchronized repository state and scope; it must not reconstruct or
 guess a Strategic Specification from conversation history. Direct write access
 never grants the Strategic Analyst authority to approve its own proposal.
 
-Before execution, verify task front matter has `status: APPROVED` and
-`current_owner: codex`, and `### 1.11 Authorization` records
-`status: APPROVED`, `approved_by: user`, and the exact `approved_scope`.
+Before a fresh start, verify `status: APPROVED` / `current_owner: codex`.
+For resume of the same started task, accept `status: EXECUTING` /
+`current_owner: codex`. Both require `### 1.11 Authorization` to retain
+`status: APPROVED`, `approved_by: user`, and the unchanged exact
+`approved_scope`. Authorization is durable proof of human permission;
+front matter describes progress. Session boundaries do not require reapproval.
+
+Deterministic, non-destructive Track 1 recovery inside existing authority
+keeps `EXECUTING / codex`: record evidence, apply documented recovery, and
+continue. Use `BLOCKED / user` only when human judgment, new authority,
+authentication, or another external action is actually required.
 Git writes remain subject to project policy and explicit human authorization.
 
 ## `SETUP` authority
@@ -45,6 +53,14 @@ Codex may autonomously:
 - inspect and organize evidence;
 - perform the routine Git, syntax-check, directory, PBS, scheduler, and output
   retrieval actions already permitted by project policy.
+
+Routine synchronization may include direct SSH, `git status`, `git fetch`,
+`git rev-parse`, `git worktree list`, `git worktree add`, clean-primary
+`git pull --ff-only`, and read-only remote inspection within the approved
+project root, when project permissions authorize them. Task-authorized PBS
+submission, bounded monitoring, and retrieval remain bounded by that scope.
+Workflow 01 defines preservation of dirty primary content and isolated clean
+execution worktrees; no destructive Git operations are authorized.
 
 The project instructions must define the actual command forms and approved
 prefixes. Do not infer that permission from this reusable pack alone.

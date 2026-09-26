@@ -28,9 +28,13 @@ Before taking action, Codex must:
 3. Identify the active `tasks/TASK-XXX.md` explicitly; do not infer it from
    file modification time.
 4. Read the approved task and the latest progress report under `progress/`.
-   Verify front matter has `status: APPROVED` and `current_owner: codex`, and
+   Verify front matter has `status: APPROVED` for a fresh start or
+   `status: EXECUTING` for resume, with `current_owner: codex` in either case, and
    `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
-   and the exact `approved_scope` before execution.
+   and the unchanged exact `approved_scope` before execution. Authorization is
+   durable human permission; lifecycle progress and session boundaries do not
+   require reapproval. Recoverable Track 1 mechanics keep `EXECUTING / codex`;
+   use `BLOCKED / user` only for required human/external action or new authority.
 5. Check the project Git state according to `workflow/01-Git-Sync-Policy.md`.
 
 For the `SETUP` command only, read `APPLICATION.md` if present; no active task
@@ -190,16 +194,26 @@ Currently authorized for documentation/setup work:
 - local validation with `bash -n` for changed shell/PBS scripts and
   `git diff --check` for reviewed changes;
 - creating designated project directories and documentation files locally;
-- read-only GAAS connection verification with `ssh -O check gaas`; and
-- non-interactive remote inspection only after the connection check, using
-  `ssh -o BatchMode=yes gaas` and staying inside the approved remote project
-  root.
+- read-only direct GAAS inspection using
+  `ssh -o BatchMode=yes gaas '<remote-command>'` (or `ssh gaas '<remote-command>'` when appropriate),
+  staying inside the approved remote project root. `ssh -O check gaas` is
+  optional only when a ControlMaster is already configured.
 
-For future execution, the following require explicit user authorization in the
-current request: committing or pushing changes, remote `git pull`, module or
-package changes, PBS submission, scheduler monitoring beyond a bounded check,
-output retrieval, resource/launcher/transport changes, and any new tuning
-direction. Remote work must use the exact rules in `workflow/00-General-SSH-Rules.md`
+For an approved execution task (fresh `APPROVED / codex` or resumed
+`EXECUTING / codex`, with unchanged approved Section 1.11), routine remote
+synchronization is authorized inside the approved project root: direct SSH,
+`git status`, `git fetch origin`, `git rev-parse`, `git worktree list`,
+`git worktree add --detach`, creation/use of `.codex-worktrees/TASK-XXX-*`,
+and clean-primary `git pull --ff-only`. Read-only inspection and PBS
+submission, bounded monitoring, and output retrieval are permitted only as
+specified in the human-approved task. Dirty primary content is preserved
+untouched; use the isolated-worktree policy in Workflow 01. No destructive
+Git operation or automatic stash/pop is authorized.
+
+Committing or pushing changes still requires explicit user authorization,
+which may be recorded in the active task. Module/package changes,
+resource/launcher/transport changes, and any new tuning direction require
+explicit human authorization. Remote work must use the exact rules in `workflow/00-General-SSH-Rules.md`
 and the multinode gates in `workflow/08-Workflow-Multinode-Tuning.md`.
 
 The workflow pack does not grant permission to install packages, modify shared
@@ -229,8 +243,8 @@ Keep optimization plans and conclusions under `planning/`.
 ## Conflict and stop rule
 
 If a rule conflicts, a placeholder is incomplete, the required authority is
-missing, the active task is not approved, or an error requires judgment beyond
-the documented automatic track, stop the affected workflow and report what
+missing, the active task lacks valid initial/resume authorization, or an error
+requires judgment beyond the documented automatic track, stop the affected workflow and report what
 must be resolved. Preserve all available evidence. Strategic analysis begins
 only after the human explicitly authorizes `ANALYSE_RESULTS`.
 

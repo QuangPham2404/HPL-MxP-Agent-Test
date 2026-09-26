@@ -134,8 +134,15 @@ that handoff ownership moves to the Strategic Analyst. After authorized
 analysis is complete and persisted, the Strategic Analyst moves `EXECUTED` to
 `ANALYZED` and returns ownership to the user. The Human Leader may then close
 the task or approve a new child task. Codex must not mark a task `ANALYZED`.
-`BLOCKED` and `FAILED` remain valid exceptional states; set `current_owner` to
-the actor who must act next.
+`EXECUTING / codex` is valid across multiple Codex sessions. A session
+boundary is not a task boundary. Resume the same task under its unchanged
+approved Section 1.11 without new human approval. Deterministic Track 1
+recovery keeps this state and ownership.
+
+`BLOCKED / user` is reserved for genuine human judgment, new authority,
+authentication, or required external action. `FAILED` remains an accurate
+exceptional outcome; neither failure nor incomplete work automatically hands
+ownership to the user when documented recovery remains within approved scope.
 
 ## Step 1: Strategic Specification and human approval
 
@@ -182,8 +189,9 @@ stays `APPROVED` as front-matter lifecycle status advances.
 Codex must not reconstruct or guess a Strategic Specification from conversation
 history. Before execution it verifies the identified task exists under
 `tasks/` at the intended synchronized revision, front matter is `APPROVED`
-with `current_owner: codex`, and the Authorization section records human
-approval and the approved scope.
+for a fresh start or `EXECUTING` for resume, with `current_owner: codex` in
+either case, and the Authorization section records human approval and the
+approved scope.
 
 ## Step 2: Codex orchestration and prepare build/run directories
 
@@ -249,7 +257,8 @@ MPI compiler, optimization notes, metadata, and build error-patching records.
 PBS stdout/stderr go directly to `outputs/`; keep every attempt.
 
 Before remote use, review and validate locally, commit and push when required,
-pull remotely, and ensure the remote output directory exists.
+synchronize the actual remote execution tree under Workflow 01, and ensure
+the remote output directory exists.
 
 ### 2.2 Prepare experiments
 
@@ -265,26 +274,32 @@ is not approved, stop and report the exact additional authority required.
 
 ## Step 3: Synchronize the two repositories and verify the active task
 
-Check both clones according to `01-Git-Sync-Policy.md`. Before Codex executes:
+Check repository state according to `01-Git-Sync-Policy.md`:
 
-1. synchronize the local repository according to normal policy;
-2. verify the explicitly identified `tasks/TASK-XXX.md` revision is present
-   locally and remotely as applicable;
-3. verify front matter has `status: APPROVED` and `current_owner: codex`, and
-   `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
-   and the exact approved scope matching the user's instruction;
-4. ensure Codex is not acting on a stale Strategic Specification;
-5. verify reviewed scripts, application revision, and required metadata are
-   the versions intended for execution.
+1. Synchronize reviewed local state under normal Git policy.
+2. Use direct SSH and inspect the primary cluster clone's revision and status.
+3. For a clean primary clone, use safe fast-forward synchronization (Mode A).
+   For pre-existing tracked changes or untracked artifacts, preserve primary
+   content untouched, fetch origin, and create/reuse a clean isolated worktree
+   at the exact intended approved commit under `.codex-worktrees/` (Mode B).
+4. Verify the explicitly identified task revision, required scripts, application
+   revision, and metadata in the **execution tree actually being used**.
+5. Accept `APPROVED / codex` for a fresh start or `EXECUTING / codex` for
+   resume. In both cases Section 1.11 must remain `status: APPROVED`,
+   `approved_by: user`, with the unchanged exact approved scope.
 
-Do not infer the active task from whichever file is newest. If fast-forward
-synchronization fails, clones diverge, the task revision is stale, or the
-approval state is unclear, stop and inspect or report the conflict rather than
-merging, overwriting, or changing the task.
+Do not infer the active task from modification time or execute a stale
+specification. Missing optional SSH reuse, stale fetchable state, and dirty
+primary state isolatable by a clean worktree are Track 1 recovery, not manual
+blockers. Record evidence and continue under existing authority. Stop the
+affected action for actual unresolved revision/content ambiguity, unsafe
+worktree creation, or a required destructive resolution under Workflow 01.
 
-After these checks, Codex sets front matter to `status: EXECUTING` with
-`current_owner: codex` immediately before the first approved execution action,
-whether local, delegated, or on the cluster.
+For a fresh task, set front matter to `status: EXECUTING` with
+`current_owner: codex` immediately before the first approved execution action
+(local, delegated, or remote). A resumed task retains this state. Keep the
+synchronized approved commit and task content recorded separately from local
+lifecycle/report bookkeeping; verify unchanged Authorization on resume.
 
 ## Step 4: Execute approved work on the cluster
 
@@ -306,7 +321,8 @@ convergence criteria. Never classify success from exit status alone.
 After a failure, classify it using
 `05-Workflow-Error-Patching-Procedures.md`. Record the failed attempt before
 any permitted patch or retry. Track 1 retries follow the build/experiment
-README procedure. Track 2 stops the affected workflow and records
+README procedure; documented SSH/repository recovery also remains Track 1
+and keeps `EXECUTING / codex`. Track 2 stops the affected workflow and records
 `MANUAL_INSPECTION_ERROR.md`; if it blocks the active task, Codex records the
 blocked state in the task's Execution Report. Strategic interpretation of the
 failure remains outside Codex's role.
@@ -364,8 +380,10 @@ to `status: EXECUTED` and `current_owner: strategic-analyst`. It validates the
 task file and references, commits and pushes when required and authorized by
 normal Git policy, and ensures the Strategic Analyst can read the latest
 repository revision. The report is operational context, not the analytical
-source of truth. Incomplete or failed work retains its accurate exceptional
-status and next owner.
+source of truth. Incomplete work with authorized recovery pending retains
+`EXECUTING / codex`
+and a `PARTIAL` Execution Report. Use `BLOCKED / user` only for a genuine
+human/external/authorization dependency; record failed outcomes accurately.
 
 ## Step 6: Analyze only with `ANALYSE_RESULTS`
 
@@ -478,10 +496,17 @@ exact next action.
 Preserve evidence and failed attempts. Record the current task, IDs, PBS job,
 stdout/stderr, error or blocker, and manual-inspection case. State whether the
 workflow awaits user action, external change, authorization, or a fix. Record
-the exact resume action. Do not retry, patch, submit, change direction, or
-widen scope without authorization. Validate, commit, and push the progress
-record when normal Git policy applies, and synchronize before remote work
-resumes.
+the exact resume action. Deterministic Track 1 recovery and retries already
+inside approved scope may continue automatically, with preserved evidence
+and new attempt names where applicable. If the session ends before recovery
+finishes, keep `EXECUTING / current_owner: codex`, a `PARTIAL` report, and
+an exact recovery/resume action. A future session may resume without new
+approval while Section 1.11 and the approved scope remain unchanged.
+Use `BLOCKED / user` only when the missing action requires human judgment,
+new authority, authentication, or another external action. Do not change
+direction or widen scope. Validate, commit, and push the progress record when
+authorized under normal Git policy, and verify the actual execution tree
+before remote work resumes.
 
 ### Case 2: analysis is complete
 

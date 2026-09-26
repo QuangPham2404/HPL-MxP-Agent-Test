@@ -13,9 +13,13 @@ Before taking action, Codex must:
 3. Identify the active `tasks/TASK-XXX.md` explicitly; do not infer it from
    file modification time.
 4. Read the approved task and the latest progress report under `progress/`.
-   Verify front matter has `status: APPROVED` and `current_owner: codex`, and
+   Verify front matter has `status: APPROVED` for a fresh start or
+   `status: EXECUTING` for resume, with `current_owner: codex` in either case, and
    `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
-   and the exact `approved_scope` before execution.
+   and the unchanged exact `approved_scope` before execution. Authorization is
+   durable human permission; lifecycle progress and session boundaries do not
+   require reapproval. Recoverable Track 1 mechanics keep `EXECUTING / codex`;
+   use `BLOCKED / user` only for required human/external action or new authority.
 5. Check the project Git state according to `workflow/01-Git-Sync-Policy.md`.
 
 For the `SETUP` command only, read `APPLICATION.md` if present; no active task
@@ -157,6 +161,14 @@ Examples of information to define, only when approved:
 - commands that always require user approval;
 - commands that are prohibited.
 
+When explicitly authorized for a project, list bounded direct SSH, `git status`,
+`git fetch`, `git rev-parse`, `git worktree list`, `git worktree add`, and
+clean-primary `git pull --ff-only` here, along with the approved project root
+and `.codex-worktrees/TASK-XXX-*` execution paths. Task-authorized PBS
+submission, bounded monitoring, and retrieval retain their exact scope.
+Preserve dirty primary content; do not authorize reset/clean/stash/pop or
+other destructive operations. An optional ControlMaster check is not a gate.
+
 The workflow pack does not grant permission to install packages, modify shared
 software, change source code, change resource policy, delete material, cancel
 jobs, or start a new optimization direction. If finishing the active task
@@ -173,7 +185,7 @@ Keep optimization plans and conclusions under `planning/`.
 ## Conflict and stop rule
 
 If a rule conflicts, a placeholder is incomplete, the required authority is
-missing, the active task is not approved, or an error requires judgment beyond
-the documented automatic track, stop the affected workflow and report what
+missing, the active task lacks valid initial/resume authorization, or an error
+requires judgment beyond the documented automatic track, stop the affected workflow and report what
 must be resolved. Preserve all available evidence. Strategic analysis begins
 only after the human explicitly authorizes `ANALYSE_RESULTS`.
