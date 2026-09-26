@@ -22,7 +22,7 @@ This document is intentionally not a replacement for either the
 [tuning-parameter guide](../../HPL_MxP_TuningParam_Guide.md) or the
 [dependency graph](../dependency-graph/README.md). Consult those documents
 for detailed flag definitions and dependency evidence. Use this blueprint to
-decide and execute the next experiment.
+design and evaluate the next bounded experiment.
 
 ### Relationship to the repository workflow
 

@@ -152,9 +152,10 @@ run only within an already approved task scope.
 ## 5. Authorization and failure boundaries
 
 The blueprint proposes the next bounded experiment; it does not authorize it.
-The user must confirm the experiment scope before submission, and the general
-workflow's `ANALYSE_RESULTS` authorization is still required before creating
-or updating analysis conclusions or `PLANS.md`.
+The Human Leader must approve the exact experiment scope, and that approval
+must be materialized in the synchronized approved `tasks/TASK-XXX.md` before
+submission. The general workflow's `ANALYSE_RESULTS` authorization is still
+required before creating or updating analysis conclusions or `PLANS.md`.
 
 Treat launcher, MPI/UCX, resource, node-placement, rank-mapping, and
 container-environment changes as Track 2 decisions unless the user has given a

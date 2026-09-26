@@ -63,9 +63,11 @@ For every optimization direction, use this loop:
    proceed—and waits for your decision. Further experiments require a new
    bounded task that you approve through the same specification and
    synchronization gates.
-9. **End with a handoff.** Codex records the current step, attempts, PBS
-   jobs, evidence, decisions, blockers, and exact resume action in
-   `progress/`.
+9. **End with a handoff.** After execution or incomplete execution, Codex
+   records the operational handoff in `progress/`. After `ANALYSE_RESULTS`,
+   the Strategic Analyst records analysis findings, the dependency-checkpoint
+   outcome, human decision state, and recommended/approved next action
+   according to `workflow/07-Workflow.md`.
 
 Always compare candidates against both the exact same-protocol in-sweep
 control and the immutable original baseline for the active topology. Treat
@@ -390,7 +392,7 @@ Codex's role is to:
    `tasks/TASK-XXX.md`;
 2. delegate substantive execution to OpenCode workers;
 3. operationally validate correctness and preserve evidence;
-4. complete the Codex Execution Report and the `progress/` handoff.
+4. complete the Codex Execution Report and the operational `progress/` handoff.
 
 OpenCode workers perform the substantive execution—experiment records,
 scripts, job submission, measurement extraction—only within the approved
