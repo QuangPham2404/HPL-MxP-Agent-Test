@@ -540,58 +540,75 @@ status: BLOCKED
 
 ### 2.2 Orchestration Summary
 
-No OpenCode worker was dispatched. The required persistent-connection preflight
-failed before substantive execution, so no worker or Codex performed remote
-work. Worker orchestration can resume after GAAS connectivity is restored.
+No OpenCode worker was dispatched. The direct non-interactive GAAS SSH check
+now succeeds, but the GAAS clone is not synchronized to the approved task
+revision and has pre-existing unexpected working-tree changes. Workflow
+execution remains stopped at the synchronization gate.
 
 ### 2.3 Work Executed
 
 Read Workflow v2 files `00`–`08`, `APPLICATION.md`, this explicitly selected
-task, and the latest progress report (`progress/2026-09-26-progress.md`).
-Verified the task's approved front matter and Authorization section. Checked
-local Git state at `3aad619` (`main`, tracking `origin/main`); the pre-existing
-untracked `hpl-mxp-runs-on-gaas/` directory was left untouched. Attempted the
-required read-only connection check `ssh -O check gaas`; it returned
-`No ControlPath specified for "-O" command`.
+task, and `progress/2026-09-27-progress.md`. The Authorization section remains
+`APPROVED` with `approved_by: user` and the approved scope recorded above. The
+task front matter remains `BLOCKED` / `current_owner: user` pending resolution
+of the synchronization blocker. Local Git is at `6ba66f9` (`main`, tracking
+`origin/main`); `git pull --ff-only` reported `Already up to date`. The
+pre-existing untracked `hpl-mxp-runs-on-gaas/` directory was left untouched.
+
+Following the user's direct-SSH instruction, `ssh -o BatchMode=yes gaas` was
+used for read-only verification. It reached `hpc-gaas-hn2`. The GAAS project
+clone is at `87fb61e`, does not contain `tasks/TASK-000.md` (the task path is
+absent), and has 167 pre-existing working-tree entries, including modified
+tracked files `scripts/gaas-internode-coms-debug/debug-scripts/phase2-preflight/stage_osu_tmp.sh`
+and `scripts/gaas-internode-coms-debug/debug-scripts/phase2-stage2/fabric_capture.sh`.
+No changes were made to the GAAS clone.
 
 ### 2.4 Operational Validation
 
-The local task is approved for the stated scope. The required GAAS persistent
-connection preflight did not pass. No remote synchronization, probe, scheduler
-submission, monitoring, or output retrieval was attempted. No benchmark or
-correctness evidence was produced.
+The Authorization section is approved for the stated scope, and direct SSH
+connectivity is available. Required synchronization cannot proceed safely:
+the GAAS clone lacks the task directory/revision and contains unrelated
+pre-existing modifications and untracked artifacts. No probe, scheduler
+submission, monitoring, output retrieval, or benchmark was attempted. No
+benchmark or correctness evidence was produced.
 
 ### 2.5 Evidence and Artifacts
 
-Preflight result: `ssh -O check gaas` →
-`No ControlPath specified for "-O" command`. Local starting revision:
-`3aad619`. No probe or experiment evidence exists for this execution attempt.
+Connectivity result: `ssh -o BatchMode=yes gaas` reached `hpc-gaas-hn2`.
+Local revision: `6ba66f9`; GAAS clone revision: `87fb61e`. The GAAS clone has
+167 working-tree entries and no `tasks/TASK-000.md`. No probe or experiment
+evidence exists for this execution attempt.
 
 ### 2.6 Files Changed
 
-`tasks/TASK-000.md`; `progress/2026-09-27-progress.md`.
+`tasks/TASK-000.md`; `progress/2026-09-27-progress_s2.md`.
 
 ### 2.7 Missing / Unavailable Evidence
 
-All Phase-0 probe and baseline evidence is unavailable because the required
-GAAS persistent SSH connection could not be verified.
+All Phase-0 probe and baseline evidence is unavailable because the GAAS clone
+is stale relative to the approved task and its dirty working tree prevents a
+safe synchronization.
 
 ### 2.8 Execution Errors / Exceptions
 
-Remote execution is blocked by the failed persistent-connection preflight.
-Workflow 00 specifies user recovery: run `ssh -MNf gaas` locally and complete
-any authentication personally, then repeat `ssh -O check gaas`. No remote
-action should resume until that check succeeds.
+Execution is blocked at the remote synchronization gate, not by SSH access.
+The GAAS clone is at `87fb61e`, lacks `tasks/TASK-000.md`, and has 167
+pre-existing working-tree entries (including two tracked modifications).
+Do not pull over or clean this state automatically. The Human Leader must
+resolve/preserve the remote working-tree material and synchronize the approved
+repository revision. No additional task scope has been assumed.
 
 ### 2.9 Scope Compliance
 
-Stayed within the approved scope. No external OpenMxP access, remote command,
-probe, PBS job, tuning, or analysis was performed. The pre-existing untracked
-`hpl-mxp-runs-on-gaas/` directory was not modified.
+Stayed within the approved scope. No external OpenMxP access, probe, PBS job,
+tuning, or analysis was performed. Remote commands were limited to read-only
+SSH/Git inspection inside the approved project root. The pre-existing local
+untracked `hpl-mxp-runs-on-gaas/` directory and all GAAS working-tree material
+were left untouched.
 
 ### 2.10 Handoff to Strategic Analyst
 
-TASK-000 remains blocked before Phase 0. After the Human Leader restores the
-documented GAAS persistent connection and `ssh -O check gaas` succeeds, resume
-at repository synchronization and task verification, then continue the
-approved probe-first execution order. No benchmark conclusion is available.
+TASK-000 remains blocked before Phase 0. After the Human Leader resolves the
+existing GAAS clone changes and synchronizes the approved repository revision
+so `tasks/TASK-000.md` is present, resume at task verification and continue the
+approved probe-first order. No benchmark conclusion is available.
