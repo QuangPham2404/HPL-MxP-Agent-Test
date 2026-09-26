@@ -1,5 +1,18 @@
 # Codex HPC Optimization Workflow Pack
 
+## Historical status
+
+This directory preserves the previous workflow for reference. Workflow v2
+in `../workflow/` and root `../AGENTS.md` govern all new work; the older
+startup, ownership, analysis, and permission descriptions below are historical.
+
+Exception: `08-Workflow-Multinode-Tuning.md` remains the required GAAS
+multinode adapter alongside Workflow v2 until migrated. Its launch, evidence,
+authorization, and checkpoint gates remain active, subject to root project
+overrides and Workflow v2 role boundaries. Its strategic decisions belong to
+the Strategic Analyst and user; it grants no additional execution authority.
+Use `../workflow/00-General-SSH-Rules.md` for active SSH configuration.
+
 ## What this package is
 
 This directory is a reusable workflow pack for Codex-assisted optimization of
