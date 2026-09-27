@@ -596,9 +596,9 @@ status: COMPLETE
 All three approved grid shapes (4x4, 2x8, 8x2) completed in one PBS
 allocation (job `72783.gaas`, state `F`, `Exit_status=0`) with `PASSED`
 verification, finite residuals, and full evidence preservation. The
-preparation was pushed before remote use; the post-run evidence and
-bookkeeping are validated and ready for commit/push under the approved task
-scope.
+preparation was pushed before remote use, and the post-run evidence and
+bookkeeping were committed and pushed in
+`882c6ba2e7fceb4befe5f3bb995ac4771d24312a`.
 
 ### 2.2 Orchestration Summary
 
@@ -805,8 +805,9 @@ observations, recorded without interpretation:
   whitespace/blank EOF lines in raw `.out`/PBS `.o` evidence; raw files were
   preserved byte-for-byte and were not normalized.
 
-No further execution action is required. The listed post-run artifacts are
-within the approved task scope and ready for commit/push.
+No further execution action is required. The approved post-run artifacts
+are committed and pushed in
+`882c6ba2e7fceb4befe5f3bb995ac4771d24312a`.
 
 ### 2.9 Scope Compliance
 
