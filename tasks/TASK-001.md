@@ -1,7 +1,7 @@
 ---
 task_id: TASK-001
 title: Phase 1A — 2x8 GAAS Coarse N / FP64-Residency Sweep
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-000
 analysis_id: 2x8-gaas-phase1a-n-coarse
