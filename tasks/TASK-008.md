@@ -1,7 +1,7 @@
 ---
 task_id: TASK-008
 title: Phase 2C — Bracketed UCX Affinity Confirmation
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-007
 analysis_id: 2x8-gaas-phase2c-ucx-affinity-confirm
@@ -382,7 +382,7 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: NOT_STARTED
+status: IN_PROGRESS
 
 ### 2.2 Orchestration Summary
 
