@@ -438,13 +438,13 @@ The exact Phase-2A candidate set should be specified in the next human-approved 
 
 **Human decision state:** proposed only. No Phase-2A execution is authorized by this analysis.
 
-## 5. Phase 2A — Joint TASK-004 / TASK-005 Grid × Order Matrix
+## 5. Phase 2A — Joint TASK-004 / TASK-005 / TASK-006 Grid × Order
 
-TASK-004 and TASK-005 are analyzed as one Phase-2A experiment.
+TASK-004, TASK-005, and TASK-006 are analyzed as one Phase-2A study.
 
 Detailed analysis: `planning/analysis/2x8-gaas-phase2a-grid-order-matrix.md`.
 
-Fixed geometry and controls:
+Fixed retained geometry entering Phase 2A:
 
 ```text
 N = 429056
@@ -454,31 +454,25 @@ gpu-affinity = 0:1:2:3:4:5:6:7
 fill-device = 1
 ```
 
-TASK-004 supplied the three `nporder=column` arms; TASK-005 supplied the corresponding three `nporder=row` arms. Both used the same physical rank placement:
+TASK-004 supplied the initial column-order shape screen, TASK-005 supplied the row-order counterparts, and TASK-006 supplied the same-allocation confirmation used to close the remaining ambiguity. All three tasks measured the same physical rank placement:
 
 ```text
 global ranks 0-7   -> hpc-gaas-g12
 global ranks 8-15  -> hpc-gaas-g15
 ```
 
-### 5.1 Results
+### 5.1 Initial matrix — TASK-004 + TASK-005
 
-| Grid | Order | Overall GFLOP/s | vs original baseline | LU GFLOP/s | LU s | IR s | IR/LU | Device headroom | Host consumption MAX |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| 2×8 | column | `5.3746e+06` | +11.88% | `6.3307e+06` | 8.32 | 1.48 | 0.178 | 2.163 GB | 6.395 GB |
-| 2×8 | row | `5.0562e+06` | +5.26% | `6.4670e+06` | 8.14 | 2.27 | 0.279 | 2.304 GB | 6.292 GB |
-| 4×4 | column | `5.4505e+06` | +13.46% | `6.5964e+06` | 7.98 | 1.68 | 0.211 | **2.767 GB** | **0.004 GB** |
-| **4×4** | **row** | **`5.6347e+06`** | **+17.30%** | **`6.7803e+06`** | **7.77** | **1.58** | 0.203 | **2.767 GB** | **0.004 GB** |
-| **8×2** | **column** | **`5.5487e+06`** | **+15.51%** | `6.5155e+06` | 8.08 | **1.41** | **0.175** | 2.302 GB | 2.937 GB |
-| 8×2 | row | `5.4331e+06` | +13.10% | `6.5199e+06` | 8.08 | 1.62 | 0.200 | 2.161 GB | 3.040 GB |
+| Grid | Order | Overall GFLOP/s | LU GFLOP/s | LU s | IR s | IR/LU | Device headroom | Host consumption MAX |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| 2×8 | column | `5.3746e+06` | `6.3307e+06` | 8.32 | 1.48 | 0.178 | 2.163 GB | 6.395 GB |
+| 2×8 | row | `5.0562e+06` | `6.4670e+06` | 8.14 | 2.27 | 0.279 | 2.304 GB | 6.292 GB |
+| 4×4 | column | `5.4505e+06` | `6.5964e+06` | 7.98 | 1.68 | 0.211 | 2.767 GB | 0.004 GB |
+| **4×4** | **row** | **`5.6347e+06`** | **`6.7803e+06`** | **7.77** | **1.58** | 0.203 | 2.767 GB | 0.004 GB |
+| 8×2 | column | `5.5487e+06` | `6.5155e+06` | 8.08 | 1.41 | 0.175 | 2.302 GB | 2.937 GB |
+| 8×2 | row | `5.4331e+06` | `6.5199e+06` | 8.08 | 1.62 | 0.200 | 2.161 GB | 3.040 GB |
 
-All six candidates passed correctness with three iterative-refinement iterations.
-
-Baseline percentages use the immutable TASK-000 `4.8037e+06` GFLOP/s denominator for campaign-progress context only; TASK-000 used a different N/fill-device configuration and is not an isolated grid/order causal control.
-
-### 5.2 Analysis
-
-Grid and order show a real interaction:
+The initial matrix established a shape×order interaction:
 
 ```text
 2x8: row vs column = -5.92%
@@ -486,95 +480,108 @@ Grid and order show a real interaction:
 8x2: row vs column = -2.08%
 ```
 
-No global row/column rule is therefore retained.
+There is no universal row/column winner. The order changes which logical HPL communicator crosses the node boundary.
 
-The phase timings reveal the mechanism more clearly:
+The initial matrix dropped 2×8 from serious contention but could not distinguish 4×4 row from 8×2 column confidently because their gap was only 1.55%, below observed cross-allocation control movement.
 
-- **2×8:** row order improves LU time slightly (8.32 -> 8.14 s), but IR rises 1.48 -> 2.27 s (+53.4%), causing the large end-to-end loss.
-- **4×4:** row order improves both LU (7.98 -> 7.77 s) and IR (1.68 -> 1.58 s) in these runs.
-- **8×2:** LU is effectively unchanged at 8.08 s, while row order raises IR 1.41 -> 1.62 s (+14.9%).
+### 5.2 Same-allocation confirmation — TASK-006
 
-The row/column memory footprints within each shape are similar, and are identical for 4×4. The order effect is therefore primarily a **rank-layout / communicator / synchronization effect**, not a device-capacity effect.
+TASK-006 ran all four surviving arms sequentially in one allocation, PBS job `72845.gaas`, on g12+g15.
 
-Given the contiguous two-node rank map:
+| Grid | Order | Overall GFLOP/s | vs original baseline | LU GFLOP/s | LU s | IR s | IR/LU | Device headroom | Host consumption MAX |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 4×4 | column | `5.5602e+06` | +15.75% | `6.6245e+06` | 7.95 | 1.52 | 0.191 | 2.767 GB | 0.004 GB |
+| **4×4** | **row** | **`5.6860e+06`** | **+18.37%** | **`6.7792e+06`** | **7.77** | **1.50** | 0.193 | **2.767 GB** | **0.004 GB** |
+| 8×2 | column | `5.4880e+06` | +14.25% | `6.5267e+06` | 8.07 | 1.53 | 0.190 | 2.302 GB | 2.937 GB |
+| 8×2 | row | `5.4794e+06` | +14.07% | `6.5147e+06` | 8.08 | 1.53 | 0.189 | 2.161 GB | 3.040 GB |
 
-- `nporder=column` makes process columns node-local and process rows inter-node;
-- `nporder=row` makes process rows node-local and process columns inter-node.
-
-The preferred choice changes with P×Q, confirming that abstract process-grid shape and physical rank layout must be optimized together.
-
-### 5.3 Current retention state
-
-`2×8` is dropped from serious Phase-2A contention:
-
-- its column arm is 4.62% below the current matrix leader;
-- its row arm is 10.27% below;
-- row order causes a large IR penalty.
-
-The two strongest combinations are:
+Within TASK-006:
 
 ```text
-4x4 row    = 5.6347e+06 GFLOP/s
-8x2 column = 5.5487e+06 GFLOP/s
-difference = 1.55%
+4x4 row vs 4x4 column = +2.26%
+4x4 row vs 8x2 column = +3.61%
+4x4 row vs 8x2 row    = +3.77%
+8x2 column vs 8x2 row = +0.16%
 ```
 
-That separation is not sufficient to close Phase 2A because the same 4×4-column control has moved across allocations:
+Repeated-arm movement relative to TASK-004/005 was:
 
 ```text
-TASK-002: 5.6091e+06
-TASK-003: 5.5381e+06
-TASK-004: 5.4505e+06
+4x4 row    +0.91%
+4x4 column +2.01%
+8x2 column -1.09%
+8x2 row    +0.85%
 ```
 
-The approximately 2.9% TASK-002-to-TASK-004 spread is larger than the current 1.55% top-two gap.
+The +3.61% same-allocation separation between 4×4 row and 8×2 column is larger than the observed repeat movement of either arm and preserves the direction of the earlier matrix. TASK-006 therefore resolves the previous ambiguity.
 
-Therefore:
+### 5.3 Analysis and retained grid/order
 
-- **4×4 row is the current numerical leader;**
-- **8×2 column is a co-leading serious candidate;**
-- 4×4 column and 8×2 row remain useful order controls for one confirmation experiment;
-- **Phase 2A remains open.**
+The retained operating point is:
+
+```text
+N = 429056
+NB = 3072
+nprow = 4
+npcol = 4
+nporder = row
+fill-device = 1
+```
+
+The 4×4-row arm is retained because it combines:
+
+- the best confirmed end-to-end score;
+- the fastest LU time;
+- essentially the fastest IR time;
+- identical 2.767 GB device headroom and 0.004 GB host consumption to the clean 4×4-column control;
+- stable repeat behavior across TASK-005 and TASK-006.
+
+The earlier apparent 8×2 column-order advantage does not repeat: TASK-006 shows 8×2 column and row within 0.16%. The 8×2 shape itself remains slower than 4×4 row.
+
+Identity GPU affinity remains only a control:
+
+```text
+--gpu-affinity 0:1:2:3:4:5:6:7
+```
+
+It is not yet claimed as the optimized physical placement.
+
+**Phase 2A is closed at 4×4 row.**
 
 ### 5.4 Dependency checkpoint
 
 The checkpoint is performed.
 
-- **E02 topology/rank count → grid/order:** satisfied for the current 2×8/16-rank topology.
+- **E02 topology/rank count → grid/order:** satisfied for the current 2-node / 16-rank topology.
 - **E09 N → grid/order:** satisfied at retained `N=429056`.
 - **E10 NB → grid/order:** satisfied at retained `NB=3072`.
-- **E11 grid/order → rank/GPU/NIC placement:** triggered and deferred until Phase 2A closes. Phase 2B must evaluate physical placement for the retained pair(s).
-- **E12 grid/order → panel transport:** triggered downstream. Process-grid/order materially changes communicator size and node crossings; panel-transport results must later be revalidated.
-- **E24 N/NB/npcol → U-panel chunk:** triggered downstream. The final npcol must be known before chunk validity/usefulness is recalculated.
-- **E29 grid/order → LU scheduling:** triggered downstream because ownership, timing, and node-crossing behavior changed.
-- **N/residency reopening:** conditional only. Do not reopen N before the grid/order ambiguity is resolved. If the final retained pair materially changes the residency/LU-IR regime from the Phase-1 control, use only a targeted local N revalidation.
+- **E11 grid/order → rank/GPU/NIC placement:** **triggered now.** The retained order changed from the provisional 4×4-column control to 4×4 row, so logical neighbor placement changes even with identity GPU affinity. Proceed next to Phase 2B.
+- **E12 grid/order → panel transport:** triggered downstream. Row order changes which communicator crosses nodes; transport must be revalidated after placement is established.
+- **E24 N/NB/npcol → U-panel chunk validity/usefulness:** no geometry-validity-driven reopen is required because final `N`, `NB`, and `npcol=4` are unchanged from the Phase-1 4×4 control. Chunk remains provisional for the later communication phase.
+- **E29 grid/order → LU scheduling:** triggered downstream because order changed node crossings and LU timing.
+- **E38 nprow → DGEMV:** not triggered by the final selection because retained `nprow=4` is unchanged and IR remains small/stable.
+- **N/residency reopening:** **not triggered.** 4×4 row has the same 2.767 GB device headroom and 0.004 GB host consumption as 4×4 column. No new memory/residency regime was crossed.
 
-Do not start affinity, communication, chunk, N, host-runtime, or scheduling tuning before the remaining Phase-2A ambiguity is resolved.
+The next active dependency is therefore **E11: physical GPU placement**.
 
 ### 5.5 Proposed next step
 
-**Recommended next action: one bounded same-allocation Phase-2A confirmation with exactly:**
+**Recommended next action: Phase 2B GPU placement at fixed 4×4 row.**
+
+Carry forward:
 
 ```text
+N = 429056
+NB = 3072
 4x4 row
-4x4 column
-8x2 column
-8x2 row
+fill-device = 1
 ```
 
-Keep `N=429056`, `NB=3072`, identity GPU affinity, and every other scientific control unchanged.
+Use identity GPU affinity as the control, then test only **mechanism-distinct rank↔GPU mappings**.
 
-This confirmation:
+The per-node H200 topology is all-pairs NV18, so arbitrary permutations that merely reshuffle GPUs inside the equivalent NVLink fabric are low-value. Candidate mappings should instead target meaningful differences in GPU↔NUMA/NIC association and logical process-row/process-column placement relative to the two host NUMA/NIC groups.
 
-1. removes the already-dominated 2×8 shape;
-2. directly compares the two leaders in one allocation;
-3. repeats 4×4 column as the established campaign control;
-4. checks whether the apparent 4×4 row advantage and 8×2 column advantage are repeatable.
+Do not combine Phase 2B with UCX transport selection, panel-broadcast tuning, U-panel chunking, host-runtime tuning, or LU scheduling.
 
-After the confirmation:
-
-- retain one pair if it separates repeatably beyond within-allocation/control movement;
-- if 4×4 row and 8×2 column remain tied, retain both as the Phase-2A region and carry both to Phase 2B where physical placement may break the tie.
-
-**Human decision state:** proposed only. No confirmation run or Phase-2B execution is authorized by this analysis.
+**Human decision state:** Phase 2A is closed. Phase 2B is proposed only; no Phase-2B execution is authorized by this analysis.
 
