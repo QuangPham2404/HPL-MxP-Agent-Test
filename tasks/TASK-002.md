@@ -1,7 +1,7 @@
 ---
 task_id: TASK-002
 title: Phase 1A — 2x8 GAAS Local N / FP64-Residency Refinement
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-001
 analysis_id: 2x8-gaas-phase1a-n-refine
