@@ -1,7 +1,7 @@
 ---
 task_id: TASK-003
 title: Phase 1B — 2x8 GAAS Bounded NB Screen at Retained N
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-002
 analysis_id: 2x8-gaas-phase1b-nb-screen
