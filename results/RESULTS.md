@@ -204,5 +204,10 @@ This report records validated raw result data only. No optimization analysis or 
 | 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n504832_v1 | 504832 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.0179e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n504832_v1.out |
 | 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n556032_v1 | 556032 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.0139e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n556032_v1.out |
 | 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n606208_v1 | 606208 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 4.8789e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n606208_v1.out |
+| 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n404480_v1 | 404480 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.1045e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n404480_v1.out |
+| 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n429056_v1 | 429056 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.6091e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n429056_v1.out |
+| 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n454656_v1 | 454656 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.2584e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n454656_v1.out |
+| 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n480256_v1 | 480256 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.2514e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n480256_v1.out |
+| 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n504832_v1 | 504832 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 4.9704e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n504832_v1.out |
 
 Source: `results/metrics.csv`.

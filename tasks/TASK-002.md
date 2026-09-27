@@ -1,8 +1,8 @@
 ---
 task_id: TASK-002
 title: Phase 1A — 2x8 GAAS Local N / FP64-Residency Refinement
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-001
 analysis_id: 2x8-gaas-phase1a-n-refine
 created: 2026-09-27
@@ -491,40 +491,188 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
+status: COMPLETE
 
 ### 2.2 Orchestration Summary
 
 *Workers, responsibilities, dependencies, ordering, and follow-ups.*
 
+Five sequential OpenCode worker assignments plus one orchestrator checkpoint
+verification: (A) remote synchronization, clean detached worktree creation at
+the exact approved commit, byte-exact task/script verification, and live
+gpu_as/gpu_ded queue/node eligibility; (B) immediate pre-submit recheck and
+the single qsub (that assignment was interrupted by a user status checkpoint
+after submission; the submission was verified read-only from the PBS record);
+(C) bounded monitoring to the terminal state and the remote SHA-256 evidence
+manifest; (D) authorized retrieval of all 17 evidence files with full
+per-candidate and PBS-level validation; (E) factual bookkeeping (README,
+results, this report, progress record). Sequential dependent work; one PBS
+job total; no worker exceeded the approved scope.
+
 ### 2.3 Work Executed
 
 *Factual work performed.*
+
+- The remote primary clone was `87fb61e829832a3bc07c2579d8472aa1be279f13`
+  with 168 pre-existing status entries; it was left untouched (fetch-only).
+  A clean detached worktree `.codex-worktrees/TASK-002-9d3ab3c-phase1a-v1`
+  was created at `9d3ab3c9e11d46ad28bce99f1ddfc77c9fc2c382`;
+  task/script/README/bridge SHA-256 values matched the local reviewed tree,
+  and Section 1.11 was byte-identical.
+- Live eligibility at 2026-09-27 14:16:26-14:17:09 +08:00: `gpu_as` enabled
+  and started with exactly one fully-free eligible pair, `hpc-gaas-g12` +
+  `hpc-gaas-g15` (Qlist `gpu_as,gpu_ppu`, zero assigned CPU/GPU/memory);
+  `gpu_ded` had only `hpc-gaas-g22` fully free (no eligible pair). Selected
+  `gpu_as` with the host-pinned g12+g15 pair (the validated
+  TASK-000/TASK-001 placement pattern).
+- Submitted exactly one job: `72688.gaas`, qtime 2026-09-27 14:18:55 +08:00,
+  queue `gpu_as`, project `hpc_ebslee`, host-pinned 2x8 select with no
+  `mpiprocs`, `place=scatter`, walltime `01:30:00`, `ATTEMPT_TAG=v1`, from
+  the experiment directory in the worktree; started (stime) 14:18:56.
+- All five approved candidates ran sequentially in the one allocation:
+  n404480 14:18:57-14:19:55, n429056 14:19:55-14:20:58, n454656
+  14:20:58-14:22:16, n480256 14:22:16-14:23:55, n504832 14:23:55-14:25:55
+  (+08:00). Every `.status` records `exit_status=0` with a byte-identical
+  fixed-controls line.
+- Terminal at mtime 14:25:58: `job_state=F`, `Exit_status=0`,
+  `resources_used.walltime` 00:07:01, `exec_host` hpc-gaas-g12+hpc-gaas-g15.
+  Bounded monitoring used 3 of 18 checks (the job had already left the
+  active list at the final check; terminal state confirmed via
+  `qstat -x -f`). The job was never cancelled and no second job was
+  submitted.
+- All five application outputs contain normal HPL-MxP output, finite
+  normalized residuals, and `PASSED`: 404480 1.416706E-05 / 5.1045e+06
+  GFLOP/s; 429056 1.263430E-05 / 5.6091e+06; 454656 1.124709E-04 /
+  5.2584e+06; 480256 1.900141E-04 / 5.2514e+06; 504832 1.934756E-04 /
+  4.9704e+06. LU/IR times, iteration counts, and host/device memory
+  evidence are in the experiment README and raw outputs.
+- Retrieved all 17 evidence files (five `.out`/`.err`/`.status` triplets
+  plus PBS `.o`/`.e`) into the canonical local `outputs/` directory; all 17
+  verified byte-identical to the remote copies by SHA-256.
+- Appended five unique rows to `results/metrics.csv` (experiment id
+  `2x8-GAAS-phase1a-n-refine`) and regenerated `results/RESULTS.md` with
+  the existing generator; updated the experiment README with the factual
+  run summary. Pre/post hardware-health snapshots are preserved inside the
+  PBS `.o`.
 
 ### 2.4 Operational Validation
 
 *Evidence, correctness, provenance, consistency, and scope checks.*
 
+- The execution worktree was clean at the exact pushed commit before
+  submission; task/script/README/bridge SHA-256 values matched the local
+  approved tree; Section 1.11 retained `status: APPROVED`, `approved_by:
+  user`, unchanged scope.
+- The pre-submit gate re-verified queue enablement, node state, Qlist, and
+  zero assigned resources immediately before qsub; the PBS record
+  (`Submit_arguments`, `Resource_List`, `Variable_List` with
+  `ATTEMPT_TAG=v1`, `PBS_O_QUEUE=gpu_as`) confirms the submitted form.
+- Every candidate: exit status 0, normal HPL-MxP output including all
+  `--skip-tests 0` internal test sections, Matrix Generation, 3 solver
+  iterations, finite normalized residual, `PASSED` verdict, GFLOPS/LU
+  GFLOPS lines, and host/device memory lines; no `FAILED`, `NaN`, or `Inf`
+  markers in any `.out`. The `.err` files contain only bridge/module
+  diagnostics and group-ID warnings (TASK-001 pattern).
+- All 17 retrieved files matched their remote SHA-256 values; the
+  fixed-controls line is byte-identical across all five `.status` files;
+  the PBS `.o` contains the metadata header, the de-duplicated slots=8
+  hostfile, all ten candidate start/end lines, pre- and post-sweep health
+  snapshots, and the all-exited-0 sweep-complete line.
+- The five new CSV rows are unique (no duplicate experiment_id/attempt
+  keys); the existing 200 rows and the header are preserved (205 data rows
+  total); `RESULTS.md` was regenerated from the CSV. `git diff --check`
+  passed for the edited text artifacts; raw application/PBS output was
+  preserved byte-exact (the application and topology display emit trailing
+  spaces).
+
 ### 2.5 Evidence and Artifacts
 
 *Reference raw evidence paths and revisions; do not duplicate large outputs.*
+
+- Preparation and execution at commit
+  `9d3ab3c9e11d46ad28bce99f1ddfc77c9fc2c382`
+  (`experiments/2x8-GAAS/phase1a-n-refine/`).
+- Remote execution tree (left intact):
+  `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-002-9d3ab3c-phase1a-v1`
+  at the same commit.
+- PBS job `72688.gaas`; queue/nodes/project and scheduler facts are in the
+  `qstat -x -f` record and `experiments/2x8-GAAS/phase1a-n-refine/outputs/`.
+- Per-candidate records: `experiments/2x8-GAAS/phase1a-n-refine/outputs/`
+  (five `.out`/`.err`/`.status` triplets plus
+  `2x8-GAAS-phase1a-n-refine_v1.o`/`.e`) and the run-summary table in the
+  experiment README.
+- Structured results: `results/metrics.csv` and generated
+  `results/RESULTS.md`.
+- The remote primary clone (`87fb61e8...`, 168 pre-existing status entries)
+  and all pre-existing worktrees were left untouched.
 
 ### 2.6 Files Changed
 
 *List files or state None.*
 
+- `experiments/2x8-GAAS/phase1a-n-refine/outputs/` (17 new evidence files,
+  retrieved)
+- `experiments/2x8-GAAS/phase1a-n-refine/README.md` (run summary and status
+  update)
+- `results/metrics.csv` (5 appended rows)
+- `results/RESULTS.md` (regenerated)
+- `tasks/TASK-002.md` (this Section 2 report; front matter to
+  EXECUTED/strategic-analyst)
+- `progress/2026-09-27-progress_s10.md` (new session record)
+
 ### 2.7 Missing / Unavailable Evidence
 
 *List gaps or state None.*
+
+None required. GPU-monitoring output is unavailable by design
+(`--monitor-gpu 0`). The historical `qstat` record has no `comp_time`
+attribute (mtime 14:25:58 is recorded as completion). The interrupted
+submission-worker session did not return its qsub-response capture; the
+authoritative PBS record (qtime, Submit_arguments) establishes the
+submission facts.
 
 ### 2.8 Execution Errors / Exceptions
 
 *List failures and exceptions or state None. Record authorized Track-1 recovery and the exact resume action if incomplete.*
 
+None blocking. The submission-worker assignment was interrupted by a user
+status checkpoint after the single qsub was accepted; read-only verification
+confirmed job `72688.gaas` and no second submission was ever made. The `.e`
+files record five group-ID warnings and module-load/bridge diagnostics
+(non-blocking, TASK-001 pattern). No Track-1 recovery or retry was needed;
+no Track-2 condition occurred.
+
 ### 2.9 Scope Compliance
 
 *State whether work stayed within the approved scope.*
 
+Work stayed within the approved scope: only queue `gpu_as` (an approved
+queue) with project `hpc_ebslee`; unchanged 2-node x 8-GPU / 16-rank /
+fixed 4x4 column-grid shape with `place=scatter` and no `mpiprocs`; exactly
+the five approved N values with only N varying; `--fill-device 1` active;
+all other controls at the same package defaults as TASK-001
+(`--fill-device-buffer-size 3048`, `--u-panel-chunk-nbs 8`,
+`--call-dgemv-with-multiple-threads 0`, tolerance 1e-12); no baseline
+rerun, no NB/grid/order/affinity/communication changes, no additional jobs,
+no planning edits, and no strategic interpretation or ranking.
+
 ### 2.10 Handoff to Strategic Analyst
 
 *Give factual reading guidance without strategic interpretation.*
+
+- Raw evidence: `experiments/2x8-GAAS/phase1a-n-refine/outputs/` (five
+  `.out` with full settings blocks, solver iterations, residuals,
+  GFLOPS/LU/IR, and memory lines; per-candidate `.status`; PBS `.o` with
+  pre/post health snapshots and hostfile; `.e` diagnostics).
+- Factual summaries: the experiment README run summary;
+  `results/metrics.csv` rows (experiment id `2x8-GAAS-phase1a-n-refine`);
+  this report.
+- The three repeated coarse anchors (404480, 454656, 504832) ran under the
+  identical protocol and controls for the intended reproducibility check;
+  their TASK-001 counterparts are in
+  `experiments/2x8-GAAS/phase1a-n-coarse/`. This sweep used the same
+  scored-run protocol as the 2x8 baseline (`--skip-tests 0 --monitor-gpu
+  0`).
+- All analysis, ranking, reproducibility judgment,
+  retained-N/residency-regime decisions, and Phase-1A closure are reserved
+  for the authorized `ANALYSE_RESULTS` step.
