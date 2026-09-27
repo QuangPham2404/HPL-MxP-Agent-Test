@@ -221,5 +221,9 @@ This report records validated raw result data only. No optimization analysis or 
 | 2x8-GAAS-phase2a-grid-row | 2x8-GAAS-phase2a-grid-row_grid4x4_v1 | 429056 | 3072 | 4x4 | row | 8 | unset | unset | PASSED | 5.6347e+06 | experiments/2x8-GAAS/phase2a-grid-row/outputs/2x8-GAAS-phase2a-grid-row_grid4x4_v1.out |
 | 2x8-GAAS-phase2a-grid-row | 2x8-GAAS-phase2a-grid-row_grid2x8_v1 | 429056 | 3072 | 2x8 | row | 8 | unset | unset | PASSED | 5.0562e+06 | experiments/2x8-GAAS/phase2a-grid-row/outputs/2x8-GAAS-phase2a-grid-row_grid2x8_v1.out |
 | 2x8-GAAS-phase2a-grid-row | 2x8-GAAS-phase2a-grid-row_grid8x2_v1 | 429056 | 3072 | 8x2 | row | 8 | unset | unset | PASSED | 5.4331e+06 | experiments/2x8-GAAS/phase2a-grid-row/outputs/2x8-GAAS-phase2a-grid-row_grid8x2_v1.out |
+| 2x8-GAAS-phase2a-grid-order-confirm | 2x8-GAAS-phase2a-grid-order-confirm_grid4x4-column_v1 | 429056 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.5602e+06 | experiments/2x8-GAAS/phase2a-grid-order-confirm/outputs/2x8-GAAS-phase2a-grid-order-confirm_grid4x4-column_v1.out |
+| 2x8-GAAS-phase2a-grid-order-confirm | 2x8-GAAS-phase2a-grid-order-confirm_grid4x4-row_v1 | 429056 | 3072 | 4x4 | row | 8 | unset | unset | PASSED | 5.6860e+06 | experiments/2x8-GAAS/phase2a-grid-order-confirm/outputs/2x8-GAAS-phase2a-grid-order-confirm_grid4x4-row_v1.out |
+| 2x8-GAAS-phase2a-grid-order-confirm | 2x8-GAAS-phase2a-grid-order-confirm_grid8x2-column_v1 | 429056 | 3072 | 8x2 | column | 8 | unset | unset | PASSED | 5.4880e+06 | experiments/2x8-GAAS/phase2a-grid-order-confirm/outputs/2x8-GAAS-phase2a-grid-order-confirm_grid8x2-column_v1.out |
+| 2x8-GAAS-phase2a-grid-order-confirm | 2x8-GAAS-phase2a-grid-order-confirm_grid8x2-row_v1 | 429056 | 3072 | 8x2 | row | 8 | unset | unset | PASSED | 5.4794e+06 | experiments/2x8-GAAS/phase2a-grid-order-confirm/outputs/2x8-GAAS-phase2a-grid-order-confirm_grid8x2-row_v1.out |
 
 Source: `results/metrics.csv`.
