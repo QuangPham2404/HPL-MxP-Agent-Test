@@ -1,7 +1,7 @@
 ---
 task_id: TASK-007
 title: Phase 2B/2C — 2x8 GAAS Placement and Locality Sweep
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-006
 analysis_id: 2x8-gaas-phase2bc-placement-locality
