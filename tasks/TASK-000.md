@@ -433,6 +433,9 @@ restoration of the approved task revision there.
 
 </details>
 
+<details>
+<summary>Historical N=737280 baseline execution report — host-memory OOM</summary>
+
 ### 2.1 Execution Status
 
 status: BLOCKED
@@ -640,3 +643,47 @@ authorize a new task with a revised Strategic-Analyst-supplied
 configuration (such as a lower N and/or revised memory strategy), or
 redirect Phase 0. No benchmark conclusion is available; no baseline was
 promoted.
+
+</details>
+
+### 2.1 Execution Status
+
+status: PARTIAL
+
+TASK-000 is rearmed as `APPROVED / codex` under the revised Strategic Specification. The completed Phase-0 probe and flag-support evidence remain valid. The next execution action is the fast `N=700000` baseline run; no current manual blocker is established.
+
+### 2.2 Orchestration Summary
+
+Pending resumed execution. Reuse the existing execution infrastructure and completed characterization. Do not repeat the comprehensive probe, flag-support audit, or v2/v3 repeat campaign.
+
+### 2.3 Work Executed
+
+Historical work through the failed `N=737280` attempt is preserved above. No `N=700000` attempt has been submitted yet.
+
+### 2.4 Operational Validation
+
+For resume, perform only the lightweight checks required by revised Section 1.4C. Existing Phase-0 hardware/software characterization and v26.02 flag-support evidence are accepted unless a material contradiction is directly observed.
+
+### 2.5 Evidence and Artifacts
+
+Reuse the existing Phase-0 evidence and baseline directory. New evidence is required only for the resumed `N=700000` scored attempt and its normal result bookkeeping.
+
+### 2.6 Files Changed
+
+This strategic rearm updates `tasks/TASK-000.md`. Execution files/results will be updated by Codex during the resumed task.
+
+### 2.7 Missing / Unavailable Evidence
+
+One valid scored `N=700000` baseline result is still required.
+
+### 2.8 Execution Errors / Exceptions
+
+The prior `N=737280` host-memory OOM is resolved strategically by selecting `N=700000`; it remains historical evidence and is not an unresolved blocker. No current execution error is established.
+
+### 2.9 Scope Compliance
+
+The revised scope changes only N from `737280` to `700000` and relaxes redundant validation/repeat requirements. All other fixed controls, resource shape, launcher, queue/project restrictions, and no-tuning boundary remain unchanged.
+
+### 2.10 Handoff to Codex
+
+Resume TASK-000 now. Reuse completed characterization, minimally update the baseline README/script to `N=700000`, perform the lightweight checks in Section 1.4C, synchronize the exact execution revision, and submit one scored baseline attempt. If it completes normally with finite correctness and `PASSED`, designate it immediately as the immutable `2x8-GAAS` original baseline, complete bookkeeping, and hand the task back as `EXECUTED / strategic-analyst`.
