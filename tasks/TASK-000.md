@@ -1,8 +1,8 @@
 ---
 task_id: TASK-000
 title: Phase 0 — 2x8 GAAS Characterization and Baseline
-status: BLOCKED
-current_owner: user
+status: APPROVED
+current_owner: codex
 parent_task: none
 analysis_id: 2x8-gaas-phase0
 created: 2026-09-27
@@ -15,141 +15,57 @@ last_updated: 2026-09-27
 
 ### 1.1 Objective
 
-Establish the Phase-0 evidence envelope and immutable original baseline for a new **2 GAAS nodes × 8 H200 GPUs/node** HPL-MxP optimization campaign.
+Finish Phase 0 quickly by establishing one valid immutable original baseline for the new **2 GAAS nodes × 8 H200 GPUs/node** HPL-MxP campaign.
 
-This task has two sequential objectives:
+The comprehensive 2×8 Phase-0 probe and NVIDIA v26.02 flag-support check are already complete and accepted as current evidence. Do **not** repeat them unless a material environment change or contradiction is directly observed during the resumed run.
 
-1. Re-probe the 2×8 GAAS execution environment and compare it against the existing `scripts/probing_report.md`. Append only genuinely new or corrected information if the existing report is incomplete.
-2. Execute the Strategic Analyst-defined NVIDIA HPL-MxP baseline configuration and use the resulting valid run as the new 2×8 campaign's immutable original baseline.
+The Strategic Analyst / Human Leader now selects **`N=700000`** for the baseline. All other baseline controls remain unchanged.
 
-Codex must execute the approved work through Workflow v2 and hand the completed evidence back to the Strategic Analyst at `status: EXECUTED`.
+A single valid scored run is sufficient to establish the immutable Phase-0 baseline. Additional identical repeats and noise statistics are **not required for TASK-000 completion**.
 
 No optimization analysis or next-direction selection is part of this task.
 
 ### 1.2 Context
 
-This is the first production deployment of Workflow v2 in this repository.
+The previous exact attempt at `N=737280` (job `72595.gaas`) reached Matrix Generation and was SIGKILLed with exit 137 because host-memory demand exceeded the validated 2000 GB/node allocation. That failure is preserved as boundary evidence and must not be retried.
 
-The target topology is:
+Historical NVIDIA-container 2×8 evidence already includes a successful `N=700000`, `NB=3072`, 4×4 run. The purpose of selecting `N=700000` here is **not** to claim it is optimal; it is to choose a proven memory-safe N so Phase 0 can obtain a baseline quickly.
 
-- 2 GAAS compute nodes;
-- 8 NVIDIA H200 GPUs per node;
-- 16 MPI ranks total;
-- one MPI rank per GPU.
+Completed evidence that should be reused rather than regenerated:
 
-An older NVIDIA-container 2×8 experiment family exists under:
+- comprehensive 2×8 probe: job `72591.gaas`, with raw evidence under `scripts/outputs/phase0_2x8_probe_v1*`;
+- dated 2×8 supplement already appended to `scripts/probing_report.md`;
+- NVIDIA v26.02 flag-support evidence:
+  `experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log`;
+- validated multinode launcher and execution-worktree mechanism;
+- failed `N=737280` attempt and its memory evidence.
 
-`experiments/2Nodes-8GPUs/`
+The existing baseline script and experiment directory should be reused. Update only what is necessary for the new Strategic Analyst decision.
 
-It is historical evidence, not the original baseline for this new campaign.
+### 1.3 Strategic Question
 
-Relevant historical NVIDIA results include:
+Can the fixed NVIDIA HPL-MxP configuration below, with `N=700000`, complete correctly on 2×8 GAAS and provide a valid scored original baseline?
 
-- `N=700000`, `NB=3072`, 4×4 row:  
-  `4.1061e+06 GFLOP/s`, PASSED.
-- `N=800000`:  
-  device HBM OOM.
-- The previous experiment estimated the device-matrix ceiling near `N≈747000`.
-
-Therefore the selected baseline value `N=737280` is close to the known NVIDIA-container HBM boundary. It must be attempted exactly as specified first. Codex must not silently lower `N` if it is invalid or OOMs.
-
-The current hardware report is:
-
-`scripts/probing_report.md`
-
-It was generated from one 8-GPU node (`hpc-gaas-g11`) on 2026-08-20. Phase 0 now concerns a real **two-node × eight-GPU** allocation, so cross-node consistency and current runtime/provenance must be revalidated.
-
-The active Workflow v2 files, root `AGENTS.md`, `APPLICATION.md`, the Phase-0 blueprint, and `workflow/08-Workflow-Multinode-Tuning.md` govern execution.
-
-The Strategic Analyst has already performed the external configuration study. Codex does **not** need to access, inspect, clone, or verify any external OpenMxP repository.
-
-### 1.3 Strategic Question / Hypotheses
-
-#### Question A — Phase-0 characterization
-
-Does the existing `scripts/probing_report.md` contain all hardware, topology, allocation, fabric, and software/provenance information required to trust a 2×8 GAAS HPL-MxP campaign?
-
-Hypothesis:
-
-The existing report captures the single-node hardware well but is likely incomplete for the new Phase-0 target because it does not establish all of the following for a current two-node allocation:
-
-- cross-node hardware/topology consistency;
-- allocation-visible CPU/cpuset differences;
-- per-node GPU/NIC/NUMA mapping consistency;
-- current IB/link state across both nodes;
-- current GPUDirect/peer-memory state;
-- exact current application/container/software provenance.
-
-Only actual probe evidence may confirm or reject these gaps.
-
-#### Question B — baseline validity
-
-Can the fixed Strategic Analyst-defined baseline configuration run correctly and reproducibly on the NVIDIA HPL-MxP v26.02 container on 2×8 GAAS?
-
-The configuration was selected from prior external performance evidence, but that external evidence is not part of Codex's execution responsibility.
-
-The baseline configuration is an input to this task, not something Codex must derive or verify strategically.
+This is an execution question only. Codex must not tune or re-derive the configuration.
 
 ### 1.4 Required Evidence / Deliverables
 
-#### A. Comprehensive 2×8 probe
+#### A. Reuse completed Phase-0 characterization
 
-Create and submit one read-only comprehensive Phase-0 probe on a real:
+Do not submit another comprehensive hardware/software probe.
 
-`select=2:ngpus=8`
+Treat the existing Phase-0 probe, probing-report supplement, and v26.02 flag-support log as sufficient unless the resumed run directly reveals a material contradiction, such as a different container/release, missing GPUs, incorrect rank mapping, or materially different launcher behavior.
 
-allocation with `place=scatter`.
+No repeated container hash, package-documentation audit, full topology capture, or comprehensive provenance sweep is required.
 
-The probe must collect the Phase-0 evidence required by the blueprint on **both allocated nodes**, including where available:
+#### B. Fixed fast-baseline configuration
 
-- hostname and PBS allocation identity;
-- CPU model/topology;
-- allocation-visible CPU set / affinity;
-- NUMA topology and memory;
-- host memory availability;
-- GPU count/model/UUID/VRAM;
-- GPU clocks, power limit, PCIe state and temperatures at probe time;
-- `nvidia-smi topo -m`;
-- GPU↔CPU/NUMA locality;
-- GPU↔NIC locality;
-- PCIe/NVLink/NVSwitch topology;
-- IB/RDMA devices;
-- IB port state/link layer/rate;
-- `ibdev2netdev`;
-- `nvidia_peermem` / relevant GDR module state;
-- available container/runtime/module versions;
-- current NVIDIA driver;
-- current CUDA/runtime information;
-- current Apptainer version;
-- current MPI/NCCL/UCX provenance where obtainable read-only;
-- current HPL-MxP container identity;
-- container path and image digest/hash if obtainable read-only;
-- effective installed HPL-MxP release;
-- relevant launcher/software versions.
-
-Preserve raw probe stdout/stderr under `scripts/outputs/` with a new attempt-specific name.
-
-After the probe:
-
-1. Compare its evidence against `scripts/probing_report.md`.
-2. If new, changed, or previously missing Phase-0 information is found, append a clearly dated **2×8 Phase-0 supplement** to `scripts/probing_report.md`.
-3. Do not rewrite the historical report body.
-4. If the report is already complete and current for all relevant information, leave the report unchanged and state that explicitly in the Codex Execution Report.
-
-The probe is observation only. It must not alter system configuration.
-
-#### B. Fixed NVIDIA baseline configuration
-
-The Strategic Analyst has already selected the baseline configuration.
-
-Codex must **not** reconstruct or re-derive it from another repository.
-
-Use the following fixed NVIDIA HPL-MxP configuration:
+Use exactly:
 
 ```text
 OMP_NUM_THREADS=8
 
---n 737280
+--n 700000
 --nb 3072
 --nprow 4
 --npcol 4
@@ -167,371 +83,242 @@ OMP_NUM_THREADS=8
 --monitor-gpu 0
 ```
 
-Before submission, Codex may perform only a **mechanical compatibility check** against the installed NVIDIA HPL-MxP v26.02 `--help` or equivalent local package information to confirm that the supplied NVIDIA flags and accepted values are supported.
+Only `N` changes from the failed attempt. Do not alter any other scientific/tuning control.
 
-That check is not authorization to redesign the configuration.
+The previous v26.02 flag-support check is accepted. Do **not** repeat flag-by-flag compatibility verification unless the installed container/release has materially changed.
 
-If a supplied flag is unavailable or uses materially different syntax in the installed release, stop and report the incompatibility rather than substituting another tuning control.
+#### C. Minimal baseline preparation
 
-Do not add source-specific OpenMxP environment variables or flags.
+Reuse:
 
-In particular, do not add:
+`experiments/2x8-GAAS/baseline/`
 
-- `OPENMXP_NVSHMEM_SPLIT`;
-- `OPENMXP_IR_INVCACHE`;
-- OpenMxP FP16-accumulation controls;
-- OpenMxP `-comm`, `-vcomm`, `-dcomm`, `--nbuf`, `-alt`, or `-gdirect`;
-- `UCX_IB_GPU_DIRECT_RDMA=n` solely because it was used in another implementation.
+Update the baseline README and PBS script so the active attempt uses `N=700000`.
 
-The NVIDIA container must use the project's validated NVIDIA multinode transport and launcher contract.
+Before submission, perform only lightweight mechanical validation:
 
-Do not add extra NVIDIA tuning controls unless required by the active launcher itself.
+- `bash -n` or equivalent syntax validation for a changed shell/PBS script;
+- confirm the active script contains `N=700000` and the unchanged required controls;
+- confirm 2 nodes × 8 GPUs, 16 ranks, one rank/GPU, 4×4 grid, column order;
+- confirm the validated container/launcher contract is still being used;
+- perform a quick live eligibility/health check sufficient to avoid an obviously unavailable/unhealthy node pair.
 
-#### C. New 2×8 baseline experiment
+Do not re-run comprehensive Phase-0 validation merely to reconfirm already-established facts.
 
-Create exactly this new campaign structure:
+#### D. One scored baseline attempt
 
-```text
-experiments/2x8-GAAS/
-└── baseline/
-    ├── README.md
-    ├── scripts/
-    │   └── <baseline PBS script>
-    └── outputs/
-```
+Submit one scored `N=700000` baseline attempt.
 
-Do not modify or reuse `experiments/2Nodes-8GPUs/` as the new campaign baseline area.
+Use:
 
-The baseline README must record:
-
-- the fixed configuration supplied above;
-- why it is being used as the Phase-0 starting configuration;
-- that the configuration was supplied by the Strategic Analyst;
-- that Codex did not independently optimize or derive it;
-- exact execution attempts and evidence paths.
-
-The baseline script must follow the active multinode launch contract:
-
-- 2 nodes;
-- 8 GPUs/node;
-- 16 MPI ranks;
+- 2 nodes × 8 GPUs;
+- 16 ranks;
 - one rank/GPU;
 - `place=scatter`;
 - no `mpiprocs`;
 - de-duplicated hostfile with `slots=8`;
 - NVIDIA HPC Benchmarks v26.02 container;
 - container MPI end-to-end;
-- `/opt/pbs` and `/var/spool/pbs` bindings;
-- `multi-node-test/rsh_pbsdsh_container.sh`;
-- `plm_rsh_no_tree_spawn=1`;
-- `plm_rsh_num_concurrent=1`;
-- `routed=direct`;
-- `--bind-to none`;
+- validated pbsdsh bridge;
 - project `hpc_ebslee`;
 - queue only `gpu_as` or `gpu_ded`;
-- current campaign measurement controls:
-  `--skip-tests 0 --monitor-gpu 0`.
+- `--skip-tests 0 --monitor-gpu 0`.
 
-No parameter sweep is authorized.
+If that attempt completes normally and reports a finite correctness result with `PASSED`, it becomes the immutable `2x8-GAAS` original baseline immediately.
 
-#### D. Baseline repetition / noise evidence
+**No repeat is required.** Do not delay TASK-000 completion to collect v2/v3 noise statistics.
 
-Phase 0 requires repeatability evidence.
+A retry is allowed only for a clearly non-scientific Track-1 failure (for example a deterministic workflow/scheduler/output-path issue or an obviously unusable node before a meaningful benchmark result). Use a new attempt label. Do not retry a genuine application OOM/correctness/runtime failure without new strategic direction.
 
-If the exact baseline completes successfully and passes correctness:
+#### E. Minimum evidence required
 
-1. designate the **first valid scored attempt** as the immutable
-   2×8-GAAS original baseline;
-2. run two additional **identical** scored repetitions, sequentially;
-3. preserve all three attempts separately;
-4. do not change parameters between repetitions;
-5. record exact allocated nodes for every attempt;
-6. report range, median and simple run-to-run spread/CV mechanically in the execution evidence, without strategic interpretation.
+For the successful baseline preserve:
 
-Prefer the same healthy node pair for all three attempts when practical.
-
-Do not wait indefinitely for a particular pair of nodes.
-
-All multinode jobs must run one at a time.
-
-#### E. Baseline correctness / evidence
-
-Every scored attempt must preserve:
-
-- attempt ID;
-- PBS job ID;
-- queue;
-- allocated nodes;
+- attempt ID and PBS job ID;
+- queue and allocated nodes;
 - resource request;
-- exact launcher;
-- container path and recorded provenance;
-- exact HPL-MxP command;
-- all explicit HPL-MxP flags;
-- relevant environment;
-- hostfile/rank count;
-- rank↔node↔GPU mapping evidence;
-- Phase-0/pre-post hardware-health evidence;
-- host and GPU memory/headroom reported by the application where available;
-- LU time/GFLOP/s;
-- iterative-refinement time/iterations;
+- exact HPL-MxP command/flags;
+- execution-tree revision/path;
+- enough rank/node/GPU mapping evidence to confirm 16 ranks and one rank/GPU;
+- PBS exit state;
+- HPL-MxP final correctness/verification result;
+- finite residual/normalized residual when emitted;
+- LU time/GFLOP/s when emitted;
+- iterative-refinement timing/iterations when emitted;
 - overall GFLOP/s;
-- final finite residual;
-- normalized harness residual;
-- `PASSED`/`FAILED`;
-- PBS stdout/stderr and exit state.
+- stdout/stderr.
 
-The first valid scored attempt is the immutable percentage denominator for future `2x8-GAAS` analysis.
+Existing Phase-0 probe/provenance evidence may be referenced rather than duplicated.
 
-Do not compare or promote the historical `experiments/2Nodes-8GPUs/` results as this new campaign's original baseline.
+Heavy duplicate telemetry, repeated topology captures, repeated software-version inventories, repeated image hashing, and repeat-run statistics are not completion requirements.
 
 ### 1.5 Relevant Inputs and References
 
-#### Active project repository
+Active project repository:
 
 `QuangPham2404/HPL-MxP-Agent-Test`
 
-Task-drafting revision:
+Primary references for this resume:
 
-`643eae6cf5db2396f3223a1ddcd8e3f7e2d6371e`
+- `tasks/TASK-000.md`;
+- `progress/2026-09-27-progress_s6.md`;
+- `scripts/probing_report.md`;
+- `scripts/outputs/phase0_2x8_probe_v1*`;
+- `experiments/2x8-GAAS/baseline/README.md`;
+- `experiments/2x8-GAAS/baseline/scripts/run_2x8_baseline.pbs`;
+- `experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log`;
+- `experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_v1.{o,e}`;
+- active `AGENTS.md`, `APPLICATION.md`, and Workflow v2 files.
 
-Required active references:
+Historical `experiments/2Nodes-8GPUs/` evidence may be used as safety/context. In particular, the prior successful `N=700000` run supports this fast-baseline choice, but it is not itself the new campaign baseline.
 
-- `AGENTS.md`
-- `APPLICATION.md`
-- `workflow/00-General-SSH-Rules.md`
-- `workflow/01-Git-Sync-Policy.md`
-- `workflow/02-Repo-Structure.md`
-- `workflow/03-Workflow-General-Notes.md`
-- `workflow/04-Workflow-Probing-Scripts-Rules.md`
-- `workflow/05-Workflow-Error-Patching-Procedures.md`
-- `workflow/06-Workflow-Automation-and-Authorization.md`
-- `workflow/07-Workflow.md`
-- `workflow/08-Workflow-Multinode-Tuning.md`
-- `planning/blueprint/HPL_MxP_Sweep_Blueprint.md`
-- `planning/dependency-graph/README.md`
-- `planning/dependency-graph/edges.csv`
-- `HPL_MxP_TuningParam_Guide.md`
-- `scripts/probing_report.md`
-- `scripts/compute_node_hardware_probe_v1.pbs`
-- `scripts/comm_transport_probe_report.md`
-- `multi-node-test/GAAS_MULTINODE_SETUP.md`
-- `multi-node-test/HPL-MxP/run_hplmxp_baseline.pbs`
-- `experiments/2Nodes-8GPUs/README.md`
-- `experiments/2Nodes-8GPUs/scripts/run_hplmxp_n_sweep.pbs`
-
-Historical 2×8 evidence may be used for safety/context, especially the known `N=700000` pass and `N=800000` HBM OOM, but it is not the new campaign baseline.
-
-No external OpenMxP repository access is required or authorized by this task.
+No external OpenMxP repository access is required or authorized.
 
 ### 1.6 Execution Scope
 
 #### Allowed
 
-Within this approved task, Codex may orchestrate and delegate to OpenCode workers the following:
+Codex may:
 
-- read required files in the active HPL-MxP-Agent-Test repository;
-- perform read-only local/repository inspection;
-- create a new Phase-0 probe script under `scripts/`;
-- create new attempt-specific probe outputs under `scripts/outputs/`;
-- submit one comprehensive read-only 2×8 PBS probe;
-- boundedly monitor the approved PBS jobs;
-- retrieve/preserve the approved probe outputs;
-- append new Phase-0 information to `scripts/probing_report.md` if and only if supported by new evidence;
-- create:
-  `experiments/2x8-GAAS/baseline/README.md`;
-- create:
-  `experiments/2x8-GAAS/baseline/scripts/`;
-- create:
-  `experiments/2x8-GAAS/baseline/outputs/`;
-- create and validate the NVIDIA-container baseline PBS script;
-- mechanically confirm that the supplied NVIDIA flags are accepted by the installed release;
-- use the validated NVIDIA container multinode launcher;
-- submit the exact fixed 2×8 baseline and, after a valid first result, up to two identical repeat attempts;
-- boundedly monitor those jobs;
-- retrieve and preserve `.o`/`.e` evidence and other designated experiment evidence;
-- update the experiment README with factual execution records;
-- update `results/metrics.csv` / `results/RESULTS.md` only as required by Workflow v2 result logging;
-- update the task's Codex Execution Report and lifecycle state;
-- create/update the required progress handoff;
-- perform required local syntax/path/diff validation;
-- commit and push approved task-execution artifacts to the current project repository;
-- perform non-destructive synchronization inside the configured GAAS project root using direct SSH (`ssh -o BatchMode=yes gaas '<remote-command>'`, or direct SSH when appropriate), `git status`, `git fetch origin`, `git rev-parse`, `git worktree list`, and `git worktree add --detach`;
-- use clean-primary `git pull --ff-only` or, when the primary is dirty, create/use `.codex-worktrees/TASK-000-*` at the exact approved origin commit and execute from that isolated tree; preserve all pre-existing primary content and worktree evidence untouched. This is operational recovery only and does not expand scientific scope.
+- reuse the completed Phase-0 probe and flag-support evidence without repeating it;
+- update the existing `experiments/2x8-GAAS/baseline/README.md` for the new `N=700000` decision;
+- minimally edit the existing baseline PBS script so `N=700000` is used and all other fixed controls remain unchanged;
+- perform lightweight syntax/configuration/resource sanity checks;
+- use the validated NVIDIA multinode launcher;
+- select an eligible healthy node pair in `gpu_as` or `gpu_ded`;
+- submit one scored `N=700000` baseline attempt;
+- perform a Track-1 retry only when the failure is clearly non-scientific and already covered by Workflow v2;
+- boundedly monitor the approved job;
+- retrieve/preserve its designated output;
+- update the experiment README and results files with factual execution data;
+- update the task Execution Report/lifecycle and required progress handoff;
+- commit/push approved task-execution artifacts;
+- use direct SSH and the existing clean-primary / isolated-worktree synchronization policy.
 
-The approved resource shape for this task is 2 nodes × 8 GPUs.
+The approved resource shape remains 2 nodes × 8 GPUs.
 
-The approved queues are `gpu_as` and `gpu_ded`.
+Approved queues remain `gpu_as` and `gpu_ded`.
 
-The approved accounting group is `hpc_ebslee`.
+Approved accounting group remains `hpc_ebslee`.
 
 #### Prohibited
 
 Codex and workers must not:
 
-- access, clone, inspect, or depend on the OpenMxP repository for this task;
-- re-derive or redesign the supplied baseline configuration;
+- access or depend on the OpenMxP repository;
+- change `N` away from `700000`;
+- change `NB=3072`;
+- change the 4×4 grid or `nporder=column`;
+- change the supplied communication, precision, residency, affinity, scheduling, or OMP controls;
+- perform an N/NB/grid/order/communication/affinity/runtime sweep;
 - perform Phase-1 tuning;
-- sweep `N`, `NB`, grid, order, communication, affinity, runtime, residency, precision, or scheduling controls;
-- choose a different baseline configuration after failure;
-- silently lower `N=737280`;
-- silently change `NB=3072`;
-- change the 4×4 process grid;
-- change `nporder=column`;
-- substitute a different tuning control if one supplied flag is unsupported;
-- add source-specific OpenMxP flags or environment variables;
-- change launcher/transport policy outside the validated NVIDIA multinode contract;
-- use NVSHMEM as a new NVIDIA-container transport experiment;
-- modify source code;
-- rebuild or replace the NVIDIA container;
-- install packages;
-- modify shared cluster software;
-- change scheduler policy;
-- use `gpu_aisg`, `gpu_free`, or other unapproved queues;
-- use project `hpc_admin`;
-- delete or overwrite historical evidence;
-- modify `experiments/2Nodes-8GPUs/`;
-- perform campaign-level strategic interpretation;
-- promote any result other than the first valid exact baseline attempt as the original baseline;
-- create Phase-1 work;
-- run the dependency checkpoint;
-- perform `ANALYSE_RESULTS`.
+- add source-specific OpenMxP flags/environment;
+- change launcher/transport strategy;
+- modify source code, rebuild the container, install packages, or modify shared software;
+- use unapproved queues/projects;
+- repeat the comprehensive Phase-0 probe or flag-validation exercise unless a material contradiction is actually observed;
+- require extra scored repeats before promoting the first valid `N=700000` run;
+- perform campaign-level strategic interpretation, dependency analysis, or `ANALYSE_RESULTS`.
 
 ### 1.7 Execution Constraints
 
-1. Follow root `AGENTS.md` and Workflow `00`–`08`.
-2. Substantive execution must be delegated to OpenCode worker(s).
-3. Probe work is read-only with respect to cluster state.
-4. All scheduler work must use PBS.
-5. All GPU work must run on compute nodes.
-6. Multinode jobs run sequentially, one at a time.
-7. Use only `gpu_as` or `gpu_ded`.
-8. Use `#PBS -P hpc_ebslee`.
-9. Use `place=scatter`.
-10. Do not specify `mpiprocs`.
-11. Use one MPI rank per GPU.
-12. Use the container's MPI runtime end-to-end.
-13. Preserve `/opt/pbs` and `/var/spool/pbs` bindings and the validated pbsdsh bridge.
-14. Use the exact Strategic Analyst-supplied baseline configuration unless a mechanical syntax incompatibility requires escalation.
-15. Baseline scored runs must use:
-    - `--skip-tests 0`
-    - `--monitor-gpu 0`
-16. Hardware health must be established with the Phase-0 probe and/or pre/post-run diagnostics rather than continuous benchmark monitoring.
-17. Every retry uses a new attempt label and new output filenames.
-18. Preserve failed/OOM attempts as evidence.
-19. Before submitting `N=737280`, use existing NVIDIA evidence plus current available-memory/headroom information to confirm there is no obvious deterministic impossibility. Do not perform a new `N` search.
-20. Existing evidence places the HBM wall between `N=700000` and `N=800000`; therefore an OOM at `N=737280` is scientifically meaningful boundary evidence and not an automatic-patching defect.
+1. Follow root `AGENTS.md` and active Workflow v2.
+2. Substantive execution remains delegated to OpenCode worker(s) as required by the workflow.
+3. Use PBS compute-node execution only.
+4. Use only `gpu_as` or `gpu_ded`, project `hpc_ebslee`.
+5. Use 2 nodes × 8 GPUs, 16 MPI ranks, one rank/GPU, `place=scatter`, no `mpiprocs`.
+6. Preserve the validated container MPI / pbsdsh multinode launcher.
+7. Use the fixed configuration in Section 1.4B.
+8. Use `--skip-tests 0 --monitor-gpu 0`.
+9. Preserve every actual submitted attempt with unique attempt/output names.
+10. Reuse existing Phase-0 characterization/provenance; do not regenerate evidence without a concrete reason.
+11. One valid scored `N=700000` attempt is sufficient for TASK-000 completion.
+12. No repeatability/noise study is required in this task.
+13. If a clearly non-scientific Track-1 issue prevents a meaningful scored result, Codex may repair/retry within existing authority.
+14. A genuine OOM, failed verification, non-finite residual, MPI/NCCL hang/failure, or required configuration change is not an automatic retry.
 
 ### 1.8 Success Criteria
 
-Task execution is operationally complete when:
+TASK-000 is complete when:
 
-#### Probe
+- the existing completed Phase-0 probe and flag-support evidence are referenced as the accepted characterization;
+- the baseline README/script reflect `N=700000` with all other fixed controls unchanged;
+- one scored 2×8 `N=700000` attempt completes;
+- PBS/application exit is normal;
+- HPL-MxP correctness reports `PASSED`;
+- residual/normalized residual is finite when emitted;
+- overall GFLOP/s is recorded;
+- LU and iterative-refinement metrics are recorded when emitted by the application;
+- the first valid `N=700000` attempt is designated the immutable `2x8-GAAS` original baseline;
+- minimum evidence from Section 1.4E is preserved;
+- result/task/progress bookkeeping is updated and committed/pushed;
+- task becomes `EXECUTED / current_owner: strategic-analyst`.
 
-- one approved comprehensive 2×8 probe completes;
-- raw evidence is preserved;
-- both allocated nodes are represented;
-- the existing probing report has been explicitly compared against the new Phase-0 evidence;
-- any genuinely missing/current information is append-only added to `scripts/probing_report.md`, or Codex explicitly records that no update was necessary.
-
-#### Baseline configuration
-
-- the supplied NVIDIA baseline flags are mechanically confirmed as supported by the installed release;
-- the configuration is recorded exactly in `experiments/2x8-GAAS/baseline/README.md`;
-- no external-source re-derivation is performed;
-- no unsupported tuning substitutions are introduced.
-
-#### Baseline execution
-
-- `experiments/2x8-GAAS/baseline/` exists with README, `scripts/`, and `outputs/`;
-- the exact baseline is attempted at:
-  - 2 nodes × 8 GPUs;
-  - 16 ranks;
-  - `N=737280`;
-  - `NB=3072`;
-  - grid 4×4;
-  - `nporder=column`;
-  - `OMP_NUM_THREADS=8`;
-  - supplied communication/precision/scheduling flags;
-- scheduler/output validation is complete;
-- first valid attempt reports normal HPL-MxP output;
-- residual is finite;
-- verification reports `PASSED`;
-- overall and LU performance are recorded;
-- memory/headroom is recorded where available;
-- the first valid attempt is explicitly identified as the immutable `2x8-GAAS` original baseline;
-- two additional identical valid repeats are completed, if the first attempt is valid;
-- simple mechanical noise/repeat statistics are recorded without strategic interpretation;
-- evidence is committed/pushed;
-- Codex completes Section 2;
-- task status becomes `EXECUTED`;
-- `current_owner` becomes `strategic-analyst`.
-
-No optimization conclusion is required for execution completeness.
+No additional repeats, range/median/CV calculation, new comprehensive probe, repeated flag audit, or strategic conclusion is required.
 
 ### 1.9 Stop / Escalation Conditions
 
-Stop the affected branch of execution and report to the Human Leader if any of the following occurs:
+Stop and return for Strategic Analyst / Human review only if:
 
-- the two-node probe finds material hardware/topology asymmetry that makes the baseline unsafe or ambiguous;
-- expected GPUs, cpusets, NICs, IB links, or rank placement are materially different from the documented environment;
-- intended GPU-direct/CUDA-aware behavior cannot be established sufficiently for the approved launcher;
-- the NVIDIA container/release or launcher provenance differs materially from `APPLICATION.md`;
-- one of the supplied NVIDIA baseline flags is unavailable or has materially incompatible syntax/semantics;
-- exact `N=737280` is deterministically infeasible;
-- the exact baseline OOMs;
-- the exact baseline fails verification;
-- residual is non-finite;
-- launcher/MPI/NCCL/UCX behavior fails or hangs;
-- rank/GPU mapping is incorrect;
-- a transport or resource change outside the approved launcher is required;
-- a node appears unhealthy or contaminated in a way that invalidates performance measurement;
-- fewer than two healthy eligible 8-GPU nodes can be obtained within the approved queues;
-- any required action exceeds this task's scope.
+- `N=700000` itself OOMs or is otherwise deterministically infeasible;
+- HPL-MxP reports failed/non-finite correctness;
+- MPI/NCCL/launcher behavior fails or hangs after normal Track-1 recovery is exhausted;
+- rank/GPU mapping is materially wrong;
+- the active container/release or validated launcher has materially changed such that existing validation cannot be reused;
+- a resource/launcher/transport/scientific-control change is required;
+- no eligible 2×8 node pair can be obtained in the approved queues;
+- another action would exceed the approved scope.
 
-If the exact baseline fails because `N=737280` is too close to the NVIDIA memory wall, do **not** automatically choose a smaller `N`. Preserve the evidence and return the task as `BLOCKED` or `PARTIAL` as appropriate for Strategic Analyst/Human review.
+Do **not** stop merely because comprehensive Phase-0 validation was not repeated. Existing probe/flag/provenance evidence is intentionally reused.
 
-Track 1 may repair only deterministic workflow machinery defects according to `workflow/05-Workflow-Error-Patching-Procedures.md`.
-
-Track 2 conditions must follow the manual-inspection process.
+Track 1 may automatically handle deterministic non-scientific workflow/synchronization/scheduler-output defects within the existing approved scope.
 
 ### 1.10 Strategic Analyst Notes
 
+This is a **fast baseline completion** decision.
+
+The previous `N=737280` attempt established that the original choice sits beyond the practical host-memory limit for the 2000 GB/node allocation. It is historical evidence and must not be retried.
+
+The new fixed N is:
+
+`N=700000`
+
+because it has already been demonstrated to execute successfully in historical 2×8 NVIDIA-container evidence and provides substantially more memory headroom. Numeric performance from the historical run does not become the new denominator; only the first valid run produced under this resumed TASK-000 configuration does.
+
 Execution order:
 
-1. Verify synchronized repository/task state.
-2. Perform comprehensive 2×8 probe.
-3. Compare against `scripts/probing_report.md`.
-4. Append only genuinely new/corrected evidence if necessary.
-5. Mechanically confirm the supplied NVIDIA flags are accepted by the installed release.
-6. Create and validate the baseline script.
-7. Synchronize.
-8. Submit the exact fixed baseline.
-9. If valid, designate the first valid attempt as original baseline.
-10. Run two identical repeats sequentially.
-11. Preserve/log all evidence.
-12. Complete Codex Execution Report and hand ownership back to Strategic Analyst.
+1. verify current task/repository state;
+2. reuse completed Phase-0 probe + v26.02 flag evidence;
+3. change the baseline README/script from `N=737280` to `N=700000` only;
+4. perform lightweight syntax/configuration/node sanity checks;
+5. synchronize the exact execution revision;
+6. submit one scored baseline attempt;
+7. if valid/PASSED, designate it immediately as the immutable original baseline;
+8. log/persist the minimum required evidence and results;
+9. hand TASK-000 back as `EXECUTED / strategic-analyst`.
 
-Do not perform any external OpenMxP investigation.
-
-Do not optimize during this task.
-
-The baseline configuration is a Human/Strategic-Analyst-approved starting point. Codex's job is to execute and validate it operationally, not to reconsider how it was derived.
-
-Historical `experiments/2Nodes-8GPUs/` evidence should be used only for NVIDIA-container feasibility and safety context, not as the original-baseline denominator for the new `2x8-GAAS` campaign.
-
-After Codex hands the task back as `EXECUTED`, the Human Leader may separately authorize `ANALYSE_RESULTS` for `analysis_id: 2x8-gaas-phase0`. The Phase-0 dependency checkpoint belongs to that later Strategic Analyst step, not to Codex execution.
+Do not optimize and do not run extra repeats merely for completeness.
 
 ### 1.11 Authorization
 
 status: APPROVED
 
-approved_scope: Comprehensive 2x8 GAAS Phase-0 probe; append-only probing-report supplementation if evidence requires it; execution of the fixed Strategic-Analyst-supplied NVIDIA HPL-MxP 2x8 baseline configuration; creation of experiments/2x8-GAAS/baseline; exact baseline submission and up to two identical valid repeats; bounded monitoring, evidence retrieval, result logging, synchronization, commit/push, and Workflow-v2 handoff. No external OpenMxP access, tuning, configuration re-derivation, or parameter substitution.
+approved_scope: Resume TASK-000 using the already-completed 2x8 Phase-0 characterization and NVIDIA v26.02 flag-support evidence; update only the baseline N from 737280 to the Strategic-Analyst/Human-selected N=700000 while keeping all other fixed controls and the validated launcher/resource shape unchanged; perform only lightweight mechanical pre-submit checks; submit one scored 2x8 baseline attempt, with Track-1 retry only for clearly non-scientific workflow/scheduler defects; preserve minimum correctness/performance/provenance evidence; establish the first valid PASSED N=700000 attempt as the immutable 2x8-GAAS original baseline; update results/task/progress and commit/push. No comprehensive re-probe, repeated flag audit, mandatory repeat/noise study, OpenMxP access, tuning, re-derivation, parameter sweep, transport/resource redesign, or strategic analysis.
 
 approved_by: user
 
 ---
 
 ## 2. CODEX EXECUTION REPORT
+
+### 2.0 Current Resume Directive — 2026-09-27
+
+The prior `N=737280` execution and its host-memory OOM remain preserved below as historical execution evidence. They are no longer the current decision gate.
+
+The Human Leader / Strategic Analyst has now rearmed TASK-000 as `APPROVED / codex` with the revised Section 1 above. Resume from the completed Phase-0 evidence, change only the baseline N to `700000`, and follow the fast-baseline success criteria. Do not repeat the comprehensive probe, flag audit, or mandatory v2/v3 repeats.
+
+On resumed execution, Codex should update/append the current Execution Report with the new attempt rather than treating the historical `N=737280` BLOCKED report as an unresolved blocker.
+
 
 ### 2.0 Previous Startup Attempts
 
