@@ -2,18 +2,18 @@
 
 TASK-000 Phase-0 immutable original baseline for the 2 GAAS nodes x 8 H200
 GPUs HPL-MxP campaign. The configuration below is fixed and identical for
-every attempt. The first valid scored attempt becomes the immutable original
-baseline for the 2x8-GAAS topology; two additional identical repeats provide
-run-to-run noise evidence (range/median/spread/CV computed mechanically
-later).
+every attempt. Under the revised approved scope, the first valid scored
+attempt becomes the immutable original baseline for the 2x8-GAAS topology; a
+single valid scored attempt is sufficient — repeats are not required.
 
 **Status (2026-09-27):** first exact attempt `2x8-GAAS-baseline_v1`
 (job 72595.gaas) FAILED with a host-memory OOM kill (exit 137) during
-Matrix Generation; run stopped at the TASK-000 1.9 gate. The two identical
-repeats (v2/v3) were not run — they are conditional on a valid first
-attempt. Awaiting Strategic Analyst / Human Leader review; `N` was not
-changed (TASK-000 constraint: an OOM at N=737280 is scientifically
-meaningful boundary evidence, not an automatic-patching defect).
+Matrix Generation; it is preserved as historical boundary evidence (see
+"Runtime error-patching history" below). TASK-000 has since been rearmed by
+the Strategic Analyst / Human Leader with `N=700000`; all other fixed
+controls are unchanged. The active attempt is
+`2x8-GAAS-baseline_n700k_v1` — a single scored attempt; no v2/v3 repeats
+are required for TASK-000 completion.
 
 ## Structure
 
@@ -26,7 +26,7 @@ meaningful boundary evidence, not an automatic-patching defect).
 
 ```
 OMP_NUM_THREADS=8
---n 737280
+--n 700000
 --nb 3072
 --nprow 4
 --npcol 4
@@ -44,17 +44,20 @@ OMP_NUM_THREADS=8
 
 Configuration supplied by the Strategic Analyst and approved by the Human
 Leader in `tasks/TASK-000.md`; Codex did not derive, optimize, or modify it.
-It was selected from prior external performance evidence (N=700000 PASSED at
-4.1061e+06 GFLOP/s, N=800000 device OOM in the historical
-`experiments/2Nodes-8GPUs/` family; N=737280 sits just below the implied
-~747000 device-matrix ceiling) — factual context only.
+`N=700000` is now the Strategic-Analyst-selected fixed baseline N (rearmed
+after the v1 N=737280 host-memory OOM), not a tuning choice. It is supported
+by prior external performance evidence (N=700000 PASSED at 4.1061e+06
+GFLOP/s, N=800000 device OOM in the historical `experiments/2Nodes-8GPUs/`
+family; N=737280 sits just below the implied ~747000 device-matrix ceiling
+but hit the host-memory wall) — factual context only.
 
 ## Pre-submission mechanical checks
 
 | check | result | evidence |
 |---|---|---|
 | CLI flag support | all 14 supplied flags SUPPORTED by the installed NVIDIA HPC Benchmarks v26.02 package | `outputs/hplmxp_v2602_flag_check_v1.log` |
-| N=737280 feasibility | per-GPU device matrix `737280^2 * 4 / 16 = 135.895 GB` vs 138.739 GB historical available MIN (139.80 GiB free at probe time); no obvious deterministic impossibility | arithmetic over `scripts/probing_report.md` (2x8 supplement) and historical `experiments/2Nodes-8GPUs/` runs |
+| N=737280 feasibility (v1 historical precheck) | per-GPU device matrix `737280^2 * 4 / 16 = 135.895 GB` vs 138.739 GB historical available MIN (139.80 GiB free at probe time); no obvious deterministic impossibility | arithmetic over `scripts/probing_report.md` (2x8 supplement) and historical `experiments/2Nodes-8GPUs/` runs |
+| N=700000 feasibility (active attempt `2x8-GAAS-baseline_n700k_v1`) | historical 2Nodes-8GPUs run at N=700000 PASSED with host available MIN 238.426 GB/process; host FP64 matrix per node = `700000^2 * 8 / 2 ≈ 1960 GB` vs the 2000 GB per-node cgroup; per-GPU device matrix `700000^2 * 4 / 16 ≈ 122.5 GB` vs 138.739 GB available MIN | historical `experiments/2Nodes-8GPUs/` evidence |
 
 ## Launch contract
 
@@ -75,8 +78,8 @@ submissions).
 ## Submission (from this directory)
 
 ```bash
-qsub -q <gpu_ded|gpu_as> -v "ATTEMPT=2x8-GAAS-baseline_v1" \
-     -o outputs/2x8-GAAS-baseline_v1.o -e outputs/2x8-GAAS-baseline_v1.e \
+qsub -q <gpu_ded|gpu_as> -v "ATTEMPT=2x8-GAAS-baseline_n700k_v1" \
+     -o outputs/2x8-GAAS-baseline_n700k_v1.o -e outputs/2x8-GAAS-baseline_n700k_v1.e \
      scripts/run_2x8_baseline.pbs
 ```
 
@@ -104,13 +107,11 @@ A run is valid only when:
 | attempt | PBS job | queue | nodes | result | residual | overall GFLOP/s | per-GPU GFLOP/s |
 |---|---|---|---|---|---|---|---|
 | 2x8-GAAS-baseline_v1 | 72595.gaas | gpu_as | hpc-gaas-g12 hpc-gaas-g15 | FAILED: host-memory OOM kill (exit 137) during Matrix Generation; no residual/verification/GFLOPS produced | none (run died before verification) | - | - |
-| 2x8-GAAS-baseline_v2 | - | - | - | not run (conditional on a valid first attempt) | - | - | - |
-| 2x8-GAAS-baseline_v3 | - | - | - | not run (conditional on a valid first attempt) | - | - | - |
+| 2x8-GAAS-baseline_n700k_v1 | TBD | - | - | pending submission under the revised N=700000 scope | - | - | - |
 
-No valid scored attempt exists yet; the immutable 2x8-GAAS original
-baseline has NOT been established. When a valid attempt is eventually
-designated (under new human-approved scope), that first valid attempt
-becomes the immutable original baseline and the future percentage
+No valid scored attempt exists yet. Under the revised approved scope, the
+first valid N=700000 attempt becomes the immutable 2x8-GAAS original
+baseline immediately (no repeats required) and the future percentage
 denominator for 2x8-GAAS analysis.
 
 ## Runtime error-patching history
