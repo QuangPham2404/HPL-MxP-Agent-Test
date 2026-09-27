@@ -229,3 +229,103 @@ After that refinement is analyzed, retain the bounded N/residency regime(s) and 
 
 **Human decision state:** proposed only. No further execution is authorized by this analysis.
 
+## 3. Phase 1A — Local N Refinement and Closure
+
+TASK-002 refined the TASK-001 coarse region with:
+
+```text
+N = 404480, 429056, 454656, 480256, 504832
+```
+
+using the same 2×8 GAAS allocation pattern and identical scientific controls except N. All five points passed correctness.
+
+Detailed analysis: `planning/analysis/2x8-gaas-phase1a-n-refine.md`.
+
+### 3.1 Results
+
+| N | Overall GFLOP/s | vs original baseline | LU GFLOP/s | LU time | IR time | IR/LU | Device headroom after matgen | Host memory consumption MAX |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 404480 | `5.1045e+06` | +6.26% | `6.4584e+06` | 6.83 s | 1.81 s | 0.265 | 17.450 GB | 0.004 GB |
+| **429056** | **`5.6091e+06`** | **+16.77%** | `6.6130e+06` | 7.96 s | **1.43 s** | **0.180** | 2.767 GB | 0.004 GB |
+| 454656 | `5.2584e+06` | +9.47% | `6.8314e+06` | 9.17 s | 2.75 s | 0.300 | 2.257 GB | 15.024 GB |
+| 480256 | `5.2514e+06` | +9.32% | **`7.1777e+06`** | 10.29 s | 3.78 s | 0.367 | 2.257 GB | 34.205 GB |
+| 504832 | `4.9704e+06` | +3.47% | `7.0018e+06` | 12.25 s | 5.01 s | 0.409 | 2.257 GB | 51.561 GB |
+
+The deliberate TASK-001 anchor repeats were stable:
+
+```text
+N=404480: -1.00%
+N=454656: +0.29%
+N=504832: -0.95%
+```
+
+relative to their TASK-001 scores. This is not a formal noise study, but the movement is small compared with the approximately 6.7% separation between `N=429056` and the next-best refinement points.
+
+### 3.2 Analysis
+
+`N=429056` is retained as the Phase-1A representative N.
+
+Its advantage is not the highest LU throughput. Larger N values produce faster LU, but their iterative-refinement cost rises enough to reduce the end-to-end score:
+
+```text
+N=429056: IR/LU = 0.180
+N=454656: IR/LU = 0.300
+N=480256: IR/LU = 0.367
+N=504832: IR/LU = 0.409
+```
+
+All five candidates still use three IR iterations, so the gain at `N=429056` comes from a shorter refinement path rather than fewer iterations.
+
+The FP64-residency transition is now bounded more tightly:
+
+```text
+N=429056:
+  device headroom = 2.767 GB
+  host consumption = 0.004 GB
+
+N=454656:
+  device headroom = 2.257 GB
+  host consumption = 15.024 GB
+```
+
+Thus `N=429056` sits at the useful edge of the high-device-residency regime: it nearly fills practical device capacity while avoiding the host-resident/staged behavior visible at the next point.
+
+The post-transition `N=454656–480256` regime is mechanistically distinct but is approximately 6.3% below `N=429056`, materially larger than the observed repeat-anchor movement. It is therefore not retained as a co-equal performance regime. `N=454656` remains useful as a residency-boundary reference.
+
+### 3.3 Phase-1A decision
+
+**Phase 1A is closed at `N=429056` under the current provisional controls and `--fill-device 1` policy.**
+
+Phase 1 itself remains open because `NB=3072` has not been tuned for the retained N.
+
+### 3.4 Dependency checkpoint
+
+The checkpoint is performed.
+
+- **E07, N → NB:** triggered. Proceed to Phase 1B NB tuning.
+- **E08, NB → N/memory boundary:** mandatory after Phase 1B because only 2.767 GB device headroom remains at the retained N.
+- **E09, N → grid/order:** grid/order remains open downstream; defer to Phase 2A.
+- **E14/E15, N ↔ FP64 residency:** resolved for Phase 1A under the current fill policy; reopen only if NB/workspace or residency policy materially changes.
+- **E16, fill/residency → buffer:** open downstream; the package-default buffer is not treated as optimized.
+- **E18/E21, N/residency → host runtime/DGEMV:** open downstream and deferred.
+- **E22–E24, E28, E34:** become active after the NB decision.
+- **E37, N → scheduling:** scheduling is reopened downstream because the retained N materially changes LU geometry, but it is not tuned during Phase 1.
+
+### 3.5 Proposed next step
+
+**Recommended next action: Phase 1B bounded NB screen at fixed `N=429056`.**
+
+Proposed first-stage candidates:
+
+```text
+NB = 1024, 2048, 3072, 4096, 5120, 6144
+```
+
+Use `NB=3072` as the same-protocol control. Keep N and every non-NB scientific control fixed. These values are search hypotheses only; no single-node NB optimum is transferred to this topology, and `N % NB == 0` is not required.
+
+Because the retained N is close to the device-residency limit, correctness and memory headroom remain hard gates. Upward extension should stop after invalidity/OOM or repeated clear degradation rather than adding larger NB values automatically.
+
+After Phase 1B, perform the mandatory E08 dependency review and reopen N only locally if the retained NB materially changes the residency boundary, feasibility, ranking, or LU/IR balance.
+
+**Human decision state:** proposed only. No Phase-1B execution is authorized by this analysis.
+
