@@ -1,0 +1,81 @@
+# 2x8-GAAS-baseline_n700k_v1_job72602_qstat_monitor.log
+# Bounded qstat monitoring evidence for TASK-000 scored baseline attempt
+# 2x8-GAAS-baseline_n700k_v1 (PBS job 72602.gaas).
+#
+# Purpose: record every bounded monitoring check (max 30 checks, 60 s apart)
+# for PBS job 72602.gaas, per the approved worker procedure. Each check
+# records a timestamp plus job_state/substate extracted from
+# `qstat -f 72602.gaas` (with `qstat -x -f` fallback if the non-history
+# query returns nothing).
+#
+# Date: 2026-09-27
+# Job id: 72602.gaas
+# Job: 2x8_gaas_baseline, queue gpu_as, project hpc_ebslee,
+#      host-pinned select host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB
+#      +host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB, place=scatter,
+#      walltime 00:45:00, submitted 2026-09-27T08:58:13+08:00 from
+#      .codex-worktrees/TASK-000-11b9e5a-n700k/experiments/2x8-GAAS/baseline
+#      (verified clean at HEAD 11b9e5a1c93eb52966ad30f5a7a1755ef359f881;
+#      script sha256 25208750c7eb61acecd302f2c3050c5d1087c5ce038b61669cd366e8cf34a8f0).
+# All checks run via direct noninteractive SSH:
+#   ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 \
+#       -o ServerAliveCountMax=3 gaas '<polling loop>'
+# Polling loop (single SSH session; 60 s spacing; hard cap 8 checks in the
+# chunk, global cap 30; early break on terminal state):
+#   JOB=72602.gaas; N=0; sleep 50
+#   while [ $N -lt 8 ]; do
+#     N=$((N+1)); TS=$(date +%Y-%m-%dT%H:%M:%S%z)
+#     OUT=$(qstat -f $JOB 2>/dev/null)
+#     [ -z "$OUT" ] && OUT=$(qstat -x -f $JOB 2>/dev/null)
+#     ST=$(echo "$OUT" | grep "job_state" | sed "s/.*= //")
+#     SUB=$(echo "$OUT" | grep "substate" | sed "s/.*= //")
+#     echo "# check $N @ $TS: job_state=$ST substate=$SUB"
+#     if [ "$ST" = "F" ] || [ "$ST" = "E" ]; then break; fi
+#     sleep 60
+#   done
+# Timestamps below are cluster local time (GAAS, +08:00), printed by the
+# polling loop itself. The verbatim loop output is preserved below.
+#
+# Job start fact from the single immediate post-submission qstat -f
+# (2026-09-27T08:58:17+08:00): job_state = R, substate = 42,
+# stime = Sun Sep 27 08:58:13 2026,
+# exec_vnode = (hpc-gaas-g12:ngpus=8:ncpus=96:mem=2097152000kb)+
+#              (hpc-gaas-g15:ngpus=8:ncpus=96:mem=2097152000kb),
+# comment = Job run at Sun Sep 27 at 08:58 on
+# (hpc-gaas-g12:ngpus=8:ncpus=96:mem=2097152000kb)+
+# (hpc-gaas-g15:ngpus=8:ncpus=96:mem=2097152000kb).
+
+=== VERBATIM POLLING LOOP OUTPUT ===
+# check 1 @ 2026-09-27T08:59:23+0800: job_state=R substate=42
+# check 2 @ 2026-09-27T09:00:23+0800: job_state=R substate=42
+# check 3 @ 2026-09-27T09:01:23+0800: job_state=R substate=42
+# check 4 @ 2026-09-27T09:02:23+0800: job_state=R substate=42
+# check 5 @ 2026-09-27T09:03:23+0800: job_state=R substate=42
+# check 6 @ 2026-09-27T09:04:23+0800: job_state=F substate=92
+TERMINAL_STATE_REACHED at check 6
+CHUNK_DONE checks_used=6
+=== END VERBATIM POLLING LOOP OUTPUT ===
+
+=== CHECK-BY-CHECK RECORD ===
+=== CHECK 1 ===
+# check 1 @ 2026-09-27T08:59:23+08:00: job_state=R substate=42
+=== CHECK 2 ===
+# check 2 @ 2026-09-27T09:00:23+08:00: job_state=R substate=42
+=== CHECK 3 ===
+# check 3 @ 2026-09-27T09:01:23+08:00: job_state=R substate=42
+=== CHECK 4 ===
+# check 4 @ 2026-09-27T09:02:23+08:00: job_state=R substate=42
+=== CHECK 5 ===
+# check 5 @ 2026-09-27T09:03:23+08:00: job_state=R substate=42
+=== CHECK 6 ===
+# check 6 @ 2026-09-27T09:04:23+08:00: job_state=F substate=92
+TERMINAL STATE (job_state=F) at check 6
+=== MONITORING LOOP ENDED ===
+
+# Summary: 6 checks used of the max 30; ~60 s spacing maintained between
+# checks (first check ~70 s after submission); states observed: R/substate=42
+# (checks 1-5), F/substate=92 (check 6, terminal, 2026-09-27T09:04:23+08:00).
+# Loop stopped early on terminal state per procedure; the 30-check cap was
+# not exceeded. Final-state confirmation (qstat -x -f, 2026-09-27T09:04:26
+# +08:00): job_state = F, substate = 92, Exit_status = 0,
+# resources_used.walltime = 00:05:46, comment "... and finished".

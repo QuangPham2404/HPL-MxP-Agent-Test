@@ -1,8 +1,8 @@
 ---
 task_id: TASK-000
 title: Phase 0 — 2x8 GAAS Characterization and Baseline
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: none
 analysis_id: 2x8-gaas-phase0
 created: 2026-09-27
@@ -648,42 +648,187 @@ promoted.
 
 ### 2.1 Execution Status
 
-status: PARTIAL
+status: COMPLETE
 
-TASK-000 is rearmed as `APPROVED / codex` under the revised Strategic Specification. The completed Phase-0 probe and flag-support evidence remain valid. The next execution action is the fast `N=700000` baseline run; no current manual blocker is established.
+The resumed fast-baseline objective is achieved. The single scored attempt
+`2x8-GAAS-baseline_n700k_v1` (job 72602.gaas) completed normally (exit 0)
+with `PASSED` verification, finite residuals, and overall `4.8037e+06`
+GFLOP/s, and is designated the immutable `2x8-GAAS` original baseline. The
+front matter is set to `EXECUTED / strategic-analyst`.
 
 ### 2.2 Orchestration Summary
 
-Pending resumed execution. Reuse the existing execution infrastructure and completed characterization. Do not repeat the comprehensive probe, flag-support audit, or v2/v3 repeat campaign.
+Resumed execution under the unchanged approved Section 1.11 (N=700000
+scope). Two OpenCode execution workers, each bounded by the task scope;
+Codex validated every worker claim against repository state and raw
+evidence before relying on it:
+
+1. Worker A — minimal local preparation: changed the two `--n 737280`
+   settings to `--n 700000` in the baseline PBS script and updated the
+   experiment README for the revised single-attempt scope; ran `bash -n`
+   and exact-change checks.
+2. Worker B — remote execution: execution-worktree preflight verification
+   (exact HEAD, clean status, script sha256), live `pbsnodes -aSj` + live
+   Qlist node selection, single host-pinned submission (job 72602.gaas),
+   bounded monitoring (6 of max 30 checks), sha256-verified evidence
+   retrieval, and mechanical factual validation.
+
+Codex directly performed startup verification, Git commit/push, remote
+Mode-B worktree synchronization, results/task/progress bookkeeping, and
+final verification.
 
 ### 2.3 Work Executed
 
-Historical work through the failed `N=737280` attempt is preserved above. No `N=700000` attempt has been submitted yet.
+1. Startup: read Workflow v2 files 00-08, `APPLICATION.md`, this task, and
+   `progress/2026-09-27-progress_s6.md`; verified front matter
+   (`APPROVED / codex` fresh start) and Section 1.11 (`APPROVED`,
+   `approved_by: user`, N=700000 approved scope unchanged); verified Git
+   state `0c9900f` (local = origin; only the pre-existing untracked
+   `hpl-mxp-runs-on-gaas/`, preserved untouched throughout).
+2. Reused the completed Phase-0 probe and v26.02 flag-support evidence; no
+   comprehensive re-probe or repeated flag audit performed.
+3. Set front matter `EXECUTING / codex`; Worker A updated the PBS script
+   (exactly the two `--n` lines) and the README. Codex validated: `bash -n`
+   OK; 2x `--n 700000`, 0x `--n 737280`; all 15 fixed controls, PBS
+   directives, and launcher gates unchanged; `git diff --check` clean.
+4. Committed/pushed `11b9e5a1c93eb52966ad30f5a7a1755ef359f881`
+   ("Prepare TASK-000 N=700000 baseline attempt").
+5. Mode-B synchronization: recorded the dirty primary clone (`87fb61e`,
+   168 working-tree entries including 2 tracked modifications — left
+   completely untouched); non-destructive `git fetch origin`; created the
+   clean detached worktree `.codex-worktrees/TASK-000-11b9e5a-n700k` at
+   exactly `11b9e5a1c93eb52966ad30f5a7a1755ef359f881`; verified clean
+   status, script sha256
+   `25208750c7eb61acecd302f2c3050c5d1087c5ce038b61669cd366e8cf34a8f0`
+   identical local/remote, and the unchanged task Authorization
+   (`EXECUTING / codex` + Section 1.11 `APPROVED`). Pre-existing worktrees
+   and the dirty primary preserved.
+6. Worker B live node selection: `pbsnodes -aSj` fully-free candidates
+   g04/g05/g12/g15/g16/g17/g22; live Qlist — g12/g15 `gpu_as,gpu_ppu`;
+   g22 `gpu_ded` (single node only); g04/g05/g16/g17 `gpu_aisg`
+   (off-limits). Chosen pair hpc-gaas-g12 + hpc-gaas-g15, queue `gpu_as`
+   (the only approved queue present in both live Qlists; both nodes had
+   zero assigned resources).
+7. Single submission (exactly one qsub, 2026-09-27T08:58:13+08:00, exit
+   0): `qsub -q gpu_as -l select=host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB -v "ATTEMPT=2x8-GAAS-baseline_n700k_v1" -o outputs/2x8-GAAS-baseline_n700k_v1.o -e outputs/2x8-GAAS-baseline_n700k_v1.e scripts/run_2x8_baseline.pbs`
+   → job `72602.gaas`. No second job was submitted.
+8. Immediate `qstat -f` verification: job_state R, queue `gpu_as`, project
+   `hpc_ebslee`, exact host-pinned select, `place=scatter`, walltime
+   `00:45:00`, no `mpiprocs`, exec_vnode exactly g12+g15, ATTEMPT variable
+   and output paths under the worktree `outputs/`.
+9. Bounded monitoring: 6 checks of max 30, 60 s apart (R/substate 42 for
+   checks 1-5; F/substate 92 at check 6). Final: `Exit_status = 0`,
+   `resources_used.walltime = 00:05:46`, `resources_used.mem =
+   3868586744kb`, exec_vnode exactly hpc-gaas-g12 + hpc-gaas-g15, comment
+   "... and finished"; all 16 GPUs overallHealth=10, thermalViolationTime=0.
+10. Evidence retrieved with sha256-verified remote/local identity, exact
+    filenames preserved: `2x8-GAAS-baseline_n700k_v1.{o,e}`, submission
+    log, and qstat monitor log.
+11. Results logged: `results/metrics.csv` attempt row
+    `2x8-GAAS-baseline,2x8-GAAS-baseline_n700k_v1,...` (194 rows, no
+    duplicates, no empty fields); `results/RESULTS.md` regenerated from the
+    CSV; experiment README updated with the valid-attempt record and the
+    immutable-baseline designation.
 
 ### 2.4 Operational Validation
 
-For resume, perform only the lightweight checks required by revised Section 1.4C. Existing Phase-0 hardware/software characterization and v26.02 flag-support evidence are accepted unless a material contradiction is directly observed.
+Validated by Codex directly against the raw `.o`/`.e` evidence:
+
+- PBS: job_state F / substate 92, `Exit_status = 0`, walltime used
+  `00:05:46`, exec_vnode exactly
+  `(hpc-gaas-g12:ngpus=8:ncpus=96:mem=2097152000kb)+(hpc-gaas-g15:...)`.
+- App-echoed config exact: HPL-MxP-NVIDIA 26.2.0; nprow=4, npcol=4,
+  order=column, n=700000, nb=3072, tolerance=1e-12, test-loop=1,
+  sloppy-type=FP16, use-mpi-panel-broadcast=0,
+  use-separate-stream-for-gemm=1, prioritize-trsm=0,
+  prioritize-factorization=0, skip-tests=0, monitor-gpu=0,
+  OMP_NUM_THREADS=8.
+- Layout: 2 nodes x 8 GPUs = 16 ranks; hostfile `hpc-gaas-g12 slots=8` +
+  `hpc-gaas-g15 slots=8`; rank-attributed output lines contain only
+  hpc-gaas-g12/hpc-gaas-g15 (ranks 0-15), one GPU per rank.
+- Memory: host consumption MAX 228.452 GB / available MIN 219.944 GB;
+  device consumption MAX 124.016 GB / available MIN 138.739 GB;
+  post-Matrix-Generation available MIN system 4.168 GB, device 14.005 GB.
+- Internal tests (skip-tests 0) ran and completed: GEMM AVG 601163.48
+  GFLOPS; MPI/NCCL U and L2 broadcasts; pdgemv; RNG 160.73 s; matgen
+  212.97 s.
+- Correctness: solver L-infinite residuals finite — iteration 0:
+  `4.81404253e-04`, 1: `9.49865631e-10`, 2: `1.06359366e-13` (3
+  iterative-refinement iterations, Iterative Solver seconds AVG 18.44);
+  normalized residual `||Ax-b||_oo / (...) = 2.520608E-04 PASSED`; no
+  NaN/-nan anywhere in the output.
+- Performance: LU seconds AVG 29.17; LU GFLOPS `7.8390e+06` (per GPU
+  489939.40); overall GFLOPS `4.8037e+06` (per GPU 300228.24) — "The
+  HPL-MxP performance to report".
+- GPU-monitoring output unavailable by design (`--monitor-gpu 0`);
+  pre/post-run hardware-health snapshots normal (31-33 C, ~118-128 W,
+  driver 580.126.20, 0 MiB used post-run).
 
 ### 2.5 Evidence and Artifacts
 
-Reuse the existing Phase-0 evidence and baseline directory. New evidence is required only for the resumed `N=700000` scored attempt and its normal result bookkeeping.
+- Attempt evidence:
+  `experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_n700k_v1.{o,e}`,
+  `2x8-GAAS-baseline_n700k_v1_submission.log`,
+  `2x8-GAAS-baseline_n700k_v1_job72602_qstat_monitor.log`.
+- Reused unchanged: Phase-0 probe evidence
+  `scripts/outputs/phase0_2x8_probe_v1*`, the `scripts/probing_report.md`
+  2x8 supplement, the flag check
+  `experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log`,
+  and the preserved historical failed attempt `2x8-GAAS-baseline_v1`
+  (job 72595.gaas) records.
+- Results: `results/metrics.csv` (attempt row appended; 194 rows),
+  `results/RESULTS.md` (regenerated from the CSV).
+- Commits: `11b9e5a` (N=700000 preparation + `EXECUTING`); final execution
+  commit (this report, results, README, progress handoff).
+- Remote execution tree: `.codex-worktrees/TASK-000-11b9e5a-n700k` at
+  `11b9e5a1c93eb52966ad30f5a7a1755ef359f881` (clean; dirty primary and
+  pre-existing worktrees untouched).
 
 ### 2.6 Files Changed
 
-This strategic rearm updates `tasks/TASK-000.md`. Execution files/results will be updated by Codex during the resumed task.
+- `experiments/2x8-GAAS/baseline/scripts/run_2x8_baseline.pbs` (two `--n`
+  lines 737280 → 700000 only)
+- `experiments/2x8-GAAS/baseline/README.md` (revised-scope update, then
+  valid-attempt record and immutable-baseline designation)
+- `experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_n700k_v1.{o,e}`,
+  `2x8-GAAS-baseline_n700k_v1_submission.log`,
+  `2x8-GAAS-baseline_n700k_v1_job72602_qstat_monitor.log` (new evidence)
+- `results/metrics.csv` (attempt row), `results/RESULTS.md` (regenerated)
+- `tasks/TASK-000.md` (this report; front matter `EXECUTING / codex` →
+  `EXECUTED / strategic-analyst`)
+- `progress/2026-09-27-progress_s7.md` (session handoff)
 
 ### 2.7 Missing / Unavailable Evidence
 
-One valid scored `N=700000` baseline result is still required.
+None required for completion. GPU-monitoring telemetry is unavailable by
+design (`--monitor-gpu 0`). No v2/v3 repeat or noise statistics exist (not
+required under the revised scope). No OpenMxP access was performed or
+required.
 
 ### 2.8 Execution Errors / Exceptions
 
-The prior `N=737280` host-memory OOM is resolved strategically by selecting `N=700000`; it remains historical evidence and is not an unresolved blocker. No current execution error is established.
+None. The single attempt completed normally; no Track-1 defect occurred and
+no retry was used. The historical N=737280 host-memory OOM remains preserved
+above and was resolved strategically by the approved N=700000 selection.
 
 ### 2.9 Scope Compliance
 
-The revised scope changes only N from `737280` to `700000` and relaxes redundant validation/repeat requirements. All other fixed controls, resource shape, launcher, queue/project restrictions, and no-tuning boundary remain unchanged.
+Stayed within the approved scope: only the two `--n` settings changed (all
+other controls verified unchanged and echoed exactly by the application); no
+comprehensive re-probe or repeated flag audit; exactly one submission in
+approved queue `gpu_as` with project `hpc_ebslee`; 2 nodes x 8 GPUs, 16
+ranks, one rank/GPU, `place=scatter`, no `mpiprocs`; validated container
+MPI + pbsdsh bridge unchanged; bounded monitoring 6 of max 30 checks;
+unique attempt/output names with preserved provenance; no repeats, no
+tuning, no OpenMxP access, no `ANALYSE_RESULTS` or strategic
+interpretation; dirty remote primary and all pre-existing remote material
+preserved; pre-existing local untracked `hpl-mxp-runs-on-gaas/` untouched.
 
-### 2.10 Handoff to Codex
+### 2.10 Handoff to Strategic Analyst
 
-Resume TASK-000 now. Reuse completed characterization, minimally update the baseline README/script to `N=700000`, perform the lightweight checks in Section 1.4C, synchronize the exact execution revision, and submit one scored baseline attempt. If it completes normally with finite correctness and `PASSED`, designate it immediately as the immutable `2x8-GAAS` original baseline, complete bookkeeping, and hand the task back as `EXECUTED / strategic-analyst`.
+TASK-000 is COMPLETE and returned as `EXECUTED / strategic-analyst`. The
+immutable `2x8-GAAS` original baseline is `2x8-GAAS-baseline_n700k_v1`
+(job 72602.gaas): N=700000, NB=3072, 4x4 column grid, 16 ranks on
+hpc-gaas-g12 + hpc-gaas-g15, overall `4.8037e+06` GFLOP/s, normalized
+residual `2.520608E-04` `PASSED`. Strategic analysis requires explicit
+human `ANALYSE_RESULTS` authorization.

@@ -1,0 +1,425 @@
+# 2x8-GAAS-baseline_n700k_v1_submission.log
+# Raw preflight, node-selection, submission, final-state, and retrieval
+# evidence for TASK-000 (Phase 0 - 2x8 GAAS) scored baseline attempt
+# 2x8-GAAS-baseline_n700k_v1 (PBS job 72602.gaas, queue gpu_as,
+# host-pinned hpc-gaas-g12 + hpc-gaas-g15, N=700000).
+#
+# Date: 2026-09-27
+# Job id: 72602.gaas
+# Context: OpenCode execution-worker session under TASK-000 (EXECUTING /
+# codex, Section 1.11 Authorization: status APPROVED, approved_by: user,
+# unchanged exact approved scope: submit ONE scored 2x8 GAAS HPL-MxP
+# baseline attempt at N=700000 with all other fixed controls and the
+# validated launcher/resource shape unchanged, in queue gpu_as or gpu_ded
+# only, project hpc_ebslee; bounded monitoring max 30 checks spaced 60 sec;
+# retrieve and preserve evidence; mechanical factual validation only).
+# This assignment covers ONLY the single scored attempt
+# 2x8-GAAS-baseline_n700k_v1.
+#
+# All remote commands were run read-only (preflight/monitoring) or exactly
+# as instructed (single qsub + one immediate qstat -f + bounded monitoring
+# loop + final qstat -x -f + evidence listing/scp) via direct
+# noninteractive SSH:
+#   ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 \
+#       -o ServerAliveCountMax=3 gaas '<remote-command>'
+#
+# Execution tree used (verified clean at exact approved HEAD):
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-11b9e5a-n700k
+#   HEAD = 11b9e5a1c93eb52966ad30f5a7a1755ef359f881
+#
+# Baseline script (unchanged): experiments/2x8-GAAS/baseline/scripts/run_2x8_baseline.pbs
+#   sha256 = 25208750c7eb61acecd302f2c3050c5d1087c5ce038b61669cd366e8cf34a8f0
+#   N control verified by grep: "--n 700000" count = 2 (expected 2);
+#   "--n 737280" count = 0 (expected 0).
+
+===== PREFLIGHT 1: execution worktree verification (read-only) =====
+# Commands (run against the GAAS worktree, read-only):
+#   git -C <worktree> rev-parse HEAD
+#   git -C <worktree> status --porcelain
+#   sha256sum <worktree>/experiments/2x8-GAAS/baseline/scripts/run_2x8_baseline.pbs
+#   grep -c -- "--n 700000" <script>
+#   grep -c -- "--n 737280" <script>
+# Remote time at command: not separately timestamped; executed immediately
+# before PREFLIGHT 2 (2026-09-27T08:58:03+08:00) in the same worker
+# session.
+=== rev-parse HEAD ===
+11b9e5a1c93eb52966ad30f5a7a1755ef359f881
+(matches approved commit 11b9e5a1c93eb52966ad30f5a7a1755ef359f881)
+=== status --porcelain ===
+(empty; clean; exit 0)
+=== sha256sum baseline script ===
+25208750c7eb61acecd302f2c3050c5d1087c5ce038b61669cd366e8cf34a8f0  /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-11b9e5a-n700k/experiments/2x8-GAAS/baseline/scripts/run_2x8_baseline.pbs
+(matches required sha256 25208750c7eb61acecd302f2c3050c5d1087c5ce038b61669cd366e8cf34a8f0)
+=== grep -c -- "--n 700000" ===
+2
+(required: 2)
+=== grep -c -- "--n 737280" ===
+0
+(required: 0)
+===== END PREFLIGHT 1 =====
+# All five verification checks PASSED (exact approved HEAD, clean tree,
+# exact script sha256, N=700000 count 2, N=737280 count 0).
+
+===== PREFLIGHT 2: pbsnodes -aSj (live clean-node scan, read-only) =====
+# Command: pbsnodes -aSj
+# Remote time at command: 2026-09-27T08:58:03+08:00
+                                                        mem       ncpus   nmics   ngpus
+vnode           state           njobs   run   susp      f/t        f/t     f/t     f/t   jobs
+--------------- --------------- ------ ----- ------ ------------ ------- ------- ------- -------
+hpc-gaas-g01    free                 2     2      0    765gb/2tb  40/100     0/0     3/8 72286,72594
+hpc-gaas-g02    free                 1     1      0      1tb/2tb  76/100     0/0     6/8 72435
+hpc-gaas-g03    free                 1     1      0      1tb/2tb  52/100     0/0     4/8 67044
+hpc-gaas-g04    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g05    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g06    free                 7     7      0    265gb/2tb  16/100     0/0     1/8 72599,68937,65458,70448,72528,71882,72454
+hpc-gaas-g07    free                 6     6      0    515gb/2tb  28/100     0/0     2/8 72302,72456,72455,71697,72567,72376
+hpc-gaas-g08    free                 3     3      0    765gb/2tb  40/100     0/0     3/8 71513,72037,71513
+hpc-gaas-g09    free                 5     5      0    265gb/2tb  16/100     0/0     1/8 71833,72395,64144,72447,72395
+hpc-gaas-g10    free                 4     4      0     15gb/2tb   4/100     0/0     0/8 72449,72250,72449,72250
+hpc-gaas-g11    free                 1     1      0      1tb/2tb  76/100     0/0     6/8 71787
+hpc-gaas-g12    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g13    free                 1     1      0     15gb/2tb   4/100     0/0     0/8 70232
+hpc-gaas-g14    free                 1     1      0      2tb/2tb  88/100     0/0     7/8 68707
+hpc-gaas-g15    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g16    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g17    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g18    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g19    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g20    free                 1     1      0      2tb/2tb  88/100     0/0     7/8 67357
+hpc-gaas-g21    free                 1     1      0     15gb/2tb   4/100     0/0     0/8 67045
+hpc-gaas-g22    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g23    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g24    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g25    free                 1     1      0      2tb/2tb  88/100     0/0     7/8 72589
+hpc-gaas-dm1    free                 0     0      0      1tb/1tb 256/256     0/0     0/0 --
+hpc-gaas-dm2    free                 0     0      0      1tb/1tb 128/128     0/0     0/0 --
+# Fully-free 8-GPU-node candidates (state=free, njobs=0, mem 2tb/2tb,
+# ncpus 100/100, ngpus 8/8, not down):
+#   hpc-gaas-g04, hpc-gaas-g05, hpc-gaas-g12, hpc-gaas-g15, hpc-gaas-g16,
+#   hpc-gaas-g17, hpc-gaas-g22.
+===== END PREFLIGHT 2 =====
+
+===== PREFLIGHT 3: live Qlist for all fully-free candidates =====
+# Command: pbsnodes -av (full vnode listing; per-node state, Qlist, and
+# resources_assigned extracted verbatim with grep). Remote time at command:
+# 2026-09-27T08:58:03+08:00 (same SSH call as PREFLIGHT 2).
+# Live Qlist lines of all fully-free candidates:
+hpc-gaas-g04: Qlist = gpu_aisg        (OFF-LIMITS queue)
+hpc-gaas-g05: Qlist = gpu_aisg        (OFF-LIMITS queue)
+hpc-gaas-g12: Qlist = gpu_as,gpu_ppu  (contains approved gpu_as)
+hpc-gaas-g15: Qlist = gpu_as,gpu_ppu  (contains approved gpu_as)
+hpc-gaas-g16: Qlist = gpu_aisg        (OFF-LIMITS queue)
+hpc-gaas-g17: Qlist = gpu_aisg        (OFF-LIMITS queue)
+hpc-gaas-g22: Qlist = gpu_ded         (contains approved gpu_ded)
+# resources_assigned (live, from the same pbsnodes -av listing) for the
+# chosen nodes, confirming zero assigned resources (no assigned jobs):
+hpc-gaas-g12: state = free; resources_assigned.ngpus = 0;
+    resources_assigned.ncpus = 0; resources_assigned.mem = 0kb;
+    resources_assigned.vmem = 0kb; resources_assigned.naccelerators = 0
+hpc-gaas-g15: state = free; resources_assigned.ngpus = 0;
+    resources_assigned.ncpus = 0; resources_assigned.mem = 0kb;
+    resources_assigned.vmem = 0kb; resources_assigned.naccelerators = 0
+# Approved-queue membership of fully-free candidates:
+#   gpu_as (approved): hpc-gaas-g12, hpc-gaas-g15 (both fully free)
+#   gpu_ded (approved): hpc-gaas-g22 (fully free, but only ONE node)
+#   gpu_aisg (OFF-LIMITS): g04, g05, g16, g17
+#   (non-candidates: g25 Qlist = gpu_free; dm1/dm2 = gpu_datamover)
+===== END PREFLIGHT 3 =====
+
+===== NODE PAIR / QUEUE CHOICE =====
+# Chosen pair: hpc-gaas-g12 + hpc-gaas-g15
+# Chosen queue: gpu_as
+# Reason (mechanical): g12 and g15 are the preferred Phase-0 probed pair;
+# at live re-verification both are STILL fully free (state=free, njobs=0,
+# 2tb/2tb mem, 100/100 ncpus, 8/8 ngpus, not down) with live
+# resources_assigned all zero, and both have live
+# resources_available.Qlist = gpu_as,gpu_ppu, i.e. both are members of the
+# approved queue gpu_as. gpu_as is the only approved queue present in BOTH
+# chosen nodes' live Qlists. No fully-free gpu_ded pair exists (g22 is the
+# only fully-free gpu_ded node). g04/g05/g16/g17 are gpu_aisg (off-limits).
+# Host-pinned select through a queue whose Qlist contains both pinned
+# nodes (gpu_as) matches the validated Phase-0 placement pattern.
+===== END NODE PAIR / QUEUE CHOICE =====
+
+===== SUBMISSION: single qsub from the baseline directory in the worktree =====
+# Session opened with: cd <worktree>/experiments/2x8-GAAS/baseline
+# Remote submit time: 2026-09-27T08:58:13+08:00
+SUBMIT_TIME=2026-09-27T08:58:13+08:00
+SUBMIT_CWD=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-11b9e5a-n700k/experiments/2x8-GAAS/baseline
+=== EXACT QSUB COMMAND ===
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB \
+     -v "ATTEMPT=2x8-GAAS-baseline_n700k_v1" \
+     -o outputs/2x8-GAAS-baseline_n700k_v1.o \
+     -e outputs/2x8-GAAS-baseline_n700k_v1.e \
+     scripts/run_2x8_baseline.pbs
+=== QSUB RESPONSE ===
+72602.gaas
+qsub_exit=0
+job_id=72602.gaas
+===== END SUBMISSION =====
+# Exactly ONE qsub was executed.
+
+===== IMMEDIATE qstat -f 72602.gaas (single post-submission check) =====
+# Command: qstat -f 72602.gaas (separate SSH check)
+# Remote time at command: 2026-09-27T08:58:17+08:00
+# Exit status: 0
+Job Id: 72602.gaas
+    Job_Name = 2x8_gaas_baseline
+    Job_Owner = pham0094@hpc-gaas-hn2
+    resources_used.cpupercent = 0
+    resources_used.cput = 00:00:00
+    resources_used.mem = 0kb
+    resources_used.ncpus = 192
+    resources_used.ngpus = 16
+    resources_used.vmem = 0kb
+    resources_used.walltime = 00:00:00
+    job_state = R
+    queue = gpu_as
+    server = gaas
+    Checkpoint = u
+    ctime = Sun Sep 27 08:58:13 2026
+    Error_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-11b9e5a-n700k/
+	experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_n700k_v1.e
+    exec_host = hpc-gaas-g12/0*96+hpc-gaas-g15/0*96
+    exec_vnode = (hpc-gaas-g12:ngpus=8:ncpus=96:mem=2097152000kb)+(hpc-gaas-g15
+	:ngpus=8:ncpus=96:mem=2097152000kb)
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = a
+    mtime = Sun Sep 27 08:58:15 2026
+    Output_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP
+	-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-11b9e5a-n700k
+	/experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_n700k_v1.o
+    Priority = 100
+    qtime = Sun Sep 27 08:58:13 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 2700,
+	 "job.queue_charge_rate": 0, "am_cloud_enabled": false}
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=h
+	pc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB
+    Resource_List.walltime = 00:45:00
+    stime = Sun Sep 27 08:58:13 2026
+    session_id = 3726292
+    jobdir = /home/pham0094
+    substate = 42
+    Variable_List = PBS_O_HOME=/home/pham0094,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=pham0094,
+	PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/l
+	ocal/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin,
+	PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=hpc-gaas-hn2,
+	PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-
+	Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-11b9e5a-n700k/experim
+	ents/2x8-GAAS/baseline,PBS_O_SYSTEM=Linux,
+	ATTEMPT=2x8-GAAS-baseline_n700k_v1,PBS_O_QUEUE=gpu_as
+    comment = Job run at Sun Sep 27 at 08:58 on (hpc-gaas-g12:ngpus=8:ncpus=96:
+	mem=2097152000kb)+(hpc-gaas-g15:ngpus=8:ncpus=96:mem=2097152000kb)
+    etime = Sun Sep 27 08:58:13 2026
+    run_count = 1
+    Submit_arguments = -q gpu_as -l select=host=hpc-gaas-g12:ngpus=8:ncpus=96:m
+	em=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB -v ATTEMPT=2x8-
+	GAAS-baseline_n700k_v1 -o outputs/2x8-GAAS-baseline_n700k_v1.o -e outpu
+	ts/2x8-GAAS-baseline_n700k_v1.e scripts/run_2x8_baseline.pbs
+    project = hpc_ebslee
+    Submit_Host = hpc-gaas-hn2
+===== END IMMEDIATE QSTAT =====
+# Post-submission facts: job_state = R immediately (started 08:58:13, at
+# submission time); queue = gpu_as (approved); project = hpc_ebslee;
+# exact host-pinned per-chunk select preserved with NO mpiprocs anywhere;
+# place = scatter; walltime = 00:45:00; exec_vnode/exec_host = exactly
+# hpc-gaas-g12 + hpc-gaas-g15; Variable_List contains
+# ATTEMPT=2x8-GAAS-baseline_n700k_v1; Output_Path/Error_Path resolve under
+# the worktree baseline outputs/ directory as instructed.
+
+===== BOUNDED MONITORING SUMMARY =====
+# Max 30 checks, 60 s apart; loop stopped early on terminal state.
+# Checks used: 6 (of max 30). Spacing: 60 s between checks (first check
+# ~70 s after submission). States observed: R/substate=42 at checks 1-5;
+# terminal job_state=F/substate=92 at check 6 (2026-09-27T09:04:23+08:00).
+# Every check is recorded verbatim in
+# 2x8-GAAS-baseline_n700k_v1_job72602_qstat_monitor.log.
+===== END BOUNDED MONITORING SUMMARY =====
+
+===== FINAL JOB STATE (qstat -x -f 72602.gaas, after job_state F) =====
+# Command: qstat -x -f 72602.gaas
+# Remote time at command: 2026-09-27T09:04:26+08:00
+# Exit status: 0
+    job_state = F
+    substate = 92
+    queue = gpu_as
+    project = hpc_ebslee
+    ctime = Sun Sep 27 08:58:13 2026
+    qtime = Sun Sep 27 08:58:13 2026
+    stime = Sun Sep 27 08:58:13 2026
+    mtime = Sun Sep 27 09:04:01 2026
+    obittime = Sun Sep 27 09:04:01 2026
+    etime = Sun Sep 27 08:58:13 2026
+    session_id = 3726292
+    run_count = 1
+    history_timestamp = 1790471041
+    Exit_status = 0
+    Stageout_status = 1
+    exec_host = hpc-gaas-g12/0*96+hpc-gaas-g15/0*96
+    exec_vnode = (hpc-gaas-g12:ngpus=8:ncpus=96:mem=2097152000kb)+(hpc-gaas-g15
+	:ngpus=8:ncpus=96:mem=2097152000kb)
+    resources_used.walltime = 00:05:46
+    resources_used.cpupercent = 3893
+    resources_used.cput = 04:41:29
+    resources_used.mem = 3868586744kb
+    resources_used.ncpus = 192
+    resources_used.ngpus = 16
+    resources_used.vmem = 9744479752kb
+    comment = Job run at Sun Sep 27 at 08:58 on (hpc-gaas-g12:ngpus=8:ncpus=96:
+	mem=2097152000kb)+(hpc-gaas-g15:ngpus=8:ncpus=96:mem=2097152000kb) and 
+	finished
+# Per-GPU usage summary recorded by PBS (resources_used.gpu_usage, both
+# nodes, all 16 GPUs): overallHealth=10 for every GPU; maxGpuMemoryUsed
+# between 128226.000MB and 128806.000MB per GPU; memUsagePerc between
+# 89.188% and 89.591%; smClock_max=1980MHz; smUtilization_max=100%;
+# thermalViolationTime=0.000s on all GPUs; GPU wallTime 319-321s each.
+# Factual terminal facts: job_state F, substate 92, Exit_status = 0,
+# comment "... and finished".
+===== END FINAL JOB STATE =====
+
+===== EVIDENCE RETRIEVAL (scp after job_state F) =====
+# Retrieval commands:
+#   scp -o BatchMode=yes gaas:<remote>/2x8-GAAS-baseline_n700k_v1.o <local>.o
+#   scp -o BatchMode=yes gaas:<remote>/2x8-GAAS-baseline_n700k_v1.e <local>.e
+# Remote dir: .codex-worktrees/TASK-000-11b9e5a-n700k/experiments/2x8-GAAS/baseline/outputs
+# Local dir:  experiments/2x8-GAAS/baseline/outputs
+# Remote sizes/sha256 BEFORE transfer (2026-09-27T09:04:32+08:00):
+-rw-------. 1 pham0094 1304617061  1249 Sep 27 08:58 2x8-GAAS-baseline_n700k_v1.e
+-rw-------. 1 pham0094 1304617061 29200 Sep 27 09:03 2x8-GAAS-baseline_n700k_v1.o
+3c2e18e1074ef69849f804bee759b36aff4dc497d064cbe2df6224e923dc555a  2x8-GAAS-baseline_n700k_v1.o
+a22b7816a02be7b2346a4548bb799b84dbb9306408b2e95f2fe3d4010163cb81  2x8-GAAS-baseline_n700k_v1.e
+# Local sizes/sha256 AFTER transfer (verified identical):
+-rw------- 1 stvnpham stvnpham  1249 Sep 27 09:04 2x8-GAAS-baseline_n700k_v1.e
+-rw------- 1 stvnpham stvnpham 29200 Sep 27 09:04 2x8-GAAS-baseline_n700k_v1.o
+3c2e18e1074ef69849f804bee759b36aff4dc497d064cbe2df6224e923dc555a  2x8-GAAS-baseline_n700k_v1.o
+a22b7816a02be7b2346a4548bb799b84dbb9306408b2e95f2fe3d4010163cb81  2x8-GAAS-baseline_n700k_v1.e
+# Remote/local sizes and sha256 are IDENTICAL for both files.
+# Exact file names preserved (no rename).
+===== END EVIDENCE RETRIEVAL =====
+
+===== MECHANICAL VALIDATION FACTS (factual extraction from the .o/.e; no interpretation) =====
+# Identification echo lines (verbatim from .o):
+#   experiment_id=2x8-GAAS-baseline
+#   attempt=2x8-GAAS-baseline_n700k_v1
+#   pbs_job_id=72602.gaas
+#   queue=gpu_as
+#   project=hpc_ebslee
+#   2026-09-27T08:58:13+08:00
+# 1. "fixed configuration" echo block matches EXACTLY (all 15 items):
+#    OMP_NUM_THREADS=8; --n 700000; --nb 3072; --nprow 4; --npcol 4;
+#    --nporder column; --gpu-affinity 0:1:2:3:4:5:6:7; --sloppy-type FP16;
+#    --use-mpi-panel-broadcast 0; --use-separate-stream-for-gemm 1;
+#    --prioritize-trsm 0; --prioritize-factorization 0; --test-loop 1;
+#    --skip-tests 0; --monitor-gpu 0.
+# 2. Layout/grid/bridge/container/hostfile echoes:
+#    layout=2 nodes x 8 GPUs = 16 ranks
+#    grid=nprow=4 npcol=4 nporder=column
+#    nodes=hpc-gaas-g12 hpc-gaas-g15
+#    gpu_affinity=0:1:2:3:4:5:6:7
+#    bridge=.../TASK-000-11b9e5a-n700k/multi-node-test/rsh_pbsdsh_container.sh
+#    container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+#    hostfile: hpc-gaas-g12 slots=8; hpc-gaas-g15 slots=8
+# 3. Banner: "HPL-MxP-NVIDIA 26.2.0 -- NVIDIA accelerated HPL-MxP
+#    benchmark benchmark -- NVIDIA".
+#    Application-echoed settings: --nprow=4; --npcol=4; --order=column;
+#    --n=700000; --nb=3072; --tolerance=1.000000e-12; --test-loop=1;
+#    --preset-gemm-kernel=90; --u-panel-chunk-nbs=8;
+#    --call-dgemv-with-multiple-threads=0; --prioritize-trsm=0;
+#    --prioritize-factorization=0; --use-separate-stream-for-gemm=1;
+#    --use-mpi-panel-broadcast=0; --mpi-use-host-threads=1;
+#    --sloppy-type=FP16; --Anq-device=0; --cuda-host-register-step=2048;
+#    --mpi-use-mpi=0; --use-host-mpi=0; --fill-device=0;
+#    --fill-device-buffer-size=3048; --fp4-scaling-factor-a=1.000000e-05;
+#    --skip-tests=0; --gemm-iterations=100; --monitor-gpu=0.
+# 4. Rank/node mapping: 16 ranks (0-15). Per-line attributions observed:
+#    ranks 0,1,2,3,4,5,6,7 -> hpc-gaas-g12; ranks 8,9,10,11,14,15 ->
+#    hpc-gaas-g15 (ranks 12,13 are not individually attributed in any
+#    AVG/MAX/MIN line). Only node strings present in the .o file are
+#    hpc-gaas-g12 and hpc-gaas-g15. Hostfile lists slots=8 per node;
+#    gpu_affinity=0:1:2:3:4:5:6:7 (8 GPUs per node, one GPU per rank).
+#    Device info: NVIDIA H200, SM 90, 132 SMs, peak clock 1980 MHz,
+#    total memory 139.80 GB per GPU; 8 GPUs listed per node (nvidia-smi
+#    tables before and after the run).
+# 5. Memory consumption / headroom lines (verbatim):
+#    Per process host memory consumption MAX = 228.452 GB,
+#      available MIN = 219.944 GB
+#    Per process device memory consumption MAX = 124.016 GB,
+#      available MIN = 138.739 GB
+#    Per process memory available MIN system = 219.329 GB, device = 14.005 GB
+#    Per process memory available MIN system = 4.168 GB, device = 14.005 GB
+# 6. Internal test phase results (skip-tests 0, phase ran):
+#    Constructor seconds: AVG = 0.11, MAX = 0.16 (15->hpc-gaas-g15),
+#      MIN = 0.07 (0->hpc-gaas-g12)
+#    GEMM seconds: AVG = 15.65, MAX = 16.11 (6->hpc-gaas-g12),
+#      MIN = 15.24 (11->hpc-gaas-g15)
+#    GEMM GFLOPS: AVG = 601163.48, MAX = 616672.15 (11->hpc-gaas-g15),
+#      MIN = 584564.84 (6->hpc-gaas-g12)
+#    MPI U broadcast GFLOPS: AVG = 19863.80; (2nd) AVG = 22243.12
+#    NCCL U broadcast GFLOPS: AVG = 339.76
+#    MPI L2 broadcast GFLOPS: AVG = 138926.86
+#    NCCL L2 broadcast GFLOPS: AVG = 95.29
+#    pdgemv GFLOPS: AVG = 105.47
+#    RNG seconds: AVG = 160.73; Set Diagonal seconds: AVG = 0.02;
+#      Get Anorm seconds: AVG = 0.02; Sp seconds: AVG = 45.01;
+#      matgen seconds: AVG = 212.97
+# 7. Solver iteration / L-infinite residual lines (verbatim):
+#    Solver iteration  0, L-infinite residual = 4.81404253e-04
+#    Solver iteration  1, L-infinite residual = 9.49865631e-10
+#    Solver iteration  2, L-infinite residual = 1.06359366e-13
+#    Iterative Solver seconds: AVG = 18.44, MAX = 18.45 (15->hpc-gaas-g15),
+#      MIN = 18.43 (0->hpc-gaas-g12)
+# 8. Result block (verbatim values):
+#    EPS = 2.000000E-16; Threshold = 1.600000E+01
+#    ||Ax-b||_oo = 1.063594E-13; ||A||_oo = 7.024175E+05
+#    ||x||_oo = 2.867236E-06; ||b||_oo = 9.999969E-01
+#    ||Ax-b||_oo / (EPS * (||A||_oo * ||x||_oo + ||b||_oo) * N)
+#      = 2.520608E-04 ...... PASSED
+#    N = 700000, NB = 3072, NPROW = 4, NPCOL = 4, SLOPPY-TYPE = FP16
+#    GFLOPS = 4.8037e+06, per GPU = 300228.24
+#      ------ The HPL-MxP performance to report
+#    LU GFLOPS = 7.8390e+06, per GPU = 489939.40
+#      ------ The performance excluding the iterative solver part
+#    LU seconds: AVG = 29.17, MAX = 29.17 (5->hpc-gaas-g12),
+#      MIN = 29.17 (11->hpc-gaas-g15)
+#    Iterative-refinement: 3 solver iterations (0, 1, 2); Iterative
+#      Solver seconds AVG = 18.44.
+#    In-run timestamps: test loop start 2026-09-27 09:02:44.166; LU end
+#      marker 09:03:13.337; result marker 09:03:31.830.
+#    Completion marker (verbatim): "=== HPL-MxP 2x8-GAAS baseline
+#    complete: 2x8-GAAS-baseline_n700k_v1 ==="
+# 9. Finiteness: no NaN / -nan strings anywhere in the .o file (word
+#    search count = 0); the only "inf" substrings are the "L-infinite"
+#    residual labels (3) and "Device info:" (1); all numeric values
+#    (residuals, norms, GFLOPS, timings) are finite.
+# 10. .e file contents summary (1249 bytes, 7 lines): module-load messages
+#     ("cuda/13.1: compile with -arch=sm_XX ... default builds fail to
+#     launch on the 580 driver."; "Loading nvhpc/26.3" with requirements
+#     gnu/gcc-12.3, cuda/13.1), two "WARNING: group: unknown groupid
+#     1304617061" lines, and the rsh_pbsdsh_container orted launch line
+#     for HOST=hpc-gaas-g15 idx=1 (OPAL_PREFIX/mpi environment). No
+#     errors, no kill/abort messages.
+# Factual bottom line: PBS exit = 0 (Exit_status 0, comment "and
+# finished"); verification = PASSED; residual finite
+# (||Ax-b||_oo = 1.063594E-13, normalized = 2.520608E-04); overall GFLOPS
+# present (4.8037e+06 total; 300228.24 per GPU).
+# 11. Actions NOT taken (per instruction): no second submission, no
+#     cancel, no retry, no PBS script or configuration modification, no
+#     parameter change, no git operations, no analysis or interpretation.
+# 12. Local artifacts created by this worker session: the two retrieved
+#     evidence files (.o, .e), this submission log, and the qstat monitor
+#     log.
+
+===== END OF LOG =====

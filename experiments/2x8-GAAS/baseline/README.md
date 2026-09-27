@@ -6,14 +6,16 @@ every attempt. Under the revised approved scope, the first valid scored
 attempt becomes the immutable original baseline for the 2x8-GAAS topology; a
 single valid scored attempt is sufficient — repeats are not required.
 
-**Status (2026-09-27):** first exact attempt `2x8-GAAS-baseline_v1`
-(job 72595.gaas) FAILED with a host-memory OOM kill (exit 137) during
-Matrix Generation; it is preserved as historical boundary evidence (see
-"Runtime error-patching history" below). TASK-000 has since been rearmed by
-the Strategic Analyst / Human Leader with `N=700000`; all other fixed
-controls are unchanged. The active attempt is
-`2x8-GAAS-baseline_n700k_v1` — a single scored attempt; no v2/v3 repeats
-are required for TASK-000 completion.
+**Status (2026-09-27, updated after the n700k run):** attempt
+`2x8-GAAS-baseline_n700k_v1` (job 72602.gaas) PASSED verification with exit
+status 0 and is designated the **immutable 2x8-GAAS original baseline**
+(overall `4.8037e+06` GFLOP/s, normalized residual `2.520608E-04`, 3
+iterative-refinement iterations). No repeats are required; the baseline is
+established. The earlier `2x8-GAAS-baseline_v1` (job 72595.gaas, N=737280)
+FAILED with a host-memory OOM kill (exit 137) during Matrix Generation and is
+preserved as historical boundary evidence (see "Runtime error-patching
+history" below). TASK-000 was rearmed by the Strategic Analyst / Human Leader
+with `N=700000`; all other fixed controls are unchanged.
 
 ## Structure
 
@@ -107,12 +109,12 @@ A run is valid only when:
 | attempt | PBS job | queue | nodes | result | residual | overall GFLOP/s | per-GPU GFLOP/s |
 |---|---|---|---|---|---|---|---|
 | 2x8-GAAS-baseline_v1 | 72595.gaas | gpu_as | hpc-gaas-g12 hpc-gaas-g15 | FAILED: host-memory OOM kill (exit 137) during Matrix Generation; no residual/verification/GFLOPS produced | none (run died before verification) | - | - |
-| 2x8-GAAS-baseline_n700k_v1 | TBD | - | - | pending submission under the revised N=700000 scope | - | - | - |
+| 2x8-GAAS-baseline_n700k_v1 | 72602.gaas | gpu_as | hpc-gaas-g12 hpc-gaas-g15 | PASSED (exit 0, walltime 00:05:46): solver residuals 4.81404253e-04 → 9.49865631e-10 → 1.06359366e-13 over 3 iterative-refinement iterations (18.44 s); LU 29.17 s, LU GFLOPS 7.8390e+06; host available MIN 219.944 GB/process, device available MIN 138.739 GB | normalized residual 2.520608E-04 | 4.8037e+06 | 300228.24 |
 
-No valid scored attempt exists yet. Under the revised approved scope, the
-first valid N=700000 attempt becomes the immutable 2x8-GAAS original
-baseline immediately (no repeats required) and the future percentage
-denominator for 2x8-GAAS analysis.
+`2x8-GAAS-baseline_n700k_v1` is the **immutable 2x8-GAAS original
+baseline** — the first valid scored attempt under the revised approved
+N=700000 scope — and the future percentage denominator for 2x8-GAAS
+analysis. No repeats were run or required.
 
 ## Runtime error-patching history
 
