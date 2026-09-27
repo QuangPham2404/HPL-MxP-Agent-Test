@@ -1,0 +1,254 @@
+probe_id=phase0_2x8_probe_v1
+probe_scope=read-only 2x8 Phase-0 characterization (TASK-000 deliverable A)
+pbs_job_id=72591.gaas
+queue=gpu_as
+project=hpc_ebslee
+resource_request=select=2:ngpus=8 place=scatter walltime=00:30:00 (no mpiprocs)
+submitted_workdir=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts
+2026-09-27T08:00:58+08:00
+mother_superior=hpc-gaas-g12
+sif=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+modules=apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+repo_revision=43e7520357740ae4eaf1f56d0e76a7112cce35f9
+
+============================================================
+SECTION 1: PBS ALLOCATION IDENTITY
+============================================================
+--- raw PBS_NODEFILE ---
+hpc-gaas-g12
+hpc-gaas-g15
+distinct_nodes=2 (expected 2)
+granted_hosts=hpc-gaas-g12 hpc-gaas-g15
+--- qstat -f allocation fields (whitelisted; env excluded) ---
+Job Id: 72591.gaas
+    Job_Name = phase0_2x8_probe_v1
+    job_state = R
+    queue = gpu_as
+    exec_vnode = (hpc-gaas-g12:ngpus=8:ncpus=96:mem=2097152000kb)+(hpc-gaas-g15
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 1800,
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=h
+    Resource_List.walltime = 00:30:00
+    project = hpc_ebslee
+--- PBS environment variables ---
+PBS_CWD_PATH=/home/pham0094
+PBS_ENVIRONMENT=PBS_BATCH
+PBS_JOBCOOKIE=6AAEACFC4C0BB9227BFC43B26890444B
+PBS_JOBDIR=/home/pham0094
+PBS_JOBID=72591.gaas
+PBS_JOBNAME=phase0_2x8_probe_v1
+PBS_MOMPORT=15003
+PBS_NODEFILE=/var/spool/pbs/aux/72591.gaas
+PBS_NODENUM=0
+PBS_O_HOME=/home/pham0094
+PBS_O_HOST=hpc-gaas-hn2
+PBS_O_INTERACTIVE_AUTH_METHOD=resvport
+PBS_O_LANG=en_US.UTF-8
+PBS_O_LOGNAME=pham0094
+PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin
+PBS_O_QUEUE=gpu_as
+PBS_O_SHELL=/bin/bash
+PBS_O_SYSTEM=Linux
+PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts
+PBS_QUEUE=gpu_as
+PBS_STDERR_PATH=/var/spool/pbs/spool/72591.gaas.ER
+PBS_STDIN_PATH=/dev/null
+PBS_STDOUT_PATH=/var/spool/pbs/spool/72591.gaas.OU
+PBS_TASKNUM=1
+
+============================================================
+SECTION 2: PER-NODE CAPTURE VIA pbsdsh (ONCE PER NODE)
+============================================================
+node_body=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_body.sh
+lock_base=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/.locks_phase0_2x8_probe_v1_72591.gaas
+PHASE0_NODE_CAPTURE hpc-gaas-g12 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log
+PHASE0_NODE_CAPTURE hpc-gaas-g15 wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g15.log
+
+============================================================
+SECTION 3: MODULE ENVIRONMENT AND HOST TOOLS
+============================================================
+Currently Loaded Modulefiles:
+ 1) apptainer/1.4.1     3) cuda/13.1 <aL>   5) squashfuse/0.5.2  
+ 2) gnu/gcc-12.3 <aL>   4) nvhpc/26.3       6) gocryptfs/2.5.0   
+
+Key:
+<module-tag>  <aL>=auto-loaded  
+--- currently available versions of the validated module set ---
+--------------------- /usr/local/modules-5.6.1/modulefiles ---------------------
+apptainer/1.4.1 <L>  
+
+Key:
+<module-tag>  <L>=loaded  
+--------------------- /usr/local/modules-5.6.1/modulefiles ---------------------
+nvhpc/26.3 <L>  
+
+Key:
+<module-tag>  <L>=loaded  
+--------------------- /usr/local/modules-5.6.1/modulefiles ---------------------
+squashfuse/0.5.2 <L>  
+
+Key:
+<module-tag>  <L>=loaded  
+--------------------- /usr/local/modules-5.6.1/modulefiles ---------------------
+gocryptfs/2.5.0 <L>  
+
+Key:
+<module-tag>  <L>=loaded  
+
+### Apptainer version (mother superior)
++ apptainer --version
+apptainer version 1.4.1
+[exit_status=0]
+
+### Host MPI launcher version (nvhpc HPC-X)
++ mpirun --version
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+[exit_status=0]
+
+============================================================
+SECTION 4: CONTAINER IMAGE IDENTITY
+============================================================
+-rwxr-xr-x 1 pham0094 1304617061 5307924480 May  6 06:07 /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+size=5307924480 bytes mtime=2026-05-06 06:07:56.408241441 +0800
+--- apptainer inspect (labels) ---
+com.nvidia.build.id: {NVIDIA_BUILD_ID:-}
+com.nvidia.build.ref: 
+com.nvidia.cublas.version: 13.2.1.1
+com.nvidia.cublasmp.version: 0.7.0.125
+com.nvidia.cuda.version: 9.0
+com.nvidia.cudla.version: 13.1.1.006
+com.nvidia.cudnn.version: 9.17.1.4
+com.nvidia.cufft.version: 12.1.0.78
+com.nvidia.curand.version: 10.4.1.81
+com.nvidia.cusolver.version: 12.0.9.81
+com.nvidia.cusparse.version: 12.7.3.1
+com.nvidia.cusparselt.version: 0.8.1.1
+com.nvidia.nccl.version: 2.29.stable.20260109
+com.nvidia.npp.version: 13.0.3.3
+com.nvidia.nsightcompute.version: 2025.4.1.2
+com.nvidia.nsightsystems.version: 2025.6.1.190
+com.nvidia.nvjpeg.version: 13.0.3.75
+com.nvidia.nvvm.version: 13.1.115
+com.nvidia.tensorrt.version: 10.14.1.48+cuda13.0
+com.nvidia.tensorrtoss.version: 
+com.nvidia.volumes.needed: nvidia_driver
+org.label-schema.build-arch: amd64
+org.label-schema.build-date: Wednesday_6_May_2026_6:7:9_+08
+org.label-schema.schema-version: 1.0
+org.label-schema.usage.apptainer.version: 1.4.1
+org.label-schema.usage.singularity.deffile.bootstrap: docker
+org.label-schema.usage.singularity.deffile.from: nvcr.io/nvidia/hpc-benchmarks:26.02
+org.opencontainers.image.ref.name: ubuntu
+org.opencontainers.image.version: 24.04
+--- apptainer sif list (descriptors, head) ---
+------------------------------------------------------------------------------
+ID   |GROUP   |LINK    |SIF POSITION (start-end)  |TYPE
+------------------------------------------------------------------------------
+1    |1       |NONE    |32176-32237               |Def.FILE
+2    |1       |NONE    |32237-41475               |JSON.Generic
+3    |1       |NONE    |41475-44630               |JSON.Generic
+4    |1       |NONE    |45056-5307924480          |FS (Squashfs/*System/amd64)
+--- sha256 (guarded, optional) ---
+123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628  /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+
+============================================================
+SECTION 5: CONTAINER SOFTWARE STACK PROVENANCE
+============================================================
+--- container OS ---
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+--- container MPI (mpirun) ---
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+--- container MPI (ompi_info) ---
+Open MPI v4.1.9a1
+
+http://www.open-mpi.org/community/help/
+--- CUDA-aware MPI evidence ---
+                 MCA btl: smcuda (MCA v2.1.0, API v3.1.0, Component v4.1.9)
+--- container UCX ---
+# Library version: 1.20.0
+# Library path: /opt/hpcx/ucx/bin/../lib/libucs.so.0
+# API headers version: 1.20.0
+# Git branch '', revision be940c1
+# Configured with: --disable-logging --disable-debug --disable-assertions --disable-params-check --enable-mt --without-knem --with-xpmem=/hpc/local/oss/xpmem/v2.7.1 --without-java --enable-devel-headers --with-fuse3-static --with-cuda=/hpc/local/oss/cuda13.0.2 --with-gdrcopy --prefix=/build-result/hpcx-v2.25.1-gcc-inbox-ubuntu24.04-cuda13-x86_64/ucx/mt
+--- container NCCL libraries ---
+	libnccl_wrapper.so.0 (libc6,x86-64) => /opt/hpcx/clusterkit/lib/libnccl_wrapper.so.0
+	libnccl_wrapper.so (libc6,x86-64) => /opt/hpcx/clusterkit/lib/libnccl_wrapper.so
+	libnccl.so.2 (libc6,x86-64) => /lib/x86_64-linux-gnu/libnccl.so.2
+	libnccl.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libnccl.so
+	libnccl-tuner-ofi.so (libc6,x86-64) => /opt/amazon/aws-ofi-nccl/lib/libnccl-tuner-ofi.so
+/usr/lib/x86_64-linux-gnu/libnccl.so
+/usr/lib/x86_64-linux-gnu/libnccl.so.2
+/usr/lib/x86_64-linux-gnu/libnccl.so.2.29.2
+--- container CUDA ---
+[no cuda version file]
+Cuda compilation tools, release 13.1, V13.1.115
+Build cuda_13.1.r13.1/compiler.37061995_0
+[container_stack_exit_status=0]
+
+============================================================
+SECTION 6: EFFECTIVE INSTALLED HPL-MxP RELEASE AND ACCEPTED FLAGS
+============================================================
+--- /workspace benchmark layout ---
+total 2
+-rw-r--r--  1 pham0094 1304617061  813 Feb 28  2026 hpc-benchmarks-gpu-env.sh
+drwxr-xr-x  4 pham0094 1304617061    0 Feb 28  2026 hpcg-linux-x86_64
+lrwxrwxrwx  1 pham0094 1304617061   25 Feb 28  2026 hpcg.sh -> hpcg-linux-x86_64/hpcg.sh
+drwxr-xr-x  4 pham0094 1304617061    0 Feb 28  2026 hpl-linux-x86_64
+drwxr-xr-x  3 pham0094 1304617061    0 Feb 28  2026 hpl-mxp-linux-x86_64
+lrwxrwxrwx  1 pham0094 1304617061   31 Feb 28  2026 hpl-mxp.sh -> hpl-mxp-linux-x86_64/hpl-mxp.sh
+lrwxrwxrwx  1 pham0094 1304617061   23 Feb 28  2026 hpl.sh -> hpl-linux-x86_64/hpl.sh
+drwxr-xr-x  4 pham0094 1304617061    0 Feb 28  2026 lib
+-rw-r--r--  1 pham0094 1304617061  467 Jan 10  2026 license.txt
+drwxr-xr-x  6 pham0094 1304617061    0 Feb 28  2026 microbenchmarks
+drwxr-xr-x 11 pham0094 1304617061    0 Feb 28  2026 source_code
+drwxr-xr-x  2 pham0094 1304617061    0 Feb 28  2026 stream-gpu-linux-x86_64
+lrwxrwxrwx  1 pham0094 1304617061   42 Feb 28  2026 stream-gpu-test.sh -> stream-gpu-linux-x86_64/stream-gpu-test.sh
+-rw-r--r--  1 pham0094 1304617061 1064 Feb 28  2026 third-party.txt
+--- hpl-mxp-linux-x86_64 directory ---
+total 5804
+-rw-r--r-- 1 pham0094 1304617061    1587 Feb 27  2026 COPYRIGHT-CLI11
+-rw-r--r-- 1 pham0094 1304617061     892 Feb 27  2026 README
+-rw-r--r-- 1 pham0094 1304617061    1429 Feb 27  2026 RUNNING
+-rw-r--r-- 1 pham0094 1304617061    3748 Feb 27  2026 TUNING
+-rwxr-xr-x 1 pham0094 1304617061    9099 Feb 27  2026 hpl-mxp.sh
+drwxr-xr-x 2 pham0094 1304617061       0 Feb 27  2026 sample-slurm
+-rwxr-xr-x 1 pham0094 1304617061 5927592 Feb 28  2026 xhpl_mxp
+--- hpl-mxp.sh --help (usage output only) ---
+List of GPUs is not defined
+[help_pipeline_status=1]
+[hplmxp_release_exit_status=0]
+
+============================================================
+SECTION 7: PER-NODE EVIDENCE VERIFICATION
+============================================================
+-rw-r--r-- 1 pham0094 1304617061 150344 Sep 27 08:01 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log
+-rw-r--r-- 1 pham0094 1304617061 150345 Sep 27 08:01 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g15.log
+--- captured node identities ---
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log:node=hpc-gaas-g12
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log:+ bash -c for d in /sys/class/net/*; do printf "%s numa_node=" "$(basename "$d")"; cat "$d/device/numa_node" 2>/dev/null || echo unknown; done
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log:bond0 numa_node=unknown
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log:bond0.103 numa_node=unknown
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log:bond0.200 numa_node=unknown
+per_node_logs_verified=2 (expected >= 2)
+
+============================================================
+SECTION 8: PROBE COMPLETION
+============================================================
+--- evidence manifest ---
+-rwxr-xr-x 1 pham0094 1304617061   9186 Sep 27 08:00 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_body.sh
+-rw-r--r-- 1 pham0094 1304617061 150344 Sep 27 08:01 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log
+-rw-r--r-- 1 pham0094 1304617061 150345 Sep 27 08:01 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g15.log
+drwxr-xr-x 1 pham0094 1304617061 0 Sep 27 08:00 /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/outputs/.locks_phase0_2x8_probe_v1_72591.gaas
+probe_end_time=2026-09-27T08:01:31+08:00
+probe_status=completed_read_only_observation

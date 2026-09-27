@@ -1,0 +1,307 @@
+# phase0_2x8_probe_v1_job_pinned_g12_g15_submission.log
+# Raw preflight and submission evidence for TASK-000 (Phase-0 2x8 probe,
+# host-pinned PBS job 72591.gaas on hpc-gaas-g12 + hpc-gaas-g15, queue gpu_as).
+#
+# Context: OpenCode execution-worker session under TASK-000 (EXECUTING / codex,
+# Section 1.11 APPROVED, approved_by: user, unchanged approved scope).
+# Prior attempts: 72556.gaas (gpu_ded, cancelled while queued, never ran) and
+# 72590.gaas (gpu_ded, qdel'd by explicit user authorization, job_state F /
+# substate 91, never ran; "Insufficient amount of resource: Qlist"). Live
+# Qlist evidence showed the only eligible fully-free pair in an approved queue
+# is hpc-gaas-g12 + hpc-gaas-g15 via queue gpu_as (both live Qlist =
+# gpu_as,gpu_ppu; gpu_as default_chunk.Qlist = gpu_as). g04 is live gpu_aisg
+# and must not be used. See
+# phase0_2x8_probe_v1_job72590_placement_check.log and
+# phase0_2x8_probe_v1_live_qlist_verification.log.
+#
+# All remote commands were run read-only (preflight) or exactly as instructed
+# (single qsub + one immediate qstat -f) via direct noninteractive SSH:
+#   ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 \
+#       -o ServerAliveCountMax=3 gaas '<remote-command>'
+#
+# Execution tree used (verified clean at exact approved HEAD):
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520
+#   HEAD = 43e7520357740ae4eaf1f56d0e76a7112cce35f9
+#
+# Probe script (unchanged): scripts/phase0_2x8_probe_v1.pbs
+#   sha256 = dcda09fd3ca7b30125dd87623f48ebc18f84c4a1121547f8f3470ee0142ab526
+#   (identical local and in the remote worktree at HEAD 43e7520)
+#   In-script directives preserved: #PBS -P hpc_ebslee, #PBS -l place=scatter,
+#   #PBS -l select=2:ngpus=8 (overridden on the qsub command line by the
+#   documented per-chunk host-pinned select), no mpiprocs anywhere.
+
+===== PREFLIGHT 1: qstat -x -f 72590.gaas (fresh recheck) =====
+# Command: qstat -x -f 72590.gaas
+# Remote time at command: 2026-09-27T08:00:33+08:00
+# Exit status: 0
+Job Id: 72590.gaas
+    Job_Name = phase0_2x8_probe_v1
+    Job_Owner = pham0094@hpc-gaas-hn2
+    job_state = F
+    queue = gpu_ded
+    server = gaas
+    Checkpoint = u
+    ctime = Sun Sep 27 07:48:30 2026
+    Error_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/script
+	s/outputs/phase0_2x8_probe_v1.e
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = a
+    mtime = Sun Sep 27 07:57:08 2026
+    Output_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scrip
+	ts/outputs/phase0_2x8_probe_v1.o
+    Priority = 100
+    qtime = Sun Sep 27 07:48:30 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 1800,
+	 "job.queue_charge_rate": 0, "formula_constants": "",
+	 "am_cloud_enabled": false}
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = 2:ngpus=8:ncpus=96:mem=2000GB
+    Resource_List.walltime = 00:30:00
+    substate = 91
+    Variable_List = PBS_O_HOME=/home/pham0094,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=pham0094,
+	PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/l
+	ocal/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin,
+	PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=hpc-gaas-hn2,
+	PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-
+	Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts,
+	PBS_O_SYSTEM=Linux,PBS_O_QUEUE=gpu_ded
+    comment = Not Running: Insufficient amount of resource: Qlist  and terminat
+	ed
+    etime = Sun Sep 27 07:48:30 2026
+    Submit_arguments = phase0_2x8_probe_v1.pbs
+    estimated.exec_vnode = (hpc-gaas-g04:ngpus=8:ncpus=96:mem=2097152000kb)+(hp
+	c-gaas-g05:ngpus=8:ncpus=96:mem=2097152000kb)
+    estimated.start_time = Sun Sep 27 07:55:04 2026
+    history_timestamp = 1790467028
+    project = hpc_ebslee
+    Submit_Host = hpc-gaas-hn2
+===== END PREFLIGHT 1 =====
+# Fresh-recheck fact: 72590.gaas remains job_state F / substate 91 (terminated
+# by the user-authorized qdel; never ran — no start_time/exec_host).
+
+===== PREFLIGHT 2: pbsnodes -aSj (fresh recheck) =====
+# Command: pbsnodes -aSj
+# Exit status: 0
+                                                        mem       ncpus   nmics   ngpus
+vnode           state           njobs   run   susp      f/t        f/t     f/t     f/t   jobs
+--------------- --------------- ------ ----- ------ ------------ ------- ------- ------- -------
+hpc-gaas-g01    free                 2     2      0      1tb/2tb  52/100     0/0     4/8 72286,72512
+hpc-gaas-g02    free                 3     3      0    765gb/2tb  40/100     0/0     3/8 72541,72435,72541
+hpc-gaas-g03    free                 1     1      0      1tb/2tb  52/100     0/0     4/8 67044
+hpc-gaas-g04    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g05    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g06    free                 7     7      0    265gb/2tb  16/100     0/0     1/8 72377,68937,65458,70448,72404,71882,72454
+hpc-gaas-g07    free                 6     6      0    515gb/2tb  28/100     0/0     2/8 72302,72456,72455,71697,72567,72376
+hpc-gaas-g08    free                 3     3      0    765gb/2tb  40/100     0/0     3/8 71513,72037,71513
+hpc-gaas-g09    free                 6     6      0     15gb/2tb   4/100     0/0     0/8 71833,72395,64144,72374,72447,72395
+hpc-gaas-g10    free                 4     4      0     15gb/2tb   4/100     0/0     0/8 72449,72250,72449,72250
+hpc-gaas-g11    free                 1     1      0      1tb/2tb  76/100     0/0     6/8 71787
+hpc-gaas-g12    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g13    free                 1     1      0     15gb/2tb   4/100     0/0     0/8 70232
+hpc-gaas-g14    free                 1     1      0      2tb/2tb  88/100     0/0     7/8 68707
+hpc-gaas-g15    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g16    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g17    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g18    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g19    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g20    free                 1     1      0      2tb/2tb  88/100     0/0     7/8 67357
+hpc-gaas-g21    free                 1     1      0     15gb/2tb   4/100     0/0     0/8 67045
+hpc-gaas-g22    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g23    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g24    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g25    free                 2     2      0      1tb/2tb  76/100     0/0     6/8 72589,72570
+hpc-gaas-dm1    free                 0     0      0      1tb/1tb 256/256     0/0     0/0 --
+hpc-gaas-dm2    free                 0     0      0      1tb/1tb 128/128     0/0     0/0 --
+===== END PREFLIGHT 2 =====
+# Fresh-recheck facts: hpc-gaas-g12 and hpc-gaas-g15 are both state=free,
+# njobs=0, 2tb/2tb mem, 100/100 ncpus, 8/8 ngpus — fully free, unchanged from
+# the prior live records.
+
+===== PREFLIGHT 3: live Qlist for g12/g15 (and g04) =====
+# Command: pbsnodes -av hpc-gaas-g12
+# (Server behavior: returns the complete vnode listing; the g04/g12/g15 blocks
+#  were extracted verbatim with awk. Exit status: 0.)
+hpc-gaas-g04
+     state = free
+     resources_available.host = hpc-gaas-g04
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+hpc-gaas-g12
+     state = free
+     resources_available.host = hpc-gaas-g12
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+hpc-gaas-g15
+     state = free
+     resources_available.host = hpc-gaas-g15
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+===== END PREFLIGHT 3 =====
+# Fresh-recheck facts: g12 and g15 live Qlist = gpu_as,gpu_ppu (gpu_as members,
+# gpu_as is an approved queue with default_chunk.Qlist=gpu_as per
+# phase0_2x8_probe_v1_live_qlist_verification.log). g04 live Qlist = gpu_aisg
+# (off-limits; must not be used).
+
+===== PREFLIGHT 4: execution worktree verification =====
+# Commands (run in the GAAS primary clone / worktree, read-only):
+#   git worktree list
+#   git -C <worktree> rev-parse HEAD
+#   git -C <worktree> status --porcelain
+#   sha256sum <worktree>/scripts/phase0_2x8_probe_v1.pbs
+#   grep -n "PBS -l select\|PBS -l place\|PBS -q\|PBS -P" <worktree>/scripts/phase0_2x8_probe_v1.pbs
+#   ls -la <worktree>/scripts/outputs/
+=== git worktree list ===
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test                                    87fb61e [main]
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520  43e7520 (detached HEAD)
+/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-b91497d  b91497d (detached HEAD)
+=== worktree HEAD ===
+43e7520357740ae4eaf1f56d0e76a7112cce35f9
+=== worktree status --porcelain ===
+(empty; clean)
+[status_exit=0]
+=== probe script sha256 and select/place lines ===
+dcda09fd3ca7b30125dd87623f48ebc18f84c4a1121547f8f3470ee0142ab526  /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts/phase0_2x8_probe_v1.pbs
+39:#PBS -q gpu_ded
+40:#PBS -P hpc_ebslee
+41:#PBS -l select=2:ngpus=8
+42:#PBS -l place=scatter
+=== probe attempt outputs present? ===
+total 460
+drwxr-xr-x. 1 pham0094 1304617061      0 Sep 27 01:49 .
+drwxr-xr-x. 1 pham0094 1304617061 1 Sep 27 01:49 ..
+-rw-r--r--. 1 pham0094 1304617061   1031 Sep 27 01:49 comm_transport_probe_v1.e
+-rw-r--r--. 1 pham0094 1304617061 280175 Sep 27 01:49 comm_transport_probe_v1.o
+-rw-r--r--. 1 pham0094 1304617061    392 Sep 27 01:49 comm_transport_probe_v2.e
+-rw-r--r--. 1 pham0094 1304617061   6900 Sep 27 01:49 comm_transport_probe_v2.o
+-rw-r--r--. 1 pham0094 1304617061     33 Sep 27 01:49 compute_node_hardware_probe_v1.1.e
+-rw-r--r--. 1 pham0094 1304617061 147353 Sep 27 01:49 compute_node_hardware_probe_v1.1.o
+-rw-r--r--. 1 pham0094 1304617061     73 Sep 27 01:49 compute_node_hardware_probe_v1.e
+-rw-r--r--. 1 pham0094 1304617061  14105 Sep 27 01:49 compute_node_hardware_probe_v1.o
+-rw-r--r--. 1 pham0094 1304617061      0 Sep 27 01:49 .gitkeep
+[ls_exit=0]
+===== END PREFLIGHT 4 =====
+# Fresh-recheck facts:
+#  - Worktree TASK-000-43e7520 exists at exact approved HEAD
+#    43e7520357740ae4eaf1f56d0e76a7112cce35f9 with a clean working tree.
+#  - Probe script sha256 identical to the local repository copy at the same
+#    commit: dcda09fd3ca7b30125dd87623f48ebc18f84c4a1121547f8f3470ee0142ab526
+#    (script unchanged).
+#  - In-script directives intact: -P hpc_ebslee, place=scatter, select=2:ngpus=8
+#    (overridden by the qsub command line), no mpiprocs.
+#  - No phase0_2x8_probe_v1.* outputs exist under scripts/outputs/ (only the
+#    tracked historical probe outputs and .gitkeep): the probe attempt outputs
+#    remain absent, consistent with 72556/72590 never having run.
+
+===== SUBMISSION: single qsub from the worktree scripts directory =====
+# Session opened with: cd <worktree>/scripts (SUBMIT_CWD below).
+# Remote submit time: 2026-09-27T08:00:57+08:00
+SUBMIT_TIME=2026-09-27T08:00:57+08:00
+SUBMIT_CWD=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts
+=== EXACT QSUB COMMAND ===
+qsub -q gpu_as -l select=host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB phase0_2x8_probe_v1.pbs
+=== QSUB RESPONSE ===
+qsub_response=72591.gaas
+qsub_exit=0
+job_id=72591.gaas
+===== END SUBMISSION =====
+
+===== IMMEDIATE qstat -f 72591.gaas (single post-submission check) =====
+# Command: qstat -f 72591.gaas (run in the same SSH session, same second)
+# Remote time: 2026-09-27T08:00:57+08:00
+# Exit status: 0
+Job Id: 72591.gaas
+    Job_Name = phase0_2x8_probe_v1
+    Job_Owner = pham0094@hpc-gaas-hn2
+    job_state = Q
+    queue = gpu_as
+    server = gaas
+    Checkpoint = u
+    ctime = Sun Sep 27 08:00:57 2026
+    Error_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/script
+	s/outputs/phase0_2x8_probe_v1.e
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = a
+    mtime = Sun Sep 27 08:00:57 2026
+    Output_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scrip
+	ts/outputs/phase0_2x8_probe_v1.o
+    Priority = 100
+    qtime = Sun Sep 27 08:00:57 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 1800,
+	 "job.queue_charge_rate": 0, "formula_constants": "",
+	 "am_cloud_enabled": false}
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=h
+	pc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB
+    Resource_List.walltime = 00:30:00
+    substate = 10
+    Variable_List = PBS_O_HOME=/home/pham0094,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=pham0094,
+	PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/l
+	ocal/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin,
+	PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=hpc-gaas-hn2,
+	PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-
+	Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts,
+	PBS_O_SYSTEM=Linux,PBS_O_QUEUE=gpu_as
+    etime = Sun Sep 27 08:00:57 2026
+    Submit_arguments = -q gpu_as -l select=host=hpc-gaas-g12:ngpus=8:ncpus=96:m
+	em=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB phase0_2x8_prob
+	e_v1.pbs
+    project = hpc_ebslee
+    Submit_Host = hpc-gaas-hn2
+===== END IMMEDIATE QSTAT =====
+POST_QSTAT_TIME=2026-09-27T08:00:57+08:00
+
+===== MECHANICAL VERIFICATION FACTS (no strategic interpretation) =====
+# 1. Submission was performed exactly once, with the exact instructed command,
+#    from the verified clean worktree scripts directory at approved HEAD
+#    43e7520357740ae4eaf1f56d0e76a7112cce35f9.
+# 2. qsub response: 72591.gaas; exit status 0.
+# 3. Immediate qstat -f confirms:
+#    - queue = gpu_as (approved queue)
+#    - Resource_List.select = host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+
+#      host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB
+#      (exact requested per-chunk host pinning, 8 GPUs / 96 CPUs / 2000GB per
+#      chunk, unchanged from the 72556/72590 chunk resources)
+#    - Resource_List.place = scatter (in-script place=scatter preserved)
+#    - no mpiprocs in the select specification
+#    - project = hpc_ebslee
+#    - Resource_List.walltime = 00:30:00
+#    - job_state = Q at 2026-09-27T08:00:57+08:00 (queued at the instant of
+#      the check; same second as submission)
+#    - Output/Error paths resolve under
+#      .codex-worktrees/TASK-000-43e7520/scripts/outputs/ as designed.
+# 4. Requested nodes/queue verified as requested: gpu_as, hpc-gaas-g12,
+#    hpc-gaas-g15.
+# 5. Actions NOT taken (per instruction): no cancel, no resubmit, no file
+#    changes on GAAS, no further monitoring beyond the single immediate
+#    qstat -f, no benchmark run, no analysis.
+# 6. Local evidence file (this file) is the only local artifact created by
+#    this worker session.
+
+===== END OF LOG =====

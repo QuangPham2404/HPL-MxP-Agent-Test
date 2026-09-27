@@ -1,0 +1,150 @@
+#!/bin/bash
+# HPL-MxP 2x8-GAAS baseline: 2 GAAS nodes x 8 H200 GPUs (16 ranks, grid 4x4,
+# column order).
+#
+# Purpose: TASK-000 Phase-0 immutable 2x8-GAAS original baseline. Fixed
+# Strategic-Analyst-supplied configuration (see tasks/TASK-000.md); every
+# attempt launches the identical configuration; repeats exist only to provide
+# run-to-run noise evidence. No parameter is varied across attempts.
+#
+# Expected working directory: this experiment directory
+# (experiments/2x8-GAAS/baseline/) on GAAS. Submit with:
+#   qsub -q gpu_ded -v "ATTEMPT=2x8-GAAS-baseline_v1" \
+#        -o outputs/2x8-GAAS-baseline_v1.o -e outputs/2x8-GAAS-baseline_v1.e \
+#        scripts/run_2x8_baseline.pbs
+#
+# Inputs: ATTEMPT (attempt/output stem) via environment (-v).
+# Outputs: attempt-specific PBS stdout/stderr under outputs/ (names are passed
+# at qsub with -o/-e; this script deliberately has no #PBS -o/-e directives).
+# Assumptions: approved container and modules exist on GAAS; one GPU per MPI
+# process; validated Approach-1 multinode launch (container mpirun +
+# rsh_pbsdsh_container.sh bridge; see multi-node-test/GAAS_MULTINODE_SETUP.md).
+#
+# gpu_ded is the in-script default queue and may be overridden at qsub; both
+# gpu_ded and gpu_as are approved for this campaign. select=2:ngpus=8 (no
+# mpiprocs) may likewise be overridden on the qsub command line by a
+# documented host-pinned select (see README.md).
+
+#PBS -N 2x8_gaas_baseline
+#PBS -q gpu_ded
+#PBS -P hpc_ebslee
+#PBS -l select=2:ngpus=8
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+
+# --- Experiment metadata ------------------------------------------------------
+cd "$PBS_O_WORKDIR"
+EXPERIMENT_ID="2x8-GAAS-baseline"
+ATTEMPT="${ATTEMPT:-unknown}"
+
+echo "experiment_id=${EXPERIMENT_ID}"
+echo "attempt=${ATTEMPT}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "queue=${PBS_O_QUEUE:-unknown}"
+echo "project=hpc_ebslee"
+date --iso-8601=seconds
+echo "fixed configuration (identical across attempts):"
+echo "OMP_NUM_THREADS=8"
+echo "--n 737280"
+echo "--nb 3072"
+echo "--nprow 4"
+echo "--npcol 4"
+echo "--nporder column"
+echo "--gpu-affinity 0:1:2:3:4:5:6:7"
+echo "--sloppy-type FP16"
+echo "--use-mpi-panel-broadcast 0"
+echo "--use-separate-stream-for-gemm 1"
+echo "--prioritize-trsm 0"
+echo "--prioritize-factorization 0"
+echo "--test-loop 1"
+echo "--skip-tests 0"
+echo "--monitor-gpu 0"
+
+# --- Locate repo root and the validated launch bridge --------------------------
+# Submission dir is experiments/2x8-GAAS/baseline/, so the repo root is three
+# levels up.
+REPO_ROOT="$(cd "${PBS_O_WORKDIR}/../../.." && pwd)"
+BRIDGE="${REPO_ROOT}/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+[ -f "$BRIDGE" ] || { echo "FATAL: bridge not found at ${BRIDGE}; submit from the experiment directory (experiments/2x8-GAAS/baseline/)" >&2; exit 1; }
+[ -f "$SIF" ] || { echo "FATAL: container image not found: ${SIF}" >&2; exit 1; }
+
+# --- Allocation checks (place=scatter, no mpiprocs; fixed 4x4 grid) -------------
+GPUS=8                                   # GPUs (and ranks) per node
+EXPECTED_NODES=2
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+[ "$NNODES" -eq "$EXPECTED_NODES" ] || { echo "FATAL: expected ${EXPECTED_NODES} distinct nodes, got ${NNODES}" >&2; exit 1; }
+NPROCS=$((NNODES * GPUS))
+
+# Fixed process grid and order (supplied configuration; do NOT auto-derive).
+NPROW=4
+NPCOL=4
+NPORDER=column
+GPU_AFFINITY=0:1:2:3:4:5:6:7
+[ "$NPROCS" -eq $((NPROW * NPCOL)) ] || { echo "FATAL: fixed grid ${NPROW}x${NPCOL} requires $((NPROW * NPCOL)) ranks, got ${NPROCS}" >&2; exit 1; }
+
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} nporder=${NPORDER}"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "bridge=${BRIDGE}"
+echo "container=${SIF}"
+
+# --- Environment (validated module set) -----------------------------------------
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+# Supplied configuration sets OMP_NUM_THREADS=8 only; OMP_PLACES and
+# OMP_PROC_BIND are deliberately not set (not supplied).
+export OMP_NUM_THREADS=8
+
+# --- Pre-run hardware-health snapshot (ordinary evidence; must not block) -------
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# De-duplicated hostfile with explicit per-node slot count (GAAS Blocker 8).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# --- Launch: container mpirun + pbsdsh bridge (Approach 1, validated) -----------
+# OMP_NUM_THREADS=8 is exported in the environment section above; no other
+# tuning or monitoring flags are passed.
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --n 737280 \
+      --nb 3072 \
+      --nprow 4 \
+      --npcol 4 \
+      --nporder column \
+      --gpu-affinity 0:1:2:3:4:5:6:7 \
+      --sloppy-type FP16 \
+      --use-mpi-panel-broadcast 0 \
+      --use-separate-stream-for-gemm 1 \
+      --prioritize-trsm 0 \
+      --prioritize-factorization 0 \
+      --test-loop 1 \
+      --skip-tests 0 \
+      --monitor-gpu 0
+
+# --- Post-run hardware-health snapshot (ordinary evidence; must not block) ------
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+echo "=== HPL-MxP 2x8-GAAS baseline complete: ${ATTEMPT} ==="

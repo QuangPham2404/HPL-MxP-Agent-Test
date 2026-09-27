@@ -1,0 +1,1035 @@
+================================================================================
+# TASK-000 (Phase 0 - 2x8 GAAS Characterization and Baseline)
+# Deliverable B pre-check: mechanical flag compatibility check of the fixed
+# Strategic-Analyst-supplied NVIDIA HPL-MxP baseline configuration against
+# the INSTALLED HPC Benchmarks v26.02 container, plus mechanical N=737280
+# feasibility sanity check. No configuration change, no substitution, no
+# benchmark/GPU/PBS work, no strategic interpretation.
+# Date: 2026-09-27
+# Worker session: OpenCode execution worker (TASK-000, EXECUTING/codex,
+#   Section 1.11 APPROVED), mechanical verification assignment only.
+# Cluster: GAAS, login node hpc-gaas-hn2, SSH alias gaas.
+# Container: /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+#
+# Evidence methods used (in the fallback order prescribed by the assignment):
+#   1. wrapper --help (CMD-02)        -> FAILED on login node (exit 1)
+#   2. binary --help (CMD-03)         -> FAILED on login node (exit 127)
+#   3. (b) strings of installed binary (CMD-04/07/08/09/10/11/12) -> SUCCEEDED
+#   4. (c) package docs README/RUNNING/TUNING (CMD-05/06)         -> SUCCEEDED
+# Authoritative source for the INSTALLED v26.02 release = binary strings;
+# the in-package TUNING doc is stale relative to the installed binary
+# (documented in SECTION 5, ANOMALIES).
+#
+# Execution provenance: each command in SECTION 1 was executed twice with
+# identical command strings (initial working execution, then an identical
+# verification re-run with output captured verbatim to file); both executions
+# of every command produced identical output and identical exit status. The
+# outputs embedded below are the verbatim captures. All remote operations
+# were read-only (SSH inspection + container help/strings/doc queries only;
+# no qsub, no qdel, no GPU work, no cluster file modification, no transfers).
+================================================================================
+
+CONFIGURATION UNDER VERIFICATION (supplied, unmodified, not substituted):
+  OMP_NUM_THREADS=8
+  --n 737280
+  --nb 3072
+  --nprow 4
+  --npcol 4
+  --nporder column
+  --gpu-affinity 0:1:2:3:4:5:6:7
+  --sloppy-type FP16
+  --use-mpi-panel-broadcast 0
+  --use-separate-stream-for-gemm 1
+  --prioritize-trsm 0
+  --prioritize-factorization 0
+  --test-loop 1
+  --skip-tests 0
+  --monitor-gpu 0
+
+================================================================================
+SECTION 1: REMOTE COMMANDS EXACTLY AS RUN, EXIT STATUS, VERBATIM OUTPUT
+================================================================================
+
+--------------------------------------------------------------------------------
+CMD-01: SSH connectivity + apptainer PATH check (read-only)
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas 'hostname; command -v apptainer || echo APPTAINER_NOT_ON_PATH'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+hpc-gaas-hn2
+APPTAINER_NOT_ON_PATH
+NOTE: apptainer is not on PATH in non-interactive SSH; the absolute path
+/usr/local/apptainer/1.4.1/bin/apptainer was used for all subsequent commands.
+
+--------------------------------------------------------------------------------
+CMD-02: Primary method - wrapper --help WITH --gpu-affinity (per known probe fact from job 72591.gaas)
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif /workspace/hpl-mxp.sh --gpu-affinity 0 --help'
+EXIT STATUS: 1
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+WARNING: could not determine rank
+ERROR: could not determine local rank
+INFO:    Cleaning up image...
+RESULT: wrapper --help NOT obtainable on the login node: the wrapper attempts
+rank determination before help parsing and fails outside an MPI context
+("WARNING: could not determine rank" / "ERROR: could not determine local rank").
+No GPU work was performed. --nv was NOT used (prohibited by assignment).
+
+--------------------------------------------------------------------------------
+CMD-03: Fallback (a) - run the binary directly with --help
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif /workspace/hpl-mxp-linux-x86_64/xhpl_mxp --help'
+EXIT STATUS: 127
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+/workspace/hpl-mxp-linux-x86_64/xhpl_mxp: error while loading shared libraries: libnvidia-ml.so.1: cannot open shared object file: No such file or directory
+INFO:    Cleaning up image...
+RESULT: binary --help NOT obtainable on the login node: the binary links
+libnvidia-ml.so.1 (NVML), which is unavailable without --nv; --nv is
+prohibited by the assignment (no GPUs on the login node).
+
+--------------------------------------------------------------------------------
+CMD-04: Fallback (b) - extract option names from the installed package (binary strings, '^--')
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "strings /workspace/hpl-mxp-linux-x86_64/xhpl_mxp | grep -E \"^--\" | sort -u"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+----------- Out of core Mb --------------
+----------- Out of core time (in percent (%%)) --------------
+-------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
+--Anq-device
+--GH
+--call-dgemv-with-multiple-threads
+--cuda-host-register-step
+--fill-device
+--fill-device-buffer-size
+--fp4-scaling-factor-a
+--gemm-iterations
+--monitor-gpu
+--monitor-gpu-clock-warning
+--monitor-gpu-interval
+--monitor-gpu-pcie-gen-warning
+--monitor-gpu-pcie-width-warning
+--monitor-gpu-power-warning
+--monitor-gpu-temp-warning
+--mpi-use-host-threads
+--mpi-use-mpi
+--nb
+--npcol
+--nporder
+--nprow
+--preset-gemm-kernel
+--prioritize-factorization
+--prioritize-trsm
+--skip-tests
+--sloppy-type
+--test-loop
+--tolerance
+--u-panel-chunk-nbs
+--use-host-mpi
+--use-mpi-panel-broadcast
+--use-separate-stream-for-gemm
+INFO:    Cleaning up image...
+RESULT: option names present in the installed v26.02 binary include:
+--nb, --npcol, --nporder, --nprow, --prioritize-factorization, --prioritize-trsm,
+--skip-tests, --sloppy-type, --test-loop, --monitor-gpu, --use-mpi-panel-broadcast,
+--use-separate-stream-for-gemm. (--n and --gpu-affinity are handled at wrapper
+level; binary-level evidence for --n appears in CMD-11 config echo "   --n     =",
+wrapper-level evidence for --n and --gpu-affinity in CMD-06 RUNNING doc.)
+
+--------------------------------------------------------------------------------
+CMD-05: Package directory listing (read-only)
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "ls -la /workspace/hpl-mxp-linux-x86_64/"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+total 5828
+drwxr-xr-x. 3 pham0094 1304617061     126 Feb 28  2026 .
+drwxr-xr-x. 9 pham0094 1304617061    4096 Feb 28  2026 ..
+-rw-r--r--. 1 pham0094 1304617061    1587 Feb 27  2026 COPYRIGHT-CLI11
+-rw-r--r--. 1 pham0094 1304617061     892 Feb 27  2026 README
+-rw-r--r--. 1 pham0094 1304617061    1429 Feb 27  2026 RUNNING
+-rw-r--r--. 1 pham0094 1304617061    3748 Feb 27  2026 TUNING
+-rwxr-xr-x. 1 pham0094 1304617061    9099 Feb 27  2026 hpl-mxp.sh
+drwxr-xr-x. 2 pham0094 1304617061    4096 Feb 27  2026 sample-slurm
+-rwxr-xr-x. 1 pham0094 1304617061 5927592 Feb 28  2026 xhpl_mxp
+INFO:    Cleaning up image...
+
+--------------------------------------------------------------------------------
+CMD-06: Fallback (c) - cat package docs README / RUNNING / TUNING
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "echo ===README===; cat /workspace/hpl-mxp-linux-x86_64/README; echo ===RUNNING===; cat /workspace/hpl-mxp-linux-x86_64/RUNNING; echo ===TUNING===; cat /workspace/hpl-mxp-linux-x86_64/TUNING"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+===README===
+===============================================================================
+ HPL-MxP-NVIDIA 24.03.0 -- High-Performance Mixed Precision benchmark -- NVIDIA
+===============================================================================
+
+ HPL-MxP-NVIDIA is a software package that solves a (random) dense linear system
+ in mixed precision arithmetic using Tensor Cores on distributed-memory computers
+ equipped with NVIDIA GPUs, based on the netlib HPL-MxP benchmark.
+
+ The HPL-MxP-NVIDIA software package is provided in a self-contained NVIDIA 
+ HPL-Benchmarks NGC container collection with all dependencies provided.
+
+ Running  See the file RUNNING in this directory.
+ -------
+
+ Tuning  See the file TUNING in this directory.
+ ------
+
+ Check out the website NGC Catalog (https://www.nvidia.com/en-us/gpu-cloud/containers/)
+ for the latest information. Look for HPC-Benchmarks collection.===RUNNING===
+##############################################################################
+## Running the HPL-MxP-NVIDIA Benchmark
+The HPL-MxP-NVIDIA expects one GPU per MPI process. As such, set the number of 
+MPI processes to match the number of available GPUs in the cluster.
+
+The script `hpl-mxp.sh` can be invoked on a command line or through a slurm batch
+script to launch the HPL-MxP-NVIDIA benchmark. The script `hpl-mxp.sh` accepts
+the following parameters:
+--gpu-affinity <string>      colon separated list of gpu indices"
+--nprow <int>                Number of rows in the processor grid"
+--npcol <int>                Number of columns in the processor grid"
+--nporder <string>           "row" or "column" major layout of the processor grid"
+--n <int>                    Size of N-by-N matrix"
+--nb <int>                   NB: the blocking constant (panel size)"
+  
+Optional parameters:
+--cpu-affinity <string>       colon separated list of cpu index ranges
+--mem-affinity <string>       colon separated list of memory indices
+--ucx-affinity <string>       colon separated list of UCX devices
+--ucx-tls <string>            UCX transport to use
+--exec-name <string>          HPL-MxP executable file
+
+The description of tuning parameters can be found in TUNING file.
+
+Command line examples for HPL-MxP-NVIDIA benchmark can be foung on HPC Benchmarks
+NGC web-page: https://catalog.ngc.nvidia.com/orgs/nvidia/containers/hpc-benchmarks===TUNING===
+==============================================================
+ Performance Tuning HPL-MxP-NVIDIA
+==============================================================
+
+Use ./xhpl_mxp -h/--help for a full list of options for HPL-MxP-NVIDIA:
+
+```
+Usage: ./xhpl_mxp [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+  --nprow INT:POSITIVE ... REQUIRED
+                              number of rows in the processor grid
+  --npcol INT:POSITIVE ... REQUIRED
+                              number of columns in the processor grid
+  --nporder ENUM:value in {row->0,column->1} OR {0,1} REQUIRED
+                              row/column major of the processor grid
+  --n INT:POSITIVE ... REQUIRED
+                              N of the N-by-N matrix
+  --nb INT:POSITIVE ... REQUIRED
+                              NB: the blocking constant
+  --tolerance FLOAT:POSITIVE [1e-12]
+                              tolerance of the HPL harness
+  --test-loop INT:POSITIVE [1]
+                              number of test loops to run
+  --preset-gemm-kernel INT:{0,80} [0]
+                              type of preset gemm kernel to use: 0 (none) or 80 (SM80)
+  --u-panel-chunk-nbs INT:POSITIVE [8]
+                              U panel chunk size given in unit of NBs
+  --call-dgemv-with-multiple-threads INT:NONNEGATIVE [0]
+                              number of rows each host thread works on if calling dgemv with multiple threads: 0 indicates using only one thread to call dgemv
+  --prioritize-trsm INT:NUMBER [0]
+                              whether GEMMs wait for U TRSMs
+  --prioritize-factorization INT:NUMBER [0]
+                              whether GEMMs wait for factorizations
+  --use-separate-stream-for-gemm INT:NUMBER [1]
+                              whether using a separate stream for GEMMs
+  --use-mpi-panel-broadcast INT:INT in [0 - 100] [50]
+                              percent of steps using MPI: e.g., 30 means first 30 percent of steps use MPI
+  --mpi-use-host-threads INT:NUMBER [1]
+                              whether MPI uses host threads
+  --sloppy-type UINT:{1,2} [2]
+                              size of the sloppy type: 1 (FP8) or 2 (FP16)
+  --Anq-device INT:NONNEGATIVE [0]
+                              number of columns of the FP64 matrix that are placed on the device
+  --fill-device INT:{0,1} [0]
+                              whether or not fill device with the FP64 matrix - this option overrides --Anq-device
+  --fill-device-buffer-size INT:NONNEGATIVE [3048]
+                              when --fill-device=1, how many bytes of buffer zone should be left on the device (in unit of MB)
+  --cuda-host-register-step INT:POSITIVE [2048]
+                              number of columns of the FP64 matrix that are cudaHostRegister'd at a time
+  --mpi-use-mpi INT:NUMBER [0]
+                              Whether fall back to use MPI_Bcast
+  --monitor-gpu INT:NUMBER [0]
+                              whether monitoring GPUs during the run
+  --monitor-gpu-interval FLOAT:POSITIVE [1]
+                              time interval with which GPUs are monitored [seconds]
+  --monitor-gpu-clock-warning UINT:NONNEGATIVE [0]
+                              GPU clock below which warning is given [MHz]
+  --monitor-gpu-power-warning UINT:NONNEGATIVE [0]
+                              GPU power above which warning is given [W]
+  --monitor-gpu-temp-warning UINT:NONNEGATIVE [0]
+                              GPU temperature above which warning is given [C]
+  --monitor-gpu-pcie-width-warning UINT:NONNEGATIVE [0]
+                              PCIe width below which warning is given
+  --monitor-gpu-pcie-gen-warning UINT:NONNEGATIVE [0]
+                              PCIe gen below which warning is given
+```
+INFO:    Cleaning up image...
+
+--------------------------------------------------------------------------------
+CMD-07: Fallback (b) - targeted strings: sloppy-type accepted values + skip-tests
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "strings /workspace/hpl-mxp-linux-x86_64/xhpl_mxp | grep -iE \"sloppy|skip-tests|Usage: ./xhpl_mxp\" "'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+   --sloppy-type                      = %s 
+   --skip-tests                       = %d 
+    N = %d, NB = %d, NPROW = %d, NPCOL = %d, SLOPPY-TYPE = %s
+sloppy type: 'FP16'/'2', 'FP8'/'1', or 'FP4'
+--sloppy-type
+--skip-tests
+ZN3CLI18CheckedTransformerC4ISt6vectorISt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE16hpl_mxp_sloppy_tESaISB_EEPFS9_S9_EEET_T0_EUlRS9_E0_
+ZN3CLI18CheckedTransformerC4ISt6vectorISt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE16hpl_mxp_sloppy_tESaISB_EEPFS9_S9_EEET_T0_EUlvE_
+ZN3CLI3App10add_optionI16hpl_mxp_sloppy_tS2_LNS_6detail7enablerE0EEEPNS_6OptionENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERT_SC_EUlvE0_
+ZN3CLI3App10add_optionI16hpl_mxp_sloppy_tS2_LNS_6detail7enablerE0EEEPNS_6OptionENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERT_SC_EUlRKSt6vectorISC_SaISC_EEE_
+Unsupported sloppy type
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.rel.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.rel.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.rel.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.rel.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.rel.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.rel.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.capmerc.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.capmerc.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.capmerc.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.merc.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.merc.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.merc.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.capmerc.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.capmerc.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.capmerc.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.merc.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.merc.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.merc.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.info._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.shared._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.text._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.info._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.shared._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+_ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI13__nv_fp8_e4m3fEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp33copy_and_convert_to_sloppy_kernelI6__halffEEvPT_mPT0_mS5_mii
+.nv.constant0._ZN7hpl_mxp24convert_to_sloppy_kernelIfdEEvPT_mPT0_mii
+INFO:    Cleaning up image...
+KEY LINES (verbatim, from the INSTALLED v26.02 binary):
+   --sloppy-type                      = %s
+   --skip-tests                       = %d
+    N = %d, NB = %d, NPROW = %d, NPCOL = %d, SLOPPY-TYPE = %s
+sloppy type: 'FP16'/'2', 'FP8'/'1', or 'FP4'
+--sloppy-type
+--skip-tests
+Unsupported sloppy type
+RESULT: the installed binary accepts sloppy-type string 'FP16' (equivalent to
+numeric '2'); --skip-tests is echoed as an integer (%d). The remaining lines are
+ELF symbol/section names of the sloppy-conversion CUDA kernels and CLI11 template
+symbols; no additional CLI option names appear in them.
+
+--------------------------------------------------------------------------------
+CMD-08: Fallback (b) - strings attempt to extract CLI11 usage lines ('^  -')
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "strings /workspace/hpl-mxp-linux-x86_64/xhpl_mxp | grep -E \"^  -\" | sort -u"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+INFO:    Cleaning up image...
+RESULT: empty - the CLI11 help block is composed at runtime, not stored as
+literal two-space-prefixed lines. Option descriptions/type fragments were
+extracted instead (CMD-09, CMD-10, CMD-11).
+
+--------------------------------------------------------------------------------
+CMD-09: Fallback (b) - strings: option descriptions and type specs
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "strings /workspace/hpl-mxp-linux-x86_64/xhpl_mxp | grep -iE \"row/column|skip|test loop|monitor|whether|ENUM|INT:|NUMBER|sloppy type|colon|affinity|blocking constant|processor grid|N-by-N\" | sort -u"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+	Number of SMs %d
+             number of columns for each panel: %d
+             number of columns for each panel: %lli
+             number of equations:           %d
+             number of equations:           %lli
+             number of independent subgraphs:  %d
+             number of independent subgraphs:  %lli
+             number of non-zeros in A (%%): %f
+             number of non-zeros in A:      %d
+             number of non-zeros in A:      %lli
+             number of non-zeros in L+U:              %d
+             number of non-zeros in L+U:              %lli
+             number of non-zeros in L:                %d
+             number of non-zeros in L:                %lli
+             number of non-zeros in U:                %d
+             number of non-zeros in U:                %lli
+             number of right-hand sides:    %d
+             number of right-hand sides:    %lli
+             number of supernodes:                    %d
+             number of supernodes:                    %lli
+          matrix_number_in: %d matrix_type_in: %d
+          matrix_number_in: %i matrix_type_in: %d
+          matrix_number_in: %lli matrix_type_in: %lli
+   --monitor-gpu                      = %d 
+   --monitor-gpu-clock-warning        = %u 
+   --monitor-gpu-interval             = %.f 
+   --monitor-gpu-pcie-gen-warning     = %u 
+   --monitor-gpu-pcie-width-warning   = %u 
+   --monitor-gpu-power-warning        = %u 
+   --monitor-gpu-temp-warning         = %u 
+   --skip-tests                       = %d 
+ ****** Monitor GPU Settings ****** 
+ ****** test loop %d of %d done   ****** 
+ ****** test loop %d of %d starts ****** 
+ exceeds maximum iteration number %d
+ exceeds maximum iteration number %lli
+ increasing the number of requested eigenvalues, as this can increase likelihood of success.
+ parameter number %4i had an illegal value 
+*** Error in PARDISO: wrong matrix number, clean %d
+*** Error in PARDISO: wrong matrix number, clean %lli
+*** Input check: internal error, counted number of threads %d
+*** Input check: internal error, counted number of threads %lli
+*** Input check: matrix_number_new %d ido %d are incompatible
+*** Input check: matrix_number_new %lli ido %lli are incompatible
+*** Input check: max_fac_store_in %d matrix_number_in %d
+*** Input check: max_fac_store_in %lli matrix_number_in %lli
+*** Input check: nproc %d is not equal to counted number of threads %d
+*** Input check: nproc %lli is not equal to counted number of threads %lli
+--monitor-gpu
+--monitor-gpu-clock-warning
+--monitor-gpu-interval
+--monitor-gpu-pcie-gen-warning
+--monitor-gpu-pcie-width-warning
+--monitor-gpu-power-warning
+--monitor-gpu-temp-warning
+--skip-tests
+< Parallel Direct Factorization with number of processors: > %d
+Bad severity number
+Division by zero occurred: At iteration number %s, the rotated Hessenberg
+ENUM
+Each IP number must be between 0 and 255 
+Failed parsing number (
+I_MPI_NUMBER_OF_MPI_PROCESSES_PER_NODE
+Intel oneMKL DFTI ERROR: Configuration parameter DFTI_NUMBER_OF_USER_THREADS is not set 
+Intel oneMKL DFTI ERROR: Transforms with number of points N of a non-unit stride dimension exceeding 2^(27-p) - 1 for N a power-of-two, or 2^(23-p) - 1 for N not a power-of-two, are currently not supported, where p=0 for single precision and p=1 for double precision
+Intel oneMKL Extended Eigensolvers WARNING: Solver did not converge (number of loops reached maximum allowed.
+Invalid error number
+L&U for matrix number %d deleted
+L&U for matrix number %lli deleted
+MONITORLESS_MWAIT
+N of the N-by-N matrix
+NB: the blocking constant
+NUMBER
+Number of CPUs: %i
+Number of GEMM iterations in self tests
+Number of columns less than one
+Number of cores: %i
+Number of items read=%d
+Number of items read=%lli
+Number of iterative refinement steps performed         %d
+Number of non-zeros greater than nRows*nCols
+Number of non-zeros less than nRows
+Number of processes (
+Number of rows less than one
+Number of tests: %i
+Number of threads: %i
+Number of unknowns computed in backward solving step
+Number of unknowns computed in forward solving step
+PARDISO_OOC_NUMBER_OF_READ_EQUAL_ZERO occurred: %s
+PARDISO_OOC_NUMBER_OF_READ_NOT_EQUAL_COUNT occurred: %s
+PARDISO_OOC_NUMBER_OF_WRITE_EQUAL_ZERO occurred: %s
+PARDISO_OOC_NUMBER_OF_WRITE_NOT_EQUAL_COUNT occurred: %s
+Parameter IPAR(11)=%s (the number of intervals in phi-direction)
+Parameter IPAR(11)=%s (the number of intervals in x-direction)
+Parameter IPAR(12)=%s (the number of intervals in theta-direction)
+Parameter IPAR(12)=%s (the number of intervals in y-direction)
+Parameter IPAR(13)=%s (the number of intervals in z-direction)
+Parameter ipar[10]=%s (the number of intervals in phi-direction)
+Parameter ipar[10]=%s (the number of intervals in x-direction)
+Parameter ipar[11]=%s (the number of intervals in the y-direction)
+Parameter ipar[11]=%s (the number of intervals in theta-direction)
+Parameter ipar[12]=%s (the number of intervals in z-direction)
+Required min options greater than number of available options
+The number of OMP threads defined by parameter IPAR(10)=%s should be
+The number of OMP threads defined by parameter ipar[9]=%s should be
+The solvers_ee interval generator has failed to find the requested number of eigenvalues. Try
+Unsupported sloppy type
+Whether fall back to use MPI_Bcast
+_ZNSt8ios_base6skipwsE
+an integer number greater than or equal to 2.
+call to DCG routine. Otherwise, the maximal number
+call to DFGMRES routine. Otherwise, the maximal number of iterations is equal to
+cleaned memory, deleted number of L&U-factorizations: %d
+cleaned memory, deleted number of L&U-factorizations: %lli
+monitorless_mwait
+number of columns in the processor grid
+number of columns of the FP64 matrix that are cudaHostRegister'd at a time
+number of columns of the FP64 matrix that are placed on the device
+number of iterations is equal to IPAR(5)-IPAR(4).
+number of rows each host thread works on if calling dgemv with multiple threads: 0 indicates using only one thread to call dgemv
+number of rows in the processor grid
+number of test loops to run
+residual stopping test and the stopping test for the maximal number of
+row/column major of the processor grid
+should be an even number. Assign a proper value to parameter 'np'
+should be an even number. Assign a proper value to parameter 'nt'
+should be an even number. Assign a proper value to parameter 'nx'
+should be an even number. Assign a proper value to the parameter 'np'
+should be an even number. Assign a proper value to the parameter 'nt'
+should be an even number. Assign a proper value to the parameter 'nx'
+sloppy type: 'FP16'/'2', 'FP8'/'1', or 'FP4'
+src/cuda_monitor.hpp
+time interval with which GPUs are monitored [seconds]
+whether GEMMs wait for U TRSMs
+whether GEMMs wait for factorizations
+whether MPI uses host threads
+whether monitoring GPUs during the run
+whether or not fill device with the FP64 matrix - this option overrides --Anq-device
+whether using a separate stream for GEMMs
+INFO:    Cleaning up image...
+NOTE: lines originating from the bundled Intel oneMKL/PARDISO library
+(e.g., "Parameter IPAR(...)", "Number of non-zeros...", "PARDISO_OOC_...",
+"matrix_number_in", "Number of items read", "number of independent subgraphs",
+"number of equations", "number of right-hand sides", "number of supernodes",
+"Number of unknowns computed ...", "exceeds maximum iteration number",
+"cleaned memory, deleted number of L&U-factorizations", "Number of CPUs",
+"Number of cores", "Number of tests", "Number of threads", "Number of processes",
+"Division by zero", "Bad severity number", "Invalid error number",
+"*** Input check ...", "*** Error in PARDISO ...", "< Parallel Direct Factorization ...")
+are library strings, not HPL-MxP CLI options; the HPL-MxP option-description
+strings are the ones matching the TUNING doc lines quoted in CMD-06
+(e.g., "N of the N-by-N matrix", "NB: the blocking constant",
+"number of rows in the processor grid", "number of columns in the processor grid",
+"row/column major of the processor grid", "number of test loops to run",
+"whether GEMMs wait for U TRSMs", "whether GEMMs wait for factorizations",
+"whether using a separate stream for GEMMs",
+"whether monitoring GPUs during the run").
+
+--------------------------------------------------------------------------------
+CMD-10: Fallback (b) - strings: value-range / enum fragments
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "strings /workspace/hpl-mxp-linux-x86_64/xhpl_mxp | grep -E \"percent|row->|column->|value in|skip the|skip-tests|\{0,1\}|in \[0 - 100\]|Print this help|Usage:\" | sort -u"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+   --skip-tests                       = %d 
+----------- Out of core time (in percent (%%)) --------------
+--skip-tests
+Print this help message and exit
+percent of steps using MPI: e.g., 30 means first 30 percent of steps use MPI
+value in 
+INFO:    Cleaning up image...
+RESULT: confirms the --use-mpi-panel-broadcast description ("percent of steps
+using MPI...") and CLI11 enum machinery ("value in"); the enum literal
+"{row->0,column->1}" is composed at runtime (documented verbatim in the
+in-package TUNING doc, CMD-06).
+
+--------------------------------------------------------------------------------
+CMD-11: Fallback (b) - strings: binary configuration-echo block (all parsed options)
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "strings /workspace/hpl-mxp-linux-x86_64/xhpl_mxp | grep -E \"^   --\" | sort -u"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+   --Anq-device                       = %d 
+   --call-dgemv-with-multiple-threads = %d 
+   --cuda-host-register-step          = %d 
+   --fill-device                      = %d 
+   --fill-device-buffer-size          = %d 
+   --fp4-scaling-factor-a             = %e 
+   --gemm-iterations                  = %d 
+   --monitor-gpu                      = %d 
+   --monitor-gpu-clock-warning        = %u 
+   --monitor-gpu-interval             = %.f 
+   --monitor-gpu-pcie-gen-warning     = %u 
+   --monitor-gpu-pcie-width-warning   = %u 
+   --monitor-gpu-power-warning        = %u 
+   --monitor-gpu-temp-warning         = %u 
+   --mpi-use-host-threads             = %d 
+   --mpi-use-mpi                      = %d 
+   --n     =
+   --nb    =
+   --npcol = 
+   --nprow = 
+   --order = %s 
+   --preset-gemm-kernel               = %d 
+   --prioritize-factorization         = %d 
+   --prioritize-trsm                  = %d 
+   --skip-tests                       = %d 
+   --sloppy-type                      = %s 
+   --test-loop                        = %d 
+   --tolerance                        = %e 
+   --u-panel-chunk-nbs                = %d 
+   --use-host-mpi                     = %d 
+   --use-mpi-panel-broadcast          = %d 
+   --use-separate-stream-for-gemm     = %d 
+INFO:    Cleaning up image...
+RESULT: the installed v26.02 binary parses and echoes --n, --nb, --nprow,
+--npcol, --nporder (echoed as "--order"), --sloppy-type,
+--use-mpi-panel-broadcast, --use-separate-stream-for-gemm, --prioritize-trsm,
+--prioritize-factorization, --test-loop, --skip-tests, --monitor-gpu.
+
+--------------------------------------------------------------------------------
+CMD-12: Fallback (b) - strings: OpenMP environment references (for OMP_NUM_THREADS note)
+COMMAND:
+ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 gaas '/usr/local/apptainer/1.4.1/bin/apptainer exec /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif bash -c "strings /workspace/hpl-mxp-linux-x86_64/xhpl_mxp | grep -iE \"OMP_NUM|OpenMP|OMP threads|OMP_PLACES|OMP_PROC\" | sort -u"'
+EXIT STATUS: 0
+VERBATIM OUTPUT:
+INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+INFO:    Converting SIF file to temporary sandbox...
+WARNING: group: unknown groupid 1304617061
+Intel oneMKL DFTI ERROR: Error in OpenMP
+OMP_NUM_THREADS
+Parallel Direct Factorization is running on %d MPI and %d OpenMP per MPI process
+Parallel Direct Factorization is running on %d OpenMP
+Parallel Direct Factorization is running on %lli OpenMP
+The number of OMP threads defined by parameter IPAR(10)=%s should be
+The number of OMP threads defined by parameter ipar[9]=%s should be
+INFO:    Cleaning up image...
+RESULT: the installed binary contains the literal environment-variable string
+OMP_NUM_THREADS; there is NO --omp* CLI option in the installed option list
+(CMD-04/CMD-11), and none of the package docs (README/RUNNING/TUNING, CMD-06)
+document any OpenMP environment variable.
+
+================================================================================
+SECTION 2: PER-FLAG VERDICT TABLE
+(flag | supplied value | installed help/option line (quoted) | verdict)
+Evidence source abbreviations:
+  [BIN]  = strings of installed v26.02 binary (CMD-04/07/09/10/11/12)
+  [RUN]  = in-package RUNNING doc (CMD-06)
+  [TUN]  = in-package TUNING doc (CMD-06)
+  [HIST] = historical runtime use on this same container/cluster
+           (experiments/2Nodes-8GPUs/, jobs 67383/67393/67397/67404.gaas;
+            scripts/run_hplmxp_n_sweep.pbs lines 101-112)
+--------------------------------------------------------------------------------
+
+1) OMP_NUM_THREADS (environment variable, NOT a CLI flag)
+   supplied value: 8
+   installed evidence: [BIN CMD-12] literal string "OMP_NUM_THREADS" present in
+   the installed binary; NO --omp* CLI option exists in the installed option
+   list ([BIN CMD-04], [BIN CMD-11]); package docs ([RUN]/[TUN] CMD-06) contain
+   no OpenMP or environment-variable documentation.
+   verdict: ENVIRONMENT NOTE - not a package CLI flag; standard OpenMP runtime
+   environment variable; no incompatibility indicated by any installed evidence
+   (see OMP note below the table).
+
+2) --n
+   supplied value: 737280
+   installed help line (quoted): [RUN] "--n <int>                    Size of N-by-N matrix""
+   installed help line (quoted): [TUN] "--n INT:POSITIVE ... REQUIRED" / "N of the N-by-N matrix"
+   installed help line (quoted): [BIN CMD-11] config echo "   --n     ="
+   verdict: SUPPORTED (positive integer accepted; 737280 is INT:POSITIVE)
+
+3) --nb
+   supplied value: 3072
+   installed help line (quoted): [RUN] "--nb <int>                   NB: the blocking constant (panel size)""
+   installed help line (quoted): [TUN] "--nb INT:POSITIVE ... REQUIRED" / "NB: the blocking constant"
+   installed help line (quoted): [BIN CMD-04] "--nb"
+   verdict: SUPPORTED (positive integer accepted)
+
+4) --nprow
+   supplied value: 4
+   installed help line (quoted): [RUN] "--nprow <int>                Number of rows in the processor grid""
+   installed help line (quoted): [TUN] "--nprow INT:POSITIVE ... REQUIRED" / "number of rows in the processor grid"
+   installed help line (quoted): [BIN CMD-04] "--nprow"
+   verdict: SUPPORTED
+
+5) --npcol
+   supplied value: 4
+   installed help line (quoted): [RUN] "--npcol <int>                Number of columns in the processor grid""
+   installed help line (quoted): [TUN] "--npcol INT:POSITIVE ... REQUIRED" / "number of columns in the processor grid"
+   installed help line (quoted): [BIN CMD-04] "--npcol"
+   verdict: SUPPORTED
+
+6) --nporder
+   supplied value: column
+   installed help line (quoted): [RUN] '--nporder <string>           "row" or "column" major layout of the processor grid"'
+   installed help line (quoted): [TUN] "--nporder ENUM:value in {row->0,column->1} OR {0,1} REQUIRED" / "row/column major of the processor grid"
+   installed help line (quoted): [BIN CMD-04] "--nporder"; [BIN CMD-09] "row/column major of the processor grid"; [BIN CMD-10] "value in"
+   verdict: SUPPORTED - "column" is a documented accepted enum string
+   ({row->0,column->1}); [HIST] the string form "--nporder row" ran successfully
+   on this same container (2Nodes-8GPUs n-sweep).
+
+7) --gpu-affinity
+   supplied value: 0:1:2:3:4:5:6:7
+   installed help line (quoted): [RUN] "--gpu-affinity <string>      colon separated list of gpu indices""
+   (wrapper-level required option; known probe fact from job 72591.gaas: without
+   a GPU list the wrapper fails "List of GPUs is not defined", exit 1)
+   verdict: SUPPORTED - colon-separated GPU index list form; [HIST] the
+   identical form 0:1:...:7 was used on this container (run_hplmxp_n_sweep.pbs
+   line 63: GPU_AFFINITY=$(seq -s: 0 7), line 102: --gpu-affinity "$GPU_AFFINITY").
+
+8) --sloppy-type
+   supplied value: FP16
+   installed help line (quoted): [BIN CMD-07] "sloppy type: 'FP16'/'2', 'FP8'/'1', or 'FP4'"
+   installed help line (quoted): [BIN CMD-11] config echo "   --sloppy-type                      = %s "
+   installed help line (quoted): [BIN CMD-04] "--sloppy-type"
+   installed help line (quoted): [TUN - STALE] "--sloppy-type UINT:{1,2} [2]" / "size of the sloppy type: 1 (FP8) or 2 (FP16)"
+   verdict: SUPPORTED by the installed binary - 'FP16' is an accepted string
+   value (equivalent to numeric '2'); the TUNING doc text is stale relative to
+   the installed v26.02 binary (see SECTION 5, ANOMALY 3).
+
+9) --use-mpi-panel-broadcast
+   supplied value: 0
+   installed help line (quoted): [TUN] "--use-mpi-panel-broadcast INT:INT in [0 - 100] [50]" / "percent of steps using MPI: e.g., 30 means first 30 percent of steps use MPI"
+   installed help line (quoted): [BIN CMD-04] "--use-mpi-panel-broadcast"; [BIN CMD-10] "percent of steps using MPI: e.g., 30 means first 30 percent of steps use MPI"; [BIN CMD-11] echo "   --use-mpi-panel-broadcast          = %d "
+   verdict: SUPPORTED - 0 is within the documented range [0 - 100]
+
+10) --use-separate-stream-for-gemm
+    supplied value: 1
+    installed help line (quoted): [TUN] "--use-separate-stream-for-gemm INT:NUMBER [1]" / "whether using a separate stream for GEMMs"
+    installed help line (quoted): [BIN CMD-04] "--use-separate-stream-for-gemm"; [BIN CMD-09] "whether using a separate stream for GEMMs"
+    verdict: SUPPORTED - 1 is the documented default
+
+11) --prioritize-trsm
+    supplied value: 0
+    installed help line (quoted): [TUN] "--prioritize-trsm INT:NUMBER [0]" / "whether GEMMs wait for U TRSMs"
+    installed help line (quoted): [BIN CMD-04] "--prioritize-trsm"; [BIN CMD-09] "whether GEMMs wait for U TRSMs"
+    verdict: SUPPORTED - 0 is the documented default
+
+12) --prioritize-factorization
+    supplied value: 0
+    installed help line (quoted): [TUN] "--prioritize-factorization INT:NUMBER [0]" / "whether GEMMs wait for factorizations"
+    installed help line (quoted): [BIN CMD-04] "--prioritize-factorization"; [BIN CMD-09] "whether GEMMs wait for factorizations"
+    verdict: SUPPORTED - 0 is the documented default
+
+13) --test-loop
+    supplied value: 1
+    installed help line (quoted): [TUN] "--test-loop INT:POSITIVE [1]" / "number of test loops to run"
+    installed help line (quoted): [BIN CMD-04] "--test-loop"; [BIN CMD-09] "number of test loops to run"
+    verdict: SUPPORTED - 1 is the documented default
+
+14) --skip-tests
+    supplied value: 0
+    installed help line (quoted): [BIN CMD-04] "--skip-tests" (option name)
+    installed help line (quoted): [BIN CMD-11] config echo "   --skip-tests                       = %d " (integer-valued)
+    installed help line (quoted): [TUN] NOT listed in the TUNING usage block (stale doc, see ANOMALY 3)
+    [HIST] "--skip-tests 1" was accepted by this same wrapper+container in all
+    four 2Nodes-8GPUs n-sweep runs (jobs 67383/67393/67397/67404.gaas; script
+    line 108).
+    verdict: SUPPORTED by the installed binary - integer value form (0/1);
+    absent from the stale in-package TUNING doc (see SECTION 5, ANOMALY 3).
+
+15) --monitor-gpu
+    supplied value: 0
+    installed help line (quoted): [TUN] "--monitor-gpu INT:NUMBER [0]" / "whether monitoring GPUs during the run"
+    installed help line (quoted): [BIN CMD-04] "--monitor-gpu"; [BIN CMD-09] "whether monitoring GPUs during the run"; [BIN CMD-11] echo "   --monitor-gpu                      = %d "
+    verdict: SUPPORTED - 0 is the documented default
+
+OMP_NUM_THREADS environment note (factual):
+- It is an environment variable, not an HPL-MxP/wrapper CLI option; the
+  installed option list contains no thread-related CLI flag.
+- The installed binary contains the literal string "OMP_NUM_THREADS" and
+  OpenMP-related text (mostly from the bundled Intel oneMKL/PARDISO library,
+  e.g., "Parallel Direct Factorization is running on %d MPI and %d OpenMP per
+  MPI process"), i.e., the binary is built against an OpenMP runtime that
+  consumes OMP_NUM_THREADS from the environment.
+- The installed package help/docs say nothing else about OpenMP or environment
+  variables; no incompatibility with OMP_NUM_THREADS=8 is indicated by any
+  installed evidence. Probe facts for scale: 112 CPUs per node
+  (2 sockets x 56 cores, INTEL(R) XEON(R) PLATINUM 8570,
+  scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g12.log); 8 ranks/node x
+  8 OMP threads = 64 threads per node.
+
+================================================================================
+SECTION 3: CHECK 2 - MECHANICAL N=737280 FEASIBILITY SANITY CHECK (NO N SEARCH)
+================================================================================
+
+INPUT EVIDENCE (as prescribed by the assignment):
+
+(a) Historical (repo evidence):
+- experiments/2Nodes-8GPUs/README.md:
+  - N=700000 PASSED, 16 ranks (job 67397.gaas): device memory consumption MAX
+    124.016 GB, available MIN 138.739 GB per process. Raw line,
+    experiments/2Nodes-8GPUs/outputs/2x8-n-sweep_n700k_v1.o line 124:
+    "Per process device memory consumption MAX = 124.016 GB, available MIN = 138.739 GB"
+    (raw file contains ANSI color codes around this line); line 117:
+    "Total memory available 139.80 GB".
+  - N=800000 FAILED with device cudaMalloc OOM (job 67404.gaas, exit 102). Raw
+    line, experiments/2Nodes-8GPUs/outputs/2x8-n-sweep_n800k_v1.o line 124:
+    "Per process device memory consumption MAX = 161.669 GB, available MIN = 138.739 GB".
+  - Recorded implied ceiling, README line 78:
+    "Implied device-matrix ceiling: N ≈ sqrt(139.8 GB x 16 GPUs / 4 B) ≈ 747000."
+
+(b) Current probe GPU memory evidence (scripts/outputs/):
+- phase0_2x8_probe_v1_node_hpc-gaas-g12.log lines 358-365 (nvidia-smi query,
+  all 8 GPUs identical), representative line 358:
+  "0, NVIDIA H200, GPU-d2232a2c-2b62-8176-6acc-4a24e96bb786, 00000000:1B:00.0,
+   580.126.20, 96.00.DA.00.16, 143771 MiB, 0 MiB, 143156 MiB, P0, 29, [N/A],
+   77.38 W, 700.00 W, 345 MHz, 3201 MHz, 1980 MHz, 3201 MHz, 5, 5, 16, 16"
+  (memory.total=143771 MiB, memory.used=0 MiB, memory.free=143156 MiB).
+- phase0_2x8_probe_v1_node_hpc-gaas-g15.log lines 358-365: identical figures
+  on all 8 GPUs (143771 MiB total, 0 MiB used, 143156 MiB free), e.g. line 358:
+  "0, NVIDIA H200, GPU-0b725b9e-faa0-e534-3b81-94b6e210ae4b, ..., 143771 MiB, 0 MiB, 143156 MiB, ..."
+
+ARITHMETIC (exact; computed locally with python3 integer arithmetic):
+
+Device matrix bytes per GPU at N=737280 (16 GPUs, 4 bytes/element, as
+prescribed by the assignment and consistent with the historical README
+ceiling formula):
+
+  N                = 737280
+  N^2              = 737280 * 737280 = 543,581,798,400
+  total bytes      = N^2 * 4        = 2,174,327,193,600 bytes
+  per-GPU bytes    = total / 16     =   135,895,449,600 bytes
+
+  per-GPU in GiB   = 135,895,449,600 / 2^30 = 126.5625 GiB (exact)
+  per-GPU in GB    = 135,895,449,600 / 10^9 = 135.895 GB (decimal)
+
+Reference matrix sizes per GPU (same formula):
+  N=700000 : 122.500 GB decimal / 114.087 GiB  (historical: PASSED,
+             app-reported consumption MAX 124.016)
+  N=737280 : 135.895 GB decimal / 126.5625 GiB (baseline under check)
+  N=800000 : 160.000 GB decimal / 149.012 GiB  (historical: device OOM,
+             app-reported consumption MAX 161.669)
+
+Available-memory figures:
+  Historical app-reported per-process device available MIN = 138.739 (app "GB")
+  Historical app-reported total device memory available   = 139.80  (app "GB")
+  Probe nvidia-smi total  = 143771 MiB = 140.40 GiB = 150.75 GB decimal
+  Probe nvidia-smi free   = 143156 MiB = 139.80 GiB = 150.11 GB decimal
+  (Note: 143156 MiB / 1024 = 139.80, i.e., the app's "Total memory available
+  139.80 GB" corresponds to the nvidia-smi free value in GiB units.)
+
+COMPARISONS (matrix-only, per GPU, at N=737280):
+  - vs historical app-reported available MIN 138.739 (same-units face value):
+      126.5625 < 138.739  -> margin 12.177   (if app figures are GiB)
+      135.895  < 138.739  -> margin  2.844   (if app figures are decimal GB)
+    Under EITHER unit convention the per-GPU matrix is below the historical
+    per-process available minimum.
+  - vs current probe free memory 143156 MiB = 139.80 GiB (g12 and g15):
+      126.5625 GiB < 139.80 GiB -> margin 13.238 GiB
+  - vs recorded implied device-matrix ceiling:
+      README formula sqrt(139.8e9 * 16 / 4) = 747,797 (~747000 as recorded);
+      N=737280 < 747,797 -> below the recorded implied ceiling.
+  - Historical bracket: 700000 (PASSED) < 737280 < 800000 (device OOM).
+
+ONE-SENTENCE VERDICT (mechanical):
+  No - the per-GPU device matrix size at N=737280 (135,895,449,600 bytes =
+  126.5625 GiB = 135.895 GB decimal) is below every available-memory figure
+  used for this check (historical app-reported available MIN 138.739; probe
+  free 143156 MiB = 139.80 GiB on both g12 and g15), so this arithmetic shows
+  NO obvious deterministic impossibility; no N search was performed and no N
+  change is recommended.
+
+================================================================================
+SECTION 4: OVERALL SUMMARY
+================================================================================
+
+FLAG COMPATIBILITY (Check 1): ALL 14 supplied CLI flags are SUPPORTED by the
+installed NVIDIA HPL-MxP v26.02 package with exactly the supplied spelling
+and value forms:
+  SUPPORTED: --n 737280 | --nb 3072 | --nprow 4 | --npcol 4 |
+             --nporder column | --gpu-affinity 0:1:2:3:4:5:6:7 |
+             --sloppy-type FP16 | --use-mpi-panel-broadcast 0 |
+             --use-separate-stream-for-gemm 1 | --prioritize-trsm 0 |
+             --prioritize-factorization 0 | --test-loop 1 |
+             --skip-tests 0 | --monitor-gpu 0
+  NOT SUPPORTED: (none)
+  ENVIRONMENT NOTE: OMP_NUM_THREADS=8 is an environment variable, not a CLI
+  flag; no incompatibility indicated by installed evidence.
+No flag was added, removed, altered, or substituted.
+
+FEASIBILITY (Check 2): NO obvious deterministic impossibility (arithmetic in
+SECTION 3).
+
+VERIFICATION METHOD THAT PRODUCED THE EVIDENCE:
+  Primary (wrapper --help, CMD-02) and fallback (a) (binary --help, CMD-03)
+  both failed on the login node (exit 1 "could not determine local rank";
+  exit 127 missing libnvidia-ml.so.1 without --nv). The evidence was
+  therefore produced by:
+  - fallback (b): strings extraction from the installed binary
+    /workspace/hpl-mxp-linux-x86_64/xhpl_mxp inside the container
+    (CMD-04, CMD-07, CMD-08, CMD-09, CMD-10, CMD-11, CMD-12; all exit 0), and
+  - fallback (c): in-package docs README / RUNNING / TUNING at
+    /workspace/hpl-mxp-linux-x86_64/ (CMD-05, CMD-06; exit 0).
+  Binary strings are the authoritative source for the installed v26.02
+  release (the in-package TUNING doc is stale; see SECTION 5).
+  Exact apptainer commands and exit statuses: CMD-01..CMD-12 in SECTION 1
+  (apptainer invoked via absolute path /usr/local/apptainer/1.4.1/bin/apptainer;
+  wrapper-help exit 1; binary-help exit 127; all strings/doc queries exit 0).
+
+================================================================================
+SECTION 5: ANOMALIES OBSERVED (FACTUAL ONLY, NO INTERPRETATION)
+================================================================================
+
+1. Wrapper --help is not obtainable on the login node: /workspace/hpl-mxp.sh
+   --gpu-affinity 0 --help exits 1 with "WARNING: could not determine rank" /
+   "ERROR: could not determine local rank" (CMD-02). The wrapper attempts rank
+   determination before help parsing.
+2. Binary --help is not obtainable on the login node: xhpl_mxp --help exits
+   127 with "error while loading shared libraries: libnvidia-ml.so.1" (CMD-03);
+   --nv was not used per assignment constraints.
+3. The in-package TUNING doc is stale relative to the installed v26.02 binary:
+   (a) it documents "--sloppy-type UINT:{1,2}" while the installed binary
+   accepts the string values 'FP16'/'2', 'FP8'/'1', or 'FP4' (CMD-07);
+   (b) it omits --skip-tests (and --fp4-scaling-factor-a, --gemm-iterations,
+   --use-host-mpi), all of which are present in the installed binary strings
+   (CMD-04, CMD-11). The package README header also reads "HPL-MxP-NVIDIA
+   24.03.0" although the binary is dated Feb 28 2026 inside the
+   hpc-benchmarks_26.02.sif container.
+4. The installed binary's configuration-echo prints the nporder option as
+   "--order = %s " (CMD-11) while the CLI option name is --nporder (CMD-04,
+   TUNING, RUNNING); cosmetic echo-name difference only.
+5. apptainer is not on PATH in non-interactive SSH sessions; the absolute
+   path /usr/local/apptainer/1.4.1/bin/apptainer was required (CMD-01).
+6. Without squashfuse/gocryptfs in the login-node environment, each apptainer
+   invocation prints "Converting SIF file to temporary sandbox..." and
+   "Cleaning up image..." afterward (temporary conversion only; no persistent
+   cluster modification was made; no benchmark, GPU work, or PBS job was run).
+7. Unit-label observation (factual): the app-reported "Total memory available
+   139.80 GB" equals the nvidia-smi free value 143156 MiB / 1024 = 139.80
+   GiB, i.e., the application's "GB" label corresponds to GiB quantities; the
+   historical README ceiling formula (sqrt(139.8 GB x 16 / 4 B)) treats 139.8
+   as decimal GB. Both conventions are shown in SECTION 3; the verdict is the
+   same under either convention.
+
+================================================================================
+END OF LOG
+================================================================================

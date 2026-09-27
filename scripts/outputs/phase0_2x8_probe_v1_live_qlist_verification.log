@@ -1,0 +1,1038 @@
+# phase0_2x8_probe_v1_live_qlist_verification.log
+# Raw live queue-membership (Qlist) verification evidence for TASK-000
+# (Phase-0 2x8 probe). PBS job 72590.gaas was qdel'd by explicit user
+# authorization before this check; it is not touched further here.
+# Collected 2026-09-26T23:57:50Z through 2026-09-26T23:58:23Z (UTC) via
+# read-only direct noninteractive SSH (ssh -o BatchMode=yes gaas '<cmd>'):
+#   1. qstat -x -f 72590.gaas
+#   2. qstat -Qf gpu_as
+#   3. qstat -Qf gpu_ded
+#   4. pbsnodes -av hpc-gaas-g04
+#   5. pbsnodes -av hpc-gaas-g22
+#   6. pbsnodes -av hpc-gaas-g12
+#   7. pbsnodes -av hpc-gaas-g15
+# All commands exited 0 with empty stderr. Server behavior note: on this
+# server `pbsnodes -av <node>` does NOT filter to the named node; each of
+# the four invocations (commands 4-7) returned the complete 27-vnode
+# listing, byte-identical across invocations (md5sum below). The exact
+# records for hpc-gaas-g04/g22/g12/g15 are all contained in the preserved
+# copy under RAW COMMAND 4; commands 5-7 returned the identical bytes.
+
+===== BEGIN RAW COMMAND 1: qstat -x -f 72590.gaas =====
+Job Id: 72590.gaas
+    Job_Name = phase0_2x8_probe_v1
+    Job_Owner = pham0094@hpc-gaas-hn2
+    job_state = F
+    queue = gpu_ded
+    server = gaas
+    Checkpoint = u
+    ctime = Sun Sep 27 07:48:30 2026
+    Error_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/script
+	s/outputs/phase0_2x8_probe_v1.e
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = a
+    mtime = Sun Sep 27 07:57:08 2026
+    Output_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP
+	-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scrip
+	ts/outputs/phase0_2x8_probe_v1.o
+    Priority = 100
+    qtime = Sun Sep 27 07:48:30 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 1800,
+	 "job.queue_charge_rate": 0, "formula_constants": "",
+	 "am_cloud_enabled": false}
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = 2:ngpus=8:ncpus=96:mem=2000GB
+    Resource_List.walltime = 00:30:00
+    substate = 91
+    Variable_List = PBS_O_HOME=/home/pham0094,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=pham0094,
+	PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/l
+	ocal/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin,
+	PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=hpc-gaas-hn2,
+	PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-
+	Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-43e7520/scripts,
+	PBS_O_SYSTEM=Linux,PBS_O_QUEUE=gpu_ded
+    comment = Not Running: Insufficient amount of resource: Qlist  and terminat
+	ed
+    etime = Sun Sep 27 07:48:30 2026
+    Submit_arguments = phase0_2x8_probe_v1.pbs
+    estimated.exec_vnode = (hpc-gaas-g04:ngpus=8:ncpus=96:mem=2097152000kb)+(hp
+	c-gaas-g05:ngpus=8:ncpus=96:mem=2097152000kb)
+    estimated.start_time = Sun Sep 27 07:55:04 2026
+    history_timestamp = 1790467028
+    project = hpc_ebslee
+    Submit_Host = hpc-gaas-hn2
+
+===== END RAW COMMAND 1 =====
+
+===== BEGIN RAW COMMAND 2: qstat -Qf gpu_as =====
+Queue: gpu_as
+    queue_type = Execution
+    total_jobs = 55
+    state_count = Transit:0 Queued:10 Held:22 Waiting:0 Running:23 Exiting:0 Be
+	gun:0 
+    resources_max.walltime = 336:00:00
+    resources_min.ngpus = 1
+    resources_default.queue_charge_rate = 0
+    resources_default.walltime = 168:00:00
+    acl_group_enable = True
+    acl_groups = as_hpc_sblee,hpc_admin,hpc_angel_ascymiao_group,
+	hpc_angel_common_group,hpc_angel_group,hpc_angel_gslin_group,
+	hpc_angel_wei_dong_group,hpc_aseschng_group,hpc_asjagath_group,
+	hpc_aswbgoh_group,hpc_bjtang_group,hpc_chen.wang_group,
+	hpc_cheongsa_group,hpc_chuanxia.zheng_group,hpc_congcong.yuan_group,
+	hpc_david.ongtw_group,hpc_ebslee_group,hpc_gslin_group,
+	hpc_guoweialvin.chan_group,hpc_haidang.dau_group,hpc_hongying.li_group,
+	hpc_icaic_wangwy,hpc_jianfei.yang_group,hpc_luca.dalzilio_group,
+	hpc_nitish.govindarajan_group,hpc_psengupta_group,hpc_r-ni_group,
+	hpc_r.ni_chemmodel_group,hpc_ropedia_group,hpc_sameeralam_group,
+	hpc_seanglid002_group,hpc_shijian.lu_group,hpc_tanrui_group,
+	hpc_tej.choksi_group,hpc_wangwy_group,hpc_wei.lu_group,
+	hpc_will.cong_group,hpc_wslin_group,hpc_yi_li_group,
+	hpc_yingzhen.li_group
+    default_chunk.Qlist = gpu_as
+    resources_assigned.mem = 10750gb
+    resources_assigned.mpiprocs = 6
+    resources_assigned.ncpus = 516
+    resources_assigned.ngpus = 43
+    resources_assigned.nodect = 23
+    enabled = True
+    started = True
+
+===== END RAW COMMAND 2 =====
+
+===== BEGIN RAW COMMAND 3: qstat -Qf gpu_ded =====
+Queue: gpu_ded
+    queue_type = Execution
+    total_jobs = 7
+    state_count = Transit:0 Queued:0 Held:0 Waiting:0 Running:7 Exiting:0 Begun
+	:0 
+    resources_max.walltime = 1440:00:00
+    resources_min.ngpus = 1
+    resources_default.queue_charge_rate = 0
+    resources_default.walltime = 168:00:00
+    acl_group_enable = True
+    acl_groups = hpc_admin,hpc_asjagath_group,hpc_astjcham_group,
+	hpc_ctguan_group,hpc_david.ongtw_group,hpc_ebslee_group,
+	hpc_jeremie.houssineau_group,hpc_luke.ong_group,hpc_wei.lu_group
+    default_chunk.Qlist = gpu_ded
+    resources_assigned.mem = 5500gb
+    resources_assigned.mpiprocs = 3
+    resources_assigned.ncpus = 264
+    resources_assigned.ngpus = 22
+    resources_assigned.nodect = 7
+    enabled = True
+    started = True
+
+===== END RAW COMMAND 3 =====
+
+===== BEGIN RAW COMMAND 4: pbsnodes -av hpc-gaas-g04 =====
+# (full-cluster output as returned; byte-identical to the outputs of
+#  `pbsnodes -av hpc-gaas-g22`, `pbsnodes -av hpc-gaas-g12`, and
+#  `pbsnodes -av hpc-gaas-g15` — see CHECKSUM EVIDENCE below)
+hpc-gaas-g01
+     Mom = hpc-gaas-g01
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 72286.gaas/0, 72286.gaas/1, 72286.gaas/2, 72286.gaas/3, 72286.gaas/4, 72286.gaas/5, 72286.gaas/6, 72286.gaas/7, 72286.gaas/8, 72286.gaas/9, 72286.gaas/10, 72286.gaas/11, 72286.gaas/12, 72286.gaas/13, 72286.gaas/14, 72286.gaas/15, 72286.gaas/16, 72286.gaas/17, 72286.gaas/18, 72286.gaas/19, 72286.gaas/20, 72286.gaas/21, 72286.gaas/22, 72286.gaas/23, 72512.gaas/72, 72512.gaas/73, 72512.gaas/74, 72512.gaas/75, 72512.gaas/76, 72512.gaas/77, 72512.gaas/78, 72512.gaas/79, 72512.gaas/80, 72512.gaas/81, 72512.gaas/82, 72512.gaas/83, 72512.gaas/84, 72512.gaas/85, 72512.gaas/86, 72512.gaas/87, 72512.gaas/88, 72512.gaas/89, 72512.gaas/90, 72512.gaas/91, 72512.gaas/92, 72512.gaas/93, 72512.gaas/94, 72512.gaas/95
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g01
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276116kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_ded
+     resources_available.vmem = 2121664720kb
+     resources_available.vnode = hpc-gaas-g01
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 1048576000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 48
+     resources_assigned.ngpus = 4
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Wed Sep 23 22:02:21 2026
+     last_used_time = Sun Sep 27 05:13:13 2026
+
+hpc-gaas-g02
+     Mom = hpc-gaas-g02
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 72541.gaas/12, 72541.gaas/13, 72541.gaas/14, 72541.gaas/15, 72541.gaas/16, 72541.gaas/17, 72541.gaas/18, 72541.gaas/19, 72541.gaas/20, 72541.gaas/21, 72541.gaas/22, 72541.gaas/23, 72541.gaas/24, 72541.gaas/25, 72541.gaas/26, 72541.gaas/27, 72541.gaas/28, 72541.gaas/29, 72541.gaas/30, 72541.gaas/31, 72541.gaas/32, 72541.gaas/33, 72541.gaas/34, 72541.gaas/35, 72435.gaas/36, 72435.gaas/37, 72435.gaas/38, 72435.gaas/39, 72435.gaas/40, 72435.gaas/41, 72435.gaas/42, 72435.gaas/43, 72435.gaas/44, 72435.gaas/45, 72435.gaas/46, 72435.gaas/47, 72435.gaas/48, 72435.gaas/49, 72435.gaas/50, 72435.gaas/51, 72435.gaas/52, 72435.gaas/53, 72435.gaas/54, 72435.gaas/55, 72435.gaas/56, 72435.gaas/57, 72435.gaas/58, 72435.gaas/59, 72541.gaas/60, 72541.gaas/61, 72541.gaas/62, 72541.gaas/63, 72541.gaas/64, 72541.gaas/65, 72541.gaas/66, 72541.gaas/67, 72541.gaas/68, 72541.gaas/69, 72541.gaas/70, 72541.gaas/71
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g02
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276084kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_ded
+     resources_available.vmem = 2121664688kb
+     resources_available.vnode = hpc-gaas-g02
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 1310720000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 60
+     resources_assigned.ngpus = 5
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 07:04:08 2026
+     last_used_time = Sun Sep 27 01:46:54 2026
+
+hpc-gaas-g03
+     Mom = hpc-gaas-g03
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 67044.gaas/0, 67044.gaas/1, 67044.gaas/2, 67044.gaas/3, 67044.gaas/4, 67044.gaas/5, 67044.gaas/6, 67044.gaas/7, 67044.gaas/8, 67044.gaas/9, 67044.gaas/10, 67044.gaas/11, 67044.gaas/12, 67044.gaas/13, 67044.gaas/14, 67044.gaas/15, 67044.gaas/16, 67044.gaas/17, 67044.gaas/18, 67044.gaas/19, 67044.gaas/20, 67044.gaas/21, 67044.gaas/22, 67044.gaas/23, 67044.gaas/48, 67044.gaas/49, 67044.gaas/50, 67044.gaas/51, 67044.gaas/52, 67044.gaas/53, 67044.gaas/54, 67044.gaas/55, 67044.gaas/56, 67044.gaas/57, 67044.gaas/58, 67044.gaas/59, 67044.gaas/60, 67044.gaas/61, 67044.gaas/62, 67044.gaas/63, 67044.gaas/64, 67044.gaas/65, 67044.gaas/66, 67044.gaas/67, 67044.gaas/68, 67044.gaas/69, 67044.gaas/70, 67044.gaas/71
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g03
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276080kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_ded
+     resources_available.vmem = 2121664684kb
+     resources_available.vnode = hpc-gaas-g03
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 1048576000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 48
+     resources_assigned.ngpus = 4
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 07:04:09 2026
+     last_used_time = Fri Sep 25 15:20:18 2026
+
+hpc-gaas-g04
+     Mom = hpc-gaas-g04
+     ntype = PBS
+     state = free
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g04
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276072kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664676kb
+     resources_available.vnode = hpc-gaas-g04
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-18
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Sat Sep 26 09:45:30 2026
+     last_used_time = Sat Sep 26 19:40:02 2026
+
+hpc-gaas-g05
+     Mom = hpc-gaas-g05
+     ntype = PBS
+     state = free
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g05
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276076kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664680kb
+     resources_available.vnode = hpc-gaas-g05
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-16
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Wed Sep 16 15:39:14 2026
+     last_used_time = Sat Sep 26 19:42:27 2026
+
+hpc-gaas-g06
+     Mom = hpc-gaas-g06
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 72377.gaas/0, 72377.gaas/1, 72377.gaas/2, 72377.gaas/3, 72377.gaas/4, 72377.gaas/5, 72377.gaas/6, 72377.gaas/7, 72377.gaas/8, 72377.gaas/9, 72377.gaas/10, 72377.gaas/11, 68937.gaas/12, 68937.gaas/13, 68937.gaas/14, 68937.gaas/15, 68937.gaas/16, 68937.gaas/17, 68937.gaas/18, 68937.gaas/19, 68937.gaas/20, 68937.gaas/21, 68937.gaas/22, 68937.gaas/23, 65458.gaas/24, 65458.gaas/25, 65458.gaas/26, 65458.gaas/27, 65458.gaas/28, 65458.gaas/29, 65458.gaas/30, 65458.gaas/31, 65458.gaas/32, 65458.gaas/33, 65458.gaas/34, 65458.gaas/35, 70448.gaas/36, 70448.gaas/37, 70448.gaas/38, 70448.gaas/39, 70448.gaas/40, 70448.gaas/41, 70448.gaas/42, 70448.gaas/43, 70448.gaas/44, 70448.gaas/45, 70448.gaas/46, 70448.gaas/47, 72404.gaas/48, 72404.gaas/49, 72404.gaas/50, 72404.gaas/51, 72404.gaas/52, 72404.gaas/53, 72404.gaas/54, 72404.gaas/55, 72404.gaas/56, 72404.gaas/57, 72404.gaas/58, 72404.gaas/59, 71882.gaas/60, 71882.gaas/61, 71882.gaas/62, 71882.gaas/63, 71882.gaas/64, 71882.gaas/65, 71882.gaas/66, 71882.gaas/67, 71882.gaas/68, 71882.gaas/69, 71882.gaas/70, 71882.gaas/71, 72454.gaas/72, 72454.gaas/73, 72454.gaas/74, 72454.gaas/75, 72454.gaas/76, 72454.gaas/77, 72454.gaas/78, 72454.gaas/79, 72454.gaas/80, 72454.gaas/81, 72454.gaas/82, 72454.gaas/83
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g06
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276064kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664668kb
+     resources_available.vnode = hpc-gaas-g06
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 1835008000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 84
+     resources_assigned.ngpus = 7
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters NOT open yet (nsight ncu): config STAGED (applies at next reboot);
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Aug 20 15:55:30 2026
+     last_used_time = Sun Sep 27 06:51:20 2026
+
+hpc-gaas-g07
+     Mom = hpc-gaas-g07
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 72302.gaas/0, 72302.gaas/1, 72302.gaas/2, 72302.gaas/3, 72302.gaas/4, 72302.gaas/5, 72302.gaas/6, 72302.gaas/7, 72302.gaas/8, 72302.gaas/9, 72302.gaas/10, 72302.gaas/11, 72456.gaas/24, 72456.gaas/25, 72456.gaas/26, 72456.gaas/27, 72456.gaas/28, 72456.gaas/29, 72456.gaas/30, 72456.gaas/31, 72456.gaas/32, 72456.gaas/33, 72456.gaas/34, 72456.gaas/35, 72455.gaas/36, 72455.gaas/37, 72455.gaas/38, 72455.gaas/39, 72455.gaas/40, 72455.gaas/41, 72455.gaas/42, 72455.gaas/43, 72455.gaas/44, 72455.gaas/45, 72455.gaas/46, 72455.gaas/47, 71697.gaas/48, 71697.gaas/49, 71697.gaas/50, 71697.gaas/51, 71697.gaas/52, 71697.gaas/53, 71697.gaas/54, 71697.gaas/55, 71697.gaas/56, 71697.gaas/57, 71697.gaas/58, 71697.gaas/59, 72567.gaas/60, 72567.gaas/61, 72567.gaas/62, 72567.gaas/63, 72567.gaas/64, 72567.gaas/65, 72567.gaas/66, 72567.gaas/67, 72567.gaas/68, 72567.gaas/69, 72567.gaas/70, 72567.gaas/71, 72376.gaas/72, 72376.gaas/73, 72376.gaas/74, 72376.gaas/75, 72376.gaas/76, 72376.gaas/77, 72376.gaas/78, 72376.gaas/79, 72376.gaas/80, 72376.gaas/81, 72376.gaas/82, 72376.gaas/83
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g07
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276076kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664680kb
+     resources_available.vnode = hpc-gaas-g07
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 1572864000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 72
+     resources_assigned.ngpus = 6
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters NOT open yet (nsight ncu): config STAGED (applies at next reboot);
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Mon Sep 21 21:27:50 2026
+     last_used_time = Sun Sep 27 06:51:57 2026
+
+hpc-gaas-g08
+     Mom = hpc-gaas-g08
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 71513.gaas/12, 71513.gaas/13, 71513.gaas/14, 71513.gaas/15, 71513.gaas/16, 71513.gaas/17, 71513.gaas/18, 71513.gaas/19, 71513.gaas/20, 71513.gaas/21, 71513.gaas/22, 71513.gaas/23, 71513.gaas/24, 71513.gaas/25, 71513.gaas/26, 71513.gaas/27, 71513.gaas/28, 71513.gaas/29, 71513.gaas/30, 71513.gaas/31, 71513.gaas/32, 71513.gaas/33, 71513.gaas/34, 71513.gaas/35, 72037.gaas/48, 72037.gaas/49, 72037.gaas/50, 72037.gaas/51, 72037.gaas/52, 72037.gaas/53, 72037.gaas/54, 72037.gaas/55, 72037.gaas/56, 72037.gaas/57, 72037.gaas/58, 72037.gaas/59, 71513.gaas/60, 71513.gaas/61, 71513.gaas/62, 71513.gaas/63, 71513.gaas/64, 71513.gaas/65, 71513.gaas/66, 71513.gaas/67, 71513.gaas/68, 71513.gaas/69, 71513.gaas/70, 71513.gaas/71, 71513.gaas/72, 71513.gaas/73, 71513.gaas/74, 71513.gaas/75, 71513.gaas/76, 71513.gaas/77, 71513.gaas/78, 71513.gaas/79, 71513.gaas/80, 71513.gaas/81, 71513.gaas/82, 71513.gaas/83
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g08
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276116kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664720kb
+     resources_available.vnode = hpc-gaas-g08
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 1310720000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 60
+     resources_assigned.ngpus = 5
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 22:52:41 2026
+     last_used_time = Sun Sep 27 05:35:49 2026
+
+hpc-gaas-g09
+     Mom = hpc-gaas-g09
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 71833.gaas/0, 71833.gaas/1, 71833.gaas/2, 71833.gaas/3, 71833.gaas/4, 71833.gaas/5, 71833.gaas/6, 71833.gaas/7, 71833.gaas/8, 71833.gaas/9, 71833.gaas/10, 71833.gaas/11, 72395.gaas/12, 72395.gaas/13, 72395.gaas/14, 72395.gaas/15, 72395.gaas/16, 72395.gaas/17, 72395.gaas/18, 72395.gaas/19, 72395.gaas/20, 72395.gaas/21, 72395.gaas/22, 72395.gaas/23, 64144.gaas/24, 64144.gaas/25, 64144.gaas/26, 64144.gaas/27, 64144.gaas/28, 64144.gaas/29, 64144.gaas/30, 64144.gaas/31, 64144.gaas/32, 64144.gaas/33, 64144.gaas/34, 64144.gaas/35, 72374.gaas/36, 72374.gaas/37, 72374.gaas/38, 72374.gaas/39, 72374.gaas/40, 72374.gaas/41, 72374.gaas/42, 72374.gaas/43, 72374.gaas/44, 72374.gaas/45, 72374.gaas/46, 72374.gaas/47, 72447.gaas/48, 72447.gaas/49, 72447.gaas/50, 72447.gaas/51, 72447.gaas/52, 72447.gaas/53, 72447.gaas/54, 72447.gaas/55, 72447.gaas/56, 72447.gaas/57, 72447.gaas/58, 72447.gaas/59, 72395.gaas/60, 72395.gaas/61, 72395.gaas/62, 72395.gaas/63, 72395.gaas/64, 72395.gaas/65, 72395.gaas/66, 72395.gaas/67, 72395.gaas/68, 72395.gaas/69, 72395.gaas/70, 72395.gaas/71, 72395.gaas/72, 72395.gaas/73, 72395.gaas/74, 72395.gaas/75, 72395.gaas/76, 72395.gaas/77, 72395.gaas/78, 72395.gaas/79, 72395.gaas/80, 72395.gaas/81, 72395.gaas/82, 72395.gaas/83, 72395.gaas/84, 72395.gaas/85, 72395.gaas/86, 72395.gaas/87, 72395.gaas/88, 72395.gaas/89, 72395.gaas/90, 72395.gaas/91, 72395.gaas/92, 72395.gaas/93, 72395.gaas/94, 72395.gaas/95
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g09
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276088kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664692kb
+     resources_available.vnode = hpc-gaas-g09
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 2097152000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 96
+     resources_assigned.ngpus = 8
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters NOT open yet (nsight ncu): config STAGED (applies at next reboot);
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Mon Sep 21 21:27:51 2026
+     last_used_time = Sun Sep 27 00:55:26 2026
+
+hpc-gaas-g10
+     Mom = hpc-gaas-g10
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 72449.gaas/0, 72449.gaas/1, 72449.gaas/2, 72449.gaas/3, 72449.gaas/4, 72449.gaas/5, 72449.gaas/6, 72449.gaas/7, 72449.gaas/8, 72449.gaas/9, 72449.gaas/10, 72449.gaas/11, 72250.gaas/12, 72250.gaas/13, 72250.gaas/14, 72250.gaas/15, 72250.gaas/16, 72250.gaas/17, 72250.gaas/18, 72250.gaas/19, 72250.gaas/20, 72250.gaas/21, 72250.gaas/22, 72250.gaas/23, 72250.gaas/24, 72250.gaas/25, 72250.gaas/26, 72250.gaas/27, 72250.gaas/28, 72250.gaas/29, 72250.gaas/30, 72250.gaas/31, 72250.gaas/32, 72250.gaas/33, 72250.gaas/34, 72250.gaas/35, 72449.gaas/36, 72449.gaas/37, 72449.gaas/38, 72449.gaas/39, 72449.gaas/40, 72449.gaas/41, 72449.gaas/42, 72449.gaas/43, 72449.gaas/44, 72449.gaas/45, 72449.gaas/46, 72449.gaas/47, 72449.gaas/48, 72449.gaas/49, 72449.gaas/50, 72449.gaas/51, 72449.gaas/52, 72449.gaas/53, 72449.gaas/54, 72449.gaas/55, 72449.gaas/56, 72449.gaas/57, 72449.gaas/58, 72449.gaas/59, 72449.gaas/60, 72449.gaas/61, 72449.gaas/62, 72449.gaas/63, 72449.gaas/64, 72449.gaas/65, 72449.gaas/66, 72449.gaas/67, 72449.gaas/68, 72449.gaas/69, 72449.gaas/70, 72449.gaas/71, 72250.gaas/72, 72250.gaas/73, 72250.gaas/74, 72250.gaas/75, 72250.gaas/76, 72250.gaas/77, 72250.gaas/78, 72250.gaas/79, 72250.gaas/80, 72250.gaas/81, 72250.gaas/82, 72250.gaas/83, 72250.gaas/84, 72250.gaas/85, 72250.gaas/86, 72250.gaas/87, 72250.gaas/88, 72250.gaas/89, 72250.gaas/90, 72250.gaas/91, 72250.gaas/92, 72250.gaas/93, 72250.gaas/94, 72250.gaas/95
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g10
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276092kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664696kb
+     resources_available.vnode = hpc-gaas-g10
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 2097152000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 96
+     resources_assigned.ngpus = 8
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-21
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Mon Sep 21 14:14:52 2026
+     last_used_time = Sat Sep 26 16:11:35 2026
+
+hpc-gaas-g11
+     Mom = hpc-gaas-g11
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 71787.gaas/0, 71787.gaas/1, 71787.gaas/2, 71787.gaas/3, 71787.gaas/4, 71787.gaas/5, 71787.gaas/6, 71787.gaas/7, 71787.gaas/8, 71787.gaas/9, 71787.gaas/10, 71787.gaas/11, 71787.gaas/48, 71787.gaas/49, 71787.gaas/50, 71787.gaas/51, 71787.gaas/52, 71787.gaas/53, 71787.gaas/54, 71787.gaas/55, 71787.gaas/56, 71787.gaas/57, 71787.gaas/58, 71787.gaas/59
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g11
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276084kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664688kb
+     resources_available.vnode = hpc-gaas-g11
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 524288000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 24
+     resources_assigned.ngpus = 2
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-18
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Fri Sep 18 11:07:08 2026
+     last_used_time = Sun Sep 27 07:12:12 2026
+
+hpc-gaas-g12
+     Mom = hpc-gaas-g12
+     ntype = PBS
+     state = free
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g12
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276052kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664656kb
+     resources_available.vnode = hpc-gaas-g12
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 07:54:44 2026
+     last_used_time = Sat Sep 26 21:15:15 2026
+
+hpc-gaas-g13
+     Mom = hpc-gaas-g13
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 70232.gaas/0, 70232.gaas/1, 70232.gaas/2, 70232.gaas/3, 70232.gaas/4, 70232.gaas/5, 70232.gaas/6, 70232.gaas/7, 70232.gaas/8, 70232.gaas/9, 70232.gaas/10, 70232.gaas/11, 70232.gaas/12, 70232.gaas/13, 70232.gaas/14, 70232.gaas/15, 70232.gaas/16, 70232.gaas/17, 70232.gaas/18, 70232.gaas/19, 70232.gaas/20, 70232.gaas/21, 70232.gaas/22, 70232.gaas/23, 70232.gaas/24, 70232.gaas/25, 70232.gaas/26, 70232.gaas/27, 70232.gaas/28, 70232.gaas/29, 70232.gaas/30, 70232.gaas/31, 70232.gaas/32, 70232.gaas/33, 70232.gaas/34, 70232.gaas/35, 70232.gaas/36, 70232.gaas/37, 70232.gaas/38, 70232.gaas/39, 70232.gaas/40, 70232.gaas/41, 70232.gaas/42, 70232.gaas/43, 70232.gaas/44, 70232.gaas/45, 70232.gaas/46, 70232.gaas/47, 70232.gaas/48, 70232.gaas/49, 70232.gaas/50, 70232.gaas/51, 70232.gaas/52, 70232.gaas/53, 70232.gaas/54, 70232.gaas/55, 70232.gaas/56, 70232.gaas/57, 70232.gaas/58, 70232.gaas/59, 70232.gaas/60, 70232.gaas/61, 70232.gaas/62, 70232.gaas/63, 70232.gaas/64, 70232.gaas/65, 70232.gaas/66, 70232.gaas/67, 70232.gaas/68, 70232.gaas/69, 70232.gaas/70, 70232.gaas/71, 70232.gaas/72, 70232.gaas/73, 70232.gaas/74, 70232.gaas/75, 70232.gaas/76, 70232.gaas/77, 70232.gaas/78, 70232.gaas/79, 70232.gaas/80, 70232.gaas/81, 70232.gaas/82, 70232.gaas/83, 70232.gaas/84, 70232.gaas/85, 70232.gaas/86, 70232.gaas/87, 70232.gaas/88, 70232.gaas/89, 70232.gaas/90, 70232.gaas/91, 70232.gaas/92, 70232.gaas/93, 70232.gaas/94, 70232.gaas/95
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g13
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276088kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664692kb
+     resources_available.vnode = hpc-gaas-g13
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 2097152000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 96
+     resources_assigned.ngpus = 8
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 16:11:36 2026
+     last_used_time = Thu Sep 24 17:37:33 2026
+
+hpc-gaas-g14
+     Mom = hpc-gaas-g14
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 68707.gaas/48, 68707.gaas/49, 68707.gaas/50, 68707.gaas/51, 68707.gaas/52, 68707.gaas/53, 68707.gaas/54, 68707.gaas/55, 68707.gaas/56, 68707.gaas/57, 68707.gaas/58, 68707.gaas/59
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g14
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276096kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664700kb
+     resources_available.vnode = hpc-gaas-g14
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 262144000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 12
+     resources_assigned.ngpus = 1
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 22:52:42 2026
+     last_used_time = Sat Sep 26 13:33:08 2026
+
+hpc-gaas-g15
+     Mom = hpc-gaas-g15
+     ntype = PBS
+     state = free
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g15
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276104kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_as,gpu_ppu
+     resources_available.vmem = 2121664708kb
+     resources_available.vnode = hpc-gaas-g15
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 07:04:09 2026
+     last_used_time = Sat Sep 26 06:09:33 2026
+
+hpc-gaas-g16
+     Mom = hpc-gaas-g16
+     ntype = PBS
+     state = free
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g16
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276084kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664688kb
+     resources_available.vnode = hpc-gaas-g16
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 06:29:19 2026
+     last_used_time = Sat Sep 26 18:43:33 2026
+
+hpc-gaas-g17
+     Mom = hpc-gaas-g17
+     ntype = PBS
+     state = free
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g17
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276084kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664688kb
+     resources_available.vnode = hpc-gaas-g17
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-16
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Wed Sep 16 15:47:36 2026
+     last_used_time = Sat Sep 26 11:36:18 2026
+
+hpc-gaas-g18
+     Mom = hpc-gaas-g18
+     ntype = PBS
+     state = down
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g18
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276088kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664692kb
+     resources_available.vnode = hpc-gaas-g18
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Fri Sep 25 13:18:35 2026
+     last_used_time = Fri Sep 25 01:23:02 2026
+
+hpc-gaas-g19
+     Mom = hpc-gaas-g19
+     ntype = PBS
+     state = down
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g19
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276064kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664668kb
+     resources_available.vnode = hpc-gaas-g19
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-16
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Fri Sep 25 13:18:16 2026
+     last_used_time = Thu Sep 24 22:25:05 2026
+
+hpc-gaas-g20
+     Mom = hpc-gaas-g20
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 67357.gaas/36, 67357.gaas/37, 67357.gaas/38, 67357.gaas/39, 67357.gaas/40, 67357.gaas/41, 67357.gaas/42, 67357.gaas/43, 67357.gaas/44, 67357.gaas/45, 67357.gaas/46, 67357.gaas/47
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g20
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276080kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_ded
+     resources_available.vmem = 2121664684kb
+     resources_available.vnode = hpc-gaas-g20
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 262144000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 12
+     resources_assigned.ngpus = 1
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 09:58:47 2026
+     last_used_time = Thu Sep 24 17:23:57 2026
+
+hpc-gaas-g21
+     Mom = hpc-gaas-g21
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 67045.gaas/0, 67045.gaas/1, 67045.gaas/2, 67045.gaas/3, 67045.gaas/4, 67045.gaas/5, 67045.gaas/6, 67045.gaas/7, 67045.gaas/8, 67045.gaas/9, 67045.gaas/10, 67045.gaas/11, 67045.gaas/12, 67045.gaas/13, 67045.gaas/14, 67045.gaas/15, 67045.gaas/16, 67045.gaas/17, 67045.gaas/18, 67045.gaas/19, 67045.gaas/20, 67045.gaas/21, 67045.gaas/22, 67045.gaas/23, 67045.gaas/24, 67045.gaas/25, 67045.gaas/26, 67045.gaas/27, 67045.gaas/28, 67045.gaas/29, 67045.gaas/30, 67045.gaas/31, 67045.gaas/32, 67045.gaas/33, 67045.gaas/34, 67045.gaas/35, 67045.gaas/36, 67045.gaas/37, 67045.gaas/38, 67045.gaas/39, 67045.gaas/40, 67045.gaas/41, 67045.gaas/42, 67045.gaas/43, 67045.gaas/44, 67045.gaas/45, 67045.gaas/46, 67045.gaas/47, 67045.gaas/48, 67045.gaas/49, 67045.gaas/50, 67045.gaas/51, 67045.gaas/52, 67045.gaas/53, 67045.gaas/54, 67045.gaas/55, 67045.gaas/56, 67045.gaas/57, 67045.gaas/58, 67045.gaas/59, 67045.gaas/60, 67045.gaas/61, 67045.gaas/62, 67045.gaas/63, 67045.gaas/64, 67045.gaas/65, 67045.gaas/66, 67045.gaas/67, 67045.gaas/68, 67045.gaas/69, 67045.gaas/70, 67045.gaas/71, 67045.gaas/72, 67045.gaas/73, 67045.gaas/74, 67045.gaas/75, 67045.gaas/76, 67045.gaas/77, 67045.gaas/78, 67045.gaas/79, 67045.gaas/80, 67045.gaas/81, 67045.gaas/82, 67045.gaas/83, 67045.gaas/84, 67045.gaas/85, 67045.gaas/86, 67045.gaas/87, 67045.gaas/88, 67045.gaas/89, 67045.gaas/90, 67045.gaas/91, 67045.gaas/92, 67045.gaas/93, 67045.gaas/94, 67045.gaas/95
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g21
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276084kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_ded
+     resources_available.vmem = 2121664688kb
+     resources_available.vnode = hpc-gaas-g21
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 2097152000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 96
+     resources_assigned.ngpus = 8
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-16
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Wed Sep 16 15:47:37 2026
+     last_used_time = Thu Sep 24 17:23:57 2026
+
+hpc-gaas-g22
+     Mom = hpc-gaas-g22
+     ntype = PBS
+     state = free
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g22
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276084kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_ded
+     resources_available.vmem = 2121664688kb
+     resources_available.vnode = hpc-gaas-g22
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-16
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Wed Sep 16 15:47:37 2026
+     last_used_time = Fri Sep 25 12:09:00 2026
+
+hpc-gaas-g23
+     Mom = hpc-gaas-g23
+     ntype = PBS
+     state = down
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g23
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276072kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664676kb
+     resources_available.vnode = hpc-gaas-g23
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-18
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Fri Sep 25 13:17:47 2026
+     last_used_time = Thu Sep 24 22:23:17 2026
+
+hpc-gaas-g24
+     Mom = hpc-gaas-g24
+     ntype = PBS
+     state = down
+     pcpus = 112
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g24
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276060kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_aisg
+     resources_available.vmem = 2121664664kb
+     resources_available.vnode = hpc-gaas-g24
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = node down: communication closed
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Tue Sep  1 12:01:40 2026
+     last_used_time = Tue Sep  1 12:00:34 2026
+
+hpc-gaas-g25
+     Mom = hpc-gaas-g25
+     ntype = PBS
+     state = free
+     pcpus = 112
+     jobs = 72589.gaas/0, 72589.gaas/1, 72589.gaas/2, 72589.gaas/3, 72589.gaas/4, 72589.gaas/5, 72589.gaas/6, 72589.gaas/7, 72589.gaas/8, 72589.gaas/9, 72589.gaas/10, 72589.gaas/11, 72570.gaas/12, 72570.gaas/13, 72570.gaas/14, 72570.gaas/15, 72570.gaas/16, 72570.gaas/17, 72570.gaas/18, 72570.gaas/19, 72570.gaas/20, 72570.gaas/21, 72570.gaas/22, 72570.gaas/23
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-g25
+     resources_available.hpmem = 17301504kb
+     resources_available.mem = 2113276064kb
+     resources_available.ncpus = 100
+     resources_available.ngpus = 8
+     resources_available.Qlist = gpu_free
+     resources_available.vmem = 2121664668kb
+     resources_available.vnode = hpc-gaas-g25
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 524288000kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 24
+     resources_assigned.ngpus = 2
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     comment = GPU counters open to users (nsight ncu), verified 2026-09-17
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Sep 17 06:29:19 2026
+     last_used_time = Sun Sep 27 07:45:03 2026
+
+hpc-gaas-dm1
+     Mom = hpc-gaas-dm1
+     ntype = PBS
+     state = free
+     pcpus = 256
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-dm1
+     resources_available.hpmem = 18743296kb
+     resources_available.mem = 1055905832kb
+     resources_available.ncpus = 256
+     resources_available.Qlist = gpu_datamover
+     resources_available.vmem = 1064294436kb
+     resources_available.vnode = hpc-gaas-dm1
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Aug 20 15:55:39 2026
+     last_used_time = Mon Sep 21 17:15:20 2026
+
+hpc-gaas-dm2
+     Mom = hpc-gaas-dm2
+     ntype = PBS
+     state = free
+     pcpus = 256
+     resources_available.arch = linux
+     resources_available.host = hpc-gaas-dm2
+     resources_available.hpmem = 18743296kb
+     resources_available.mem = 1056429128kb
+     resources_available.ncpus = 128
+     resources_available.Qlist = gpu_datamover
+     resources_available.vmem = 1064817732kb
+     resources_available.vnode = hpc-gaas-dm2
+     resources_assigned.accelerator_memory = 0kb
+     resources_assigned.hbmem = 0kb
+     resources_assigned.hpmem = 0kb
+     resources_assigned.mem = 0kb
+     resources_assigned.naccelerators = 0
+     resources_assigned.ncpus = 0
+     resources_assigned.ngpus = 0
+     resources_assigned.swap = 0kb
+     resources_assigned.vmem = 0kb
+     resv_enable = True
+     sharing = default_shared
+     license = l
+     last_state_change_time = Thu Aug 20 15:55:38 2026
+     last_used_time = Tue Aug 11 13:49:09 2026
+
+===== END RAW COMMAND 4 =====
+
+===== CHECKSUM EVIDENCE (md5) =====
+768ebe4fc44865cb03d34bdf4adeebc4  qstat_x_f_72590.out
+b66a1c7c19526234ff72191cbcd9a972  qstat_Qf_gpu_as.out
+c9aaff3859ce9ae0b87c075e84a477dc  qstat_Qf_gpu_ded.out
+ce4ba6173c6042191f950586d0c379bc  pbsnodes_av_g04.out
+ce4ba6173c6042191f950586d0c379bc  pbsnodes_av_g22.out
+ce4ba6173c6042191f950586d0c379bc  pbsnodes_av_g12.out
+ce4ba6173c6042191f950586d0c379bc  pbsnodes_av_g15.out
+
+===== MECHANICAL FACT EXTRACTION (no strategic interpretation) =====
+
+[1] Job 72590.gaas (phase0_2x8_probe_v1, queue gpu_ded, project hpc_ebslee):
+    - job_state = F (finished), substate = 91 (terminated), history_timestamp
+      = 1790467028 (= 2026-09-27 07:57:08 +08), mtime = Sun Sep 27 07:57:08 2026.
+    - comment = "Not Running: Insufficient amount of resource: Qlist and
+      terminated". No start_time/exec_host fields: the job never ran.
+    - estimated.exec_vnode = (hpc-gaas-g04...)+(hpc-gaas-g05...); both of
+      those nodes are live Qlist = gpu_aisg (see [4]).
+
+[2] Queue facts (live qstat -Qf):
+    - gpu_as: default_chunk.Qlist = gpu_as; enabled = True; started = True;
+      55 total jobs (23 running).
+    - gpu_ded: default_chunk.Qlist = gpu_ded; enabled = True; started = True;
+      7 total jobs (7 running, 0 queued).
+
+[3] Requested nodes, live pbsnodes -av records:
+    - hpc-gaas-g04:  state = free; no jobs; ngpus 8/8 free; ncpus 100/100
+      free; resources_assigned.* = 0; Qlist = gpu_aisg.
+      NOTE: live Qlist = gpu_aisg contradicts the repository-documented
+      2026-09-18 map that placed g04 in gpu_ded (resource-alloc experiment-5
+      correction). g04 last_state_change_time = Sat Sep 26 09:45:30 2026.
+    - hpc-gaas-g22:  state = free; no jobs; ngpus 8/8; ncpus 100/100;
+      Qlist = gpu_ded. (Consistent with the documented map.)
+    - hpc-gaas-g12:  state = free; no jobs; ngpus 8/8; ncpus 100/100;
+      Qlist = gpu_as,gpu_ppu. (gpu_as membership confirmed live.)
+    - hpc-gaas-g15:  state = free; no jobs; ngpus 8/8; ncpus 100/100;
+      Qlist = gpu_as,gpu_ppu. (gpu_as membership confirmed live.)
+
+[4] Complete live Qlist map extracted from RAW COMMAND 4 (all vnodes):
+    gpu_ded:           g01, g02, g03, g20, g21, g22
+    gpu_as,gpu_ppu:    g06, g07, g08, g09, g10, g11, g12, g13, g14, g15
+    gpu_aisg:          g04, g05, g16, g17, g18(down), g19(down), g23(down),
+                       g24(down)
+    gpu_free:          g25
+    gpu_datamover:     dm1, dm2 (no GPUs)
+
+[5] Fully free GPU nodes at probe time (state=free, no jobs, 8/8 GPUs,
+    100/100 ncpus): g04, g05, g12, g15, g16, g17, g22 — identical to the
+    user-provided current `pbsnodes -aSj` candidate list.
+
+[6] Cross-reference of fully-free candidates against live Qlist membership
+    in the approved queues (gpu_as, gpu_ded only):
+    - gpu_ded: only hpc-gaas-g22 is fully free. g04 is no longer gpu_ded
+      (live gpu_aisg). g01/g02/g03/g20/g21 all have running jobs.
+      -> No fully-free two-node gpu_ded pair exists at probe time.
+    - gpu_as: hpc-gaas-g12 and hpc-gaas-g15 are both fully free and both
+      live Qlist = gpu_as,gpu_ppu.
+    - g05/g16/g17: fully free but live Qlist = gpu_aisg (off-limits queue).
+
+[7] Clearest eligible exact two-node pair (both nodes fully free at probe
+    time, both live-verified Qlist members of the same approved queue):
+    hpc-gaas-g12 + hpc-gaas-g15, via queue gpu_as.
+    (No eligible fully-free gpu_ded pair exists at probe time; g22 is the
+    only fully-free gpu_ded node.)
+
+[8] Mechanical explanation of the job 72590.gaas non-start, from the live
+    evidence above: the gpu_ded queue enforces default_chunk.Qlist = gpu_ded;
+    the scheduler's estimated placement g04+g05 consists of two nodes whose
+    live Qlist is gpu_aisg, and the only fully-free gpu_ded node was g22,
+    so the two-chunk Qlist requirement could not be satisfied while queued
+    ("Insufficient amount of resource: Qlist"). The job was then terminated
+    by the user-authorized qdel (substate 91, job_state F). This is stated
+    as observed fact, without strategic interpretation.
+
+===== END OF LOG =====
