@@ -7,13 +7,14 @@ scientific control is fixed (tasks/TASK-001.md Section 1.4B), including
 `--fill-device 1` for the whole sweep so changes in N can expose the
 FP64-residency transition.
 
-**Status (2026-09-27): PREPARED, not submitted.** Local preparation only:
-script written and syntax-checked, README and `outputs/` created; no queue
-selected, no cluster access, no submission. Submission belongs to the
-TASK-001 execution step and must pass `-q gpu_as` or `-q gpu_ded` (the only
-authorized queues); queue/node eligibility (`pbsnodes`/`Qlist`) is checked at
-that time per TASK-001 Sections 1.4D and 1.7.7, not inferred from a node's
-`free` state.
+**Status (2026-09-27): v1 sweep submitted and completed.** All six approved
+candidates ran sequentially in one allocation (PBS job `72624.gaas`, queue
+`gpu_as`, nodes `hpc-gaas-g12` + `hpc-gaas-g15`, PBS state `F`, exit status
+0, walltime used `00:11:45` of `01:30:00`); every candidate exited 0 with
+final HPL-MxP output and `PASSED` verification. Evidence is under `outputs/`;
+factual rows are recorded in `results/metrics.csv` / `results/RESULTS.md`.
+Any rerun must use a new `ATTEMPT_TAG` and pass `-q gpu_as` or `-q gpu_ded`
+(the only authorized queues).
 
 ## Structure
 
@@ -251,12 +252,51 @@ alone.
 
 ## Run summary
 
-No attempts submitted yet (experiment prepared 2026-09-27, local preparation
-only). After execution, record per candidate: attempt, PBS job ID, queue,
-allocated nodes, result, residuals, verification, overall/per-GPU GFLOP/s,
-LU/IR timings and GFLOP/s, host/device memory headroom, and evidence paths.
-Extracted rows go to `results/metrics.csv` / `results/RESULTS.md` during the
-TASK-001 results-logging step, not inside this directory.
+One submitted attempt family (tag `v1`, PBS job `72624.gaas`, submitted
+2026-09-27, queue `gpu_as`, project `hpc_ebslee`, host-pinned
+`select=host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB,place=scatter,walltime=01:30:00`;
+PBS `stime` 2026-09-27 11:33:07, completion 2026-09-27 11:44:53,
+`resources_used.walltime` 00:11:45, `job_state=F`, `Exit_status=0`).
+All six candidates ran sequentially on the same node pair with identical
+fixed controls; each `.status` records `exit_status=0`. Factual per-candidate
+data as emitted by the application output (no interpretation):
+
+| N | attempt | normalized residual | verdict | overall GFLOP/s (per GPU) | LU s / LU GFLOP/s | IR s / iterations | host mem cons. MAX / avail. MIN | device mem cons. MAX / avail. MIN |
+|---|---|---|---|---|---|---|---|---|
+| 353280 | `..._n353280_v1` | 1.717556E-05 | PASSED | 4.5777e+06 (286105.60) | 4.82 / 6.0980e+06 | 1.60 / 3 | 0.004 GB / 232.180 GB | 93.734 GB / 138.739 GB |
+| 404480 | `..._n404480_v1` | 1.416706E-05 | PASSED | 5.1559e+06 (322245.99) | 6.84 / 6.4538e+06 | 1.72 / 3 | 0.004 GB / 232.017 GB | 120.570 GB / 138.739 GB |
+| 454656 | `..._n454656_v1` | 1.124709E-04 | PASSED | 5.2433e+06 (327707.78) | 9.17 / 6.8301e+06 | 2.78 / 3 | 15.024 GB / 231.927 GB | 135.762 GB / 138.739 GB |
+| 504832 | `..._n504832_v1` | 1.934756E-04 | PASSED | 5.0179e+06 (313619.63) | 12.18 / 7.0444e+06 | 4.92 / 3 | 51.561 GB / 231.864 GB | 135.763 GB / 138.739 GB |
+| 556032 | `..._n556032_v1` | 2.211047E-04 | PASSED | 5.0139e+06 (313371.84) | 15.41 / 7.4381e+06 | 7.45 / 3 | 95.340 GB / 231.870 GB | 135.763 GB / 138.739 GB |
+| 606208 | `..._n606208_v1` | 2.459980E-04 | PASSED | 4.8789e+06 (304934.10) | 19.61 / 7.5729e+06 | 10.83 / 3 | 136.519 GB / 231.865 GB | 135.763 GB / 138.739 GB |
+
+Attempt IDs are the full `2x8-GAAS-phase1a-n-coarse_n<N>_v1` stems. Per-
+candidate `.status` start/end (+08:00): n353280 11:33:08→11:34:04,
+n404480 11:34:04→11:35:01, n454656 11:35:01→11:36:23, n504832
+11:36:23→11:38:23, n556032 11:38:23→11:41:12, n606208 11:41:12→11:44:50.
+
+Facts not representable in the current `results/metrics.csv` schema,
+recorded here for Codex review (schema/extractor unchanged):
+
+- `--fill-device 1` was active for all six candidates (settings block of
+  every `.out`); the binary additionally echoed
+  `--fill-device-buffer-size = 3048` (package default, not tuned).
+- Iterative refinement emitted 3 solver iterations (iterations 0, 1, 2) for
+  every candidate; IR seconds (AVG) are in the table above. L-infinite
+  residuals per iteration are in each `.out`.
+- Matrix-generation memory lines: after matrix generation, per-process
+  available MIN was system/device: 231.952/44.286 GB (n353280),
+  231.814/17.450 GB (n404480), 216.658/2.257 GB (n454656),
+  181.766/2.257 GB (n504832), 142.180/2.257 GB (n556032),
+  100.244/2.257 GB (n606208).
+- LU GFLOP/s (excluding IR) and per-GPU values are in the table above.
+- Integrity: all 20 evidence files retrieved from the remote execution
+  worktree `.codex-worktrees/TASK-001-f9e3a5a-phase1a-v1` (commit
+  `f9e3a5aa2cc3faf840a19a5c311e6857a8f16f6c`) and verified byte-identical by
+  SHA-256 against the remote copies.
+
+Extracted rows for all six attempts are in `results/metrics.csv` /
+`results/RESULTS.md` (experiment id `2x8-GAAS-phase1a-n-coarse`).
 
 ## Evidence paths
 

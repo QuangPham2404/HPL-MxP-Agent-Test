@@ -198,5 +198,11 @@ This report records validated raw result data only. No optimization analysis or 
 | SingleNode-resweep | SingleNode-resweep_v1 | unknown | unknown | unknownxunknown | unknown | 8 | sockets | TRUE | UNKNOWN | unknown | experiments/SingleNode-resweep/outputs/SingleNode-resweep_v1.o |
 | 2x8-GAAS-baseline | 2x8-GAAS-baseline_v1 | 737280 | 3072 | 4x4 | column | 8 | unset | unset | FAILED | unknown | experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_v1.o |
 | 2x8-GAAS-baseline | 2x8-GAAS-baseline_n700k_v1 | 700000 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 4.8037e+06 | experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_n700k_v1.o |
+| 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n353280_v1 | 353280 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 4.5777e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n353280_v1.out |
+| 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n404480_v1 | 404480 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.1559e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n404480_v1.out |
+| 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n454656_v1 | 454656 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.2433e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n454656_v1.out |
+| 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n504832_v1 | 504832 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.0179e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n504832_v1.out |
+| 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n556032_v1 | 556032 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.0139e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n556032_v1.out |
+| 2x8-GAAS-phase1a-n-coarse | 2x8-GAAS-phase1a-n-coarse_n606208_v1 | 606208 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 4.8789e+06 | experiments/2x8-GAAS/phase1a-n-coarse/outputs/2x8-GAAS-phase1a-n-coarse_n606208_v1.out |
 
 Source: `results/metrics.csv`.
