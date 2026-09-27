@@ -1,8 +1,8 @@
 ---
 task_id: TASK-007
 title: Phase 2B/2C — 2x8 GAAS Placement and Locality Sweep
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-006
 analysis_id: 2x8-gaas-phase2bc-placement-locality
 created: 2026-09-27
@@ -735,42 +735,125 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
+status: COMPLETE
 
 ### 2.2 Orchestration Summary
 
-*Workers, responsibilities, dependencies, and follow-ups.*
+One primary OpenCode worker prepared, validated, synchronized, submitted,
+monitored, retrieved, and logged the approved sweep. Two bounded OpenCode
+follow-up workers each performed one read-only PBS status check while the
+primary worker continued the authorized monitoring plan. Codex verified
+startup authorization, task state, local evidence counts, syntax, Git state,
+scope, and report references. The ten dependent arms ran sequentially in the
+single allocation; no parallel scored work was performed.
 
 ### 2.3 Work Executed
 
-*Factual work performed.*
+Created `experiments/2x8-GAAS/phase2bc-placement-locality/` and ran exactly
+A0–A3, B0–B3, and C0–C1 in PBS job `72879.gaas`. All ten arms exited 0 and
+reported `PASSED` with finite residual `1.416310E-05`; the job completed with
+`Exit_status=0`, `run_count=1`, and walltime `00:10:14`. The approved
+pre-authorized >2% carry-forward rules were applied mechanically in the same
+job and recorded in the carry-forward log. Factual per-arm overall/LU/IR,
+iteration, memory, residual, and original-baseline percentage fields are in
+the experiment README and result records. No strategic interpretation or
+Phase-4 work was performed.
 
 ### 2.4 Operational Validation
 
-*Evidence, correctness, provenance, consistency, and scope checks.*
+The PBS record shows queue `gpu_as`, project `hpc_ebslee`, nodes
+`hpc-gaas-g12` + `hpc-gaas-g15`, 2 nodes × 8 H200 GPUs, 16 ranks, 192 CPUs,
+`place=scatter`, and no `mpiprocs`; all ten arm status files name the same
+job and node pair and have sequential timestamps in the approved order. The
+rank-map probe passed with 16 ranks, two hosts, and eight ranks per host
+(global ranks 0–7 on g12 and 8–15 on g15). The in-allocation topology gate
+passed for cpuset `0-49,56-101`, memory nodes `0-1`, eight GPUs, GPU0/NUMA0,
+GPU4/NUMA1, and the expected NIC legend/HCA inventory. The validated
+container MPI + `rsh_pbsdsh_container.sh` bridge and slots=8/node hostfile
+were used.
+
+The task-specific PBS script passes `bash -n`; local `git diff --check`
+passed. Exact approved GPU, memory, CPU, and HCA strings and the 10-arm
+execution order were checked before submission. All ten `.out` files contain
+normal application output and a finite residual with `PASSED`; all ten `.err`
+and `.status` files exist and agree on exit status 0. The 34 remote raw
+evidence files (ten arm `.out/.err/.status` sets, PBS `.o/.e`, rank map, and
+carry-forward log) were retrieved and SHA-256 verified byte-for-byte against
+the execution worktree. `results/metrics.csv` now has 231 data rows, including
+ten unique TASK-007 attempts; `(experiment_id, attempt)` keys are unique and
+all ten new rows are `PASSED`. `results/RESULTS.md` was regenerated from the
+CSV.
 
 ### 2.5 Evidence and Artifacts
 
-*Reference raw evidence paths and revisions; do not duplicate outputs.*
+Raw evidence and factual results: `experiments/2x8-GAAS/phase2bc-placement-locality/`
+and `results/metrics.csv` / `results/RESULTS.md`. The bounded monitoring and
+terminal PBS record are preserved in
+`outputs/2x8-GAAS-phase2bc-placement-locality_v1_job72879_qstat_monitor.log`;
+submission and live eligibility evidence are in
+`outputs/2x8-GAAS-phase2bc-placement-locality_v1_submission.log`. Execution
+used the clean detached worktree
+`/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-007-c83900f-phase2bc-v1`
+at `c83900ffafa550b74e93c9042f8ea7e2849cd732`. Preparation commits pushed
+before remote use: `a62a64a83007abe44cc91fa37603be74c00bfdd4` and
+`c83900ffafa550b74e93c9042f8ea7e2849cd732`. Evidence/results commit pushed:
+`a8c9df51af62c6458c8596ac36f3b21d94b5af16`.
 
 ### 2.6 Files Changed
 
-*List files or state None.*
+Changed `experiments/2x8-GAAS/phase2bc-placement-locality/README.md`,
+`experiments/2x8-GAAS/phase2bc-placement-locality/scripts/run_phase2bc_placement_locality.pbs`,
+the 36 files under that experiment's `outputs/`, `results/metrics.csv`, and
+`results/RESULTS.md`. This report and
+`progress/2026-09-27-progress_s15.md` are also updated. No strategic planning
+files or source code were changed.
 
 ### 2.7 Missing / Unavailable Evidence
 
-*List gaps or state None.*
+None. With `--monitor-gpu 0`, benchmark GPU-monitoring output is unavailable
+by design. All expected experiment and PBS output files were present.
 
 ### 2.8 Execution Errors / Exceptions
 
-*List failures and exceptions or state None. Record authorized Track 1
-recovery and the exact resume action if incomplete; do not mark a recoverable
-operational condition BLOCKED or transfer ownership to the user.*
+No scored arm failed and no retry was required. The remote primary clone had
+168 pre-existing status entries and was left untouched; the worker fetched
+the pushed revision and used a clean isolated worktree. The first prepared
+worktree at `a62a64a` was preserved after a preflight review produced the
+newer approved preparation revision at `c83900f`; execution used only the
+verified latter revision. The topology-matrix row anchor received a minimal
+Track-1 whitespace-tolerant hardening before submission; the NUMA/HCA
+assertions and scientific controls were unchanged. One concurrent
+worktree-add attempt encountered a transient destination collision; the
+retry completed and the final registered worktree was verified clean at the
+exact `c83900f` revision before use.
+
+The first per-file SHA-256 verification pass encountered SSH connection
+resets from repeated connections. After a pause, verification was retried in
+one SSH session and all 34 remote evidence files matched exactly. PBS reports
+`Stageout_status=1`, but every expected output was present in the execution
+worktree, retrieved, and hash-verified. PBS stderr contains the recurring
+`cuda/13.1` module note and `unknown groupid 1304617061` warnings; all ten
+arms completed successfully.
 
 ### 2.9 Scope Compliance
 
-*State whether work stayed within the approved scope.*
+Work stayed within the unchanged Section 1.11 authorization. It used the
+approved 2-node × 8-GPU resource shape, queues, project, launcher, fixed
+scientific controls, exact affinity candidates, and one sequential allocation.
+No UCX transport-family setting, MPI/NCCL policy, OpenMP policy, grid, input,
+precision, kernel, or other prohibited control was changed. The mechanical
+carry-forward rules were applied as pre-authorized. No baseline was promoted,
+no strategic placement conclusion was made, and no dependency checkpoint or
+Phase-4 run was started.
 
 ### 2.10 Handoff to Strategic Analyst
 
-*Give factual reading guidance, without strategic interpretation.*
+TASK-007 execution is complete and ready for the Strategic Analyst after the
+Human explicitly authorizes `ANALYSE_RESULTS`. Read the entire Stage A/B/C
+evidence, the mechanical carry-forward log, the repeated control observations,
+and the immutable 2x8 original baseline provenance. The README table reports
+percentages against `2x8-GAAS-baseline_n700k_v1` at `4.8037e+06` GFLOP/s and
+includes that percentage column. Per-arm raw stdout, stderr, status, rank map,
+PBS output, and monitor record are in the experiment `outputs/` directory.
+No strategic conclusion, dependency checkpoint, baseline promotion, or next
+experiment recommendation was written during execution.
