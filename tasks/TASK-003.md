@@ -1,8 +1,8 @@
 ---
 task_id: TASK-003
 title: Phase 1B — 2x8 GAAS Bounded NB Screen at Retained N
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-002
 analysis_id: 2x8-gaas-phase1b-nb-screen
 created: 2026-09-27
@@ -546,40 +546,147 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
+status: COMPLETE
 
 ### 2.2 Orchestration Summary
 
-*Workers, responsibilities, dependencies, ordering, and follow-ups.*
+Five sequential OpenCode worker assignments through the project-approved
+NTU-HPC-Large runtime:
+
+1. Prepared the dedicated experiment README, PBS sweep script, and outputs
+   directory from the validated TASK-002 pattern; ran syntax and fixed-control
+   checks.
+2. Performed GAAS Mode-B synchronization, verified the exact execution
+   worktree and live queue/node eligibility.
+3. Rechecked eligibility and submitted the single approved PBS sweep.
+4. Boundedly monitored the job (three scheduled checks, five minutes apart;
+   stopped at terminal state).
+5. Retrieved and validated raw evidence, updated the experiment README and
+   results records.
+
+Work was sequential because synchronization and eligibility preceded
+submission, which preceded monitoring and evidence retrieval. Codex reviewed
+the resulting files and raw markers before completing this report. No worker
+follow-up was required after the evidence and bookkeeping assignment.
 
 ### 2.3 Work Executed
 
-*Factual work performed.*
+Created `experiments/2x8-GAAS/phase1b-nb-screen/` with its README, PBS script,
+and tracked empty outputs directory in preparation commit
+`0db6134ed973239378d7e6cdb2dc3a3fd70ce461`. The remote primary clone was
+dirty and behind origin, so Workflow 01 Mode B was used: `origin/main` was
+fetched and a clean detached execution worktree was created at that exact
+commit. The primary clone and its 168 pre-existing status entries were left
+untouched.
+
+Submitted one job, `72712.gaas`, at 2026-09-27 15:09:13 +08:00 to `gpu_as`
+under `hpc_ebslee`, host-pinned to `hpc-gaas-g12` and `hpc-gaas-g15`, with
+2 nodes × 8 GPUs, 16 ranks, scatter placement, no `mpiprocs`, and a 90-minute
+walltime. PBS completed at 15:15:56 +08:00 with state `F`, exit status 0,
+and walltime `00:06:42`.
+
+All six candidates ran sequentially in this order: NB 3072, 1024, 2048,
+4096, 5120, and 6144, with N fixed at 429056. Factual candidate metrics and
+memory evidence are recorded in the experiment README and `results/metrics.csv`.
+All six candidate status files record exit status 0.
 
 ### 2.4 Operational Validation
 
-*Evidence, correctness, provenance, consistency, and scope checks.*
+The new PBS script passed `bash -n`; its fixed candidate set, controls,
+resource shape, project, queue guard, and validated container-MPI / pbsdsh
+launcher were checked against TASK-003 and TASK-002. Execution worktree HEAD
+was `0db6134ed973239378d7e6cdb2dc3a3fd70ce461`, clean before submission.
+The task, script, README, and bridge SHA-256 values matched local files, and
+Section 1.11 was byte-identical between local and remote trees.
+
+All six candidate `.status` files confirm the assigned N, NB, fixed-controls
+line, queue, nodes, job ID, timestamps, and candidate exit status. Every
+candidate `.out` contains normal final benchmark output, three solver
+iterations, a finite normalized residual with `PASSED`, overall and LU
+performance, and host/device memory evidence. Codex spot-checked these raw
+markers independently. The PBS `.o` records the six candidate order and
+pre/post hardware-health snapshots. GPU-monitoring output is unavailable by
+design under `--monitor-gpu 0`.
+
+All 20 retrieved evidence files (six `.out`/`.err`/`.status` triplets plus
+PBS `.o`/`.e`) matched remote SHA-256 values. Six unique rows were appended
+to `results/metrics.csv`; the CSV parses with a consistent schema and has no
+duplicate `(experiment_id, attempt)` keys. `results/RESULTS.md` was
+regenerated from the CSV and contains all six rows. `git diff --check` passed
+for the edited text artifacts. The byte-exact raw `.out` and PBS `.o` files
+contain application/topology-generated trailing spaces and blank lines at EOF,
+so Git's staged whitespace check reports those raw-evidence lines; the evidence
+was preserved without normalization.
 
 ### 2.5 Evidence and Artifacts
 
-*Reference raw evidence paths and revisions; do not duplicate large outputs.*
+Raw attempt evidence: `experiments/2x8-GAAS/phase1b-nb-screen/outputs/`.
+Factual run summary and candidate measurements:
+`experiments/2x8-GAAS/phase1b-nb-screen/README.md`. Structured results:
+`results/metrics.csv` and `results/RESULTS.md`.
+
+PBS job: `72712.gaas`. Execution worktree:
+`/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-003-0db6134-phase1b-v1`,
+commit `0db6134ed973239378d7e6cdb2dc3a3fd70ce461`. Local preparation commit:
+`0db6134ed973239378d7e6cdb2dc3a3fd70ce461`.
 
 ### 2.6 Files Changed
 
-*List files or state None.*
+Changed files:
+
+- `experiments/2x8-GAAS/phase1b-nb-screen/README.md`
+- `experiments/2x8-GAAS/phase1b-nb-screen/scripts/run_phase1b_nb_screen.pbs`
+- `experiments/2x8-GAAS/phase1b-nb-screen/outputs/` (20 attempt-specific
+  raw evidence files; `.gitkeep` retained)
+- `results/metrics.csv`
+- `results/RESULTS.md`
+- `tasks/TASK-003.md`
+- `progress/2026-09-27-progress_s11.md`
 
 ### 2.7 Missing / Unavailable Evidence
 
-*List gaps or state None.*
+None required by TASK-003.
 
 ### 2.8 Execution Errors / Exceptions
 
-*List failures and exceptions or state None. Record authorized Track-1 recovery and the exact resume action if incomplete.*
+The first retrieval pass had four SCP connections reset by the remote host
+after rapid successive transfers. This was recovered as a Track-1 transfer
+mechanic: after a 60-second wait and successful BatchMode SSH check, the four
+missing files were retried with 15-second spacing. All 20 files then matched
+their remote SHA-256 values. No evidence was overwritten.
+
+At the third scheduled monitoring point, the first two filtered `qstat -f`
+queries did not match PBS's terminal-job message; one unfiltered query
+confirmed completion, followed by `qstat -x -f` for the final record. The
+bounded monitor stopped at that terminal state. Raw PBS `.e` contains the
+module note about `cuda/13.1`/H200 and group-ID warnings; each candidate `.err`
+contains a group-ID warning and the validated bridge diagnostic. These are
+preserved in raw evidence and documented in the experiment README. No
+scientific failure, retry, or Track-2 condition occurred.
 
 ### 2.9 Scope Compliance
 
-*State whether work stayed within the approved scope.*
+Work stayed within unchanged Section 1.11 authorization: exactly the six
+approved NB values at fixed N=429056 and the specified scientific controls;
+one 2×8 allocation, 16 ranks, queue `gpu_as`, and project `hpc_ebslee`. No
+additional job, candidate, control change, baseline rerun, strategic
+interpretation, planning change, or OpenMxP access occurred. The dirty remote
+primary clone, existing remote worktrees, and pre-existing local untracked
+`hpl-mxp-runs-on-gaas/` directory were preserved.
 
 ### 2.10 Handoff to Strategic Analyst
 
-*Give factual reading guidance without strategic interpretation.*
+Read the six candidate `.out` files and their matching `.status`/`.err`
+files under `experiments/2x8-GAAS/phase1b-nb-screen/outputs/`; the PBS `.o`
+contains allocation details, the sequential candidate record, and pre/post
+health snapshots, while `.e` preserves module and bridge diagnostics. The
+experiment README records the factual table, including residual, overall and
+LU GFLOP/s, LU and IR times, iteration count, IR/LU arithmetic, and host/device
+memory fields. The six structured rows are in `results/metrics.csv` and
+`results/RESULTS.md` under experiment ID `2x8-GAAS-phase1b-nb-screen`.
+
+All six attempted NB values have finite residuals and `PASSED` verification;
+job `72712.gaas` finished with PBS exit status 0. This report and the README
+record operational facts only. Strategic ranking, baseline-percentage
+comparisons, retention decisions, dependency review, and any next action
+remain for the Strategic Analyst after explicit `ANALYSE_RESULTS`.

@@ -209,5 +209,11 @@ This report records validated raw result data only. No optimization analysis or 
 | 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n454656_v1 | 454656 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.2584e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n454656_v1.out |
 | 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n480256_v1 | 480256 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.2514e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n480256_v1.out |
 | 2x8-GAAS-phase1a-n-refine | 2x8-GAAS-phase1a-n-refine_n504832_v1 | 504832 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 4.9704e+06 | experiments/2x8-GAAS/phase1a-n-refine/outputs/2x8-GAAS-phase1a-n-refine_n504832_v1.out |
+| 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb3072_v1 | 429056 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.5381e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb3072_v1.out |
+| 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb1024_v1 | 429056 | 1024 | 4x4 | column | 8 | unset | unset | PASSED | 4.5905e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb1024_v1.out |
+| 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb2048_v1 | 429056 | 2048 | 4x4 | column | 8 | unset | unset | PASSED | 5.5286e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb2048_v1.out |
+| 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb4096_v1 | 429056 | 4096 | 4x4 | column | 8 | unset | unset | PASSED | 5.3738e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb4096_v1.out |
+| 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb5120_v1 | 429056 | 5120 | 4x4 | column | 8 | unset | unset | PASSED | 5.1301e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb5120_v1.out |
+| 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb6144_v1 | 429056 | 6144 | 4x4 | column | 8 | unset | unset | PASSED | 5.0524e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb6144_v1.out |
 
 Source: `results/metrics.csv`.
