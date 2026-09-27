@@ -10,11 +10,12 @@ execution order `4x4`, `2x8`, `8x2` mirrors TASK-004 and simplifies paired
 comparison (tasks/TASK-005.md Sections 1.4A, 1.7); one valid scored attempt
 per approved shape is sufficient (tasks/TASK-005.md Sections 1.4A, 1.7.10).
 
-**Status (2026-09-27): prepared, not yet submitted.** No scored attempt has
-run. Submission requires TASK-005 execution authorization and must pass
-`-q gpu_as` or `-q gpu_ded` (the only authorized queues); see Submission.
-Any rerun must use a new `ATTEMPT_TAG` and never overwrite existing
-evidence.
+**Status (2026-09-27): v1 sweep complete — all three approved row-order
+grid shapes ran sequentially in PBS job `72802.gaas` (queue `gpu_as`,
+project `hpc_ebslee`) with candidate `exit_status=0` and `PASSED`
+verification; see Run summary.** Any rerun must use a new `ATTEMPT_TAG`,
+pass `-q gpu_as` or `-q gpu_ded` (the only authorized queues), and never
+overwrite existing evidence.
 
 ## Structure
 
@@ -285,14 +286,139 @@ Sections 1.4F, 1.7.12-13). Do not classify success from exit status alone.
 
 ## Run summary
 
-Not yet run. This section will be completed with the factual per-candidate
-table (normalized residual, verdict, overall/LU GFLOP/s, IR time and
-iterations, host/device memory markers), allocation-level rank-map summary,
-and job-record facts after the first authorized submission.
+One submitted attempt family (tag `v1`, PBS job `72802.gaas`, queue `gpu_as`,
+project `hpc_ebslee`), executed on the host pair `hpc-gaas-g12` +
+`hpc-gaas-g15` (2 nodes x 8 H200 GPUs, 16 MPI ranks, one rank/GPU). Script
+start (first PBS `.o` timestamp): 2026-09-27T20:14:24+08:00. Execution tree:
+the remote worktree referenced by every `.status` stdout/stderr path and by
+the bridge path in the PBS `.o`,
+`.codex-worktrees/TASK-005-bc312e6-phase2a-v1` (the short SHA in the
+worktree name matches the local preparation commit `bc312e6`, "Prepare
+TASK-005 row-order grid sweep"). Container:
+`/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif`;
+launcher, bridge, daemon flags, hostfile, and module set unchanged from the
+validated TASK-004 contract (see Resource metadata and launch contract
+above).
+
+All three approved candidates ran sequentially in the documented order
+`4x4` first (mirroring TASK-004's execution order for paired comparison),
+then `2x8`, then `8x2` — on the same node pair with identical fixed
+controls; each `.status` records `exit_status=0`, and the PBS `.o` ends with
+`=== HPL-MxP 2x8-GAAS phase2a-grid-row sweep complete: all 3 candidate(s) exited 0 (tag v1) ===`.
+Factual per-candidate data as emitted by the application output (no
+interpretation, no ranking, no baseline-percentage comparison):
+
+| order | grid (nprow x npcol) | attempt | normalized residual | verdict | overall GFLOP/s (per GPU) | LU s / LU GFLOP/s (per GPU) | IR s / iterations | IR/LU | host mem cons. MAX / avail. MIN | device mem cons. MAX / avail. MIN | device mem avail. MIN after matrix gen |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 4x4 | `..._grid4x4_v1` | 1.416310E-05 | PASSED | 5.6347e+06 (352171.51) | 7.77 / 6.7803e+06 (423771.85) | 1.58 / 3 | 0.203 | 0.004 GB / 228.294 GB | 135.254 GB / 138.739 GB | 2.767 GB |
+| 2 | 2x8 | `..._grid2x8_v1` | 5.149082E-05 | PASSED | 5.0562e+06 (316010.67) | 8.14 / 6.4670e+06 (404185.65) | 2.27 / 3 | 0.279 | 6.292 GB / 228.251 GB | 135.866 GB / 138.843 GB | 2.304 GB |
+| 3 | 8x2 | `..._grid8x2_v1` | 6.995029E-05 | PASSED | 5.4331e+06 (339566.95) | 8.08 / 6.5199e+06 (407493.78) | 1.62 / 3 | 0.200 | 3.040 GB / 228.226 GB | 135.763 GB / 138.739 GB | 2.161 GB |
+
+Attempt IDs are the full `2x8-GAAS-phase2a-grid-row_grid<NPROW>x<NPCOL>_v1`
+stems. Per-candidate `.status` start/end (+08:00): grid4x4 20:14:47→20:15:45,
+grid2x8 20:15:45→20:16:51, grid8x2 20:16:51→20:17:55 (per-candidate elapsed
+58 s / 66 s / 64 s; the job-level evidence span from `.o` script start to
+the last candidate end is 00:03:31, followed by the untimed post-sweep
+health snapshot).
+
+Allocation-level rank-map probe (TASK-005 Section 1.4C),
+`outputs/2x8-GAAS-phase2a-grid-row_rankmap_v1.log`: 16/16 rank lines,
+exactly 2 distinct hosts, exactly 8 ranks per host — global ranks 0–7 →
+`hpc-gaas-g12` (local_rank 0–7/8), global ranks 8–15 → `hpc-gaas-g15`
+(local_rank 0–7/8); local_rank = global_rank − 8×host_index. The probe gate
+line in the PBS `.o` records `rc=0 rank_lines=16 hosts=2 ranks_per_host=8`.
+The mapping is sufficient to reconstruct which logical grid rows/columns
+cross the node boundary for each candidate under `nporder=row`, jointly
+with the TASK-004 column-order rank-map evidence.
+
+Facts not representable in the current `results/metrics.csv` schema,
+recorded here for Codex review (schema/extractor unchanged):
+
+- IR/LU is the mechanical ratio `Iterative Solver seconds (AVG) / LU
+  seconds (AVG)` computed from each `.out` (rounded to 3 decimals).
+- `--fill-device 1` was active for all three candidates (settings block of
+  every `.out`); the binary additionally echoed `--order = row` plus the
+  same package defaults as TASK-004: `--fill-device-buffer-size = 3048`,
+  `--u-panel-chunk-nbs = 8`, `--preset-gemm-kernel = 90`,
+  `--call-dgemv-with-multiple-threads = 0`, and
+  `--cuda-host-register-step = 2048` (package defaults, not tuned;
+  identical across all three candidates).
+- Iterative refinement emitted 3 solver iterations (iterations 0, 1, 2) for
+  every candidate; L-infinite residuals per iteration are in each `.out`
+  (grid4x4 4.88341694e-04 → 9.15421072e-10 → 3.66373598e-15; grid2x8
+  4.67920592e-04 → 8.70649116e-10 → 1.33226763e-14; grid8x2 4.82485206e-04
+  → 9.27003299e-10 → 1.80966353e-14).
+- The two `Per process memory available MIN system/device` lines per
+  candidate: grid4x4 228.078/2.767 then 228.075/2.767 GB; grid2x8
+  228.035/2.304 then 225.171/2.304 GB; grid8x2 227.996/2.161 then
+  225.891/2.161 GB.
+- Pre/post hardware-health snapshots (`nvidia-smi topo -m` + GPU query)
+  were taken once around the whole sweep on the job's mother node
+  (`hpc-gaas-g12`, where the script, rank 0, and the container `mpirun`
+  ran; each snapshot lists that node's GPUs 0–7): all NVIDIA H200, driver
+  580.126.20, 143771 MiB total, pre-sweep 0 MiB used at 345 MHz (29–31 °C,
+  75.02–78.63 W), post-sweep 0 MiB used at 1980 MHz (31–34 °C,
+  118.47–135.67 W). The pre- and post-sweep topology tables in the `.o` are
+  identical (NV18 all-pairs GPU mesh; NICs mlx5_0–mlx5_5, mlx5_8, mlx5_9,
+  mlx5_bond_0 as listed in the `.o` legend).
+- Raw PBS `.e` warnings (factual, non-blocking, same pattern as
+  TASK-001/TASK-002/TASK-003/TASK-004 evidence): module-load note
+  `cuda/13.1: compile with -arch=sm_XX (e.g. sm_90 on H200); default builds
+  fail to launch on the 580 driver.` emitted while loading `nvhpc/26.3`
+  (with requirement `gnu/gcc-12.3 cuda/13.1`), plus four `WARNING: group:
+  unknown groupid 1304617061` lines. Each candidate `.err` contains one
+  `WARNING: group: unknown groupid 1304617061` plus the bridge
+  `rsh_pbsdsh_container` orted-spawn diagnostic line for `hpc-gaas-g15`
+  (expected bridge output). The rank-map log carries the same group-ID
+  warning plus one bridge diagnostic line. No `FAILED`, `NaN`, or `Inf`
+  markers appear in any candidate `.out`.
+- Job record for `72802.gaas`: the terminal `qstat -x -f` output was
+  retrieved and captured in the operational transcript during TASK-005
+  execution, but was not retained as a standalone raw evidence file. Key
+  fields from that record: `qtime` = Sun Sep 27 20:14:24 2026 and
+  `stime` = 20:14:24 (equal — the job launched at task submission, no
+  queue wait); `mtime` = `obittime` = 20:17:57 (terminal);
+  `job_state = F`; `Exit_status = 0`; `run_count = 1`;
+  `resources_used.walltime = 00:03:32`; `queue = gpu_as`;
+  `project = hpc_ebslee`;
+  `exec_host = hpc-gaas-g12/0*96+hpc-gaas-g15/0*96`;
+  `resources_used.ngpus = 16`, `resources_used.ncpus = 192`,
+  `resources_used.mem = 85850128kb`,
+  `resources_used.vmem = 6051911728kb`; `Stageout_status = 1`. The
+  `pbs_state=F` and `exit_status=0` facts recorded in `metrics.csv` are
+  established from this job record and from the complete PBS `.o` (the
+  script ran to its final sweep-complete marker with all three candidates
+  exited 0), the closed `.e`, and the three per-candidate `.status`
+  files. As with the TASK-004 rows, the `metrics.csv`
+  `submission_time`/`completion_time` for these rows carry the job-level
+  `qtime`/`mtime` and `runtime` carries `resources_used.walltime`; the
+  per-candidate `.status` start/end timestamps and elapsed durations
+  remain recorded above in the Run summary.
+- The exact qsub-time resource request is known from the retrieved qstat
+  job record: `Resource_List.select` was the host-pinned request
+  `host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB`
+  with `place=scatter` and `walltime=01:30:00` — the documented
+  host-pinned qsub form, not the script's generic `select=2:ngpus=8`
+  default. The actual allocation evidenced by the hostfile and rank map
+  was `hpc-gaas-g12` + `hpc-gaas-g15` with 8 GPUs and `slots=8` per node,
+  16 ranks, one rank/GPU, matching the pinned hosts.
+- The 12 evidence files for this attempt family (three candidate
+  `.out`/`.err`/`.status` triplets, the rank-map log, and PBS `.o`/`.e`)
+  are preserved in `outputs/`; their recorded `stdout`/`stderr` paths
+  reference the remote execution worktree
+  `.codex-worktrees/TASK-005-bc312e6-phase2a-v1`.
+- With `--monitor-gpu 0`, benchmark GPU-monitoring output is unavailable
+  by design; the PBS `gpu_usage` accounting fields were present in the
+  retrieved `qstat -x -f` output (captured in the operational transcript,
+  not retained as a standalone raw file).
+
+Extracted rows for all three attempts are in `results/metrics.csv` /
+`results/RESULTS.md` (experiment id `2x8-GAAS-phase2a-grid-row`, attempts
+`2x8-GAAS-phase2a-grid-row_grid<NPROW>x<NPCOL>_v1`).
 
 ## Evidence paths
 
 - `outputs/` — per-candidate `.out`/`.err`/`.status`, the allocation-level
-  rank-map log, and PBS `.o`/`.e` (populated at execution)
+  rank-map log, and PBS `.o`/`.e`
 - `scripts/run_phase2a_grid_row.pbs` — the sweep script (header documents
   purpose, working directory, inputs, outputs, and assumptions)

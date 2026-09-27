@@ -1,8 +1,8 @@
 ---
 task_id: TASK-005
 title: Phase 2A — 2x8 GAAS Row-Order Complement
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-004
 analysis_id: 2x8-gaas-phase2a-grid-order-matrix
 created: 2026-09-27
@@ -596,40 +596,133 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
+status: COMPLETE
 
 ### 2.2 Orchestration Summary
 
-*Workers, responsibilities, dependencies, ordering, and follow-ups.*
+Four sequential OpenCode worker assignments handled artifact preparation,
+remote synchronization/submission/monitoring/retrieval, factual results
+extraction, and a bounded correction to job-level CSV metadata. The first
+bookkeeping worker invocation failed to connect to the OpenCode API and made
+no repository changes; its retry completed. Codex reviewed the script and
+README, verified raw output markers and the rank map, checked the local and
+remote execution revisions, and validated the resulting CSV/report and
+evidence.
 
 ### 2.3 Work Executed
 
-*Factual work performed.*
+Created the dedicated experiment `experiments/2x8-GAAS/phase2a-grid-row/`
+with its README, PBS sweep, and output directory. The reviewed preparation
+was committed and pushed at `bc312e65de55bf9fc723f0c68cb599f2e1c3ffa4`.
+
+The remote primary clone was dirty (168 status entries) at
+`87fb61e829832a3bc07c2579d8472aa1be279f13`; its existing content was left
+untouched. After `git fetch origin`, a clean detached execution worktree was
+created at the exact approved commit:
+`/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-005-bc312e6-phase2a-v1`.
+
+Live eligibility checks found `gpu_as` enabled with `hpc-gaas-g12` and
+`hpc-gaas-g15` free and unassigned; `gpu_ded` had no free eligible pair.
+One job, `72802.gaas`, was submitted to `gpu_as` with `ATTEMPT_TAG=v1`,
+project `hpc_ebslee`, the host-pinned two-node/eight-GPU-per-node request,
+`place=scatter`, and no `mpiprocs`. All three candidates ran sequentially
+with the approved controls and fixed order `row`: 4x4, 2x8, 8x2.
+
+Factual application results: 4x4 residual `1.416310E-05` PASSED at
+`5.6347e+06` overall / `6.7803e+06` LU GFLOP/s; 2x8 residual
+`5.149082E-05` PASSED at `5.0562e+06` / `6.4670e+06`; 8x2 residual
+`6.995029E-05` PASSED at `5.4331e+06` / `6.5199e+06`. Each candidate
+reported three solver iterations, LU and iterative-refinement timings, and
+host/device memory values; the full factual table is in the experiment
+README and structured results.
 
 ### 2.4 Operational Validation
 
-*Evidence, correctness, provenance, consistency, and scope checks.*
+PBS terminal record: `job_state=F`, `Exit_status=0`, `run_count=1`,
+`resources_used.walltime=00:03:32`, queue `gpu_as`, project `hpc_ebslee`,
+16 GPUs, 192 CPUs, and execution hosts g12+g15. Four bounded qstat checks
+were made at least 60 seconds apart; one terminal `qstat -x -f` record was
+captured in the execution transcript. Its key fields, including
+`Stageout_status=1`, are recorded in the experiment README. The PBS `.o`
+ends with the successful three-candidate sweep marker, and each candidate
+`.status` records `exit_status=0`.
+
+The allocation rank-map gate passed (`rc=0`, 16 rank lines, 2 hosts, 8 ranks
+per host): global ranks 0–7 mapped to g12 and ranks 8–15 to g15. Every
+candidate output contains normal HPL-MxP output, a finite normalized
+residual and `PASSED`, overall/LU performance, phase timings, and memory
+markers. No `NaN`, `Inf`, or `FAILED` markers appeared. With
+`--monitor-gpu 0`, benchmark GPU-monitoring output is unavailable by design.
+
+All 12 retrieved evidence files (three candidate `.out`/`.err`/`.status`
+triplets, rank-map `.log`, PBS `.o`/`.e`) matched remote SHA-256 values.
+The remote worktree and hostfile were left intact. Local `bash -n` passed.
+`git diff --check` is clean for reviewed documentation/results files; it
+reports trailing spaces in the raw benchmark `.out` and PBS `.o` tables,
+which were preserved byte-for-byte as evidence. `results/metrics.csv` has
+exactly three new rows
+(217 data rows total), 33 fields per row, and no duplicate experiment/attempt
+keys; `results/RESULTS.md` contains exactly the three generated raw-result
+rows. Existing rows were preserved. The only observed non-blocking messages
+were the repeated unknown group-ID warning, the `cuda/13.1` module note, and
+the scheduler's `Stageout_status=1`; these are recorded factually in the
+experiment README.
+
+Execution remained within TASK-005 Section 1.11. No candidate was ranked,
+no baseline percentages were calculated, and no strategic interpretation,
+planning update, repeat, or Phase 2B work was performed.
 
 ### 2.5 Evidence and Artifacts
 
-*Reference raw evidence paths and revisions; do not duplicate large outputs.*
+Raw evidence: `experiments/2x8-GAAS/phase2a-grid-row/outputs/` (12
+attempt-specific files). Experiment provenance, result table, candidate
+timings, rank map, scheduler record facts, and exceptions:
+`experiments/2x8-GAAS/phase2a-grid-row/README.md`. Structured rows:
+`results/metrics.csv`; generated report: `results/RESULTS.md`. The execution
+tree was at commit
+`bc312e65de55bf9fc723f0c68cb599f2e1c3ffa4`.
 
 ### 2.6 Files Changed
 
-*List files or state None.*
+`experiments/2x8-GAAS/phase2a-grid-row/README.md`,
+`experiments/2x8-GAAS/phase2a-grid-row/scripts/run_phase2a_grid_row.pbs`,
+`experiments/2x8-GAAS/phase2a-grid-row/outputs/` (12 raw evidence files),
+`results/metrics.csv`, `results/RESULTS.md`, `tasks/TASK-005.md`, and
+`progress/2026-09-27-progress_s13.md`.
 
 ### 2.7 Missing / Unavailable Evidence
 
-*List gaps or state None.*
+No task-required candidate, rank-map, PBS `.o`/`.e`, or correctness evidence
+is missing. The single terminal `qstat -x -f` output was captured in the
+operational transcript but not retained as a separate raw file; its relevant
+job fields are recorded in the experiment README and this report. Benchmark
+GPU-monitoring output is unavailable by design under `--monitor-gpu 0`.
 
 ### 2.8 Execution Errors / Exceptions
 
-*List failures and exceptions or state None. Record authorized Track-1 recovery and exact resume action if incomplete.*
+No candidate failed and no Track-1 recovery or Track-2 intervention was
+needed. The first results-bookkeeping OpenCode invocation failed to connect
+to its API before making changes; a retry and a metadata-correction
+assignment completed successfully. Preserved non-blocking observations are
+the repeated unknown group-ID warning, the `cuda/13.1` module note, and
+`Stageout_status=1`. No retry, patch, cancellation, or scientific-control
+change occurred.
 
 ### 2.9 Scope Compliance
 
-*State whether work stayed within approved scope.*
+All work stayed within the approved Section 1.11 scope. Exactly the three
+approved grid shapes were run once under `nporder=row`, at fixed N/NB and
+controls, on the approved 2-node × 8-GPU topology using `gpu_as` and project
+`hpc_ebslee`. No additional grid/order candidate, tuning direction, profiling,
+repeat, baseline comparison, or campaign interpretation was performed.
 
 ### 2.10 Handoff to Strategic Analyst
 
-*Give factual reading guidance only. Explicitly direct the Strategic Analyst to combine TASK-004 and TASK-005; do not perform the comparison here.*
+The Strategic Analyst should analyze TASK-004 and TASK-005 together as the
+complete 3×2 process-grid/order matrix, using both task reports, the factual
+rows in `results/metrics.csv`, the README tables, and the raw outputs and
+rank-map evidence in both experiment directories. TASK-005 provides the
+row-order counterparts for 4×4, 2×8, and 8×2. Its three candidates all have
+finite residuals and `PASSED` verification. No comparison, ranking, baseline
+percentage, or retention decision is included here. Await explicit human
+`ANALYSE_RESULTS` authorization before analysis.
