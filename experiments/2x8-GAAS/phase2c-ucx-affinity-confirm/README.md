@@ -34,23 +34,30 @@ automatic UCX control inside one allocation?
 `outputs/` is empty pending the first authorized submission. TASK-008 is
 `EXECUTING / codex`; submission follows the one-multinode-job-at-a-time rule
 and the live queue/node eligibility checks in tasks/TASK-008.md Section 1.8.
-Any rerun must use a new `ATTEMPT_TAG`, pass `-q gpu_as` or `-q gpu_ded` (the
+Remote preflight on 2026-09-28 found g13+g15 as the only currently free
+eligible pair; g15 is covered by the accepted Phase-0 evidence but g13 is
+not, which is why the rank-map probe now validates the approved topology on
+BOTH allocated nodes before any scored arm (see Topology gates below). Any
+rerun must use a new `ATTEMPT_TAG`, pass `-q gpu_as` or `-q gpu_ded` (the
 only authorized queues), and never overwrite existing evidence.
 
 ## Structure
 
 - `scripts/run_phase2c_ucx_affinity_confirm.pbs` — single reusable bracket
   PBS script (3 arms sequentially in one allocation; Phase-0 topology
-  consistency gates and a 16-rank rank-map probe before scored work; four
-  mother-node per-HCA `port_xmit_data` snapshots bracketing the arms;
-  per-arm evidence files; attempt tag comes from the `ATTEMPT_TAG`
+  consistency gates — a mother-node gate from the job shell plus a per-host
+  two-host gate inside the single 16-rank rank-map probe — before scored
+  work; four mother-node per-HCA `port_xmit_data` snapshots bracketing the
+  arms; per-arm evidence files; attempt tag comes from the `ATTEMPT_TAG`
   environment at submission and is validated against a conservative
   filename-safe pattern before use; environment provenance records —
   `module list`, Apptainer version, container MPI `mpirun --version`, and
   the execution-worktree Git revision — are echoed to the PBS `.o`)
 - `outputs/` — per-arm application `.out`/`.err`/`.status` evidence, the
-  allocation-level rank-map log, and PBS `.o`/`.e` job evidence (tracked,
-  never overwritten; every rerun gets a new attempt tag)
+  allocation-level rank-map log (16 rank lines plus the per-host
+  local-rank-0 topology reports for both allocated nodes), and PBS `.o`/`.e`
+  job evidence (tracked, never overwritten; every rerun gets a new attempt
+  tag)
 
 ## Fixed scientific controls (identical for all 3 arms)
 
@@ -198,8 +205,8 @@ apptainer exec --nv \
 | Hostfile | de-duplicated `$PBS_NODEFILE` with explicit `slots=8` per node (GAAS Blocker 8), shared by the rank-map probe and all arms in the allocation |
 | Process grid/order | FIXED 4x4 row for every arm (only the UCX device policy varies) |
 | Affinity semantics | installed v26.02 launcher: `--gpu-affinity` maps node-local rank -> `CUDA_VISIBLE_DEVICES`; `--ucx-affinity` -> `UCX_NET_DEVICES=<dev>:1` (indexed by node-local rank; captured launcher in `todo.md`, wrapper flags confirmed in `experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log`); `--mem-affinity`/`--cpu-affinity` are omitted for every arm |
-| Rank-map probe | one lightweight 16-rank probe before scored work per allocation; aborts before scored work on mechanical failure |
-| Topology gates | pre-scored fatal checks that the mother node matches the accepted Phase-0 topology: cpuset `0-49,56-101`, `Mems_allowed_list 0-1`, 8 GPUs, the eight 400G IB HCAs `mlx5_0..mlx5_5,mlx5_8,mlx5_9` present, GPU0 -> NUMA0 `0-49` and GPU4 -> NUMA1 `56-101`, and the `nvidia-smi topo -m` NIC legend `NIC0..NIC7 -> mlx5_0..mlx5_9` (TASK-008 Section 1.4: an allocation whose topology invalidates the approved GPU-to-HCA map aborts before scored work) |
+| Rank-map probe | one lightweight 16-rank probe before scored work per allocation (same launcher, hostfile, and rankmap log for every attempt); preserves global rank / local rank / hostname for all 16 ranks, and node-local rank 0 on EACH allocated host additionally reports that host's topology facts (hostname, cpuset, `Mems_allowed_list`, GPU count, presence of `mlx5_0..mlx5_5,mlx5_8,mlx5_9`, and `nvidia-smi topo -m`) into the same rank-map log; aborts before scored work on mechanical failure or any per-host topology mismatch |
+| Topology gates | pre-scored fatal checks against the accepted Phase-0 topology, applied to BOTH allocated nodes: (a) a mother-node gate from the job shell (retained from the validated TASK-007 script) and (b) a two-host gate in the rank-map stage validating each host's reported cpuset `0-49,56-101`, `Mems_allowed_list 0-1`, 8 GPUs, the eight 400G IB HCAs `mlx5_0..mlx5_5,mlx5_8,mlx5_9` present, GPU0 -> NUMA0 `0-49` and GPU4 -> NUMA1 `56-101`, and the `nvidia-smi topo -m` NIC legend `NIC0..NIC7 -> mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_8,mlx5_9` in order (TASK-008 Section 1.4). The two-host gate was added 2026-09-28: remote preflight found g13+g15 as the only currently free eligible pair, and g13 has no accepted Phase-0 capture (only g12 and g15 do), so replacement-node eligibility under TASK-008 Section 1.8 ("any replacement pair must satisfy the same topology assumptions required by the exact HCA mapping") is verified per host inside the rank-map stage; any host mismatch aborts before scored work with the rankmap evidence preserved |
 | Health snapshots | one pre-bracket and one post-bracket hardware-health snapshot (`nvidia-smi topo -m` + GPU query) around the whole bracket |
 | HCA counters | cheap, non-perturbing `port_xmit_data` snapshots on the mother node at four points: before C0a, after C0a/before C1, after C1/before C0b, and after C0b (informational rail/locality evidence; no profiling or tracing) |
 
@@ -214,11 +221,16 @@ Differences: the candidate set is the 3-arm C0a/C1/C0b bracket (no
 carry-forward rules and no in-script percentage computation), the fourth HCA
 counter snapshot after C0b, the extended per-arm `.status` fields
 (LU/IR/iteration/ratio/memory evidence required by TASK-008 Section 1.4),
-and the follow-up provenance additions: environment version records
-(`module list`, Apptainer version, container MPI `mpirun --version` before
-the rank-map probe), the execution-worktree Git revision record, and the
-`ATTEMPT_TAG` filename-safety gate (none of which changes any scientific
-setting or launch behavior).
+the follow-up provenance additions (environment version records:
+`module list`, Apptainer version, container MPI `mpirun --version` before
+the rank-map probe; the execution-worktree Git revision record; and the
+`ATTEMPT_TAG` filename-safety gate), plus the per-host (two-host) topology
+validation inside the rank-map probe (added 2026-09-28; see Topology gates
+above): node-local rank 0 on each allocated host reports that host's
+cpuset/mems/GPU count/HCA inventory/`nvidia-smi topo -m` into the same
+rank-map log, and both hosts are gated before scored work because the
+preflight pair g13+g15 includes g13, which has no accepted Phase-0 capture.
+None of these changes any scientific setting or launch behavior.
 
 ## Sequential-bracket behavior
 
@@ -233,11 +245,13 @@ setting or launch behavior).
   evidence). There is no in-script retry of any arm.
 - Observational preflight failures abort BEFORE any scored arm (Track 2
   stop rules; workflow/05 and workflow/08 Section 5): a topology/cpuset/HCA
-  mismatch invalidates the approved GPU-to-HCA map, and a failed rank-map
-  probe indicates a launch or rank-mapping problem. In both cases evidence
-  is preserved, nothing scored runs, and a rerun needs a new `ATTEMPT_TAG`
-  plus human direction. The script never retries a hang, failed `MPI_Init`,
-  rank misplacement, transport fallback, or uncertain correctness result.
+  mismatch on EITHER allocated node (the mother-node job-shell gate or the
+  rank-map per-host topology gate) invalidates the approved GPU-to-HCA map,
+  and a failed rank-map probe indicates a launch or rank-mapping problem. In
+  both cases evidence is preserved, nothing scored runs, and a rerun needs a
+  new `ATTEMPT_TAG` plus human direction. The script never retries a hang,
+  failed `MPI_Init`, rank misplacement, transport fallback, or uncertain
+  correctness result.
 - Required-runtime version records are deterministic tool checks, not
   scientific gates: `apptainer --version` and the container
   `/usr/local/mpi/bin/mpirun --version` query each capture their rc
@@ -279,7 +293,7 @@ aborts before anything runs (the outcome is recorded in the PBS `.o` as
 | application stdout | `outputs/<attempt>.out` |
 | application stderr | `outputs/<attempt>.err` (includes bridge `cmd=[...]` and mpirun diagnostics) |
 | arm status | `outputs/<attempt>.status` (attempt, experiment, bracket arm, PBS job ID, queue, nodes, effective gpu/mem/cpu/ucx affinity, N/NB/grid/order, fixed-controls line, OpenMP policy, start/end timestamps, exit status, extracted overall GFLOP/s, LU seconds, LU GFLOP/s, IR seconds, solver iteration count, IR/LU ratio, host/device memory lines, post-matgen headroom, verification verdict, normalized residual, evidence paths) |
-| rank-map log | `outputs/2x8-GAAS-phase2c-ucx-affinity-confirm_rankmap_<ATTEMPT_TAG>.log` |
+| rank-map log | `outputs/2x8-GAAS-phase2c-ucx-affinity-confirm_rankmap_<ATTEMPT_TAG>.log` (16 rank lines plus the per-host local-rank-0 topology reports for both allocated nodes) |
 | HCA snapshots | four `port_xmit_data` snapshot blocks echoed to the PBS `.o` (before C0a / after C0a before C1 / after C1 before C0b / after C0b) |
 | PBS job stdout | passed at qsub: `-o outputs/2x8-GAAS-phase2c-ucx-affinity-confirm_<tag>.o` |
 | PBS job stderr | passed at qsub: `-e outputs/2x8-GAAS-phase2c-ucx-affinity-confirm_<tag>.e` |
@@ -321,15 +335,28 @@ mapping.
   distinct hosts; together with each arm's recorded `gpu_affinity` /
   `mem_affinity` / `cpu_affinity` / `ucx_affinity` strings and the accepted
   Phase-0 GPU->NUMA / GPU->PIX-HCA table, it reconstructs the effective
-  local-rank -> GPU -> HCA mapping of every arm.
+  local-rank -> GPU -> HCA mapping of every arm. Inside the same single
+  probe launch (same launcher, hostfile, and log; no extra job, rank, or
+  arm), node-local rank 0 on each allocated host also collects that host's
+  topology (hostname, cpuset, `Mems_allowed_list`, GPU count, the eight
+  400G IB HCAs, and the full `nvidia-smi topo -m` matrix) into the same
+  rank-map log — read-only node-local `/proc`, `/sys`, and `nvidia-smi`
+  observation through the exact container runtime the arms use.
 - The Phase-0 hardware characterization (PBS-visible cpuset, NUMA CPU
   ranges, GPU->NUMA mapping, GPU->PIX-HCA mapping, IB HCA inventory/link
   state on both g12 and g15) is reused from `scripts/probing_report.md`
   (2x8 supplement) and
   `scripts/outputs/phase0_2x8_probe_v1_node_hpc-gaas-g{12,15}.log`, not
   repeated; the in-script topology gates verify the allocated mother node
-  still matches it, and the pre/post snapshots preserve the allocated-node
-  topology tables.
+  (job-shell gate) AND both allocated hosts (rank-map per-host gate) still
+  match it, and the pre/post snapshots preserve the allocated-node topology
+  tables. The two-host gate exists because the accepted Phase-0 evidence
+  covers only g12 and g15: the 2026-09-28 remote preflight found g13+g15 as
+  the only currently free eligible pair, and g13 has no accepted Phase-0
+  capture, so replacement-node eligibility under TASK-008 Section 1.8 ("any
+  replacement pair must satisfy the same topology assumptions required by
+  the exact HCA mapping") is verified live per host inside the rank-map
+  stage before any scored arm.
 - The four cheap per-HCA `port_xmit_data` snapshots on the mother node
   (before C0a, after C0a/before C1, after C1/before C0b, after C0b) cover
   the same eight 400G IB HCAs `mlx5_0 mlx5_1 mlx5_2 mlx5_3 mlx5_4 mlx5_5
