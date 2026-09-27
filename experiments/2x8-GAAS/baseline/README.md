@@ -7,8 +7,13 @@ baseline for the 2x8-GAAS topology; two additional identical repeats provide
 run-to-run noise evidence (range/median/spread/CV computed mechanically
 later).
 
-**Status (2026-09-27):** scripts and README created; no submission yet
-(v1-v3 planned).
+**Status (2026-09-27):** first exact attempt `2x8-GAAS-baseline_v1`
+(job 72595.gaas) FAILED with a host-memory OOM kill (exit 137) during
+Matrix Generation; run stopped at the TASK-000 1.9 gate. The two identical
+repeats (v2/v3) were not run — they are conditional on a valid first
+attempt. Awaiting Strategic Analyst / Human Leader review; `N` was not
+changed (TASK-000 constraint: an OOM at N=737280 is scientifically
+meaningful boundary evidence, not an automatic-patching defect).
 
 ## Structure
 
@@ -98,17 +103,43 @@ A run is valid only when:
 
 | attempt | PBS job | queue | nodes | result | residual | overall GFLOP/s | per-GPU GFLOP/s |
 |---|---|---|---|---|---|---|---|
-| 2x8-GAAS-baseline_v1 | - | - | - | planned | - | - | - |
-| 2x8-GAAS-baseline_v2 | - | - | - | planned | - | - | - |
-| 2x8-GAAS-baseline_v3 | - | - | - | planned | - | - | - |
+| 2x8-GAAS-baseline_v1 | 72595.gaas | gpu_as | hpc-gaas-g12 hpc-gaas-g15 | FAILED: host-memory OOM kill (exit 137) during Matrix Generation; no residual/verification/GFLOPS produced | none (run died before verification) | - | - |
+| 2x8-GAAS-baseline_v2 | - | - | - | not run (conditional on a valid first attempt) | - | - | - |
+| 2x8-GAAS-baseline_v3 | - | - | - | not run (conditional on a valid first attempt) | - | - | - |
 
-`v1` (the first valid scored attempt) is designated the immutable original
-baseline for 2x8-GAAS and the future percentage denominator for 2x8-GAAS
-analysis.
+No valid scored attempt exists yet; the immutable 2x8-GAAS original
+baseline has NOT been established. When a valid attempt is eventually
+designated (under new human-approved scope), that first valid attempt
+becomes the immutable original baseline and the future percentage
+denominator for 2x8-GAAS analysis.
 
 ## Runtime error-patching history
 
-None yet.
+- `2x8-GAAS-baseline_v1` (job 72595.gaas, 2026-09-27, hpc-gaas-g12 +
+  hpc-gaas-g15, queue gpu_as, walltime used 00:04:55): FAILED —
+  `Exit_status = 137`. The launch itself was correct and fully validated:
+  2 distinct nodes, 16 ranks, 4x4 column grid, all supplied flags echoed
+  correctly by the application, internal test phase completed (GEMM/MPI/NCCL
+  broadcasts/pdgemv). The application then reported
+  `Per process host memory consumption MAX = 253.133 GB, available MIN = 6.782 GB`
+  and `Per process device memory consumption MAX = 136.866 GB, available MIN = 138.739 GB`;
+  during Matrix Generation it reported
+  `Per process memory available MIN system = 6.157 GB, device = 1.155 GB`
+  and was then SIGKILLed (`hpl-mxp.sh: line 261: ... Killed`; first failing
+  process rank 15 on hpc-gaas-g15, exit code 137; `resources_used.mem =
+  3845454204kb` of the 4000gb request). Output ends before LU/refinement;
+  no residual, no verification, no GFLOPS. Mechanical arithmetic consistent
+  with a host-memory wall: the FP64 host matrix at N=737280 is
+  `737280^2 * 8 / 2 = ~2174 GB per node` against the 2000 GB per-node
+  cgroup (the historical 2Nodes-8GPUs N-sweep README predicted the
+  host-RAM wall in the 700000-800000 range by the same formula; N=700000
+  PASSED with host available MIN 238.426 GB/process). **No patch
+  attempted, no retry, no N change**: per TASK-000 constraint 20 and stop
+  rule 1.9, an OOM at N=737280 is scientifically meaningful boundary
+  evidence, not an automatic-patching defect. Evidence:
+  `outputs/2x8-GAAS-baseline_v1.{o,e}`,
+  `outputs/2x8-GAAS-baseline_v1_submission.log`,
+  `outputs/2x8-GAAS-baseline_v1_job72595_qstat_monitor.log`.
 
 ## Evidence paths
 

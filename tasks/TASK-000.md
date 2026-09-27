@@ -1,8 +1,8 @@
 ---
 task_id: TASK-000
 title: Phase 0 — 2x8 GAAS Characterization and Baseline
-status: EXECUTING
-current_owner: codex
+status: BLOCKED
+current_owner: user
 parent_task: none
 analysis_id: 2x8-gaas-phase0
 created: 2026-09-27
@@ -648,55 +648,208 @@ restoration of the approved task revision there.
 
 ### 2.1 Execution Status
 
-status: PARTIAL
+status: BLOCKED
 
-TASK-000 is rearmed as `APPROVED / codex` by explicit human authorization in
-the workflow-maintenance request. Approved task execution has not begun.
+The Phase-0 probe objective is COMPLETE. The baseline objective is BLOCKED
+at the task 1.9 stop gate: the first exact baseline attempt
+(`2x8-GAAS-baseline_v1`, job 72595.gaas) OOMed (host-memory kill, exit 137)
+during Matrix Generation at the unchanged fixed `N=737280`. Per Section 1.9
+and constraint 20, no retry, no `N` change, and no repeats were performed;
+the two identical repeats are conditional on a valid first attempt. The next
+action requires Strategic Analyst / Human Leader review and is outside the
+approved scope.
 
 ### 2.2 Orchestration Summary
 
-No worker was dispatched during maintenance. The next execution session must
-use the existing OpenCode execution layer within the approved task scope.
+Substantive execution was delegated to five sequential/parallel OpenCode
+execution workers, each bounded by this task's scope; Codex validated every
+worker claim against repository state and raw evidence before relying on it:
+
+1. Worker A — mechanical comparison of the completed 2x8 probe evidence
+   against `scripts/probing_report.md` and append-only supplement writing.
+2. Worker B — remote mechanical flag-support verification of all 14 supplied
+   NVIDIA flags against the installed v26.02 package, plus the N=737280
+   feasibility arithmetic (run in parallel with Worker A).
+3. Worker C — creation of `experiments/2x8-GAAS/baseline/` (README + PBS
+   script) with the unchanged exact configuration.
+4. Worker D — live clean-node selection, single host-pinned submission of
+   attempt v1, bounded monitoring (6 checks of max 30), evidence retrieval,
+   and mechanical validation (stopped on the OOM stop condition as
+   instructed).
+
+Codex directly performed Git commit/push, remote worktree synchronization,
+and results/task bookkeeping.
 
 ### 2.3 Work Executed
 
-Workflow-maintenance documentation only; no TASK-000 execution.
+1. Startup: read Workflow v2 files 00-08, `APPLICATION.md`, this task
+   (EXECUTING/codex, Section 1.11 unchanged APPROVED), and the latest
+   progress report; verified Git state (only pre-existing untracked
+   `hpl-mxp-runs-on-gaas/`, preserved untouched throughout).
+2. Reviewed the completed probe evidence locally: job 72591.gaas outputs
+   `scripts/outputs/phase0_2x8_probe_v1.{o,e}`, per-node captures for
+   hpc-gaas-g12 and hpc-gaas-g15, node body, submission/monitor logs
+   (including preserved never-ran attempts 72556/72590).
+3. Worker A appended the dated "2x8 Phase-0 supplement (2026-09-27)" to
+   `scripts/probing_report.md` (append-only: 185 added, 0 deleted;
+   historical body byte-identical). g12 vs g15 match on all hardware and
+   topology dimensions; differences are per-device identity or point-in-time
+   runtime state only.
+4. Worker B verified all 14 supplied CLI flags as SUPPORTED by the installed
+   v26.02 package (wrapper/binary `--help` unavailable on the login node;
+   evidence from installed-binary strings plus package README/RUNNING/TUNING
+   docs; in-package TUNING doc is stale vs the installed binary but the
+   binary is authoritative). N=737280 feasibility: per-GPU device matrix
+   `737280^2*4/16 = 135.895 GB` vs 138.739 GB historical available MIN and
+   139.80 GiB free at probe time — no obvious deterministic impossibility
+   from device memory. Evidence:
+   `experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log`.
+5. Worker C created `experiments/2x8-GAAS/baseline/README.md` and
+   `scripts/run_2x8_baseline.pbs` with the unchanged exact configuration
+   (launch block verified character-for-character against the flag-check
+   log); `bash -n` passes.
+6. Committed and pushed revision `73b06f4` ("Record TASK-000 2x8 probe
+   evidence and baseline preparation"); synchronized the GAAS primary by
+   non-destructive `git fetch origin` (dirty primary preserved untouched)
+   and created/verified the clean detached execution worktree
+   `.codex-worktrees/TASK-000-73b06f4` at exactly
+   `73b06f4f56e7c60f937cd1af8fc0eab70cb7c4b4` (script sha256 identical
+   local/remote).
+7. Worker D selected the clean eligible pair live (`pbsnodes -aSj` + live
+   Qlist: hpc-gaas-g12 + hpc-gaas-g15 fully free, Qlist `gpu_as,gpu_ppu`;
+   no fully-free gpu_ded pair; g04/g05/g16/g17 fully free but gpu_aisg —
+   off-limits) and submitted exactly once:
+   `qsub -q gpu_as -l select=host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB -v ATTEMPT=2x8-GAAS-baseline_v1 -o outputs/2x8-GAAS-baseline_v1.o -e outputs/2x8-GAAS-baseline_v1.e scripts/run_2x8_baseline.pbs`
+   → job 72595.gaas.
+8. Bounded monitoring (6 checks, 60 s apart, max 30): R/substate 42 for
+   checks 1-5; F/substate 93 at check 6. Final: `Exit_status = 137`,
+   `resources_used.walltime = 00:04:55`, `resources_used.mem = 3845454204kb`,
+   exec_vnode exactly hpc-gaas-g12 + hpc-gaas-g15.
+9. Retrieved and preserved `2x8-GAAS-baseline_v1.{o,e}` (sha256-verified
+   remote→local) plus submission and monitor logs.
+10. Logged the failed attempt in `results/metrics.csv` (row
+    `2x8-GAAS-baseline,2x8-GAAS-baseline_v1,...`) and regenerated
+    `results/RESULTS.md` from the CSV; updated the experiment README with
+    the failed-attempt record and no-patch decision.
 
 ### 2.4 Operational Validation
 
-Section 1.11 approval and exact scope are unchanged. The fixed baseline,
-scientific stop conditions, and approved probe-first order are unchanged.
+Launch validation of the failed attempt (all correct): exactly 2 distinct
+nodes; 16 ranks; de-duplicated hostfile `slots=8`; grid `nprow=4 npcol=4
+nporder=column`; `gpu_affinity=0:1:2:3:4:5:6:7`; HPL-MxP-NVIDIA 26.2.0
+banner; echoed settings match every supplied flag exactly (order=column,
+sloppy-type=FP16, use-mpi-panel-broadcast=0, use-separate-stream-for-gemm=1,
+prioritize-trsm=0, prioritize-factorization=0, test-loop=1, skip-tests=0,
+monitor-gpu=0); internal test phase ran and completed (GEMM 597971 GFLOPS
+avg, MPI/NCCL U and L2 broadcasts, pdgemv); rank→node mapping lines show
+only hpc-gaas-g12 and hpc-gaas-g15. Pre-run health snapshot normal (30-32 C,
+~77 W, 0 MiB used, driver 580.126.20).
+
+Failure facts: the application reported
+`Per process host memory consumption MAX = 253.133 GB, available MIN = 6.782 GB`
+and `Per process device memory consumption MAX = 136.866 GB, available MIN = 138.739 GB`;
+at Matrix Generation `Per process memory available MIN system = 6.157 GB,
+device = 1.155 GB`; then SIGKILL (`hpl-mxp.sh: line 261: ... Killed`, first
+failing process rank 15 on hpc-gaas-g15, exit code 137). Output ends before
+LU/refinement: no residual, no verification verdict, no GFLOPS. Mechanical
+arithmetic consistent with a deterministic host-memory wall at this
+allocation shape: FP64 host matrix per node `737280^2 * 8 / 2 ≈ 2174 GB`
+vs the 2000 GB per-node cgroup (the historical 2Nodes-8GPUs N-sweep
+predicted the host-RAM wall in the 700000-800000 range by the same formula;
+N=700000 PASSED with host available MIN 238.426 GB/process). The
+pre-submission feasibility check (deliverable B) examined device memory only
+and found no device-side impossibility; the binding constraint proved to be
+host RAM under the validated 2000 GB per-node allocation.
 
 ### 2.5 Evidence and Artifacts
 
-Previous startup evidence is preserved above and in the historical progress
-records. Maintenance handoff: `progress/2026-09-27-progress_s4.md`.
+- Probe (COMPLETE): job 72591.gaas on exactly hpc-gaas-g12 + hpc-gaas-g15;
+  raw evidence `scripts/outputs/phase0_2x8_probe_v1*` (committed at
+  `73b06f4`); supplement appended to `scripts/probing_report.md`.
+- Flag check: `experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log`
+  (all 14 supplied flags SUPPORTED; OMP_NUM_THREADS=8 recorded as an
+  environment setting, not a CLI flag).
+- Baseline attempt v1 (FAILED): job 72595.gaas, queue gpu_as, project
+  hpc_ebslee, nodes hpc-gaas-g12 + hpc-gaas-g15, walltime used 00:04:55,
+  Exit_status 137. Evidence:
+  `experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_v1.{o,e}`,
+  `..._v1_submission.log`, `..._v1_job72595_qstat_monitor.log`.
+- Results: `results/metrics.csv` (failed row appended),
+  `results/RESULTS.md` (regenerated, 193 rows).
+- Commits: `73b06f4` (probe evidence + supplement + baseline preparation);
+  this report and the failure bookkeeping are committed in the final
+  execution commit of this session.
+- Remote execution tree: `.codex-worktrees/TASK-000-73b06f4` at
+  `73b06f4f56e7c60f937cd1af8fc0eab70cb7c4b4` (clean; dirty primary and all
+  pre-existing remote material untouched).
 
 ### 2.6 Files Changed
 
-Workflow-maintenance files are listed in the maintenance progress record.
+- `scripts/probing_report.md` (append-only 2x8 supplement)
+- `scripts/outputs/phase0_2x8_probe_v1*` (13 evidence files, added)
+- `experiments/2x8-GAAS/baseline/README.md` (created, then updated with the
+  v1 failure record)
+- `experiments/2x8-GAAS/baseline/scripts/run_2x8_baseline.pbs` (created)
+- `experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log`
+  (created)
+- `experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_v1.{o,e}`,
+  `..._v1_submission.log`, `..._v1_job72595_qstat_monitor.log` (retrieved
+  evidence)
+- `results/metrics.csv`, `results/RESULTS.md` (failed-attempt row)
+- `tasks/TASK-000.md` (this report; front matter to BLOCKED/user)
+- `progress/2026-09-27-progress_s6.md` (session handoff)
 
 ### 2.7 Missing / Unavailable Evidence
 
-All Phase-0 probe and baseline execution evidence is still pending.
+- No valid scored baseline attempt exists; the immutable 2x8-GAAS original
+  baseline has NOT been established.
+- The two identical repeats (v2/v3) were not run (conditional on a valid
+  first attempt); no repeat range/median/spread/CV exists.
+- No LU time/GFLOPS, iterative-refinement data, residual, verification
+  verdict, or overall GFLOPS for N=737280 (the run died before those
+  phases). GPU-monitoring output is unavailable by design (`--monitor-gpu 0`).
 
 ### 2.8 Execution Errors / Exceptions
 
-No current manual blocker is established by the previous dirty-clone or
-missing-ControlPath conditions. Use documented Track 1 recovery; escalate
-only actual unresolved authority, authentication, content, or external issues.
+The exact baseline OOMed (task 1.9 stop gate; constraint 20 anticipated
+this as scientifically meaningful boundary evidence): host-memory SIGKILL
+(exit 137) during Matrix Generation at N=737280 on the validated
+2 x (ngpus=8, ncpus=96, mem=2000GB) allocation, after device memory had
+also narrowed to 1.155 GB available MIN. Host FP64 matrix demand
+(~2174 GB/node) exceeds the 2000 GB per-node cgroup; N=700000 PASSED
+historically with ~238 GB/process host headroom, so the wall sits between
+700000 and 737280 on the host side (and between 737280 and 800000 on the
+device side). No automatic patch, retry, cancellation, or parameter
+substitution was performed; no other errors occurred. Resolving this
+requires a human/Strategic-Analyst decision (for example: a new approved
+task with a revised configuration such as lower N and/or a different
+host-memory strategy, accepting the boundary evidence, or closing Phase 0
+differently) — all outside this task's approved scope, which fixed
+N=737280 exactly.
 
 ### 2.9 Scope Compliance
 
-No GAAS connection, worker, probe, scheduler action, HPL-MxP run, OpenMxP
-access, tuning, or analysis was performed during this maintenance patch.
+Stayed within the approved scope throughout: one comprehensive read-only
+probe (previous session, 72591.gaas); append-only probing-report
+supplement; no external OpenMxP access; configuration never re-derived or
+modified (all 14 flags verified unchanged and echoed identically by the
+application); exactly one baseline submission with bounded monitoring and
+full evidence retrieval; no repeats after the invalid first attempt; queues
+restricted to gpu_as (approved) with project hpc_ebslee; no source edits,
+package changes, or shared-software changes; dirty remote primary and all
+pre-existing material preserved; no ANALYSE_RESULTS or strategic
+interpretation performed.
 
 ### 2.10 Handoff to Strategic Analyst
 
-Next action is a fresh Codex execution session explicitly selecting TASK-000:
-verify approved local/origin revision and unchanged Section 1.11, connect by
-direct SSH, inspect/preserve primary state, fetch and create/reuse a clean
-isolated worktree if needed, verify the actual execution tree, and continue
-the approved probe-first sequence. Set `EXECUTING / codex` on initial start;
-subsequent sessions may resume that state without new approval. No strategic
-or benchmark conclusion is available.
+TASK-000 is returned as `BLOCKED / user` at the OOM stop gate for Strategic
+Analyst / Human Leader review. The Phase-0 characterization evidence (2x8
+probe + supplement, flag-support check, feasibility arithmetic) is complete
+and committed. The fixed baseline configuration N=737280 is not executable
+within the validated 2000 GB per-node host-memory allocation on 2x8 GAAS.
+Exact next action (human decision required): review the boundary evidence
+in `experiments/2x8-GAAS/baseline/` and decide the path forward — e.g.,
+authorize a new task with a revised Strategic-Analyst-supplied
+configuration (such as a lower N and/or revised memory strategy), or
+redirect Phase 0. No benchmark conclusion is available; no baseline was
+promoted.

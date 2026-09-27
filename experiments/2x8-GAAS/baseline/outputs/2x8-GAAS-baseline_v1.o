@@ -1,0 +1,183 @@
+experiment_id=2x8-GAAS-baseline
+attempt=2x8-GAAS-baseline_v1
+pbs_job_id=72595.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-09-27T08:24:12+08:00
+fixed configuration (identical across attempts):
+OMP_NUM_THREADS=8
+--n 737280
+--nb 3072
+--nprow 4
+--npcol 4
+--nporder column
+--gpu-affinity 0:1:2:3:4:5:6:7
+--sloppy-type FP16
+--use-mpi-panel-broadcast 0
+--use-separate-stream-for-gemm 1
+--prioritize-trsm 0
+--prioritize-factorization 0
+--test-loop 1
+--skip-tests 0
+--monitor-gpu 0
+layout=2 nodes x 8 GPUs = 16 ranks
+grid=nprow=4 npcol=4 nporder=column
+nodes=hpc-gaas-g12 hpc-gaas-g15
+gpu_affinity=0:1:2:3:4:5:6:7
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-000-73b06f4/multi-node-test/rsh_pbsdsh_container.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 30, 77.67 W, 345 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 31, 78.93 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 30, 76.69 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 32, 76.54 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 32, 75.26 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 31, 75.40 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 30, 77.15 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 31, 77.05 W, 345 MHz, 0 MiB, 143771 MiB
+=== hostfile ===
+hpc-gaas-g12 slots=8
+hpc-gaas-g15 slots=8
+
+================================================================================
+HPL-MxP-NVIDIA 26.2.0  -- NVIDIA accelerated HPL-MxP benchmark benchmark -- NVIDIA
+================================================================================
+
+ ****** HPL MxP Settings ****** 
+
+   --nprow =  4 
+   --npcol =  4 
+   --order = column 
+   --n     = 737280 
+   --nb    = 3072 
+   --tolerance                        = 1.000000e-12 
+   --test-loop                        = 1 
+   --preset-gemm-kernel               = 90 
+   --u-panel-chunk-nbs                = 8 
+   --call-dgemv-with-multiple-threads = 0 
+   --prioritize-trsm                  = 0 
+   --prioritize-factorization         = 0 
+   --use-separate-stream-for-gemm     = 1 
+   --use-mpi-panel-broadcast          = 0 
+   --mpi-use-host-threads             = 1 
+   --sloppy-type                      = FP16 
+   --Anq-device                       = 0 
+   --cuda-host-register-step          = 2048 
+   --mpi-use-mpi                      = 0 
+   --use-host-mpi                     = 0 
+   --fill-device                      = 0 
+   --fill-device-buffer-size          = 3048 
+   --fp4-scaling-factor-a             = 1.000000e-05 
+   --skip-tests                       = 0 
+   --gemm-iterations                  = 100 
+
+
+
+ ****** Monitor GPU Settings ****** 
+
+   --monitor-gpu                      = 0 
+
+
+
+ ****** test 1 of 1 starts ****** 
+
+   n      = 737280
+   nb     = 3072
+   nprow  = 4
+   npcol  = 4
+
+Device info:
+	Peak clock frequency 1980 MHz
+	SM 90
+	Number of SMs 132
+	Total memory available 139.80 GB
+
+---------------------------------------------------------------------------------------------
+[34m Per process host memory consumption MAX = 253.133 GB, available MIN = 6.782 GB[0m
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+[34m Per process device memory consumption MAX = 136.866 GB, available MIN = 138.739 GB[0m
+---------------------------------------------------------------------------------------------
+
+Constructor seconds: AVG = 1.11, MAX = 2.15 (15->hpc-gaas-g15), MIN = 0.08 (5->hpc-gaas-g12)
+
+
+ ****** Testing HPL MxP components ****** 
+
+GEMM seconds: AVG = 17.46, MAX = 17.88 (3->hpc-gaas-g12), MIN = 17.13 (11->hpc-gaas-g15)
+
+GEMM GFLOPS: AVG = 597971.12, MAX = 609277.63 (11->hpc-gaas-g15), MIN = 583761.70 (3->hpc-gaas-g12)
+
+MPI U broadcast seconds: AVG = 0.00, MAX = 0.00 (8->hpc-gaas-g15), MIN = 0.00 (4->hpc-gaas-g12)
+
+MPI U broadcast GFLOPS: AVG = 21119.86, MAX = 24080.48 (4->hpc-gaas-g12), MIN = 11575.96 (8->hpc-gaas-g15)
+
+MPI U broadcast seconds: AVG = 0.00, MAX = 0.00 (10->hpc-gaas-g15), MIN = 0.00 (4->hpc-gaas-g12)
+
+MPI U broadcast GFLOPS: AVG = 21504.96, MAX = 23944.34 (4->hpc-gaas-g12), MIN = 14762.55 (10->hpc-gaas-g15)
+
+NCCL U broadcast seconds: AVG = 0.04, MAX = 0.04 (1->hpc-gaas-g12), MIN = 0.04 (15->hpc-gaas-g15)
+
+NCCL U broadcast GFLOPS: AVG = 339.14, MAX = 340.70 (15->hpc-gaas-g15), MIN = 335.71 (1->hpc-gaas-g12)
+
+MPI L2 broadcast seconds: AVG = 0.00, MAX = 0.00 (14->hpc-gaas-g15), MIN = 0.00 (1->hpc-gaas-g12)
+
+MPI L2 broadcast GFLOPS: AVG = 143494.29, MAX = 166983.13 (1->hpc-gaas-g12), MIN = 89244.73 (14->hpc-gaas-g15)
+
+NCCL L2 broadcast seconds: AVG = 1.19, MAX = 1.19 (3->hpc-gaas-g12), MIN = 1.19 (13->hpc-gaas-g15)
+
+NCCL L2 broadcast GFLOPS: AVG = 95.31, MAX = 95.40 (13->hpc-gaas-g15), MIN = 95.24 (3->hpc-gaas-g12)
+
+pdgemv seconds: AVG = 0.77, MAX = 0.78 (14->hpc-gaas-g15), MIN = 0.76 (15->hpc-gaas-g15)
+
+pdgemv GFLOPS: AVG = 88.56, MAX = 89.53 (15->hpc-gaas-g15), MIN = 87.54 (14->hpc-gaas-g15)
+
+
+ ****** Matrix Generation ****** 
+
+---------------------------------------------------------------------------------------------
+[34m Per process memory available MIN system = 6.157 GB, device = 1.155 GB[0m
+---------------------------------------------------------------------------------------------
+

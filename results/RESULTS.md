@@ -196,5 +196,6 @@ This report records validated raw result data only. No optimization analysis or 
 | 3x4-smoketest | smoketest_100k_v1 | 100000 | 1024 | 3x4 | row | unset | unset | unset | PASSED | 1.4438e+04 | experiments/3x4-smoketest/outputs/smoketest_100k_v1.o |
 | SingleNode-resweep | SingleNode-resweep_v1.1 | 356352 | 3072 | 4x2 | row | 8 | sockets | TRUE | PASSED | 2.7694e+06 | experiments/SingleNode-resweep/outputs/SingleNode-resweep_v1.1.o |
 | SingleNode-resweep | SingleNode-resweep_v1 | unknown | unknown | unknownxunknown | unknown | 8 | sockets | TRUE | UNKNOWN | unknown | experiments/SingleNode-resweep/outputs/SingleNode-resweep_v1.o |
+| 2x8-GAAS-baseline | 2x8-GAAS-baseline_v1 | 737280 | 3072 | 4x4 | column | 8 | unset | unset | FAILED | unknown | experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_v1.o |
 
 Source: `results/metrics.csv`.
