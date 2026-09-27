@@ -529,42 +529,98 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
+status: PARTIAL
 
 ### 2.2 Orchestration Summary
 
-*Workers, responsibilities, dependencies, and follow-ups.*
+Two sequential NTU-HPC-Large OpenCode worker assignments were completed. The
+first prepared the experiment README and PBS script and ran the requested
+syntax check. The second performed Workflow 01 Mode B synchronization and a
+read-only live queue/node eligibility check. Follow-up NTU-HPC-Large calls to
+submit the approved job failed at the OpenCode API connection layer before
+running SSH or qsub; no alternate model was used. No job was submitted.
 
 ### 2.3 Work Executed
 
-*Factual work performed.*
+- Created `experiments/2x8-GAAS/phase1a-n-coarse/README.md`,
+  `scripts/run_phase1a_n_coarse.pbs`, and `outputs/.gitkeep`.
+- Prepared the six approved N candidates to run sequentially in one 2×8
+  allocation, with fixed controls and attempt-specific candidate evidence.
+- Committed and pushed the reviewed preparation as
+  `70c56a1b90643631dc9e89d1f77018b46ab76983`.
+- Fetched the commit on GAAS and created a clean detached execution worktree
+  at `.codex-worktrees/TASK-001-70c56a1-phase1a`.
+- Checked live queue eligibility. At 2026-09-27 10:41:34–10:41:40 +08:00,
+  `hpc-gaas-g12` and `hpc-gaas-g15` were free, had zero assigned resources,
+  and both listed `gpu_as` in their Qlist. `gpu_as` was enabled and started.
+  `gpu_ded` had only one fully free eligible node, `hpc-gaas-g22`.
 
 ### 2.4 Operational Validation
 
-*Evidence, correctness, provenance, consistency, and scope checks.*
+- `bash -n` on the PBS script: passed. `git diff --check` and staged diff
+  check: clean.
+- The execution worktree was clean at the exact pushed commit. Its task,
+  README, and PBS script matched the reviewed local files by SHA-256.
+- The execution-tree task front matter is `EXECUTING / codex`; Section 1.11
+  remains `status: APPROVED`, `approved_by: user`, with the approved scope.
+- Queue eligibility was based on live Qlist plus state and assigned-resource
+  data, not state `free` alone. These facts are historical after their
+  timestamp and must be rechecked immediately before a future submission.
+- No PBS/application output or correctness evidence exists because no job
+  was submitted.
 
 ### 2.5 Evidence and Artifacts
 
-*Reference raw evidence paths and revisions; do not duplicate outputs.*
+- Preparation: `experiments/2x8-GAAS/phase1a-n-coarse/` at commit
+  `70c56a1b90643631dc9e89d1f77018b46ab76983`.
+- Remote execution tree:
+  `/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-001-70c56a1-phase1a`
+  at the same full SHA.
+- Remote primary clone was `87fb61e829832a3bc07c2579d8472aa1be279f13`
+  with 168 pre-existing status entries. It and all pre-existing worktrees
+  were left untouched; only the authorized fetch and new detached worktree
+  were created.
+- Queue evidence: bounded `pbsnodes -aSj`, `pbsnodes -av` Qlist mapping,
+  per-node `resources_assigned`, and `qstat -Qf gpu_as/gpu_ded` output via
+  BatchMode SSH at the times above.
 
 ### 2.6 Files Changed
 
-*List files or state None.*
+- `experiments/2x8-GAAS/phase1a-n-coarse/README.md`
+- `experiments/2x8-GAAS/phase1a-n-coarse/outputs/.gitkeep`
+- `experiments/2x8-GAAS/phase1a-n-coarse/scripts/run_phase1a_n_coarse.pbs`
+- `tasks/TASK-001.md`
+- `progress/2026-09-27-progress_s8.md`
 
 ### 2.7 Missing / Unavailable Evidence
 
-*List gaps or state None.*
+All six candidate attempts, PBS `.o`/`.e`, per-candidate `.out`/`.err`/
+`.status`, correctness markers, performance and memory measurements, and
+`results/metrics.csv` / `results/RESULTS.md` entries remain unavailable until
+the approved sweep is submitted and completed.
 
 ### 2.8 Execution Errors / Exceptions
 
-*List failures and exceptions or state None. Record authorized Track 1
-recovery and the exact resume action if incomplete; do not mark a recoverable
-operational condition BLOCKED or transfer ownership to the user.*
+NTU-HPC-Large OpenCode submission calls returned `Cannot connect to API`
+(including `Was there a typo in the url or port?`) before executing the
+assigned remote commands. The remote worktree and prior eligibility check
+remain intact. No qsub command ran, no job ID was issued, and no output file
+was created. Resume by invoking the same approved submission assignment
+through NTU-HPC-Large after its OpenCode API call succeeds; first refresh the
+Qlist/free-resource check and verify every v1 target filename is absent.
 
 ### 2.9 Scope Compliance
 
-*State whether work stayed within the approved scope.*
+Work stayed within the approved TASK-001 scope. Only the `gpu_as` eligible
+pair was identified; there was no use of an off-scope queue, no job
+submission, no scientific-control/resource/launcher change, no strategic
+analysis, and no access to OpenMxP. The pre-existing local untracked
+`hpl-mxp-runs-on-gaas/` directory and dirty remote primary clone were
+preserved. Only NTU-HPC-Large was used for OpenCode worker assignments.
 
 ### 2.10 Handoff to Strategic Analyst
 
-*Give factual reading guidance, without strategic interpretation.*
+No handoff yet: execution remains `EXECUTING / codex` and is incomplete. The
+next action is to resume TASK-001 by rechecking the approved `gpu_as` pair and
+submitting exactly one `ATTEMPT_TAG=v1` sweep job through an NTU-HPC-Large
+worker. Section 1.11 is unchanged; no new task authorization is needed.
