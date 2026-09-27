@@ -329,3 +329,112 @@ After Phase 1B, perform the mandatory E08 dependency review and reopen N only lo
 
 **Human decision state:** proposed only. No Phase-1B execution is authorized by this analysis.
 
+## 4. Phase 1B — NB Screen and Phase-1 Closure
+
+TASK-003 screened NB at fixed `N=429056` using the retained Phase-1A controls. All six approved NB values ran successfully and passed correctness.
+
+Detailed analysis: `planning/analysis/2x8-gaas-phase1b-nb-screen.md`.
+
+### 4.1 Results
+
+| NB | Overall GFLOP/s | vs original baseline | vs TASK-003 NB=3072 | LU GFLOP/s | LU time | IR time | IR/LU | Device headroom after matgen | Host memory consumption MAX |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1024 | `4.5905e+06` | -4.44% | -17.11% | `5.3920e+06` | 9.77 s | 1.71 s | 0.175 | **5.700 GB** | 0.004 GB |
+| 2048 | `5.5286e+06` | +15.09% | -0.17% | `6.5865e+06` | 7.99 s | 1.53 s | 0.191 | 2.237 GB | 0.517 GB |
+| **3072** | **`5.5381e+06`** | **+15.29%** | control | **`6.5950e+06`** | **7.98 s** | **1.53 s** | 0.192 | 2.767 GB | **0.004 GB** |
+| 4096 | `5.3738e+06` | +11.87% | -2.97% | `6.4400e+06` | 8.18 s | 1.62 s | 0.198 | 2.284 GB | 6.123 GB |
+| 5120 | `5.1301e+06` | +6.79% | -7.37% | `6.1330e+06` | 8.59 s | 1.68 s | 0.196 | 2.319 GB | 2.554 GB |
+| 6144 | `5.0524e+06` | +5.18% | -8.77% | `5.9792e+06` | 8.81 s | 1.62 s | 0.184 | 2.362 GB | 11.900 GB |
+
+All six candidates used three refinement iterations and reported finite residuals with `PASSED`.
+
+The same-protocol `NB=3072` control moved from `5.6091e+06` in TASK-002 to `5.5381e+06` in TASK-003 (-1.27%). The within-job difference between `NB=2048` and `NB=3072` is only 0.17%, so they form a performance plateau rather than a proven unique winner.
+
+### 4.2 Analysis
+
+The NB sweep primarily changes **LU performance**, not iterative-refinement behavior.
+
+`NB=1024` provides the most device headroom but performs poorly because its many small panels increase panel/factorization/broadcast/synchronization overhead and create weaker trailing-update geometry. Moving to `NB=2048–3072` sharply improves LU while IR remains approximately 1.53 s.
+
+Above `NB=3072`, LU time rises progressively. The likely mechanism is that larger panels reduce panel count but increase per-panel dependency, communication, workspace, and synchronization granularity while changing GEMM/update shapes. The useful region is therefore `NB=2048–3072`, not a monotonic large-NB trend.
+
+#### Why memory headroom changes with NB at fixed N
+
+Global `N` is fixed, but NB changes the benchmark's memory layout and workspaces:
+
+1. block-cyclic local row/column ownership and remainder placement change with NB;
+2. panel/factorization/TRSM/update workspace scales with panel width;
+3. panel communication and staging buffers change size;
+4. with `--fill-device 1`, those allocations change how much of the FP64 matrix can remain resident while the configured 3048 MB device buffer zone is preserved.
+
+Illustrative worst-rank FP64 local-matrix arithmetic under the 4×4 block-cyclic distribution:
+
+| NB | max local row/column extent | approx. worst-rank FP64 local matrix |
+|---:|---:|---:|
+| 1024 | 107520 | 92.48 GB |
+| 2048 | 108544 | 94.25 GB |
+| 3072 | 107520 | 92.48 GB |
+| 4096 | 109568 | 96.04 GB |
+| 5120 | 107520 | 92.48 GB |
+| 6144 | 110592 | 97.84 GB |
+
+This is explanatory arithmetic, not a reconstruction of the benchmark's total memory counters. Actual reported memory also includes low-precision data, runtime workspaces, communication/staging buffers, and host allocations.
+
+The host-memory-consumption metric is therefore not a pure FP64-spill counter. Its non-monotonic behavior is expected when both block ownership and temporary workspace change.
+
+Memory headroom is a **hard constraint and mechanism**, not a direct optimization target: `NB=1024` has 5.700 GB device headroom but is the slowest candidate, whereas `NB=2048–3072` runs much faster while operating closer to the device-memory ceiling.
+
+### 4.3 Retained NB decision
+
+Retain the **`NB=2048–3072` performance plateau**, with **`NB=3072` as the representative Phase-1 control** because:
+
+- performance is effectively tied with 2048;
+- it is the same NB used throughout the retained Phase-1A geometry;
+- it has more device headroom than 2048 in this run;
+- reported host consumption is essentially zero;
+- LU and IR are effectively identical to 2048.
+
+This does not claim that 3072 is uniquely faster.
+
+### 4.4 Mandatory dependency checkpoint
+
+The checkpoint is performed.
+
+- **E08, NB → N/memory boundary:** the dependency is directly visible because NB materially changes host/device headroom. However, the retained representative NB remains 3072, the same value used to establish `N=429056`. **Keep N closed; no targeted N resweep is required.**
+- The retained `N=429056, NB=3072` point has now been repeated across TASK-002 and TASK-003: `5.6091e+06` and `5.5381e+06` (-1.27%). The lower repeat still remains clearly above the bracketing Phase-1A N points.
+- **E10, NB → grid/order:** no retained NB change, but E09 already requires a fresh Phase-2A grid/order sweep because the N/residency regime changed materially.
+- **E22, NB → panel transport:** communication remains open downstream and deferred until geometry/placement is established.
+- **E23/E24, NB/N/npcol → U-panel chunk:** default chunking remains provisional and must be recalculated after a grid change.
+- **E28, NB → scheduling:** scheduling remains open downstream; no immediate revalidation before Phase 2A because retained NB is unchanged.
+- **E34, NB → GEMM kernel:** remains open downstream; no immediate action.
+- **E16, residency → fill buffer:** default buffer remains unoptimized and is deferred to its blueprint phase.
+
+### 4.5 Phase-1 decision
+
+**Phase 1 is closed with the retained representative geometry:**
+
+```text
+N = 429056
+NB = 3072
+grid/order = 4x4 column only as a provisional control
+fill-device = 1
+```
+
+The retained NB region is `2048–3072`, with 3072 carried forward as the representative control.
+
+### 4.6 Proposed next step
+
+**Recommended next action: Phase 2A process-grid shape screening at fixed `N=429056`, `NB=3072`.**
+
+Follow the blueprint staging:
+
+1. keep all retained Phase-1 controls fixed;
+2. screen a bounded set of valid 16-rank process-grid shapes using one fixed order/mapping;
+3. retain useful shapes based on end-to-end performance, phase balance, memory/rank symmetry, and communication behavior;
+4. compare row versus column order only for retained shapes;
+5. do not combine the initial grid screen with GPU-affinity or communication tuning.
+
+The exact Phase-2A candidate set should be specified in the next human-approved task.
+
+**Human decision state:** proposed only. No Phase-2A execution is authorized by this analysis.
+
