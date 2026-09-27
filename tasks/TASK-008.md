@@ -449,7 +449,9 @@ job `73068.gaas` are in `results/metrics.csv`, and
 `results/RESULTS.md` has been regenerated. Execution used remote revision
 `962545ec71cc79cb1e368689f3f2d033f3aecd4`; preparation revisions
 `b45130aa0b069b7443a0d6229dc0ec555c660edb` and
-`962545ec71cc79cb1e368689f3f2d033f3aecd4` are on `origin/main`.
+`962545ec71cc79cb1e368689f3f2d033f3aecd4` are on `origin/main`. Evidence,
+results, and the completed execution report were committed and pushed as
+`9793e1936c4012e2ca5dcc7516acff91d128e3db`.
 
 ### 2.6 Files Changed
 
