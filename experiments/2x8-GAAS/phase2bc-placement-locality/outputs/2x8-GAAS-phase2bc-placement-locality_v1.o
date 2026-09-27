@@ -1,0 +1,245 @@
+experiment_id=2x8-GAAS-phase2bc-placement-locality
+attempt_tag=v1
+pbs_job_id=72879.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-09-27T22:47:13+08:00
+fixed scientific controls (identical across all 10 arms; only GPU/memory/CPU/UCX placement varies):
+OMP_NUM_THREADS=8 (OMP_PLACES/OMP_PROC_BIND deliberately unset in the job environment; the installed launcher's package defaults apply unchanged, same as TASK-004/TASK-005/TASK-006)
+--n 429056
+--nb 3072
+--nprow 4 --npcol 4 --nporder row
+--sloppy-type FP16
+--use-mpi-panel-broadcast 0
+--use-separate-stream-for-gemm 1
+--prioritize-trsm 0
+--prioritize-factorization 0
+--fill-device 1
+--test-loop 1
+--skip-tests 0
+--monitor-gpu 0
+deferred communication controls NOT used anywhere in this sweep: --ucx-tls / UCX_TLS, --use-mpi-panel-broadcast changes, --mpi-use-mpi, --use-host-mpi, --u-panel-chunk-nbs
+stage order: A0,A1,A2,A3 -> B0,B1,B2,B3 -> C0,C1 with pre-authorized >2.0% mechanical carry-forward (TASK-007 Sections 1.4B-1.4D)
+arm_count=10
+layout=2 nodes x 8 GPUs = 16 ranks
+grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)
+nodes=hpc-gaas-g12 hpc-gaas-g15
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-007-c83900f-phase2bc-v1/multi-node-test/rsh_pbsdsh_container.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+=== mother-node GPU topology matrix (gate input + evidence) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0 GPU4->NUMA1 NIC legend matches Phase-0)
+=== pre-sweep hardware-health snapshot (mother node hpc-gaas-g12) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 29, 77.42 W, 345 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 29, 78.48 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 29, 76.24 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 30, 76.69 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 31, 74.83 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 29, 75.09 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 29, 76.85 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 29, 76.55 W, 345 MHz, 0 MiB, 143771 MiB
+=== hostfile ===
+hpc-gaas-g12 slots=8
+hpc-gaas-g15 slots=8
+=== rank-map probe: rc=0 rank_lines=16 hosts=2 ranks_per_host=8 log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-007-c83900f-phase2bc-v1/experiments/2x8-GAAS/phase2bc-placement-locality/outputs/2x8-GAAS-phase2bc-placement-locality_rankmap_v1.log ===
+=== arm a0 (a0-identity-nomem) attempt=2x8-GAAS-phase2bc-placement-locality_a0-identity-nomem_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=omitted ucx_affinity=omitted start=2026-09-27T22:47:36+08:00 ===
+=== arm a0 (a0-identity-nomem) exit_status=0 verdict=PASSED gflops=5.7363e+06 end=2026-09-27T22:48:34+08:00 ===
+=== arm a1 (a1-identity-mem) attempt=2x8-GAAS-phase2bc-placement-locality_a1-identity-mem_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=0:0:0:0:1:1:1:1 cpu_affinity=omitted ucx_affinity=omitted start=2026-09-27T22:48:35+08:00 ===
+=== arm a1 (a1-identity-mem) exit_status=0 verdict=PASSED gflops=5.6984e+06 end=2026-09-27T22:49:34+08:00 ===
+=== arm a2 (a2-columnlocal-nomem) attempt=2x8-GAAS-phase2bc-placement-locality_a2-columnlocal-nomem_v1 gpu_affinity=0:4:2:6:1:5:3:7 mem_affinity=omitted cpu_affinity=omitted ucx_affinity=omitted start=2026-09-27T22:49:35+08:00 ===
+=== arm a2 (a2-columnlocal-nomem) exit_status=0 verdict=PASSED gflops=5.5378e+06 end=2026-09-27T22:50:34+08:00 ===
+=== arm a3 (a3-columnlocal-mem) attempt=2x8-GAAS-phase2bc-placement-locality_a3-columnlocal-mem_v1 gpu_affinity=0:4:2:6:1:5:3:7 mem_affinity=0:1:0:1:0:1:0:1 cpu_affinity=omitted ucx_affinity=omitted start=2026-09-27T22:50:35+08:00 ===
+=== arm a3 (a3-columnlocal-mem) exit_status=0 verdict=PASSED gflops=5.6699e+06 end=2026-09-27T22:51:33+08:00 ===
+=== Stage-A mechanical carry-forward (TASK-007 Section 1.4B; >2.0% gates; pre-authorized execution logic, not strategic analysis) ===
+stageA a0: score=5.7363e+06 valid=yes exit=0
+stageA a1: score=5.6984e+06 valid=yes exit=0
+stageA a2: score=5.5378e+06 valid=yes exit=0
+stageA a3: score=5.6699e+06 valid=yes exit=0
+stageA rule1: A1 is not >2.0% above valid A0 (or A1 invalid) -> retain G0 with memory affinity omitted (retained score 5.7363e+06)
+stageA rule2: A3 is >2.0% above valid A2 -> retain G1 WITH memory affinity 0:1:0:1:0:1:0:1 (retained score 5.6699e+06)
+stageA rule3: retained G1 is not >2.0% above retained G0 (or G1 invalid) -> carry G0 into Stage B (gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted)
+stageB CPU masks derived from the retained GPU map 0:1:2:3:4:5:6:7: loose=0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 medium=0-9:10-19:20-29:30-39:56-65:66-75:76-85:86-95 strict=0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87
+=== arm b0 (b0-cpu-free) attempt=2x8-GAAS-phase2bc-placement-locality_b0-cpu-free_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=omitted ucx_affinity=omitted start=2026-09-27T22:51:33+08:00 ===
+=== arm b0 (b0-cpu-free) exit_status=0 verdict=PASSED gflops=5.6247e+06 end=2026-09-27T22:52:36+08:00 ===
+=== arm b1 (b1-cpu-loose) attempt=2x8-GAAS-phase2bc-placement-locality_b1-cpu-loose_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 ucx_affinity=omitted start=2026-09-27T22:52:36+08:00 ===
+=== arm b1 (b1-cpu-loose) exit_status=0 verdict=PASSED gflops=5.5530e+06 end=2026-09-27T22:53:34+08:00 ===
+=== arm b2 (b2-cpu-medium) attempt=2x8-GAAS-phase2bc-placement-locality_b2-cpu-medium_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=0-9:10-19:20-29:30-39:56-65:66-75:76-85:86-95 ucx_affinity=omitted start=2026-09-27T22:53:34+08:00 ===
+=== arm b2 (b2-cpu-medium) exit_status=0 verdict=PASSED gflops=5.6912e+06 end=2026-09-27T22:54:31+08:00 ===
+=== arm b3 (b3-cpu-strict) attempt=2x8-GAAS-phase2bc-placement-locality_b3-cpu-strict_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87 ucx_affinity=omitted start=2026-09-27T22:54:32+08:00 ===
+=== arm b3 (b3-cpu-strict) exit_status=0 verdict=PASSED gflops=5.3783e+06 end=2026-09-27T22:55:30+08:00 ===
+=== Stage-B mechanical carry-forward (TASK-007 Section 1.4C; >2.0% gates) ===
+stageB b0: score=5.6247e+06 valid=yes exit=0
+stageB b1: score=5.5530e+06 valid=yes exit=0
+stageB b2: score=5.6912e+06 valid=yes exit=0
+stageB b3: score=5.3783e+06 valid=yes exit=0
+stageB: no explicit CPU policy is >2.0% above valid B0 (or B0 invalid) -> carry B0 / no explicit CPU affinity
+stageC PIX-paired HCA map derived from the retained GPU map 0:1:2:3:4:5:6:7: mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9
+=== HCA port_xmit_data snapshot before-c0 2026-09-27T22:55:30+08:00 (mother node hpc-gaas-g12) ===
+mlx5_0 1222558235014
+mlx5_1 1218663683551
+mlx5_2 1221761606922
+mlx5_3 1199101449633
+mlx5_4 1209718699703
+mlx5_5 1226431594956
+mlx5_8 1216468612975
+mlx5_9 1206194967231
+=== arm c0 (c0-ucx-auto) attempt=2x8-GAAS-phase2bc-placement-locality_c0-ucx-auto_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=omitted ucx_affinity=omitted start=2026-09-27T22:55:30+08:00 ===
+=== arm c0 (c0-ucx-auto) exit_status=0 verdict=PASSED gflops=5.5828e+06 end=2026-09-27T22:56:29+08:00 ===
+=== HCA port_xmit_data snapshot after-c0-before-c1 2026-09-27T22:56:29+08:00 (mother node hpc-gaas-g12) ===
+mlx5_0 1232861404100
+mlx5_1 1229050320637
+mlx5_2 1232052673666
+mlx5_3 1209487833013
+mlx5_4 1220016226511
+mlx5_5 1236812443219
+mlx5_8 1226932888887
+mlx5_9 1216480176841
+=== arm c1 (c1-ucx-pix) attempt=2x8-GAAS-phase2bc-placement-locality_c1-ucx-pix_v1 gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=omitted ucx_affinity=mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9 start=2026-09-27T22:56:29+08:00 ===
+=== arm c1 (c1-ucx-pix) exit_status=0 verdict=PASSED gflops=5.6949e+06 end=2026-09-27T22:57:25+08:00 ===
+=== HCA port_xmit_data snapshot after-c1 2026-09-27T22:57:25+08:00 (mother node hpc-gaas-g12) ===
+mlx5_0 1243166009393
+mlx5_1 1239438693740
+mlx5_2 1242345476768
+mlx5_3 1219875952395
+mlx5_4 1230315217421
+mlx5_5 1247195021900
+mlx5_8 1237398900595
+mlx5_9 1226767123347
+=== Stage-C mechanical carry-forward (TASK-007 Section 1.4D; >2.0% gate) ===
+stageC c0: score=5.5828e+06 valid=yes exit=0
+stageC c1: score=5.6949e+06 valid=yes exit=0
+stageC: C1 is >2.0% above valid C0 -> retain explicit PIX-paired UCX affinity mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9
+final execution carry-forward placement (mechanical task-rule outcome only; final strategic closure requires explicit ANALYSE_RESULTS): gpu_affinity=0:1:2:3:4:5:6:7 mem_affinity=omitted cpu_affinity=free-omitted ucx_affinity=mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9
+=== post-sweep hardware-health snapshot (mother node hpc-gaas-g12) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 34, 117.96 W, 405 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 35, 111.38 W, 450 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 35, 122.86 W, 1980 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 37, 126.37 W, 1980 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 37, 119.39 W, 1980 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 35, 129.05 W, 1980 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 34, 124.56 W, 405 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 36, 130.22 W, 405 MHz, 0 MiB, 143771 MiB
+=== HPL-MxP 2x8-GAAS phase2bc-placement-locality sweep complete: all 10 arm(s) exited 0 with PASSED verification (tag v1) ===

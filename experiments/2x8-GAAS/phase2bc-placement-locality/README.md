@@ -17,11 +17,14 @@ B. CPU affinity                     (4 arms: B0 free, B1 loose, B2 medium, B3 st
 C. UCX device affinity              (2 arms: C0 automatic, C1 GPU-PIX-paired)
 ```
 
-**Status (2026-09-27): prepared; the `v1` sweep has not been submitted yet.**
-Any run must use a unique `ATTEMPT_TAG`, pass `-q gpu_as` or `-q gpu_ded`
-(the only authorized queues), and never overwrite existing evidence. All ten
-scored arms must share one PBS job/allocation (tasks/TASK-007.md Sections
-1.4F, 1.7.10); this script has deliberately no arm-subset option.
+**Status (2026-09-27): v1 sweep complete — all ten TASK-007-approved arms ran
+sequentially in PBS job `72879.gaas` (queue `gpu_as`, project `hpc_ebslee`)
+with `exit_status=0` and `PASSED` verification, and the pre-authorized
+mechanical carry-forward rules were applied in-allocation; see Run summary.**
+Any rerun must use a new `ATTEMPT_TAG`, pass `-q gpu_as` or `-q gpu_ded` (the
+only authorized queues), and never overwrite existing evidence. All ten
+scored arms shared the same PBS job/allocation, as required by
+tasks/TASK-007.md Sections 1.4F, 1.7.10.
 
 ## Structure
 
@@ -351,7 +354,145 @@ retention decisions, and Phase-2B/2C closure are reserved for the authorized
 
 ## Run summary
 
-(To be completed after execution; factual data only, no interpretation.)
+One submitted attempt family (tag `v1`, PBS job `72879.gaas`, queue `gpu_as`,
+project `hpc_ebslee`), submitted 2026-09-27T22:47:12+08:00 and executed on
+the host pair `hpc-gaas-g12` + `hpc-gaas-g15` (2 nodes x 8 H200 GPUs, 16 MPI
+ranks, one rank/GPU). Job-level record (`qstat -x -f`): `qtime` =
+`stime` = 22:47:12 (no queue wait), `mtime` = `obittime` = 22:57:28,
+`job_state = F`, `Exit_status = 0`, `run_count = 1`,
+`resources_used.walltime = 00:10:14`, `resources_used` 16 GPUs / 192 CPUs,
+`Stageout_status = 1` (recurring non-blocking observation, same as TASK-006;
+all 34 expected evidence files were present and byte-identical to the remote
+copies). Execution tree: `.codex-worktrees/TASK-007-c83900f-phase2bc-v1` at
+`c83900ffafa550b74e93c9042f8ea7e2849cd732` (preparation + preflight-review
+commit "Harden TASK-007 topo gate row anchors after preflight review", pushed
+to `origin/main`). The unused clean worktree `TASK-007-a62a64a-phase2bc-v1`
+(at the initial preparation commit `a62a64a`, superseded before submission by
+the preflight parser review) is preserved untouched.
+
+Pre-scored checks (PBS `.o`): `topology_gate=PASS` (cpuset `0-49,56-101`,
+`Mems_allowed_list 0-1`, 8 GPUs, the eight 400G IB HCAs present, GPU0 ->
+NUMA0 `0-49` and GPU4 -> NUMA1 `56-101` verified from the in-allocation
+`nvidia-smi topo -m` matrix, NIC legend `NIC0..NIC7 -> mlx5_0..mlx5_9`
+matched); rank-map probe `rc=0 rank_lines=16 hosts=2 ranks_per_host=8` —
+global ranks 0-7 -> `hpc-gaas-g12` (local_rank 0-7), global ranks 8-15 ->
+`hpc-gaas-g15` (local_rank 0-7), i.e. the already-validated contiguous
+placement, measured rather than assumed
+(`outputs/2x8-GAAS-phase2bc-placement-locality_rankmap_v1.log`).
+
+Single-allocation proof: all ten per-arm `.status` files record
+`pbs_job_id=72879.gaas` and `nodes=hpc-gaas-g12 hpc-gaas-g15`, with strictly
+sequential start/end timestamps inside one PBS job execution (`run_count=1`),
+in the exact approved order A0 -> A1 -> A2 -> A3 -> B0 -> B1 -> B2 -> B3 ->
+C0 -> C1. Per-arm elapsed: a0 58 s, a1 59 s, a2 59 s, a3 58 s, b0 63 s,
+b1 58 s, b2 57 s, b3 58 s, c0 59 s, c1 56 s. The PBS `.o` ends with
+`=== HPL-MxP 2x8-GAAS phase2bc-placement-locality sweep complete: all 10
+arm(s) exited 0 with PASSED verification (tag v1) ===`.
+
+Factual per-arm data as emitted by the application output. The baseline
+column is the mechanical percentage
+`(arm overall GFLOP/s / 4.8037e+06 − 1) × 100`, where the exact denominator
+`4.8037e+06` GFLOP/s is the overall HPL-MxP performance reported by the
+immutable 2x8-GAAS original baseline attempt `2x8-GAAS-baseline_n700k_v1`
+(TASK-000, PBS job 72602.gaas; raw evidence
+`experiments/2x8-GAAS/baseline/outputs/2x8-GAAS-baseline_n700k_v1.o`;
+recorded in `experiments/2x8-GAAS/baseline/README.md` and the
+`2x8-GAAS-baseline_n700k_v1` row of `results/metrics.csv`). No ranking, no
+retention decision — final strategic closure requires `ANALYSE_RESULTS`:
+
+| arm | effective placement (gpu/mem/cpu/ucx) | overall GFLOP/s | vs original baseline (+%) | LU s / LU GFLOP/s | IR s / iter | IR/LU | normalized residual | verdict |
+|---|---|---:|---:|---|---|---:|---|---|
+| A0 `a0-identity-nomem` | G0 `0:1:2:3:4:5:6:7` / omit / free / auto | `5.7363e+06` | +19.41% | 7.79 / `6.7609e+06` | 1.39 / 3 | 0.178 | 1.416310E-05 | PASSED |
+| A1 `a1-identity-mem` | G0 / `0:0:0:0:1:1:1:1` / free / auto | `5.6984e+06` | +18.63% | 7.79 / `6.7561e+06` | 1.45 / 3 | 0.186 | 1.416310E-05 | PASSED |
+| A2 `a2-columnlocal-nomem` | G1 `0:4:2:6:1:5:3:7` / omit / free / auto | `5.5378e+06` | +15.28% | 7.78 / `6.7713e+06` | 1.73 / 3 | 0.222 | 1.416310E-05 | PASSED |
+| A3 `a3-columnlocal-mem` | G1 / `0:1:0:1:0:1:0:1` / free / auto | `5.6699e+06` | +18.03% | 7.78 / `6.7675e+06` | 1.51 / 3 | 0.194 | 1.416310E-05 | PASSED |
+| B0 `b0-cpu-free` | G0 / omit / free / auto | `5.6247e+06` | +17.09% | 7.81 / `6.7453e+06` | 1.56 / 3 | 0.200 | 1.416310E-05 | PASSED |
+| B1 `b1-cpu-loose` | G0 / omit / `0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101` / auto | `5.5530e+06` | +15.60% | 7.77 / `6.7781e+06` | 1.72 / 3 | 0.221 | 1.416310E-05 | PASSED |
+| B2 `b2-cpu-medium` | G0 / omit / `0-9:10-19:20-29:30-39:56-65:66-75:76-85:86-95` / auto | `5.6912e+06` | +18.48% | 7.78 / `6.7686e+06` | 1.48 / 3 | 0.190 | 1.416310E-05 | PASSED |
+| B3 `b3-cpu-strict` | G0 / omit / `0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87` / auto | `5.3783e+06` | +11.96% | 7.77 / `6.7728e+06` | 2.02 / 3 | 0.260 | 1.416310E-05 | PASSED |
+| C0 `c0-ucx-auto` | G0 / omit / free / automatic | `5.5828e+06` | +16.22% | 7.80 / `6.7515e+06` | 1.64 / 3 | 0.210 | 1.416310E-05 | PASSED |
+| C1 `c1-ucx-pix` | G0 / omit / free / `mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9` | `5.6949e+06` | +18.55% | 7.78 / `6.7658e+06` | 1.47 / 3 | 0.189 | 1.416310E-05 | PASSED |
+
+Every arm emitted 3 solver iterations (0, 1, 2) with the identical
+L-infinite residual trajectory
+`4.88341694e-04 -> 9.15421072e-10 -> 3.66373598e-15` (identical numerics;
+the placement controls do not change the computed solution). Memory is
+uniform across arms: host consumption MAX `0.004 GB`, host available MIN
+`227.9-229.5 GB`, device consumption MAX `135.254 GB`, device available MIN
+`138.739 GB`, and after-matrix-generation `system/device = ~228/2.767 GB`
+per process (c1 host-available reading `229.223/229.221 GB` is the only
+value outside the 227.9-228.1 GB range of the other arms).
+
+Mechanical carry-forward decisions (pre-authorized task-rule outcomes,
+recorded in
+`outputs/2x8-GAAS-phase2bc-placement-locality_carryforward_v1.log`; the
+gate margins quoted here are mechanical derived values):
+
+- **Stage A:** rule 1: A1 (`5.6984e+06`) is not >2.0% above valid A0
+  (`5.7363e+06`; margin -0.66%) -> retain G0 with memory affinity omitted.
+  Rule 2: A3 (`5.6699e+06`) is >2.0% above valid A2 (`5.5378e+06`; margin
+  +2.39%) -> retain G1 WITH memory affinity `0:1:0:1:0:1:0:1`. Rule 3:
+  retained G1 (`5.6699e+06`) is not >2.0% above retained G0 (`5.7363e+06`;
+  margin -1.16%) -> **carry G0 identity, memory affinity omitted** into
+  Stage B.
+- **Stage B** (under G0/no-mem; exact approved G0 masks): B1 `5.5530e+06`
+  (-1.27% vs B0), B2 `5.6912e+06` (+1.18% vs B0), B3 `5.3783e+06` (-4.38%
+  vs B0) — no explicit CPU policy is >2.0% above valid B0 (`5.6247e+06`) ->
+  **carry B0 / no explicit CPU affinity** into Stage C.
+- **Stage C** (under G0/no-mem/free; G0 PIX map
+  `mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9`): C1
+  (`5.6949e+06`) is >2.0% above valid C0 (`5.5828e+06`; margin +2.01%) ->
+  **retain explicit PIX-paired UCX affinity**.
+- Final execution carry-forward placement (mechanical outcome only):
+  `gpu_affinity=0:1:2:3:4:5:6:7`, `mem_affinity=omitted`,
+  `cpu_affinity=free`, `ucx_affinity=mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9`.
+
+Facts relevant to later analysis (mechanical observations, no
+interpretation):
+
+- The identical-configuration control ran three times inside this one
+  allocation as A0, B0, and C0 (G0 / no mem / free CPU / automatic UCX):
+  `5.7363e+06` -> `5.6247e+06` -> `5.5828e+06` (spans -1.98% and -2.75%
+  relative to A0). The C1-vs-C0 gate margin (+2.01%) is smaller than this
+  observed same-allocation control span.
+- Per-HCA `port_xmit_data` deltas on the mother node (g12) around the
+  Stage-C arms: both C0 (automatic) and C1 (PIX-pinned) moved approximately
+  `1.03e+10` 4-byte units on each of the eight HCAs (C0 range 1.029-1.046e10,
+  C1 range 1.029-1.047e10); the raw before/after snapshots are in the PBS
+  `.o`.
+- Pre/post hardware-health snapshots (mother node g12) are present in the
+  PBS `.o`; pre-sweep 0 MiB used at 345 MHz, post-sweep 0 MiB used at 1980
+  or 405 MHz, all eight GPUs NVIDIA H200 driver 580.126.20; the pre/post
+  topology tables are identical (NV18 all-pairs, same CPU-affinity columns).
+- PBS `.e` preserves the recurring `cuda/13.1` module-load note and eleven
+  `WARNING: group: unknown groupid 1304617061` lines; each arm `.err`
+  contains one group-ID warning plus the expected `rsh_pbsdsh_container`
+  bridge diagnostic line for `hpc-gaas-g15` (same non-blocking pattern as
+  TASK-001..TASK-006). No `FAILED`, `NaN`, or `Inf` markers appear in any
+  arm `.out`.
+- Live eligibility at submission (22:45-22:47 +08:00): `gpu_as` enabled;
+  g12 and g15 fully free (0 GPUs/0 CPUs assigned, `Qlist=gpu_as,gpu_ppu`);
+  no fully-free `gpu_ded` pair existed; no user job running (one multinode
+  job at a time). Recorded in
+  `outputs/2x8-GAAS-phase2bc-placement-locality_v1_submission.log` and the
+  bounded-monitoring/terminal-record evidence
+  `outputs/2x8-GAAS-phase2bc-placement-locality_v1_job72879_qstat_monitor.log`.
+- With `--monitor-gpu 0`, benchmark GPU-monitoring output is unavailable by
+  design.
+- Effective OpenMP placement policy (unchanged package behavior): the job
+  environment sets only `OMP_NUM_THREADS=8`; `OMP_PLACES`/`OMP_PROC_BIND`
+  are unset, so the installed launcher applies its package defaults
+  (`OMP_PLACES=sockets`, `OMP_PROC_BIND=TRUE`) inside the container — same
+  as TASK-004/TASK-005/TASK-006.
+
+Extracted rows for all ten attempts are in `results/metrics.csv` /
+`results/RESULTS.md` (experiment id
+`2x8-GAAS-phase2bc-placement-locality`, attempts
+`2x8-GAAS-phase2bc-placement-locality_<arm>_v1`). The per-arm
+`mem_affinity`/`cpu_affinity`/`ucx_affinity` values are not representable
+in the current `results/metrics.csv` schema; they are recorded exactly in
+each arm's `.status` file and in the table above (schema/extractor
+unchanged, TASK-006 precedent).
 
 ## Evidence paths
 
