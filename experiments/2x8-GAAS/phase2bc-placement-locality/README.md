@@ -303,6 +303,15 @@ eligible pair that satisfies the approved topology (Section 1.6).
 - Cheap per-HCA `port_xmit_data` snapshots around the Stage-C arms
   (mother node) provide optional rail/locality evidence; no profiling or
   tracing is performed.
+- Pre-submit parser review (2026-09-27): byte-level inspection of every
+  stored `nvidia-smi topo -m` capture (TASK-000/TASK-006 PBS `.o` pre/post
+  snapshots and the Phase-0 per-node logs for g12 and g15) shows the GPU
+  data rows starting at column 0 with only the header line tab-indented
+  (tab + ANSI bold before `GPU0`). The script's gate row anchors are
+  whitespace-tolerant, so the header stays excluded on the verified format
+  and a differently indented data row cannot cause a false abort; the gate
+  assertions (GPU0 -> `0-49`, GPU4 -> `56-101`, NIC legend
+  `NIC0..NIC7 -> mlx5_0..mlx5_9`) are unchanged.
 
 ## Expected output markers and validation criteria
 

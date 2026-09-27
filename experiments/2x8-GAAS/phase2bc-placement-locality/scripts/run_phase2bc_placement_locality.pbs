@@ -227,11 +227,17 @@ done
 TOPO_MATRIX="$(nvidia-smi topo -m 2>/dev/null || true)"
 echo "=== mother-node GPU topology matrix (gate input + evidence) ==="
 echo "$TOPO_MATRIX"
-if ! printf '%s\n' "$TOPO_MATRIX" | grep '^GPU0' | grep -Fq '0-49'; then
+# Row selection is whitespace-tolerant: in the accepted Phase-0 evidence the
+# GPU data rows start at column 0 and only the header is tab-indented
+# (header bytes: TAB ESC[4m GPU0 TAB GPU1 ...), so the tolerant anchor still
+# excludes the header while also accepting a matrix whose data rows arrive
+# with leading whitespace. The gate assertion itself is the second-stage
+# fixed-string check (CPU-affinity column value), unchanged.
+if ! printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU0' | grep -Fq '0-49'; then
   echo "FATAL: GPU0 is not on NUMA0 CPUs 0-49 as in the accepted Phase-0 topology; the approved G0/G1 maps are no longer valid (TASK-007 Section 1.9)" >&2
   exit 1
 fi
-if ! printf '%s\n' "$TOPO_MATRIX" | grep '^GPU4' | grep -Fq '56-101'; then
+if ! printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU4' | grep -Fq '56-101'; then
   echo "FATAL: GPU4 is not on NUMA1 CPUs 56-101 as in the accepted Phase-0 topology; the approved G0/G1 maps are no longer valid (TASK-007 Section 1.9)" >&2
   exit 1
 fi
