@@ -1,7 +1,7 @@
 ---
 task_id: TASK-006
 title: Phase 2A — 2x8 GAAS Grid/Order Confirmation
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-005
 analysis_id: 2x8-gaas-phase2a-grid-order-confirm
