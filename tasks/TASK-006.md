@@ -1,8 +1,8 @@
 ---
 task_id: TASK-006
 title: Phase 2A — 2x8 GAAS Grid/Order Confirmation
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-005
 analysis_id: 2x8-gaas-phase2a-grid-order-confirm
 created: 2026-09-27
@@ -567,40 +567,114 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: <COMPLETE | PARTIAL | BLOCKED | FAILED>
+status: COMPLETE
 
 ### 2.2 Orchestration Summary
 
-*Workers, responsibilities, dependencies, ordering, and follow-ups.*
+One OpenCode worker handled experiment preparation, remote execution, evidence
+retrieval, and factual result logging. Codex verified the approved task and
+scope, reviewed the preparation and execution tree, checked the returned PBS
+and application evidence, and completed this report. Work was sequential:
+prepare and validate; commit/push; synchronize an isolated remote worktree;
+check live queue eligibility; submit and boundedly monitor one allocation;
+retrieve and validate evidence; update factual records. No follow-up job was
+needed.
 
 ### 2.3 Work Executed
 
-*Factual work performed.*
+Created `experiments/2x8-GAAS/phase2a-grid-order-confirm/` with a README, one
+PBS sweep script, and outputs directory. The script ran the four approved
+grid/order candidates sequentially in order: 4x4 column, 4x4 row, 8x2 column,
+8x2 row. Fixed N=429056, NB=3072, OMP_NUM_THREADS=8, identity GPU affinity,
+FP16, the approved broadcast/stream/priority/fill/test controls, and the
+validated container MPI plus `pbsdsh` bridge.
+
+Submitted one host-pinned PBS allocation, job `72845.gaas`, to `gpu_as` under
+`hpc_ebslee` on `hpc-gaas-g12` and `hpc-gaas-g15`. Retrieved the four
+candidate `.out`/`.err`/`.status` triplets, rank-map log, and PBS `.o`/`.e`.
+Added four factual rows to `results/metrics.csv` and regenerated
+`results/RESULTS.md`.
 
 ### 2.4 Operational Validation
 
-*Evidence, correctness, provenance, consistency, and scope checks.*
+The preparation PBS script passed `bash -n`; mechanical checks confirmed the
+exact candidate list/order, P×Q=16 for each candidate, fixed N/NB and controls,
+and absence of a candidate-splitting option. `git diff --check` passed for the
+reviewed preparation and result files.
+
+The remote primary checkout was dirty at `87fb61e829832a3bc07c2579d8472aa1be279f13`
+with 168 status entries. It was left untouched. The clean detached execution
+worktree `.codex-worktrees/TASK-006-2192153-phase2a-v1` was verified at
+preparation commit `2192153b9841d0db9b11c68e45eeecbf210cf228`, with clean
+status, `EXECUTING / codex`, and unchanged Section 1.11 authorization.
+
+Live PBS eligibility showed g12+g15 fully free and eligible for `gpu_as`
+(`Qlist=gpu_as,gpu_ppu`); `gpu_ded` had no fully free eligible pair. No
+concurrent user job was present at submission. The terminal job record showed
+`job_state=F`, `Exit_status=0`, `run_count=1`, walltime `00:04:29`, 16 GPUs,
+`place=scatter`, and project `hpc_ebslee`. All four candidate status files
+record the same job ID and node pair and the approved sequential order.
+
+The rank-map probe recorded 16/16 ranks across two hosts, eight ranks per
+host: ranks 0–7 on g12 and ranks 8–15 on g15. Pre/post hardware-health
+snapshots are present in the PBS stdout. All four outputs have normal
+benchmark markers, three solver iterations, finite normalized residuals,
+`PASSED`, overall and LU performance, and memory/headroom lines. All 15
+retrieved files matched the remote worktree by SHA-256. The four result keys
+are unique; `metrics.csv` contains 221 data rows with its existing 33-field
+schema, and the generated report contains the four new records.
 
 ### 2.5 Evidence and Artifacts
 
-*Reference raw evidence paths and revisions; do not duplicate large outputs.*
+Raw evidence and the factual four-arm table are in
+`experiments/2x8-GAAS/phase2a-grid-order-confirm/`; structured records are in
+`results/metrics.csv` and `results/RESULTS.md`. The remote execution tree was
+`.codex-worktrees/TASK-006-2192153-phase2a-v1` at
+`2192153b9841d0db9b11c68e45eeecbf210cf228`. Preparation commit:
+`2192153b9841d0db9b11c68e45eeecbf210cf228`. Evidence/results commit:
+`853117bfd4901e258f50e7c1731306ece693b0ac`. Both were pushed to
+`origin/main`.
 
 ### 2.6 Files Changed
 
-*List files or state None.*
+Added the experiment README, PBS script, outputs placeholder, and 15
+attempt-specific evidence files; appended four rows to `results/metrics.csv`;
+regenerated `results/RESULTS.md`; completed this Execution Report and added
+`progress/2026-09-27-progress_s14.md`. Section 1, strategic planning, and the
+pre-existing untracked `hpl-mxp-runs-on-gaas/` directory were not changed.
 
 ### 2.7 Missing / Unavailable Evidence
 
-*List gaps or state None.*
+No required run evidence is missing. The terminal `qstat -x -f` record was
+read and its key fields recorded in the experiment README and this report,
+but was not retained as a separate raw file. PBS `.o`/`.e`, all candidate
+outputs/status files, and the rank-map log are preserved. GPU-monitor output
+is unavailable by design with `--monitor-gpu 0`.
 
 ### 2.8 Execution Errors / Exceptions
 
-*List failures and exceptions or state None. Record authorized Track-1 recovery and exact resume action if incomplete.*
+No job or candidate failed; no retry or Track-1 patch was needed. The PBS
+stderr preserves the recurring `cuda/13.1` module note and
+`unknown groupid 1304617061` warnings. The terminal record also reported
+`Stageout_status=1`; all expected outputs were present locally and matched
+their remote copies. These observations were recorded without patching.
 
 ### 2.9 Scope Compliance
 
-*State whether work stayed within the approved scope.*
+Work stayed within the approved TASK-006 scope. Exactly four approved
+configurations ran in one allocation with the approved controls, topology,
+queue, accounting project, launcher, and evidence requirements. No strategic
+retention/tie conclusion, baseline promotion, planning update, Phase 2B work,
+or unapproved access/action occurred. Section 1 and its approved scope remain
+unchanged.
 
 ### 2.10 Handoff to Strategic Analyst
 
-*Give factual reading guidance only. Do not classify the four-arm confirmation result.*
+Read the four candidate `.out` files and `.status` files alongside the shared
+rank-map and PBS `.o`/`.e` evidence in the experiment directory. All four
+reported finite residuals and `PASSED`; their factual output markers and
+timings are summarized in the README. The terminal PBS fields are transcribed
+there, with the raw PBS stdout/stderr retained. No candidate retention,
+tie/noise assessment, percentage comparison, dependency-checkpoint outcome,
+or next action is recorded here. Await explicit `ANALYSE_RESULTS` authority
+before strategic analysis.
