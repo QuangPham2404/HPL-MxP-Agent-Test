@@ -1,7 +1,7 @@
 ---
 task_id: TASK-004
 title: Phase 2A — 2x8 GAAS Process-Grid Shape Screen
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-003
 analysis_id: 2x8-gaas-phase2a-grid-shape
