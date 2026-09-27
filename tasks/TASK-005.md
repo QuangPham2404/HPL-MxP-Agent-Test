@@ -1,7 +1,7 @@
 ---
 task_id: TASK-005
 title: Phase 2A — 2x8 GAAS Row-Order Complement
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-004
 analysis_id: 2x8-gaas-phase2a-grid-order-matrix

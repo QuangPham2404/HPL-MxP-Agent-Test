@@ -1,0 +1,368 @@
+#!/bin/bash
+# HPL-MxP 2x8-GAAS Phase-2A row-order complement: 2 GAAS nodes x 8 H200
+# GPUs (16 ranks). The three TASK-005-approved grid shapes run sequentially
+# within this single PBS allocation at the retained Phase-1 geometry
+# N=429056, NB=3072 (BOTH fixed); only nprow x npcol varies, with
+# --nporder row fixed for every scored candidate.
+#
+# Purpose: TASK-005 Phase-2A bounded row-order complement (see
+# tasks/TASK-005.md Sections 1.4A-1.4F). Every scientific control other than
+# the process-grid shape is fixed and identical to the validated TASK-004
+# Phase-2A controls except the rank order (TASK-005 Section 1.4B). Candidate
+# order: 4x4 first (mirrors TASK-004's execution order to simplify paired
+# row-vs-column comparison, TASK-005 Section 1.4A), then 2x8 (wider
+# process-column count / smaller process-row count), then 8x2 (larger
+# process-row count / narrower process-column count), all with nporder row.
+# All three candidates should normally be attempted (Section 1.4A): a valid
+# but slower candidate never justifies truncation; this script records each
+# candidate's evidence and continues with the next candidate on a nonzero
+# exit, and the job returns nonzero overall if any candidate failed. One
+# lightweight 16-rank MPI rank-map probe (TASK-005 Section 1.4C) runs once
+# before the scored candidates; the script aborts before scored work if the
+# probe fails its mechanical check.
+#
+# Expected working directory: this experiment directory
+# (experiments/2x8-GAAS/phase2a-grid-row/) on GAAS. Submit with (the queue
+# is deliberately NOT selected in this script; pass an approved one at qsub):
+#   qsub -q <gpu_as|gpu_ded> -v "ATTEMPT_TAG=v1" \
+#        -o outputs/2x8-GAAS-phase2a-grid-row_v1.o \
+#        -e outputs/2x8-GAAS-phase2a-grid-row_v1.e \
+#        scripts/run_phase2a_grid_row.pbs
+#
+# Inputs (environment, via qsub -v):
+#   ATTEMPT_TAG  REQUIRED sweep attempt tag (e.g. v1); it names every
+#                per-candidate evidence file. A rerun must use a new tag.
+#   GRID_SUBSET  OPTIONAL space-separated subset of the three approved grid
+#                shapes, for the TASK-005 Section 1.4D split-across-
+#                allocations fallback. Default: run all three, in the listed
+#                order. Any value outside {4x4,2x8,8x2}, or a duplicate, is
+#                a fatal error.
+# Outputs: per-candidate application stdout/stderr and status files under
+#   outputs/2x8-GAAS-phase2a-grid-row_grid<NPROW>x<NPCOL>_<ATTEMPT_TAG>.{out,err,status};
+#   the allocation-level rank-map log
+#   outputs/2x8-GAAS-phase2a-grid-row_rankmap_<ATTEMPT_TAG>.log; PBS-level
+#   stdout/stderr names are passed at qsub with -o/-e (this script
+#   deliberately has no #PBS -o/-e directives). Existing attempt files are
+#   never overwritten: the script aborts before running anything if a target
+#   file already exists. A candidate killed mid-run (e.g. by walltime) keeps
+#   its .out/.err but has no .status file.
+# Assumptions: approved container and modules exist on GAAS; one GPU per MPI
+# process; validated Approach-1 multinode launch (container mpirun +
+# rsh_pbsdsh_container.sh bridge; see multi-node-test/GAAS_MULTINODE_SETUP.md).
+#
+# Queue policy: no queue is preselected here. TASK-005 authorizes only
+# gpu_as and gpu_ded; the submitting qsub must pass -q explicitly, and this
+# script verifies the actually-assigned queue and aborts on anything else.
+# select=2:ngpus=8 (no mpiprocs) may likewise be overridden on the qsub
+# command line by a documented host-pinned select (see README.md).
+
+#PBS -N 2x8_phase2a_gridrow
+#PBS -P hpc_ebslee
+#PBS -l select=2:ngpus=8
+#PBS -l place=scatter
+#PBS -l walltime=01:30:00
+
+set -euo pipefail
+
+# --- Experiment metadata --------------------------------------------------------
+cd "$PBS_O_WORKDIR"
+EXPERIMENT_ID="2x8-GAAS-phase2a-grid-row"
+OUTDIR="$PWD/outputs"
+mkdir -p "$OUTDIR"
+
+ATTEMPT_TAG="${ATTEMPT_TAG:-}"
+if [ -z "$ATTEMPT_TAG" ]; then
+  echo "FATAL: ATTEMPT_TAG is required (e.g. -v \"ATTEMPT_TAG=v1\"); it names this sweep's evidence files" >&2
+  exit 1
+fi
+
+# Only gpu_as and gpu_ded are authorized for TASK-005 (Section 1.7). The
+# queue is not preselected in this script; fail fast if PBS assigned any
+# other queue (including an omitted -q falling through to a default queue).
+QUEUE="${PBS_O_QUEUE:-unknown}"
+case "$QUEUE" in
+  gpu_as|gpu_ded) ;;
+  *) echo "FATAL: queue '${QUEUE}' is not authorized for TASK-005 (only gpu_as or gpu_ded); pass -q at qsub" >&2; exit 1 ;;
+esac
+
+# Approved grid candidates (TASK-005 Section 1.4A): the complete sweep, at
+# the fixed retained geometry. 4x4 runs first to mirror TASK-004's execution
+# order (paired row-vs-column comparison, TASK-005 Section 1.4A); 2x8 is the
+# wider process-column count / smaller process-row count; 8x2 is the larger
+# process-row count / narrower process-column count.
+APPROVED_GRIDS=(4x4 2x8 8x2)
+
+# Fixed retained geometry (TASK-005 Sections 1.1, 1.4B): only the process
+# grid varies; N and NB are BOTH fixed.
+N_FIXED=429056
+NB_FIXED=3072
+
+# Optional operational split (TASK-005 Section 1.4D): restrict this
+# allocation to a subset of the approved candidates, controls unchanged.
+GRID_SUBSET="${GRID_SUBSET:-}"
+if [ -n "$GRID_SUBSET" ]; then
+  GRID_CANDIDATES=""
+  seen=""
+  for grid in $GRID_SUBSET; do
+    case " ${APPROVED_GRIDS[*]} " in
+      *" $grid "*) ;;
+      *) echo "FATAL: grid ${grid} is not one of the three TASK-005-approved candidates (${APPROVED_GRIDS[*]})" >&2; exit 1 ;;
+    esac
+    case " $seen " in
+      *" $grid "*) echo "FATAL: duplicate grid ${grid} in GRID_SUBSET" >&2; exit 1 ;;
+    esac
+    seen="$seen $grid"
+    GRID_CANDIDATES="$GRID_CANDIDATES $grid"
+  done
+else
+  GRID_CANDIDATES="${APPROVED_GRIDS[*]}"
+fi
+NCAND=$(set -- $GRID_CANDIDATES; echo $#)
+
+echo "experiment_id=${EXPERIMENT_ID}"
+echo "attempt_tag=${ATTEMPT_TAG}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "queue=${QUEUE}"
+echo "project=hpc_ebslee"
+date --iso-8601=seconds
+echo "fixed scientific controls (identical across candidates; only nprow x npcol varies):"
+echo "OMP_NUM_THREADS=8"
+echo "--n 429056"
+echo "--nb 3072"
+echo "--nporder row"
+echo "--gpu-affinity 0:1:2:3:4:5:6:7"
+echo "--sloppy-type FP16"
+echo "--use-mpi-panel-broadcast 0"
+echo "--use-separate-stream-for-gemm 1"
+echo "--prioritize-trsm 0"
+echo "--prioritize-factorization 0"
+echo "--fill-device 1"
+echo "--test-loop 1"
+echo "--skip-tests 0"
+echo "--monitor-gpu 0"
+echo "grid candidates for this allocation (TASK-005 Section 1.4A; 4x4 first mirroring TASK-004, then 2x8, then 8x2):${GRID_CANDIDATES}"
+echo "grid_candidate_count=${NCAND}"
+
+# --- Locate repo root and the validated launch bridge ---------------------------
+# Submission dir is experiments/2x8-GAAS/phase2a-grid-row/, so the repo
+# root is three levels up.
+REPO_ROOT="$(cd "${PBS_O_WORKDIR}/../../.." && pwd)"
+BRIDGE="${REPO_ROOT}/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+[ -f "$BRIDGE" ] || { echo "FATAL: bridge not found at ${BRIDGE}; submit from the experiment directory (experiments/2x8-GAAS/phase2a-grid-row/)" >&2; exit 1; }
+[ -f "$SIF" ] || { echo "FATAL: container image not found: ${SIF}" >&2; exit 1; }
+
+# --- Allocation checks (place=scatter, no mpiprocs; per-candidate grid) ---------
+GPUS=8                                   # GPUs (and ranks) per node
+EXPECTED_NODES=2
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+[ "$NNODES" -eq "$EXPECTED_NODES" ] || { echo "FATAL: expected ${EXPECTED_NODES} distinct nodes, got ${NNODES}" >&2; exit 1; }
+NPROCS=$((NNODES * GPUS))
+
+# Fixed process-grid order and GPU affinity (supplied configuration; do NOT
+# auto-derive). The grid shape is the per-candidate variable; every
+# candidate must satisfy NPROW x NPCOL = NPROCS.
+NPORDER=row
+GPU_AFFINITY=0:1:2:3:4:5:6:7
+for GRID in $GRID_CANDIDATES; do
+  NPROW="${GRID%x*}"
+  NPCOL="${GRID#*x}"
+  [ "$NPROCS" -eq $((NPROW * NPCOL)) ] || { echo "FATAL: candidate grid ${NPROW}x${NPCOL} requires $((NPROW * NPCOL)) ranks, got ${NPROCS}" >&2; exit 1; }
+done
+
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow x npcol per candidate (${GRID_CANDIDATES}); nporder=${NPORDER}"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "bridge=${BRIDGE}"
+echo "container=${SIF}"
+
+# --- Environment (validated module set) ------------------------------------------
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+# Supplied configuration sets OMP_NUM_THREADS=8 only; OMP_PLACES and
+# OMP_PROC_BIND are deliberately not set (not supplied, same as TASK-004).
+export OMP_NUM_THREADS=8
+
+# --- Pre-sweep hardware-health snapshot (ordinary evidence; must not block) ------
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# De-duplicated hostfile with explicit per-node slot count (GAAS Blocker 8);
+# shared by the rank-map probe and all candidates in this allocation.
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# --- Attempt-evidence guard (never overwrite existing evidence) -------------------
+# Every candidate writes attempt-specific .out/.err/.status files, and the
+# allocation writes one rank-map .log. If any target file already exists,
+# this ATTEMPT_TAG was already (partially) used: abort before running
+# anything; a rerun must take a new ATTEMPT_TAG.
+for GRID in $GRID_CANDIDATES; do
+  NPROW="${GRID%x*}"
+  NPCOL="${GRID#*x}"
+  ATTEMPT="${EXPERIMENT_ID}_grid${NPROW}x${NPCOL}_${ATTEMPT_TAG}"
+  for f in "${OUTDIR}/${ATTEMPT}.out" "${OUTDIR}/${ATTEMPT}.err" "${OUTDIR}/${ATTEMPT}.status"; do
+    if [ -e "$f" ]; then
+      echo "FATAL: refusing to overwrite existing evidence ${f}; resubmit with a new ATTEMPT_TAG" >&2
+      exit 1
+    fi
+  done
+done
+if [ -e "${OUTDIR}/${EXPERIMENT_ID}_rankmap_${ATTEMPT_TAG}.log" ]; then
+  echo "FATAL: refusing to overwrite existing evidence ${OUTDIR}/${EXPERIMENT_ID}_rankmap_${ATTEMPT_TAG}.log; resubmit with a new ATTEMPT_TAG" >&2
+  exit 1
+fi
+
+# --- Allocation-level rank-map probe (TASK-005 Section 1.4C) ---------------------
+# One lightweight 16-rank MPI mapping probe BEFORE any scored candidate,
+# using the SAME shared hostfile and the SAME container mpirun + bridge +
+# daemon flags as the scored launch. Diagnostic only (TASK-005 Section
+# 1.4C): it adds no topology profiling or communication tracing and must
+# not alter scientific controls. The probe evidence (global rank, hostname,
+# and local rank for all 16 ranks) lets the later Strategic Analyst
+# reconstruct which logical grid rows/columns cross the node boundary for
+# each candidate under nporder=row, jointly with the TASK-004 column-order
+# evidence. The `|| RC=$?` form keeps set -e from aborting before the
+# mechanical gate below can classify the failure.
+RANKMAP_LOG="${OUTDIR}/${EXPERIMENT_ID}_rankmap_${ATTEMPT_TAG}.log"
+RC=0
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    bash -c 'echo "rank=$OMPI_COMM_WORLD_RANK/$OMPI_COMM_WORLD_SIZE host=$(hostname) local_rank=$OMPI_COMM_WORLD_LOCAL_RANK/$OMPI_COMM_WORLD_LOCAL_SIZE"' \
+  > "$RANKMAP_LOG" 2>&1 || RC=$?
+
+# Mechanical gate (grep/awk counting with || true guards; set -euo pipefail
+# safe, same style as the established repo probe pattern): the probe must
+# have exited 0, emitted exactly NPROCS rank lines, exactly EXPECTED_NODES
+# distinct hostnames, and exactly GPUS rank lines per host. Otherwise abort
+# BEFORE any scored candidate runs; the probe evidence is preserved in
+# RANKMAP_LOG and a rerun needs a new ATTEMPT_TAG.
+RANK_LINES=$(grep -c "^rank=" "$RANKMAP_LOG" || true)
+HOST_COUNT=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); seen[$2] = 1 } END { n = 0; for (h in seen) n++; print n }' || true)
+MIN_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] < m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+MAX_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] > m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+if [ "$MIN_RANKS_PER_HOST" = "$MAX_RANKS_PER_HOST" ]; then
+  RANKS_PER_HOST_SUMMARY="$MIN_RANKS_PER_HOST"
+else
+  RANKS_PER_HOST_SUMMARY="${MIN_RANKS_PER_HOST}-${MAX_RANKS_PER_HOST}"
+fi
+echo "=== rank-map probe: rc=${RC} rank_lines=${RANK_LINES} hosts=${HOST_COUNT} ranks_per_host=${RANKS_PER_HOST_SUMMARY} log=${RANKMAP_LOG} ==="
+if [ "$RC" -ne 0 ] || [ "$RANK_LINES" -ne "$NPROCS" ] || [ "$HOST_COUNT" -ne "$EXPECTED_NODES" ] || [ "$MIN_RANKS_PER_HOST" -ne "$GPUS" ] || [ "$MAX_RANKS_PER_HOST" -ne "$GPUS" ]; then
+  echo "FATAL: rank-map probe failed its mechanical check (rc=${RC} rank_lines=${RANK_LINES} hosts=${HOST_COUNT} ranks_per_host=${RANKS_PER_HOST_SUMMARY}; mapping/launch problem; evidence preserved in ${RANKMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+  exit 1
+fi
+
+# --- Sequential candidate sweep within this single allocation --------------------
+# One candidate at a time, all sharing this allocation's nodes and hostfile.
+# A nonzero candidate exit is recorded (status file + job stdout) and the
+# sweep CONTINUES with the next candidate (TASK-005 Section 1.4A: all three
+# approved shapes should normally be attempted); the job exits nonzero
+# overall if any candidate failed. The `|| RC=$?` form keeps set -e from
+# aborting the sweep on an individual candidate failure.
+FAILURES=0
+RUN=0
+for GRID in $GRID_CANDIDATES; do
+  RUN=$((RUN + 1))
+  NPROW="${GRID%x*}"
+  NPCOL="${GRID#*x}"
+  ATTEMPT="${EXPERIMENT_ID}_grid${NPROW}x${NPCOL}_${ATTEMPT_TAG}"
+  STDOUT_FILE="${OUTDIR}/${ATTEMPT}.out"
+  STDERR_FILE="${OUTDIR}/${ATTEMPT}.err"
+  STATUS_FILE="${OUTDIR}/${ATTEMPT}.status"
+  START_TS=$(date --iso-8601=seconds)
+  echo "=== candidate ${RUN}/${NCAND} N=429056 NB=3072 nprow=${NPROW} npcol=${NPCOL} attempt=${ATTEMPT} start=${START_TS} ==="
+
+  # Validated Approach-1 launch, identical to the TASK-004 Phase-2A sweep
+  # launch (run_phase2a_grid_shape.pbs) except that the process-grid shape
+  # is this candidate's approved NPROW x NPCOL and the rank order is
+  # nporder=row: N and NB stay fixed at the retained 429056/3072, and the
+  # fixed controls are the TASK-005 Section 1.4B set (TASK-004 Section 1.4B
+  # controls with nporder=row). No other tuning, monitoring, or environment
+  # flags are passed.
+  RC=0
+  apptainer exec --nv \
+    -B /opt/pbs:/opt/pbs \
+    -B /var/spool/pbs:/var/spool/pbs \
+    -B "$REPO_ROOT":"$REPO_ROOT" \
+    "$SIF" \
+    /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+      --hostfile "$PWD/hostfile" \
+      --mca plm_rsh_agent "$BRIDGE" \
+      --mca plm_rsh_no_tree_spawn 1 \
+      --mca plm_rsh_num_concurrent 1 \
+      --mca routed direct \
+      -x PATH -x LD_LIBRARY_PATH \
+      --bind-to none \
+      /workspace/hpl-mxp.sh \
+        --n "$N_FIXED" \
+        --nb "$NB_FIXED" \
+        --nprow "$NPROW" \
+        --npcol "$NPCOL" \
+        --nporder row \
+        --gpu-affinity 0:1:2:3:4:5:6:7 \
+        --sloppy-type FP16 \
+        --use-mpi-panel-broadcast 0 \
+        --use-separate-stream-for-gemm 1 \
+        --prioritize-trsm 0 \
+        --prioritize-factorization 0 \
+        --fill-device 1 \
+        --test-loop 1 \
+        --skip-tests 0 \
+        --monitor-gpu 0 \
+    > "$STDOUT_FILE" 2> "$STDERR_FILE" || RC=$?
+
+  END_TS=$(date --iso-8601=seconds)
+  if [ "$RC" -ne 0 ]; then
+    FAILURES=$((FAILURES + 1))
+    echo "=== candidate ${RUN}/${NCAND} N=429056 NB=3072 nprow=${NPROW} npcol=${NPCOL} attempt=${ATTEMPT} FAILED exit_status=${RC} end=${END_TS}; continuing with the next candidate ==="
+  else
+    echo "=== candidate ${RUN}/${NCAND} N=429056 NB=3072 nprow=${NPROW} npcol=${NPCOL} attempt=${ATTEMPT} exit_status=0 end=${END_TS} ==="
+  fi
+  {
+    echo "attempt=${ATTEMPT}"
+    echo "experiment_id=${EXPERIMENT_ID}"
+    echo "pbs_job_id=${PBS_JOBID:-unknown}"
+    echo "queue=${QUEUE}"
+    echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+    echo "n=${N_FIXED}"
+    echo "nb=${NB_FIXED}"
+    echo "nprow=${NPROW}"
+    echo "npcol=${NPCOL}"
+    echo "nporder=row"
+    echo "fixed_controls=OMP_NUM_THREADS=8 --n 429056 --nb 3072 --nporder row --gpu-affinity 0:1:2:3:4:5:6:7 --sloppy-type FP16 --use-mpi-panel-broadcast 0 --use-separate-stream-for-gemm 1 --prioritize-trsm 0 --prioritize-factorization 0 --fill-device 1 --test-loop 1 --skip-tests 0 --monitor-gpu 0"
+    echo "start=${START_TS}"
+    echo "end=${END_TS}"
+    echo "exit_status=${RC}"
+    echo "stdout=${STDOUT_FILE}"
+    echo "stderr=${STDERR_FILE}"
+  } > "$STATUS_FILE"
+done
+
+# --- Post-sweep hardware-health snapshot (ordinary evidence; must not block) -----
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# --- Overall sweep result ---------------------------------------------------------
+# Nonzero overall if any candidate failed, even though later candidates were
+# still attempted (their evidence is preserved either way).
+if [ "$FAILURES" -ne 0 ]; then
+  echo "=== HPL-MxP 2x8-GAAS phase2a-grid-row sweep finished with ${FAILURES}/${NCAND} candidate(s) exited nonzero (tag ${ATTEMPT_TAG}) ==="
+  exit 1
+fi
+echo "=== HPL-MxP 2x8-GAAS phase2a-grid-row sweep complete: all ${NCAND} candidate(s) exited 0 (tag ${ATTEMPT_TAG}) ==="
