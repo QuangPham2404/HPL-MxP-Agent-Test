@@ -1,0 +1,140 @@
+experiment_id=2x8-GAAS-phase2a-grid-shape
+attempt_tag=v1
+pbs_job_id=72783.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-09-27T19:32:20+08:00
+fixed scientific controls (identical across candidates; only nprow x npcol varies):
+OMP_NUM_THREADS=8
+--n 429056
+--nb 3072
+--nporder column
+--gpu-affinity 0:1:2:3:4:5:6:7
+--sloppy-type FP16
+--use-mpi-panel-broadcast 0
+--use-separate-stream-for-gemm 1
+--prioritize-trsm 0
+--prioritize-factorization 0
+--fill-device 1
+--test-loop 1
+--skip-tests 0
+--monitor-gpu 0
+grid candidates for this allocation (TASK-004 Section 1.4A; 4x4 first as same-protocol control, then 2x8, then 8x2):4x4 2x8 8x2
+grid_candidate_count=3
+layout=2 nodes x 8 GPUs = 16 ranks
+grid=nprow x npcol per candidate (4x4 2x8 8x2); nporder=column
+nodes=hpc-gaas-g12 hpc-gaas-g15
+gpu_affinity=0:1:2:3:4:5:6:7
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-004-2332d8f-phase2a-v1/multi-node-test/rsh_pbsdsh_container.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 30, 77.94 W, 345 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 30, 78.81 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 30, 76.61 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 31, 76.56 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 31, 75.12 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 30, 75.33 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 30, 77.07 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 30, 76.81 W, 345 MHz, 0 MiB, 143771 MiB
+=== hostfile ===
+hpc-gaas-g12 slots=8
+hpc-gaas-g15 slots=8
+=== rank-map probe: rc=0 rank_lines=16 hosts=2 ranks_per_host=8 log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-004-2332d8f-phase2a-v1/experiments/2x8-GAAS/phase2a-grid-shape/outputs/2x8-GAAS-phase2a-grid-shape_rankmap_v1.log ===
+=== candidate 1/3 N=429056 NB=3072 nprow=4 npcol=4 attempt=2x8-GAAS-phase2a-grid-shape_grid4x4_v1 start=2026-09-27T19:32:43+08:00 ===
+=== candidate 1/3 N=429056 NB=3072 nprow=4 npcol=4 attempt=2x8-GAAS-phase2a-grid-shape_grid4x4_v1 exit_status=0 end=2026-09-27T19:33:43+08:00 ===
+=== candidate 2/3 N=429056 NB=3072 nprow=2 npcol=8 attempt=2x8-GAAS-phase2a-grid-shape_grid2x8_v1 start=2026-09-27T19:33:43+08:00 ===
+=== candidate 2/3 N=429056 NB=3072 nprow=2 npcol=8 attempt=2x8-GAAS-phase2a-grid-shape_grid2x8_v1 exit_status=0 end=2026-09-27T19:34:50+08:00 ===
+=== candidate 3/3 N=429056 NB=3072 nprow=8 npcol=2 attempt=2x8-GAAS-phase2a-grid-shape_grid8x2_v1 start=2026-09-27T19:34:50+08:00 ===
+=== candidate 3/3 N=429056 NB=3072 nprow=8 npcol=2 attempt=2x8-GAAS-phase2a-grid-shape_grid8x2_v1 exit_status=0 end=2026-09-27T19:35:52+08:00 ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 32, 130.20 W, 1980 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 33, 132.41 W, 1980 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 32, 120.98 W, 1980 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 34, 131.42 W, 1980 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 34, 125.56 W, 1980 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 33, 126.07 W, 1980 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 32, 130.98 W, 1980 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 33, 128.86 W, 1980 MHz, 0 MiB, 143771 MiB
+=== HPL-MxP 2x8-GAAS phase2a-grid-shape sweep complete: all 3 candidate(s) exited 0 (tag v1) ===

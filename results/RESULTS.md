@@ -215,5 +215,8 @@ This report records validated raw result data only. No optimization analysis or 
 | 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb4096_v1 | 429056 | 4096 | 4x4 | column | 8 | unset | unset | PASSED | 5.3738e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb4096_v1.out |
 | 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb5120_v1 | 429056 | 5120 | 4x4 | column | 8 | unset | unset | PASSED | 5.1301e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb5120_v1.out |
 | 2x8-GAAS-phase1b-nb-screen | 2x8-GAAS-phase1b-nb-screen_nb6144_v1 | 429056 | 6144 | 4x4 | column | 8 | unset | unset | PASSED | 5.0524e+06 | experiments/2x8-GAAS/phase1b-nb-screen/outputs/2x8-GAAS-phase1b-nb-screen_nb6144_v1.out |
+| 2x8-GAAS-phase2a-grid-shape | 2x8-GAAS-phase2a-grid-shape_grid4x4_v1 | 429056 | 3072 | 4x4 | column | 8 | unset | unset | PASSED | 5.4505e+06 | experiments/2x8-GAAS/phase2a-grid-shape/outputs/2x8-GAAS-phase2a-grid-shape_grid4x4_v1.out |
+| 2x8-GAAS-phase2a-grid-shape | 2x8-GAAS-phase2a-grid-shape_grid2x8_v1 | 429056 | 3072 | 2x8 | column | 8 | unset | unset | PASSED | 5.3746e+06 | experiments/2x8-GAAS/phase2a-grid-shape/outputs/2x8-GAAS-phase2a-grid-shape_grid2x8_v1.out |
+| 2x8-GAAS-phase2a-grid-shape | 2x8-GAAS-phase2a-grid-shape_grid8x2_v1 | 429056 | 3072 | 8x2 | column | 8 | unset | unset | PASSED | 5.5487e+06 | experiments/2x8-GAAS/phase2a-grid-shape/outputs/2x8-GAAS-phase2a-grid-shape_grid8x2_v1.out |
 
 Source: `results/metrics.csv`.
