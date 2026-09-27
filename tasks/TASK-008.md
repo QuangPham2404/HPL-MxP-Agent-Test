@@ -1,8 +1,8 @@
 ---
 task_id: TASK-008
 title: Phase 2C — Bracketed UCX Affinity Confirmation
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-007
 analysis_id: 2x8-gaas-phase2c-ucx-affinity-confirm
 created: 2026-09-28
@@ -382,40 +382,113 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: IN_PROGRESS
+status: COMPLETE
 
 ### 2.2 Orchestration Summary
 
-Pending execution.
+One OpenCode execution worker performed the live GAAS preflight, submitted and
+boundedly monitored the single approved PBS job, retrieved the outputs, and
+prepared factual experiment and metrics records. Work used the clean detached
+remote worktree `.codex-worktrees/TASK-008-962545e-phase2c-v2` at
+`962545ec71cc79cb1e368689f3f2d033f3aecd4`; the dirty remote primary and
+unrelated local untracked `hpl-mxp-runs-on-gaas/` were preserved. Codex
+validated the returned evidence and completed the task/progress bookkeeping.
+All run arms were sequential within one allocation; no retry or second
+submission occurred.
 
 ### 2.3 Work Executed
 
-Pending execution.
+Submitted job `73068.gaas` once at `2026-09-28T07:32:27+08:00` to `gpu_as`
+under project `hpc_ebslee`, host-pinned to `hpc-gaas-g13` and `hpc-gaas-g15`
+(8 GPUs, 96 CPUs and 2000 GB per node; `place=scatter`; no `mpiprocs`). The
+preferred g12+g15 pair was not clean because job `72885.gaas` occupied all of
+g12's 96 CPUs and 8 GPUs. Immediately before submission, g13 and g15 were
+`free`, had zero assigned CPU/GPU/memory, and advertised `Qlist=gpu_as,gpu_ppu`;
+`gpu_as` was enabled/started and its ACL included `hpc_ebslee_group`.
+
+The script ran the exact C0a automatic UCX → C1 PIX-paired UCX → C0b automatic
+UCX order, with the Section 1.2 settings unchanged. The job ran
+`07:32:28–07:35:57 +08:00`, finished in `00:03:29`, and returned state `F`,
+`Exit_status=0`, `run_count=1`. All three arms exited 0, reported
+`PASSED`, finite normalized residual `1.416310E-05`, and 3 solver
+iterations:
+
+| arm | attempt suffix | overall GFLOP/s | LU seconds | IR seconds |
+|---|---|---:|---:|---:|
+| C0a automatic | `c0a-ucx-auto_v1` | 5.6421e+06 | 7.76 | 1.57 |
+| C1 PIX-paired | `c1-ucx-pix_v1` | 5.5794e+06 | 7.75 | 1.69 |
+| C0b automatic | `c0b-ucx-auto_v1` | 5.6285e+06 | 7.75 | 1.61 |
+
+The README records LU GFLOP/s, IR/LU ratio, host/device memory, all four
+eight-HCA counter snapshots, exact controls, and PBS provenance. No strategic
+retain/reject decision or follow-on experiment was performed.
 
 ### 2.4 Operational Validation
 
-Pending execution.
+The attempt-tag and mother-node topology gates passed. The rank-map probe
+returned `rc=0` with 16 ranks on two hosts and 8 ranks per host (global ranks
+0–7 on g13, 8–15 on g15). The added per-host topology gate passed on both
+hosts before any scored arm, including g13, which had no accepted Phase-0
+capture. Both hosts reported cpuset `0-49,56-101`, memory nodes `0-1`, eight
+GPUs and the expected eight HCA devices/topology anchors. The PBS `.o`
+records loaded modules, Apptainer 1.4.1, container MPI Open MPI 4.1.9a1, and
+execution-worktree revision. All 12 retrieved raw files were compared
+byte-for-byte by SHA-256 against their remote worktree copies. The CSV parses
+with 234 data rows, three unique TASK-008 rows, no malformed rows, and no
+duplicate `(experiment_id, attempt)` keys. `results/RESULTS.md` was regenerated
+from the CSV; `git diff --check` passed.
 
 ### 2.5 Evidence and Artifacts
 
-Pending execution.
+Raw PBS `.o`/`.e`, three arm `.out`/`.err`/`.status` sets, and the rank-map
+log are in
+`experiments/2x8-GAAS/phase2c-ucx-affinity-confirm/outputs/`. The PBS `.o`
+contains the four `port_xmit_data` snapshots and runtime provenance. The
+experiment README contains the factual run summary. Three completed rows for
+job `73068.gaas` are in `results/metrics.csv`, and
+`results/RESULTS.md` has been regenerated. Execution used remote revision
+`962545ec71cc79cb1e368689f3f2d033f3aecd4`; preparation revisions
+`b45130aa0b069b7443a0d6229dc0ec555c660edb` and
+`962545ec71cc79cb1e368689f3f2d033f3aecd4` are on `origin/main`.
 
 ### 2.6 Files Changed
 
-Pending execution.
+`experiments/2x8-GAAS/phase2c-ucx-affinity-confirm/README.md`, its 12 v1 raw
+files under `outputs/`, `results/metrics.csv`, `results/RESULTS.md`, this task
+report, and the dated progress report. Preparation script/README changes were
+committed in the two revisions listed above. No planning/analysis files were
+changed.
 
 ### 2.7 Missing / Unavailable Evidence
 
-Pending execution.
+None required by the approved task is missing. GPU-monitoring telemetry is
+unavailable by design because the approved run used `--monitor-gpu 0`; the
+ordinary pre/post hardware-health snapshots are preserved in the PBS `.o`.
 
 ### 2.8 Execution Errors / Exceptions
 
-Pending execution.
+No execution-blocking errors occurred. PBS/arm stderr preserves the recurring
+`cuda/13.1` module note and `unknown groupid 1304617061` warnings, plus normal
+container bridge diagnostics; all gates, arms and correctness checks passed.
+The requested preferred pair was unavailable at live preflight, so the
+approved replacement pair g13+g15 was used after both nodes passed the
+in-allocation topology gate. The local unrelated untracked directory was
+preserved.
 
 ### 2.9 Scope Compliance
 
-Pending execution.
+Scope complied with: one allocation and one submission; exactly three arms in
+the approved order; fixed N/NB/grid, rank map, scientific controls, launcher,
+queue, project and PIX HCA string; no UCX_TLS or communication-policy change;
+no retry; no source, software, resource-policy or strategic-plan changes. The
+approved Section 1.11 text is unchanged. Evidence/results are committed and
+pushed with this report under the task's explicit Section 1.10 success
+criteria.
 
 ### 2.10 Handoff to Strategic Analyst
 
-Pending execution.
+TASK-008 is `EXECUTED / strategic-analyst`. The raw evidence and factual
+metrics are available at the paths above. This report makes no retain/reject
+decision and does not authorize analysis; wait for the Human Leader's
+explicit `ANALYSE_RESULTS` authorization before strategic interpretation or
+follow-on work.

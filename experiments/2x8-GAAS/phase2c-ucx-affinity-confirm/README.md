@@ -30,16 +30,12 @@ exactly one question: does explicit rank-to-PIX-HCA UCX affinity reproduce an
 end-to-end and iterative-refinement advantage when bracketed by the unchanged
 automatic UCX control inside one allocation?
 
-**Status (2026-09-28): prepared, not yet submitted.** No attempt has run;
-`outputs/` is empty pending the first authorized submission. TASK-008 is
-`EXECUTING / codex`; submission follows the one-multinode-job-at-a-time rule
-and the live queue/node eligibility checks in tasks/TASK-008.md Section 1.8.
-Remote preflight on 2026-09-28 found g13+g15 as the only currently free
-eligible pair; g15 is covered by the accepted Phase-0 evidence but g13 is
-not, which is why the rank-map probe now validates the approved topology on
-BOTH allocated nodes before any scored arm (see Topology gates below). Any
-rerun must use a new `ATTEMPT_TAG`, pass `-q gpu_as` or `-q gpu_ded` (the
-only authorized queues), and never overwrite existing evidence.
+**Status (2026-09-28): v1 attempt executed; raw evidence retrieved.** The
+single authorized Phase-2C bracket run (attempt tag `v1`) completed on
+2026-09-28 with all three arms `PASSED`; see Run summary below. TASK-008
+remains `EXECUTING / codex` pending the Codex Execution Report. Any rerun
+must use a new `ATTEMPT_TAG`, pass `-q gpu_as` or `-q gpu_ded` (the only
+authorized queues), and never overwrite existing evidence.
 
 ## Structure
 
@@ -412,15 +408,98 @@ Sections 1.5, 1.10).
 
 ## Run summary
 
-Not yet executed. No attempt has been submitted; this section will record
-the factual run summary (PBS provenance, single-allocation proof, per-arm
-measurements, HCA counter observations) after the first authorized
-submission. During execution, factual rows for the three attempts will be
-appended to `results/metrics.csv` and `results/RESULTS.md` (experiment id
-`2x8-GAAS-phase2c-ucx-affinity-confirm`, attempts
-`2x8-GAAS-phase2c-ucx-affinity-confirm_<arm>_v1`); strategic conclusions in
+### v1 attempt (2026-09-28, PBS job 73068.gaas)
+
+One authorized bracket submission, exactly as approved by TASK-008 Section
+1.11 (one qsub, no retry).
+
+**Node/queue selection (live preflight immediately before submission).**
+`gpu_as` was enabled and started (walltime limit 336:00:00; ACL includes
+`hpc_ebslee_group`, so project `hpc_ebslee` is eligible; precedent jobs
+72624/72845/72879). `hpc-gaas-g12` was NOT clean: another user's job
+`72885.gaas` (`tr_para-3`) held 96 CPUs, 8 GPUs, and ~2000 GB on it, so the
+preferred g12+g15 pair was unavailable. `hpc-gaas-g13` and `hpc-gaas-g15`
+were both `free` with zero assigned CPU/GPU/memory and
+`Qlist = gpu_as,gpu_ppu` — completely idle and eligible for `gpu_as` (the
+only authorized queue containing the pair; `gpu_ded` is not in their Qlist).
+The submitted pair was therefore **g13+g15 on `gpu_as`**.
+
+**PBS provenance.**
+
+| item | value |
+|---|---|
+| PBS job | `73068.gaas` (job name `2x8_phase2c_ucx`) |
+| Submitted | 2026-09-28T07:32:27+08:00 (single qsub) |
+| Job running from | 2026-09-28T07:32:28+08:00 |
+| Completed | 2026-09-28T07:35:57+08:00 (walltime `00:03:29` of `01:30:00` requested) |
+| Final state | `F`, `Exit_status=0`, `run_count=1` |
+| Queue / project | `gpu_as` / `hpc_ebslee` |
+| Select (host-pinned at qsub) | `select=host=hpc-gaas-g13:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB`, `place=scatter`, no `mpiprocs` |
+| Allocated hosts | `hpc-gaas-g13/0*96 + hpc-gaas-g15/0*96` |
+| Execution worktree | `.codex-worktrees/TASK-008-962545e-phase2c-v2` at `962545ec71cc79cb1e3686893f2f4d033f3aecd4` (recorded in the PBS `.o`) |
+| Modules / container | `apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0`; Apptainer 1.4.1; container MPI Open MPI 4.1.9a1; `hpc-benchmarks_26.02.sif` |
+
+**Single-allocation proof.** All three arms share job `73068.gaas`, the
+g13+g15 pair, one hostfile/rank-placement contract, and one container
+environment: C0a ran 07:32:57–07:33:55, C1 07:33:55–07:34:54, C0b
+07:34:55–07:35:55 (+08:00), bracketed by the four HCA snapshots
+(07:32:56 / 07:33:55 / 07:34:55 / 07:35:56). Arm order was exactly
+C0a → C1 → C0b.
+
+**Preflight gates (all PASS, before any scored arm).**
+`attempt_tag_validation=PASS`; mother-node (g13) topology gate PASS
+(cpuset `0-49,56-101`, mems `0-1`, 8 GPUs, HCAs `mlx5_0..mlx5_5,mlx5_8,mlx5_9`,
+GPU0→NUMA0, GPU4→NUMA1, NIC legend match); rank-map probe `rc=0`,
+16 rank lines, 2 hosts, 8 ranks/host; per-host topology gate PASS on BOTH
+`hpc-gaas-g13` and `hpc-gaas-g15` (g13, which has no accepted Phase-0
+capture, was validated live as required for replacement-node eligibility).
+Rank map: global ranks 0–7 on g13, ranks 8–15 on g15
+(`outputs/2x8-GAAS-phase2c-ucx-affinity-confirm_rankmap_v1.log`).
+
+**Per-arm measurements (from the arm `.status` files / `.out` evidence).**
+Identical fixed controls per TASK-008 Section 1.2; only the UCX policy
+varied (`--ucx-affinity` omitted for C0a/C0b; the PIX-paired map for C1).
+All arms: exit_status=0, verification `PASSED`, finite normalized residual
+`1.416310E-05`, 3 solver iterations.
+
+| arm | attempt | overall GFLOP/s | LU seconds | LU GFLOP/s | IR seconds | IR/LU | host mem MAX / avail MIN | device mem MAX / avail MIN | post-matgen headroom (sys/dev) |
+|---|---|---|---|---|---|---|---|---|---|
+| C0a | `..._c0a-ucx-auto_v1` | 5.6421e+06 | 7.76 | 6.7818e+06 | 1.57 | 0.202 | 0.004 GB / 49.569 GB | 135.254 GB / 138.739 GB | 49.349 GB / 2.767 GB |
+| C1 | `..._c1-ucx-pix_v1` | 5.5794e+06 | 7.75 | 6.7936e+06 | 1.69 | 0.218 | 0.004 GB / 50.970 GB | 135.254 GB / 138.739 GB | 50.751 GB / 2.767 GB |
+| C0b | `..._c0b-ucx-auto_v1` | 5.6285e+06 | 7.75 | 6.7967e+06 | 1.61 | 0.208 | 0.004 GB / 49.622 GB | 135.254 GB / 138.739 GB | 49.391 GB / 2.767 GB |
+
+Attempt ids: `2x8-GAAS-phase2c-ucx-affinity-confirm_{c0a-ucx-auto,c1-ucx-pix,c0b-ucx-auto}_v1`.
+
+**HCA `port_xmit_data` snapshots (mother node g13, raw cumulative values).**
+
+| HCA | before C0a | after C0a | after C1 | after C0b |
+|---|---|---|---|---|
+| mlx5_0 | 7204104 | 10310374981 | 20614979371 | 30918150241 |
+| mlx5_1 | 7202016 | 10393838773 | 20782210099 | 31168849192 |
+| mlx5_2 | 7204032 | 10298268970 | 20591071665 | 30882139982 |
+| mlx5_3 | 7202448 | 10393586241 | 20781704918 | 31168088198 |
+| mlx5_4 | 7203816 | 10304729707 | 20603719452 | 30901246062 |
+| mlx5_5 | 7203600 | 10388049294 | 20770629604 | 31151474743 |
+| mlx5_8 | 7202808 | 10471478531 | 20937490663 | 31401770535 |
+| mlx5_9 | 7202376 | 10292411062 | 20579357917 | 30864567812 |
+
+**Anomalies.** None blocking. PBS stderr preserves the recurring
+`cuda/13.1` module note and `unknown groupid 1304617061` warnings (same as
+TASK-007); arm `.err` files contain the normal bridge `cmd=[...]` orted
+diagnostics. GPU-monitoring output is unavailable by design
+(`--monitor-gpu 0`). Pre/post-bracket hardware-health snapshots are in the
+PBS `.o`.
+
+**Evidence (all retrieved to this directory, SHA-256-verified against the
+remote worktree copies).** `outputs/` contains the 12 v1 files: PBS
+`..._v1.o`/`..._v1.e`, three arm `.out`/`.err`/`.status` sets, and the
+rank-map log. Factual rows for the three attempts were appended to
+`results/metrics.csv` (experiment id
+`2x8-GAAS-phase2c-ucx-affinity-confirm`). Strategic conclusions in
 `planning/2x8-GAAS.md` and any final Phase-2C analysis are NOT updated
-during execution (TASK-008 Section 1.9).
+during execution (TASK-008 Section 1.9); bracket interpretation and the
+retain/reject decision are reserved for the authorized `ANALYSE_RESULTS`
+step (TASK-008 Section 1.5).
 
 ## Evidence paths
 
