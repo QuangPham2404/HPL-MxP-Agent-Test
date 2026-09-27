@@ -585,3 +585,145 @@ Do not combine Phase 2B with UCX transport selection, panel-broadcast tuning, U-
 
 **Human decision state:** Phase 2A is closed. Phase 2B is proposed only; no Phase-2B execution is authorized by this analysis.
 
+
+## 6. Phase 2B/2C — Placement and Locality
+
+TASK-007 tested GPU/NUMA/CPU/NIC placement at the retained Phase-2A geometry.
+
+Detailed analysis: `planning/analysis/2x8-gaas-phase2bc-placement-locality.md`.
+
+All ten arms ran sequentially in one allocation, PBS job `72879.gaas`, on
+g12+g15. All passed with the same residual and three IR iterations.
+
+### 6.1 Results and main mechanism
+
+| Arm | Change | Overall GFLOP/s | LU s | IR s |
+|---|---|---:|---:|---:|
+| A0 | G0 identity, mem omitted | 5.7363e+06 | 7.79 | 1.39 |
+| A1 | G0 + mem affinity | 5.6984e+06 | 7.79 | 1.45 |
+| A2 | G1 column-local, mem omitted | 5.5378e+06 | 7.78 | 1.73 |
+| A3 | G1 + matching mem affinity | 5.6699e+06 | 7.78 | 1.51 |
+| B0 | CPU free | 5.6247e+06 | 7.81 | 1.56 |
+| B1 | CPU loose | 5.5530e+06 | 7.77 | 1.72 |
+| B2 | CPU medium, 10 CPUs/rank | 5.6912e+06 | 7.78 | 1.48 |
+| B3 | CPU strict, 8 CPUs/rank | 5.3783e+06 | 7.77 | 2.02 |
+| C0 | UCX automatic | 5.5828e+06 | 7.80 | 1.64 |
+| C1 | PIX-paired UCX HCA | 5.6949e+06 | 7.78 | 1.47 |
+
+The important result is that LU is essentially flat (7.77–7.81 s) across the
+entire sweep while IR ranges from 1.39 to 2.02 s. Placement therefore affects
+the host/NUMA/MPI/refinement side much more strongly than the H200 LU path.
+
+The identical G0/no-mem/free/auto control appears as A0, B0, and C0 and moves
+`5.7363e+06 -> 5.6247e+06 -> 5.5828e+06`, a same-allocation span of about
+2.68%. One-shot 1–2% effects are therefore treated cautiously.
+
+### 6.2 GPU and memory placement
+
+G1 without matching memory affinity loses 3.46% versus A0 entirely through
+IR (1.39 -> 1.73 s), not LU. Matching G1 memory affinity recovers 2.39% and
+cuts IR to 1.51 s, showing a real GPU-map × memory-locality interaction.
+
+Under G0, explicit memory affinity is slightly negative (-0.66%) and does not
+change LU.
+
+Retain:
+
+```text
+gpu-affinity = 0:1:2:3:4:5:6:7
+mem-affinity = omitted
+```
+
+Identity is simpler and at least as fast; G1+memory is not proven inferior but
+does not justify the extra mapping complexity.
+
+### 6.3 CPU affinity
+
+B2 medium is the only promising explicit CPU policy:
+
+```text
+B2 vs B0:
+  overall +1.18%
+  IR 1.56 -> 1.48 s
+```
+
+but the gain is below measured control drift.
+
+B3 strict is clearly harmful:
+
+```text
+overall -4.38%
+IR 1.56 -> 2.02 s (+29.49%)
+```
+
+while LU remains flat. Eight CPUs/rank for eight OMP threads leaves too little
+host-side headroom for progress/helper/refinement work. The 10-CPU/rank B2
+result suggests that some private CPU ownership plus spare capacity may be
+useful.
+
+Keep CPU affinity free as the representative control, but preserve B2 as the
+main hypothesis for the E19 coordinated OMP/CPU revalidation.
+
+### 6.4 UCX affinity
+
+C1 PIX-paired UCX affinity gives:
+
+```text
+overall +2.008% vs C0
+LU 7.80 -> 7.78 s
+IR 1.64 -> 1.47 s (-10.37%)
+```
+
+The g12 HCA counters show that both C0 and C1 already distribute essentially
+equal traffic across all eight HCAs; mean transmitted traffic differs by only
+~0.016%. Therefore C1, if real, is not winning by activating more rails or
+moving more aggregate bytes. The plausible mechanism is more deterministic
+rank-to-local-PIX-HCA routing / lower path-locality overhead.
+
+However, +2.01% is smaller than the 2.68% identical-control span. The
+pre-authorized execution rule correctly promoted C1, but strategic closure
+requires a bracketed confirmation.
+
+### 6.5 Dependency checkpoint
+
+- **E03:** current g12/g15 physical mapping is validated; remap on another
+  topology rather than transferring affinity strings.
+- **E11:** satisfied for retained 4x4 row.
+- **E12/E13:** panel transport remains fully open downstream; grid/order and
+  physical placement both require Phase-4 transport revalidation.
+- **E18:** host runtime remains open because IR is clearly placement-sensitive.
+- **E19:** strongly triggered. CPU affinity and OMP thread/place/bind must be
+  revalidated as one coordinated group; do not independently stack B2 with an
+  old OMP policy.
+- **E20:** defer DGEMV until host runtime closes.
+- **E25/E26/E29:** chunk and scheduling remain downstream of final
+  communication/transport decisions.
+- N/NB/residency stay closed because every TASK-007 arm has the same memory
+  regime.
+
+### 6.6 Proposed next step
+
+**Recommended next action: one minimal bracketed UCX-affinity confirmation.**
+
+At fixed G0 / no memory affinity / CPU free / OMP=8, run:
+
+```text
+C0 automatic
+C1 PIX-paired
+C0 automatic repeat
+```
+
+inside one allocation.
+
+If C1 remains above the local C0 bracket and reproduces the IR reduction,
+retain PIX affinity and close Phase 2C. If it falls inside bracket drift,
+retain automatic UCX and close Phase 2C.
+
+After placement closes, proceed to the E19-required coordinated OpenMP + CPU
+host-runtime revalidation, keeping B2 medium as the main explicit-CPU
+candidate.
+
+Do not start `UCX_TLS × use-mpi-panel-broadcast` yet; that remains Phase 4.
+
+**Human decision state:** TASK-007 analysis complete. UCX confirmation proposed
+only; no execution is authorized.
