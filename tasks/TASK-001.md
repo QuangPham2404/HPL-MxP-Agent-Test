@@ -621,6 +621,9 @@ preserved. Only NTU-HPC-Large was used for OpenCode worker assignments.
 ### 2.10 Handoff to Strategic Analyst
 
 No handoff yet: execution remains `EXECUTING / codex` and is incomplete. The
-next action is to resume TASK-001 by rechecking the approved `gpu_as` pair and
-submitting exactly one `ATTEMPT_TAG=v1` sweep job through an NTU-HPC-Large
-worker. Section 1.11 is unchanged; no new task authorization is needed.
+next action is to resume TASK-001 by synchronizing the latest pushed
+revision, creating a clean detached worktree at that exact revision while
+preserving the existing `70c56a1` worktree, rechecking the approved `gpu_as`
+pair, and submitting exactly one `ATTEMPT_TAG=v1` sweep job through an
+NTU-HPC-Large worker. Section 1.11 is unchanged; no new task authorization is
+needed.
