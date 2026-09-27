@@ -438,3 +438,143 @@ The exact Phase-2A candidate set should be specified in the next human-approved 
 
 **Human decision state:** proposed only. No Phase-2A execution is authorized by this analysis.
 
+## 5. Phase 2A — Joint TASK-004 / TASK-005 Grid × Order Matrix
+
+TASK-004 and TASK-005 are analyzed as one Phase-2A experiment.
+
+Detailed analysis: `planning/analysis/2x8-gaas-phase2a-grid-order-matrix.md`.
+
+Fixed geometry and controls:
+
+```text
+N = 429056
+NB = 3072
+OMP_NUM_THREADS = 8
+gpu-affinity = 0:1:2:3:4:5:6:7
+fill-device = 1
+```
+
+TASK-004 supplied the three `nporder=column` arms; TASK-005 supplied the corresponding three `nporder=row` arms. Both used the same physical rank placement:
+
+```text
+global ranks 0-7   -> hpc-gaas-g12
+global ranks 8-15  -> hpc-gaas-g15
+```
+
+### 5.1 Results
+
+| Grid | Order | Overall GFLOP/s | vs original baseline | LU GFLOP/s | LU s | IR s | IR/LU | Device headroom | Host consumption MAX |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 2×8 | column | `5.3746e+06` | +11.88% | `6.3307e+06` | 8.32 | 1.48 | 0.178 | 2.163 GB | 6.395 GB |
+| 2×8 | row | `5.0562e+06` | +5.26% | `6.4670e+06` | 8.14 | 2.27 | 0.279 | 2.304 GB | 6.292 GB |
+| 4×4 | column | `5.4505e+06` | +13.46% | `6.5964e+06` | 7.98 | 1.68 | 0.211 | **2.767 GB** | **0.004 GB** |
+| **4×4** | **row** | **`5.6347e+06`** | **+17.30%** | **`6.7803e+06`** | **7.77** | **1.58** | 0.203 | **2.767 GB** | **0.004 GB** |
+| **8×2** | **column** | **`5.5487e+06`** | **+15.51%** | `6.5155e+06` | 8.08 | **1.41** | **0.175** | 2.302 GB | 2.937 GB |
+| 8×2 | row | `5.4331e+06` | +13.10% | `6.5199e+06` | 8.08 | 1.62 | 0.200 | 2.161 GB | 3.040 GB |
+
+All six candidates passed correctness with three iterative-refinement iterations.
+
+Baseline percentages use the immutable TASK-000 `4.8037e+06` GFLOP/s denominator for campaign-progress context only; TASK-000 used a different N/fill-device configuration and is not an isolated grid/order causal control.
+
+### 5.2 Analysis
+
+Grid and order show a real interaction:
+
+```text
+2x8: row vs column = -5.92%
+4x4: row vs column = +3.38%
+8x2: row vs column = -2.08%
+```
+
+No global row/column rule is therefore retained.
+
+The phase timings reveal the mechanism more clearly:
+
+- **2×8:** row order improves LU time slightly (8.32 -> 8.14 s), but IR rises 1.48 -> 2.27 s (+53.4%), causing the large end-to-end loss.
+- **4×4:** row order improves both LU (7.98 -> 7.77 s) and IR (1.68 -> 1.58 s) in these runs.
+- **8×2:** LU is effectively unchanged at 8.08 s, while row order raises IR 1.41 -> 1.62 s (+14.9%).
+
+The row/column memory footprints within each shape are similar, and are identical for 4×4. The order effect is therefore primarily a **rank-layout / communicator / synchronization effect**, not a device-capacity effect.
+
+Given the contiguous two-node rank map:
+
+- `nporder=column` makes process columns node-local and process rows inter-node;
+- `nporder=row` makes process rows node-local and process columns inter-node.
+
+The preferred choice changes with P×Q, confirming that abstract process-grid shape and physical rank layout must be optimized together.
+
+### 5.3 Current retention state
+
+`2×8` is dropped from serious Phase-2A contention:
+
+- its column arm is 4.62% below the current matrix leader;
+- its row arm is 10.27% below;
+- row order causes a large IR penalty.
+
+The two strongest combinations are:
+
+```text
+4x4 row    = 5.6347e+06 GFLOP/s
+8x2 column = 5.5487e+06 GFLOP/s
+difference = 1.55%
+```
+
+That separation is not sufficient to close Phase 2A because the same 4×4-column control has moved across allocations:
+
+```text
+TASK-002: 5.6091e+06
+TASK-003: 5.5381e+06
+TASK-004: 5.4505e+06
+```
+
+The approximately 2.9% TASK-002-to-TASK-004 spread is larger than the current 1.55% top-two gap.
+
+Therefore:
+
+- **4×4 row is the current numerical leader;**
+- **8×2 column is a co-leading serious candidate;**
+- 4×4 column and 8×2 row remain useful order controls for one confirmation experiment;
+- **Phase 2A remains open.**
+
+### 5.4 Dependency checkpoint
+
+The checkpoint is performed.
+
+- **E02 topology/rank count → grid/order:** satisfied for the current 2×8/16-rank topology.
+- **E09 N → grid/order:** satisfied at retained `N=429056`.
+- **E10 NB → grid/order:** satisfied at retained `NB=3072`.
+- **E11 grid/order → rank/GPU/NIC placement:** triggered and deferred until Phase 2A closes. Phase 2B must evaluate physical placement for the retained pair(s).
+- **E12 grid/order → panel transport:** triggered downstream. Process-grid/order materially changes communicator size and node crossings; panel-transport results must later be revalidated.
+- **E24 N/NB/npcol → U-panel chunk:** triggered downstream. The final npcol must be known before chunk validity/usefulness is recalculated.
+- **E29 grid/order → LU scheduling:** triggered downstream because ownership, timing, and node-crossing behavior changed.
+- **N/residency reopening:** conditional only. Do not reopen N before the grid/order ambiguity is resolved. If the final retained pair materially changes the residency/LU-IR regime from the Phase-1 control, use only a targeted local N revalidation.
+
+Do not start affinity, communication, chunk, N, host-runtime, or scheduling tuning before the remaining Phase-2A ambiguity is resolved.
+
+### 5.5 Proposed next step
+
+**Recommended next action: one bounded same-allocation Phase-2A confirmation with exactly:**
+
+```text
+4x4 row
+4x4 column
+8x2 column
+8x2 row
+```
+
+Keep `N=429056`, `NB=3072`, identity GPU affinity, and every other scientific control unchanged.
+
+This confirmation:
+
+1. removes the already-dominated 2×8 shape;
+2. directly compares the two leaders in one allocation;
+3. repeats 4×4 column as the established campaign control;
+4. checks whether the apparent 4×4 row advantage and 8×2 column advantage are repeatable.
+
+After the confirmation:
+
+- retain one pair if it separates repeatably beyond within-allocation/control movement;
+- if 4×4 row and 8×2 column remain tied, retain both as the Phase-2A region and carry both to Phase 2B where physical placement may break the tie.
+
+**Human decision state:** proposed only. No confirmation run or Phase-2B execution is authorized by this analysis.
+
