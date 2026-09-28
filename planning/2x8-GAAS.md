@@ -935,3 +935,133 @@ B2 with a separately selected OpenMP winner.
 
 **Human decision state:** Phase 2C closed. Host-runtime tuning is proposed only;
 no execution is authorized.
+
+## 7. Phase 3A/3B — Coordinated Host Runtime
+
+TASK-009 jointly revalidated OpenMP thread count, HPL CPU affinity, and OpenMP
+place/bind policy at the retained `N=429056`, `NB=3072`, `4x4 row`
+operating point.
+
+Detailed analysis:
+`planning/analysis/2x8-gaas-phase3ab-host-runtime.md`.
+
+### 7.1 Step A — OMP thread count
+
+| OMP threads | Overall GFLOP/s | LU s | IR s | IR/LU |
+|---:|---:|---:|---:|---:|
+| **4** | **6.5632e+06** | 7.74 | **0.29** | 0.037 |
+| 6 | 6.5459e+06 | 7.75 | 0.29 | 0.037 |
+| 8 | 6.5437e+06 | 7.76 | 0.29 | 0.037 |
+| 10 | 6.4302e+06 | 7.78 | 0.41 | 0.053 |
+| 12 | 6.2635e+06 | 7.77 | 0.63 | 0.081 |
+
+Threads 4–8 form one plateau. LU is flat; the degradation at 10–12 threads
+comes from IR. Retain `OMP_NUM_THREADS=4` as the representative plateau
+control because it is the numerical leader and uses the least host-thread
+budget.
+
+TASK-009 explicitly forwards and verifies `OMP_NUM_THREADS` on all 16 ranks.
+The closest TASK-008 control on the same node pair had LU 7.76 s and IR
+1.57 s, whereas TASK-009 T=8 has LU 7.76 s and IR 0.29 s. Because the old
+remote-rank OpenMP environment is not recorded, this cross-task difference is
+not a clean causal measurement, but it establishes a materially different
+verified host-runtime/IR regime.
+
+### 7.2 Step B — CPU affinity
+
+At both retained thread counts, free and broad loose CPU territory are tied,
+while narrow private slices hurt IR strongly:
+
+```text
+T=4:
+free   6.5632e+06, IR 0.29
+loose  6.5433e+06, IR 0.29
+medium 6.2703e+06, IR 0.60
+strict 6.1713e+06, IR 0.77
+
+T=6:
+free   6.5459e+06, IR 0.29
+loose  6.5505e+06, IR 0.29
+medium 6.2819e+06, IR 0.58
+strict 6.3429e+06, IR 0.56
+```
+
+The mechanism is broader than “leave exactly two spare CPUs.” The repeated
+result is that **narrow private CPU territories themselves are harmful to the
+refinement/progress path**, while broad free/shared territory is sufficient.
+
+Retain:
+
+```text
+--cpu-affinity omitted
+```
+
+### 7.3 Step C — OpenMP place/bind
+
+Socket-level policies are flat at both T=4 and T=6. Explicit
+`sockets/CLOSE` and `sockets/SPREAD` remain within 0.5% of the omitted
+package-default control and leave LU/IR unchanged.
+
+Every `OMP_PLACES=cores` policy collapses performance to about
+`1.84–1.86e+06 GFLOP/s`, with LU rising to about 12.7–13.1 s and IR to
+15.5–16.0 s. Core-level binding is therefore rejected under the current free
+rank/cpuset launcher contract.
+
+Retain:
+
+```text
+OMP_PLACES omitted
+OMP_PROC_BIND omitted
+effective launcher policy = sockets / TRUE
+```
+
+### 7.4 Retained host-runtime control
+
+```text
+OMP_NUM_THREADS = 4
+cpu-affinity = omitted
+mem-affinity = omitted
+ucx-affinity = omitted / automatic
+OMP_PLACES = omitted
+OMP_PROC_BIND = omitted
+effective OpenMP placement = sockets / TRUE
+```
+
+T=4 is a representative of the 4–8 plateau, not a uniquely proven optimum.
+
+### 7.5 Dependency checkpoint
+
+- **E18:** host runtime is validated at N=429056, but the useful N operating
+  point is reopened because TASK-009 materially changes the IR/LU regime that
+  originally selected N=429056.
+- **E19:** CPU/OpenMP interaction is now directly observed and resolved for the
+  current launcher/cpuset. No immediate memory-affinity resweep is required
+  because the retained CPU policy remains free and socket-level; retain memory
+  affinity omitted.
+- **E20/E21:** DGEMV is technically reopened by the host-runtime change but is
+  deferred. At the current point IR is only 0.29 s / IR-LU 0.037, and N must
+  be reclosed first.
+- **E07/E09/E14/E15/E37:** become conditionally active if the reopened N moves
+  materially.
+- **E12/E13:** Phase-4 communication remains deferred until the upstream N
+  operating point is reclosed.
+
+### 7.6 Proposed next action
+
+Run a bounded N re-sweep under the **verified** retained host-runtime contract:
+
+```text
+N = 429056, 454656, 504832, 556032, 606208
+```
+
+Keep NB=3072, 4x4 row, identity GPU affinity, CPU/memory/UCX affinity omitted,
+OMP_NUM_THREADS=4, OMP place/bind omitted, and every other current scientific
+control fixed. Explicitly forward and verify OMP_NUM_THREADS on all 16 ranks.
+
+This re-tests the old LU-versus-IR tradeoff across the known FP64-residency
+transition. Do not start DGEMV or Phase-4 communication before this N
+revalidation closes.
+
+**Human decision state:** TASK-009 analysis complete. N re-sweep proposed only;
+no execution is authorized.
+
