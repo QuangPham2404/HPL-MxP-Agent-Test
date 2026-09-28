@@ -1,0 +1,374 @@
+attempt_tag_validation=PASS (conservative filename-safe pattern: nonempty, ASCII alphanumeric '.' '_' '-' only, not '.' or '..')
+experiment_id=2x8-GAAS-phase3ab-host-runtime
+attempt_tag=v2
+pbs_job_id=73174.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-09-28T12:20:24+08:00
+fixed scientific controls (identical across all arms; only the authorized host-runtime controls vary):
+--n 429056
+--nb 3072
+--nprow 4 --npcol 4 --nporder row
+--gpu-affinity 0:1:2:3:4:5:6:7 (fixed identity map; --mem-affinity omitted, --ucx-affinity omitted/automatic for every arm)
+--sloppy-type FP16
+--use-mpi-panel-broadcast 0
+--use-separate-stream-for-gemm 1
+--prioritize-trsm 0
+--prioritize-factorization 0
+--fill-device 1
+--test-loop 1
+--skip-tests 0
+--monitor-gpu 0
+deferred controls NOT used anywhere in this sweep (TASK-009 Section 1.10 prohibited): --mem-affinity, --ucx-affinity/--ucx-tls/UCX_TLS, panel-broadcast/MPI fallback/chunk policy, DGEMV, N/NB/grid/order, fill-device/residency/buffer, precision/GEMM kernel, TRSM/factorization/separate-stream scheduling
+step order: A (OMP_NUM_THREADS 4,6,8,10,12) -> B (CPU-affinity matrix per carried T) -> C (OMP_PLACES x OMP_PROC_BIND per carried host candidate) with the pre-authorized bounded carry-forward rules (TASK-009 Sections 1.5D, 1.6D, 1.7C/1.7D)
+step_a_candidates=4 6 8 10 12
+execution_worktree_root=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-009-c3e897d-phase3ab-v2
+execution_worktree_git_revision=c3e897df001d86269e263f46074398b91f7679b1
+layout=2 nodes x 8 GPUs = 16 ranks
+grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)
+nodes=hpc-gaas-g13 hpc-gaas-g15
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-009-c3e897d-phase3ab-v2/multi-node-test/rsh_pbsdsh_container.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+=== mother-node GPU topology matrix (gate input + evidence) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49,50cpus) GPU4->NUMA1(56-101,46cpus) NIC legend matches Phase-0)
+incoming job-shell OpenMP environment (before per-arm overrides):
+  OMP_NUM_THREADS=96
+  OMP_PLACES=UNSET
+  OMP_PROC_BIND=UNSET
+=== loaded modules (module list; optional record, non-fatal) ===
+Currently Loaded Modulefiles:
+ 1) apptainer/1.4.1     3) cuda/13.1 <aL>   5) squashfuse/0.5.2  
+ 2) gnu/gcc-12.3 <aL>   4) nvhpc/26.3       6) gocryptfs/2.5.0   
+
+Key:
+<module-tag>  <aL>=auto-loaded  
+=== apptainer version (required runtime; rc=0) ===
+apptainer version 1.4.1
+=== container MPI version (/usr/local/mpi/bin/mpirun --version; required runtime; rc=0) ===
+WARNING: group: unknown groupid 1304617061
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+=== pre-sweep hardware-health snapshot (mother node hpc-gaas-g13) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 32, 118.20 W, 1980 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 31, 76.34 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 30, 76.60 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 31, 77.36 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 31, 77.12 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 30, 77.20 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 31, 76.55 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 31, 76.54 W, 345 MHz, 0 MiB, 143771 MiB
+=== hostfile ===
+hpc-gaas-g13 slots=8
+hpc-gaas-g15 slots=8
+=== rank-map probe: rc=0 rank_lines=16 hosts=2 ranks_per_host=8 log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-009-c3e897d-phase3ab-v2/experiments/2x8-GAAS/phase3ab-host-runtime/outputs/2x8-GAAS-phase3ab-host-runtime_rankmap_v2.log ===
+incoming OMP environment across 16 ranks: ranks_with_OMP_PLACES_set=0 ranks_with_OMP_PROC_BIND_set=0
+incoming OMP_NUM_THREADS values seen (evidence; neutralized per arm by explicit export + -x forwarding):
+  rank=14/16 host=hpc-gaas-g15 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=11/16 host=hpc-gaas-g15 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=12/16 host=hpc-gaas-g15 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=5/16 host=hpc-gaas-g13 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=9/16 host=hpc-gaas-g15 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=10/16 host=hpc-gaas-g15 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=1/16 host=hpc-gaas-g13 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=15/16 host=hpc-gaas-g15 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=7/16 host=hpc-gaas-g13 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=6/16 host=hpc-gaas-g13 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=4/16 host=hpc-gaas-g13 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=2/16 host=hpc-gaas-g13 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=13/16 host=hpc-gaas-g15 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=8/16 host=hpc-gaas-g15 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=3/16 host=hpc-gaas-g13 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=0/16 host=hpc-gaas-g13 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+incoming_openmp_gate=PASS (OMP_PLACES/OMP_PROC_BIND unset on all 16 ranks; launcher package defaults remain the effective placement policy for omitted arms)
+  host=hpc-gaas-g13 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+  host=hpc-gaas-g15 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+rankmap_per_host_topology_gate=PASS (every allocated host matches the accepted Phase-0 topology; per-host reports preserved in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-009-c3e897d-phase3ab-v2/experiments/2x8-GAAS/phase3ab-host-runtime/outputs/2x8-GAAS-phase3ab-host-runtime_rankmap_v2.log)
+stepA_executability=PASS (allocated cpuset 0-49,56-101 on both nodes = 96 CPUs/node; largest approved OMP_NUM_THREADS=12 << 96; free CPU policy retained for Step A)
+=== Step A: OMP_NUM_THREADS sweep (TASK-009 Section 1.5; candidates 4 6 8 10 12; one scored attempt each; only OMP_NUM_THREADS varies) ===
+=== env probe arm=a4: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm a4 (a-omp4) step=A attempt=2x8-GAAS-phase3ab-host-runtime_a-omp4_v2 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-09-28T12:21:14+08:00 ===
+=== arm a4 (a-omp4) exit_status=0 verdict=PASSED gflops=6.5632e+06 end=2026-09-28T12:22:12+08:00 ===
+=== env probe arm=a6: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm a6 (a-omp6) step=A attempt=2x8-GAAS-phase3ab-host-runtime_a-omp6_v2 omp_num_threads=6 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-09-28T12:22:34+08:00 ===
+=== arm a6 (a-omp6) exit_status=0 verdict=PASSED gflops=6.5459e+06 end=2026-09-28T12:23:32+08:00 ===
+=== env probe arm=a8: rc=0 rank_lines=16 omp_num_threads=8_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm a8 (a-omp8) step=A attempt=2x8-GAAS-phase3ab-host-runtime_a-omp8_v2 omp_num_threads=8 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-09-28T12:23:54+08:00 ===
+=== arm a8 (a-omp8) exit_status=0 verdict=PASSED gflops=6.5437e+06 end=2026-09-28T12:24:52+08:00 ===
+=== env probe arm=a10: rc=0 rank_lines=16 omp_num_threads=10_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm a10 (a-omp10) step=A attempt=2x8-GAAS-phase3ab-host-runtime_a-omp10_v2 omp_num_threads=10 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-09-28T12:25:14+08:00 ===
+=== arm a10 (a-omp10) exit_status=0 verdict=PASSED gflops=6.4302e+06 end=2026-09-28T12:26:11+08:00 ===
+=== env probe arm=a12: rc=0 rank_lines=16 omp_num_threads=12_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm a12 (a-omp12) step=A attempt=2x8-GAAS-phase3ab-host-runtime_a-omp12_v2 omp_num_threads=12 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-09-28T12:26:33+08:00 ===
+=== arm a12 (a-omp12) exit_status=0 verdict=PASSED gflops=6.2635e+06 end=2026-09-28T12:27:29+08:00 ===
+=== Step-A scores (TASK-009 Section 1.5C primary evidence; valid = exit 0 + PASSED + finite residual) ===
+stepA a4: OMP_NUM_THREADS=4 score=6.5632e+06 valid=yes exit=0
+stepA a6: OMP_NUM_THREADS=6 score=6.5459e+06 valid=yes exit=0
+stepA a8: OMP_NUM_THREADS=8 score=6.5437e+06 valid=yes exit=0
+stepA a10: OMP_NUM_THREADS=10 score=6.4302e+06 valid=yes exit=0
+stepA a12: OMP_NUM_THREADS=12 score=6.2635e+06 valid=yes exit=0
+stepA leader: T=4 score=6.5632e+06 (highest valid end-to-end score)
+stepA plateau rule (Section 1.5D rule 2): valid candidates within 2.0% of the leader (score >= leader * 0.98)
+stepA plateau member: T=4 score=6.5632e+06
+stepA plateau member: T=6 score=6.5459e+06
+stepA plateau member: T=8 score=6.5437e+06
+stepA non-plateau: T=10 score=6.4302e+06 valid=yes
+stepA non-plateau: T=12 score=6.2635e+06 valid=yes
+stepA second pick: neighboring plateau member T=6 (score 6.5459e+06)
+stepA carry-forward: plateau has 3 members -> carry TWO thread counts T=4 6 (numerical leader 4 + one neighboring/lower-overhead member; Section 1.5D rules 4-5)
+stepA carried thread counts into Step B: 4 6
+=== Step B: CPU-affinity matrix per carried thread count (TASK-009 Section 1.6) ===
+stepB mask derivation inputs (live, gate-pinned): NUMA0=0-49 (50 CPUs, ranks 0-3) NUMA1=56-101 (46 CPUs, ranks 4-7); slice convention: consecutive non-overlapping rank-local slices packed from the first CPU of each NUMA domain (TASK-007 mask convention)
+stepB width rules: B1 loose = whole NUMA domain of the rank's GPU (shared same-NUMA territory); B2 medium = T+2 CPUs/rank when 4*(T+2) fits BOTH domains, else the nearest legal uniform width that still leaves helper/progress headroom (width > T), else infeasible; B3 strict = exactly T CPUs/rank when 4*T fits BOTH domains, else infeasible (Section 1.6B/1.6C; with the accepted topology the binding constraint is NUMA1: floor(46/4) = 11 max uniform width)
+--- Step B mini-matrix for T=4 (free control reused from Step-A arm a4: score 6.5632e+06, identical configuration) ---
+stepB T=4 B1 loose mask: 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 (whole-NUMA shared territory; always legal under the retained topology)
+stepB T=4 B2 medium mask (width 6 = T+2, fits both NUMA domains): 0-5:6-11:12-17:18-23:56-61:62-67:68-73:74-79
+stepB T=4 B3 strict mask (width 4 = T): 0-3:4-7:8-11:12-15:56-59:60-63:64-67:68-71
+=== env probe arm=b1t4: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm b1t4 (b1-cpu-loose-t4) step=B attempt=2x8-GAAS-phase3ab-host-runtime_b1-cpu-loose-t4_v2 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 start=2026-09-28T12:27:53+08:00 ===
+=== arm b1t4 (b1-cpu-loose-t4) exit_status=0 verdict=PASSED gflops=6.5433e+06 end=2026-09-28T12:28:51+08:00 ===
+=== env probe arm=b2t4: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm b2t4 (b2-cpu-medium-t4) step=B attempt=2x8-GAAS-phase3ab-host-runtime_b2-cpu-medium-t4_v2 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=0-5:6-11:12-17:18-23:56-61:62-67:68-73:74-79 start=2026-09-28T12:29:13+08:00 ===
+=== arm b2t4 (b2-cpu-medium-t4) exit_status=0 verdict=PASSED gflops=6.2703e+06 end=2026-09-28T12:30:09+08:00 ===
+=== env probe arm=b3t4: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm b3t4 (b3-cpu-strict-t4) step=B attempt=2x8-GAAS-phase3ab-host-runtime_b3-cpu-strict-t4_v2 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=0-3:4-7:8-11:12-15:56-59:60-63:64-67:68-71 start=2026-09-28T12:30:31+08:00 ===
+=== arm b3t4 (b3-cpu-strict-t4) exit_status=0 verdict=PASSED gflops=6.1713e+06 end=2026-09-28T12:31:30+08:00 ===
+stepB T=4 explicit-policy scores: B1 loose=6.5433e+06 valid=yes | B2 medium=6.2703e+06 valid=yes | B3 strict=6.1713e+06 valid=yes | B0 free control (reused a4)=6.5632e+06
+--- Step B mini-matrix for T=6 (free control reused from Step-A arm a6: score 6.5459e+06, identical configuration) ---
+stepB T=6 B1 loose mask: 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 (whole-NUMA shared territory; always legal under the retained topology)
+stepB T=6 B2 medium mask (width 8 = T+2, fits both NUMA domains): 0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87
+stepB T=6 B3 strict mask (width 6 = T): 0-5:6-11:12-17:18-23:56-61:62-67:68-73:74-79
+=== env probe arm=b1t6: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm b1t6 (b1-cpu-loose-t6) step=B attempt=2x8-GAAS-phase3ab-host-runtime_b1-cpu-loose-t6_v2 omp_num_threads=6 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 start=2026-09-28T12:31:52+08:00 ===
+=== arm b1t6 (b1-cpu-loose-t6) exit_status=0 verdict=PASSED gflops=6.5505e+06 end=2026-09-28T12:32:48+08:00 ===
+=== env probe arm=b2t6: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm b2t6 (b2-cpu-medium-t6) step=B attempt=2x8-GAAS-phase3ab-host-runtime_b2-cpu-medium-t6_v2 omp_num_threads=6 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87 start=2026-09-28T12:33:11+08:00 ===
+=== arm b2t6 (b2-cpu-medium-t6) exit_status=0 verdict=PASSED gflops=6.2819e+06 end=2026-09-28T12:34:09+08:00 ===
+=== env probe arm=b3t6: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm b3t6 (b3-cpu-strict-t6) step=B attempt=2x8-GAAS-phase3ab-host-runtime_b3-cpu-strict-t6_v2 omp_num_threads=6 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=0-5:6-11:12-17:18-23:56-61:62-67:68-73:74-79 start=2026-09-28T12:34:31+08:00 ===
+=== arm b3t6 (b3-cpu-strict-t6) exit_status=0 verdict=PASSED gflops=6.3429e+06 end=2026-09-28T12:35:30+08:00 ===
+stepB T=6 explicit-policy scores: B1 loose=6.5505e+06 valid=yes | B2 medium=6.2819e+06 valid=yes | B3 strict=6.3429e+06 valid=yes | B0 free control (reused a6)=6.5459e+06
+=== Step-B mechanical carry-forward (TASK-009 Section 1.6D; >2.0% gates against the same-T free control) ===
+stepB T=4: same-T free control score = 6.5632e+06 (reused Step-A arm a4)
+stepB T=4 loose: score 6.5433e+06 is NOT >2.0% above the same-T free control 6.5632e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=4 medium: score 6.2703e+06 is NOT >2.0% above the same-T free control 6.5632e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=4 strict: score 6.1713e+06 is NOT >2.0% above the same-T free control 6.5632e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=4: no explicit policy cleared the >2.0% gate -> the free policy remains the carry-forward candidate for T=4
+stepB T=6: same-T free control score = 6.5459e+06 (reused Step-A arm a6)
+stepB T=6 loose: score 6.5505e+06 is NOT >2.0% above the same-T free control 6.5459e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=6 medium: score 6.2819e+06 is NOT >2.0% above the same-T free control 6.5459e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=6 strict: score 6.3429e+06 is NOT >2.0% above the same-T free control 6.5459e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=6: no explicit policy cleared the >2.0% gate -> the free policy remains the carry-forward candidate for T=6
+stepB cross-T candidate pool before pruning: 2 candidate(s)
+stepB candidate[1]: T=4 cpu_policy=free score=6.5632e+06
+stepB candidate[2]: T=6 cpu_policy=free score=6.5459e+06
+stepB carried host candidates into Step C: 2
+stepB carried candidate 1: T=4 cpu_policy=free score=6.5632e+06 cpu_affinity=omitted
+stepB carried candidate 2: T=6 cpu_policy=free score=6.5459e+06 cpu_affinity=omitted
+=== Step C: OMP_PLACES x OMP_PROC_BIND matrix per carried host candidate (TASK-009 Section 1.7) ===
+--- Step C matrix for carried candidate 1: T=4 cpu_policy=free cpu_affinity=omitted (candidate score 6.5632e+06) ---
+stepC C0 default control (OMP_PLACES/OMP_PROC_BIND omitted; expected effective sockets/TRUE): REDUNDANT with the already-scored a-omp4 arm (identical configuration: same T=4, same CPU policy 'free', placement controls omitted); existing score 6.5632e+06 reused as the Step-C control per Section 1.7C; not rerun (Section 1.5D rule 8 forbids repeating valid points)
+stepC legality (candidate T=4/free): rank territory = full scheduled cpuset 0-49,56-101 (unpinned); OMP_PLACES=sockets -> 2 places/rank (sizes 50 and 46 CPUs); OMP_PLACES=cores -> 96 single-CPU places/rank (1 thread/core); all binding requests (TRUE/CLOSE/SPREAD) satisfiable; no out-of-mask placement possible (places are built from the mask)
+=== env probe arm=c0-sockets-close: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=sockets_ok=16 omp_proc_bind=CLOSE_ok=16 ===
+=== arm c0-sockets-close (c-sockets-close-t4-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-sockets-close-t4-free_v2 omp_num_threads=4 omp_places_supplied=sockets omp_proc_bind_supplied=CLOSE cpu_affinity=omitted start=2026-09-28T12:35:54+08:00 ===
+=== arm c0-sockets-close (c-sockets-close-t4-free) exit_status=0 verdict=PASSED gflops=6.5431e+06 end=2026-09-28T12:36:50+08:00 ===
+stepC candidate T=4/free cell sockets-close (OMP_PLACES=sockets OMP_PROC_BIND=CLOSE): score=6.5431e+06 valid=yes exit=0
+=== env probe arm=c0-sockets-spread: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=sockets_ok=16 omp_proc_bind=SPREAD_ok=16 ===
+=== arm c0-sockets-spread (c-sockets-spread-t4-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-sockets-spread-t4-free_v2 omp_num_threads=4 omp_places_supplied=sockets omp_proc_bind_supplied=SPREAD cpu_affinity=omitted start=2026-09-28T12:37:13+08:00 ===
+=== arm c0-sockets-spread (c-sockets-spread-t4-free) exit_status=0 verdict=PASSED gflops=6.5355e+06 end=2026-09-28T12:38:12+08:00 ===
+stepC candidate T=4/free cell sockets-spread (OMP_PLACES=sockets OMP_PROC_BIND=SPREAD): score=6.5355e+06 valid=yes exit=0
+=== env probe arm=c0-cores-true: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=cores_ok=16 omp_proc_bind=TRUE_ok=16 ===
+=== arm c0-cores-true (c-cores-true-t4-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-cores-true-t4-free_v2 omp_num_threads=4 omp_places_supplied=cores omp_proc_bind_supplied=TRUE cpu_affinity=omitted start=2026-09-28T12:38:35+08:00 ===
+=== arm c0-cores-true (c-cores-true-t4-free) exit_status=0 verdict=PASSED gflops=1.8504e+06 end=2026-09-28T12:39:59+08:00 ===
+stepC candidate T=4/free cell cores-true (OMP_PLACES=cores OMP_PROC_BIND=TRUE): score=1.8504e+06 valid=yes exit=0
+=== env probe arm=c0-cores-close: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=cores_ok=16 omp_proc_bind=CLOSE_ok=16 ===
+=== arm c0-cores-close (c-cores-close-t4-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-cores-close-t4-free_v2 omp_num_threads=4 omp_places_supplied=cores omp_proc_bind_supplied=CLOSE cpu_affinity=omitted start=2026-09-28T12:40:21+08:00 ===
+=== arm c0-cores-close (c-cores-close-t4-free) exit_status=0 verdict=PASSED gflops=1.8637e+06 end=2026-09-28T12:41:44+08:00 ===
+stepC candidate T=4/free cell cores-close (OMP_PLACES=cores OMP_PROC_BIND=CLOSE): score=1.8637e+06 valid=yes exit=0
+=== env probe arm=c0-cores-spread: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=cores_ok=16 omp_proc_bind=SPREAD_ok=16 ===
+=== arm c0-cores-spread (c-cores-spread-t4-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-cores-spread-t4-free_v2 omp_num_threads=4 omp_places_supplied=cores omp_proc_bind_supplied=SPREAD cpu_affinity=omitted start=2026-09-28T12:42:06+08:00 ===
+=== arm c0-cores-spread (c-cores-spread-t4-free) exit_status=0 verdict=PASSED gflops=1.8350e+06 end=2026-09-28T12:43:28+08:00 ===
+stepC candidate T=4/free cell cores-spread (OMP_PLACES=cores OMP_PROC_BIND=SPREAD): score=1.8350e+06 valid=yes exit=0
+stepC candidate T=4/free: 5 explicit cell(s) scored + C0 control reused from a-omp4 (total scored arms vs the 6-arm cap: 5 + 1 reused control)
+--- Step C matrix for carried candidate 2: T=6 cpu_policy=free cpu_affinity=omitted (candidate score 6.5459e+06) ---
+stepC C0 default control (OMP_PLACES/OMP_PROC_BIND omitted; expected effective sockets/TRUE): REDUNDANT with the already-scored a-omp6 arm (identical configuration: same T=6, same CPU policy 'free', placement controls omitted); existing score 6.5459e+06 reused as the Step-C control per Section 1.7C; not rerun (Section 1.5D rule 8 forbids repeating valid points)
+stepC legality (candidate T=6/free): rank territory = full scheduled cpuset 0-49,56-101 (unpinned); OMP_PLACES=sockets -> 2 places/rank (sizes 50 and 46 CPUs); OMP_PLACES=cores -> 96 single-CPU places/rank (1 thread/core); all binding requests (TRUE/CLOSE/SPREAD) satisfiable; no out-of-mask placement possible (places are built from the mask)
+=== env probe arm=c1-sockets-close: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=sockets_ok=16 omp_proc_bind=CLOSE_ok=16 ===
+=== arm c1-sockets-close (c-sockets-close-t6-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-sockets-close-t6-free_v2 omp_num_threads=6 omp_places_supplied=sockets omp_proc_bind_supplied=CLOSE cpu_affinity=omitted start=2026-09-28T12:43:50+08:00 ===
+=== arm c1-sockets-close (c-sockets-close-t6-free) exit_status=0 verdict=PASSED gflops=6.5575e+06 end=2026-09-28T12:44:46+08:00 ===
+stepC candidate T=6/free cell sockets-close (OMP_PLACES=sockets OMP_PROC_BIND=CLOSE): score=6.5575e+06 valid=yes exit=0
+=== env probe arm=c1-sockets-spread: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=sockets_ok=16 omp_proc_bind=SPREAD_ok=16 ===
+=== arm c1-sockets-spread (c-sockets-spread-t6-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-sockets-spread-t6-free_v2 omp_num_threads=6 omp_places_supplied=sockets omp_proc_bind_supplied=SPREAD cpu_affinity=omitted start=2026-09-28T12:45:08+08:00 ===
+=== arm c1-sockets-spread (c-sockets-spread-t6-free) exit_status=0 verdict=PASSED gflops=6.5575e+06 end=2026-09-28T12:46:04+08:00 ===
+stepC candidate T=6/free cell sockets-spread (OMP_PLACES=sockets OMP_PROC_BIND=SPREAD): score=6.5575e+06 valid=yes exit=0
+=== env probe arm=c1-cores-true: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=cores_ok=16 omp_proc_bind=TRUE_ok=16 ===
+=== arm c1-cores-true (c-cores-true-t6-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-cores-true-t6-free_v2 omp_num_threads=6 omp_places_supplied=cores omp_proc_bind_supplied=TRUE cpu_affinity=omitted start=2026-09-28T12:46:27+08:00 ===
+=== arm c1-cores-true (c-cores-true-t6-free) exit_status=0 verdict=PASSED gflops=1.8395e+06 end=2026-09-28T12:47:44+08:00 ===
+stepC candidate T=6/free cell cores-true (OMP_PLACES=cores OMP_PROC_BIND=TRUE): score=1.8395e+06 valid=yes exit=0
+=== env probe arm=c1-cores-close: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=cores_ok=16 omp_proc_bind=CLOSE_ok=16 ===
+=== arm c1-cores-close (c-cores-close-t6-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-cores-close-t6-free_v2 omp_num_threads=6 omp_places_supplied=cores omp_proc_bind_supplied=CLOSE cpu_affinity=omitted start=2026-09-28T12:48:07+08:00 ===
+=== arm c1-cores-close (c-cores-close-t6-free) exit_status=0 verdict=PASSED gflops=1.8484e+06 end=2026-09-28T12:49:33+08:00 ===
+stepC candidate T=6/free cell cores-close (OMP_PLACES=cores OMP_PROC_BIND=CLOSE): score=1.8484e+06 valid=yes exit=0
+=== env probe arm=c1-cores-spread: rc=0 rank_lines=16 omp_num_threads=6_ok=16 omp_places=cores_ok=16 omp_proc_bind=SPREAD_ok=16 ===
+=== arm c1-cores-spread (c-cores-spread-t6-free) step=C attempt=2x8-GAAS-phase3ab-host-runtime_c-cores-spread-t6-free_v2 omp_num_threads=6 omp_places_supplied=cores omp_proc_bind_supplied=SPREAD cpu_affinity=omitted start=2026-09-28T12:49:55+08:00 ===
+=== arm c1-cores-spread (c-cores-spread-t6-free) exit_status=0 verdict=PASSED gflops=1.8404e+06 end=2026-09-28T12:51:18+08:00 ===
+stepC candidate T=6/free cell cores-spread (OMP_PLACES=cores OMP_PROC_BIND=SPREAD): score=1.8404e+06 valid=yes exit=0
+stepC candidate T=6/free: 5 explicit cell(s) scored + C0 control reused from a-omp6 (total scored arms vs the 6-arm cap: 5 + 1 reused control)
+final execution carry-forward outcome (mechanical task-rule results only; NO final strategic host-runtime winner is selected during execution; final retention requires explicit ANALYSE_RESULTS per TASK-009 Sections 1.1, 1.10, 1.15): stepA_carried_T=4 6 stepB_carried_host_candidates=T=4/free T=6/free 
+=== post-sweep hardware-health snapshot (mother node hpc-gaas-g13) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 33, 119.77 W, 1980 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 33, 120.31 W, 1980 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 33, 129.50 W, 1980 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 33, 125.71 W, 1980 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 33, 129.01 W, 1980 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 32, 120.38 W, 1980 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 33, 121.51 W, 1980 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 33, 124.19 W, 1980 MHz, 0 MiB, 143771 MiB
+=== sweep recap (factual scores only; interpretation reserved for ANALYSE_RESULTS) ===
+arms_run=21 arms_exited_nonzero=0 arms_without_passed_verification=0
+arm=c1-cores-true gflops=1.8395e+06 valid=yes exit=0
+arm=c1-cores-close gflops=1.8484e+06 valid=yes exit=0
+arm=c0-cores-close gflops=1.8637e+06 valid=yes exit=0
+arm=c1-sockets-spread gflops=6.5575e+06 valid=yes exit=0
+arm=b1t6 gflops=6.5505e+06 valid=yes exit=0
+arm=b1t4 gflops=6.5433e+06 valid=yes exit=0
+arm=c1-sockets-close gflops=6.5575e+06 valid=yes exit=0
+arm=a8 gflops=6.5437e+06 valid=yes exit=0
+arm=a6 gflops=6.5459e+06 valid=yes exit=0
+arm=a4 gflops=6.5632e+06 valid=yes exit=0
+arm=c1-cores-spread gflops=1.8404e+06 valid=yes exit=0
+arm=b3t4 gflops=6.1713e+06 valid=yes exit=0
+arm=b3t6 gflops=6.3429e+06 valid=yes exit=0
+arm=c0-sockets-close gflops=6.5431e+06 valid=yes exit=0
+arm=b2t4 gflops=6.2703e+06 valid=yes exit=0
+arm=b2t6 gflops=6.2819e+06 valid=yes exit=0
+arm=c0-sockets-spread gflops=6.5355e+06 valid=yes exit=0
+arm=a10 gflops=6.4302e+06 valid=yes exit=0
+arm=a12 gflops=6.2635e+06 valid=yes exit=0
+arm=c0-cores-spread gflops=1.8350e+06 valid=yes exit=0
+arm=c0-cores-true gflops=1.8504e+06 valid=yes exit=0
+=== HPL-MxP 2x8-GAAS phase3ab-host-runtime sweep complete: all 21 run arm(s) exited 0 with PASSED verification (tag v2) ===

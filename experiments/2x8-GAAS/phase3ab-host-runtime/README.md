@@ -19,10 +19,11 @@ Step C — OMP_PLACES x OMP_PROC_BIND matrix per carried host candidate
 ```
 
 **Status (2026-09-28): v1 attempt aborted at preflight (Track-1 script
-defect, no scored arm); v2 retry prepared.** TASK-009 is
-`EXECUTING / codex`. Any rerun must use a new `ATTEMPT_TAG`, pass
-`-q gpu_as` or `-q gpu_ded` (the only authorized queues) with project
-`hpc_ebslee`, and never overwrite existing evidence.
+defect, no scored arm); v2 completed all 21 planned scored arms.** TASK-009
+is execution-complete and handed off to the Strategic Analyst. Any separately
+authorized rerun must use a new `ATTEMPT_TAG`, pass `-q gpu_as` or
+`-q gpu_ded` (the only authorized queues) with project `hpc_ebslee`, and
+never overwrite existing evidence.
 
 ## Structure
 
@@ -119,18 +120,17 @@ environment-propagation channel of the retained launch contract (already
 used for `PATH`/`LD_LIBRARY_PATH`); no daemon flag, launcher, bridge,
 resource or bind-mount change is involved.
 
-Factual consequence recorded for the Strategic Analyst (mechanical
-observation, not interpretation): in the TASK-001..TASK-008 2x8 launches,
-`OMP_NUM_THREADS` was exported only in the mother-node job shell and was
-NOT among the `-x`-forwarded variables, so under the documented Blocker-E
-propagation semantics the remote node's 8 ranks did not receive the
-exported value. TASK-009's Step-A arms therefore establish the selected
-thread count on all 16 ranks uniformly, which is not literally identical to
-the historical control state; the incoming (pre-override) per-rank values
-are captured as evidence by the rank-map probe, and each arm's effective
-values are verified per rank by the env probe. The post-task Strategic
-Analyst should weigh this when interpreting Step-A scores against
-TASK-007/TASK-008 history under E19.
+Factual execution record for later analysis: the historical TASK-001..TASK-008
+launch arguments preserved in the repository explicitly forwarded `PATH` and
+`LD_LIBRARY_PATH`; the scripts also exported `OMP_NUM_THREADS` in the job
+shell. The captured historical launch arguments do not explicitly forward
+`OMP_NUM_THREADS`, and the historical evidence does not record the effective
+value on every remote rank. Therefore the historical remote-rank values are
+unknown. TASK-009 explicitly forwards the selected value and verifies it on
+all 16 ranks before each scored arm. This is a recorded launch-metadata
+difference for the Strategic Analyst to account for when interpreting the
+results against historical runs; it does not establish what historical
+remote ranks received.
 
 **Gates and probes (lightweight, no workload, no profiling).**
 
@@ -240,8 +240,8 @@ For each carried host candidate (T, CPU policy):
   scored Step-C arms per carried candidate. `OMP_PROC_BIND=FALSE` is not
   added.
 
-Legality verification (Section 1.7B, lightweight place-list arithmetic from
-the live topology, no profiling): the script records the candidate's
+Legality precheck (Section 1.7B, lightweight place-list arithmetic from the
+live topology, no profiling): the script records the candidate's
 effective rank CPU territory (free = full scheduled cpuset under
 `--bind-to none`; loose = the rank's whole NUMA domain; medium/strict = the
 rank's slice), computes the OpenMP place lists with the OpenMP default
@@ -507,6 +507,11 @@ retention decisions, the E19 memory-affinity checkpoint and the E20 DGEMV
 review are reserved for the authorized `ANALYSE_RESULTS` step
 (tasks/TASK-009.md Sections 1.9, 1.15).
 
+The precheck derives the expected mask-respecting place list and checks
+legality against the live cpuset. The evidence does not include a separate
+runtime enumeration of Intel OpenMP's instantiated place list; do not treat
+the arithmetic precheck as such an enumeration.
+
 ## Run summary
 
 ### v1 attempt (2026-09-28, PBS job 73172.gaas) — aborted at preflight, Track-1 script defect
@@ -554,9 +559,41 @@ One authorized submission, exactly as approved by TASK-009 Section 1.16
   `outputs/2x8-GAAS-phase3ab-host-runtime_v1.e` (the FATAL line). No arm,
   rank-map, env-map or carry-forward files exist for v1.
 
-### v2 attempt (2026-09-28) — pending
+### v2 attempt (2026-09-28, PBS job 73174.gaas) — completed
 
-(to be recorded after the v2 attempt)
+The authorized Track-1 retry used a new `ATTEMPT_TAG=v2` in clean detached
+worktree `.codex-worktrees/TASK-009-c3e897d-phase3ab-v2` at
+`c3e897df001d86269e263f46074398b91f7679b1`. One PBS allocation ran on
+`hpc-gaas-g13` and `hpc-gaas-g15`, queue `gpu_as`, project `hpc_ebslee`,
+with 16 ranks (8 per host), 8 GPUs per host, and `place=scatter`. It finished
+with PBS state `F`, exit status 0, and walltime `00:30:57`.
+
+- The allocation-level rank map and all per-arm environment probes passed.
+  Each of the 21 scored arms reported 16 ranks, exit status 0, `PASSED`
+  verification, normalized residual `1.416310E-05`, and 3 solver iterations.
+- The script ran all five Step-A thread counts once. Its recorded mechanical
+  carry-forward selected T=4 and T=6 for the bounded Step-B comparison. Step B
+  retained the two free candidates under the approved 2% rule; Step C ran the
+  five distinct explicit place/bind cells for each free candidate, reusing
+  the established default control rather than rerunning it.
+- All 21 `.out`, `.err`, and `.status` files, plus rank-map, env-map,
+  carry-forward, and PBS `.o`/`.e` records are preserved in `outputs/`.
+  The v1 failed-preflight PBS `.o`/`.e` remain alongside them. Local SCP
+  retrieval was authorized and completed; a hash comparison was explicitly
+  declined and was not performed.
+- The PBS `.e` contains repeated `unknown groupid 1304617061` warnings during
+  launch. They are preserved; all probes and scored arms completed
+  successfully.
+- The Step-C place-list evidence is a topology/cpuset-based legality
+  precheck, not a separate runtime enumeration of instantiated Intel OpenMP
+  places (see above). This validation limitation is included in the
+  execution handoff.
+
+The arm-level factual results and additional CPU mask, LU/IR, memory, and
+residual evidence are recorded in each `.status` and `.out`; carry-forward
+mechanics are in `outputs/2x8-GAAS-phase3ab-host-runtime_carryforward_v2.log`.
+No winner, baseline percentage, retention conclusion, dependency checkpoint,
+or follow-on run is selected here.
 
 ## Evidence paths
 

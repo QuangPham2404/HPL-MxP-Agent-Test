@@ -1,0 +1,67 @@
+=== Step A: OMP_NUM_THREADS sweep (TASK-009 Section 1.5; candidates 4 6 8 10 12; one scored attempt each; only OMP_NUM_THREADS varies) ===
+=== Step-A scores (TASK-009 Section 1.5C primary evidence; valid = exit 0 + PASSED + finite residual) ===
+stepA a4: OMP_NUM_THREADS=4 score=6.5632e+06 valid=yes exit=0
+stepA a6: OMP_NUM_THREADS=6 score=6.5459e+06 valid=yes exit=0
+stepA a8: OMP_NUM_THREADS=8 score=6.5437e+06 valid=yes exit=0
+stepA a10: OMP_NUM_THREADS=10 score=6.4302e+06 valid=yes exit=0
+stepA a12: OMP_NUM_THREADS=12 score=6.2635e+06 valid=yes exit=0
+stepA leader: T=4 score=6.5632e+06 (highest valid end-to-end score)
+stepA plateau rule (Section 1.5D rule 2): valid candidates within 2.0% of the leader (score >= leader * 0.98)
+stepA plateau member: T=4 score=6.5632e+06
+stepA plateau member: T=6 score=6.5459e+06
+stepA plateau member: T=8 score=6.5437e+06
+stepA non-plateau: T=10 score=6.4302e+06 valid=yes
+stepA non-plateau: T=12 score=6.2635e+06 valid=yes
+stepA second pick: neighboring plateau member T=6 (score 6.5459e+06)
+stepA carry-forward: plateau has 3 members -> carry TWO thread counts T=4 6 (numerical leader 4 + one neighboring/lower-overhead member; Section 1.5D rules 4-5)
+stepA carried thread counts into Step B: 4 6
+=== Step B: CPU-affinity matrix per carried thread count (TASK-009 Section 1.6) ===
+stepB mask derivation inputs (live, gate-pinned): NUMA0=0-49 (50 CPUs, ranks 0-3) NUMA1=56-101 (46 CPUs, ranks 4-7); slice convention: consecutive non-overlapping rank-local slices packed from the first CPU of each NUMA domain (TASK-007 mask convention)
+stepB width rules: B1 loose = whole NUMA domain of the rank's GPU (shared same-NUMA territory); B2 medium = T+2 CPUs/rank when 4*(T+2) fits BOTH domains, else the nearest legal uniform width that still leaves helper/progress headroom (width > T), else infeasible; B3 strict = exactly T CPUs/rank when 4*T fits BOTH domains, else infeasible (Section 1.6B/1.6C; with the accepted topology the binding constraint is NUMA1: floor(46/4) = 11 max uniform width)
+--- Step B mini-matrix for T=4 (free control reused from Step-A arm a4: score 6.5632e+06, identical configuration) ---
+stepB T=4 B1 loose mask: 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 (whole-NUMA shared territory; always legal under the retained topology)
+stepB T=4 B2 medium mask (width 6 = T+2, fits both NUMA domains): 0-5:6-11:12-17:18-23:56-61:62-67:68-73:74-79
+stepB T=4 B3 strict mask (width 4 = T): 0-3:4-7:8-11:12-15:56-59:60-63:64-67:68-71
+stepB T=4 explicit-policy scores: B1 loose=6.5433e+06 valid=yes | B2 medium=6.2703e+06 valid=yes | B3 strict=6.1713e+06 valid=yes | B0 free control (reused a4)=6.5632e+06
+--- Step B mini-matrix for T=6 (free control reused from Step-A arm a6: score 6.5459e+06, identical configuration) ---
+stepB T=6 B1 loose mask: 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101 (whole-NUMA shared territory; always legal under the retained topology)
+stepB T=6 B2 medium mask (width 8 = T+2, fits both NUMA domains): 0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87
+stepB T=6 B3 strict mask (width 6 = T): 0-5:6-11:12-17:18-23:56-61:62-67:68-73:74-79
+stepB T=6 explicit-policy scores: B1 loose=6.5505e+06 valid=yes | B2 medium=6.2819e+06 valid=yes | B3 strict=6.3429e+06 valid=yes | B0 free control (reused a6)=6.5459e+06
+=== Step-B mechanical carry-forward (TASK-009 Section 1.6D; >2.0% gates against the same-T free control) ===
+stepB T=4: same-T free control score = 6.5632e+06 (reused Step-A arm a4)
+stepB T=4 loose: score 6.5433e+06 is NOT >2.0% above the same-T free control 6.5632e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=4 medium: score 6.2703e+06 is NOT >2.0% above the same-T free control 6.5632e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=4 strict: score 6.1713e+06 is NOT >2.0% above the same-T free control 6.5632e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=4: no explicit policy cleared the >2.0% gate -> the free policy remains the carry-forward candidate for T=4
+stepB T=6: same-T free control score = 6.5459e+06 (reused Step-A arm a6)
+stepB T=6 loose: score 6.5505e+06 is NOT >2.0% above the same-T free control 6.5459e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=6 medium: score 6.2819e+06 is NOT >2.0% above the same-T free control 6.5459e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=6 strict: score 6.3429e+06 is NOT >2.0% above the same-T free control 6.5459e+06 -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)
+stepB T=6: no explicit policy cleared the >2.0% gate -> the free policy remains the carry-forward candidate for T=6
+stepB cross-T candidate pool before pruning: 2 candidate(s)
+stepB candidate[1]: T=4 cpu_policy=free score=6.5632e+06
+stepB candidate[2]: T=6 cpu_policy=free score=6.5459e+06
+stepB carried host candidates into Step C: 2
+stepB carried candidate 1: T=4 cpu_policy=free score=6.5632e+06 cpu_affinity=omitted
+stepB carried candidate 2: T=6 cpu_policy=free score=6.5459e+06 cpu_affinity=omitted
+=== Step C: OMP_PLACES x OMP_PROC_BIND matrix per carried host candidate (TASK-009 Section 1.7) ===
+--- Step C matrix for carried candidate 1: T=4 cpu_policy=free cpu_affinity=omitted (candidate score 6.5632e+06) ---
+stepC C0 default control (OMP_PLACES/OMP_PROC_BIND omitted; expected effective sockets/TRUE): REDUNDANT with the already-scored a-omp4 arm (identical configuration: same T=4, same CPU policy 'free', placement controls omitted); existing score 6.5632e+06 reused as the Step-C control per Section 1.7C; not rerun (Section 1.5D rule 8 forbids repeating valid points)
+stepC legality (candidate T=4/free): rank territory = full scheduled cpuset 0-49,56-101 (unpinned); OMP_PLACES=sockets -> 2 places/rank (sizes 50 and 46 CPUs); OMP_PLACES=cores -> 96 single-CPU places/rank (1 thread/core); all binding requests (TRUE/CLOSE/SPREAD) satisfiable; no out-of-mask placement possible (places are built from the mask)
+stepC candidate T=4/free cell sockets-close (OMP_PLACES=sockets OMP_PROC_BIND=CLOSE): score=6.5431e+06 valid=yes exit=0
+stepC candidate T=4/free cell sockets-spread (OMP_PLACES=sockets OMP_PROC_BIND=SPREAD): score=6.5355e+06 valid=yes exit=0
+stepC candidate T=4/free cell cores-true (OMP_PLACES=cores OMP_PROC_BIND=TRUE): score=1.8504e+06 valid=yes exit=0
+stepC candidate T=4/free cell cores-close (OMP_PLACES=cores OMP_PROC_BIND=CLOSE): score=1.8637e+06 valid=yes exit=0
+stepC candidate T=4/free cell cores-spread (OMP_PLACES=cores OMP_PROC_BIND=SPREAD): score=1.8350e+06 valid=yes exit=0
+stepC candidate T=4/free: 5 explicit cell(s) scored + C0 control reused from a-omp4 (total scored arms vs the 6-arm cap: 5 + 1 reused control)
+--- Step C matrix for carried candidate 2: T=6 cpu_policy=free cpu_affinity=omitted (candidate score 6.5459e+06) ---
+stepC C0 default control (OMP_PLACES/OMP_PROC_BIND omitted; expected effective sockets/TRUE): REDUNDANT with the already-scored a-omp6 arm (identical configuration: same T=6, same CPU policy 'free', placement controls omitted); existing score 6.5459e+06 reused as the Step-C control per Section 1.7C; not rerun (Section 1.5D rule 8 forbids repeating valid points)
+stepC legality (candidate T=6/free): rank territory = full scheduled cpuset 0-49,56-101 (unpinned); OMP_PLACES=sockets -> 2 places/rank (sizes 50 and 46 CPUs); OMP_PLACES=cores -> 96 single-CPU places/rank (1 thread/core); all binding requests (TRUE/CLOSE/SPREAD) satisfiable; no out-of-mask placement possible (places are built from the mask)
+stepC candidate T=6/free cell sockets-close (OMP_PLACES=sockets OMP_PROC_BIND=CLOSE): score=6.5575e+06 valid=yes exit=0
+stepC candidate T=6/free cell sockets-spread (OMP_PLACES=sockets OMP_PROC_BIND=SPREAD): score=6.5575e+06 valid=yes exit=0
+stepC candidate T=6/free cell cores-true (OMP_PLACES=cores OMP_PROC_BIND=TRUE): score=1.8395e+06 valid=yes exit=0
+stepC candidate T=6/free cell cores-close (OMP_PLACES=cores OMP_PROC_BIND=CLOSE): score=1.8484e+06 valid=yes exit=0
+stepC candidate T=6/free cell cores-spread (OMP_PLACES=cores OMP_PROC_BIND=SPREAD): score=1.8404e+06 valid=yes exit=0
+stepC candidate T=6/free: 5 explicit cell(s) scored + C0 control reused from a-omp6 (total scored arms vs the 6-arm cap: 5 + 1 reused control)
+final execution carry-forward outcome (mechanical task-rule results only; NO final strategic host-runtime winner is selected during execution; final retention requires explicit ANALYSE_RESULTS per TASK-009 Sections 1.1, 1.10, 1.15): stepA_carried_T=4 6 stepB_carried_host_candidates=T=4/free T=6/free 

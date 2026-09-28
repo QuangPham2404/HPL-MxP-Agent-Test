@@ -1,8 +1,8 @@
 ---
 task_id: TASK-009
 title: Phase 3A/3B — Coordinated OpenMP and CPU Host-Runtime Sweep
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-008
 analysis_id: 2x8-gaas-phase3ab-host-runtime
 created: 2026-09-28
@@ -733,40 +733,105 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: NOT_STARTED
+status: COMPLETE
+completed_at: 2026-09-28
 
 ### 2.2 Orchestration Summary
 
-Pending execution.
+One OpenCode execution worker performed the approved remote preparation,
+preflight, submissions, bounded monitoring, raw evidence retrieval, and
+experiment/metrics bookkeeping. Codex performed startup and authorization
+checks, orchestration, operational evidence validation, report/progress
+bookkeeping, and scope review. Remote dirty primary-clone content was
+preserved; work ran in clean detached worktrees under the approved
+`.codex-worktrees/TASK-009-*` path.
 
 ### 2.3 Work Executed
 
-Pending execution.
+The initial v1 job, `73172.gaas`, aborted at the pre-scored topology gate
+because the script selected the final `N/A` field instead of the CPU range
+from `nvidia-smi topo -m`. It produced no scored arm. The deterministic
+Track-1 parser defect was corrected in commit
+`c3e897df001d86269e263f46074398b91f7679b1`, and the bounded retry used a new
+attempt tag. Job `73174.gaas` ran on g13+g15 in `gpu_as`, under
+`hpc_ebslee`, with 16 ranks and 8 GPUs per node. The allocation completed
+with PBS state `F`, exit status 0, and walltime `00:30:57`.
+
+The retry ran all five Step-A thread counts, then the policy-defined Step-B
+matrix for T=4 and T=6, and the five distinct Step-C cells for each retained
+free candidate. Default controls were reused where specified by the task.
+All 21 scored arms were run once. The script's factual carry-forward log
+records the mechanical decisions; execution did not select a final strategic
+winner.
 
 ### 2.4 Operational Validation
 
-Pending execution.
+The 21 arm status records each show exit status 0, `verification=PASSED`,
+normalized residual `1.416310E-05`, and 3 solver iterations. The per-allocation
+rank map records 16 ranks split 8 per host, and every per-arm environment
+probe returned success with the requested OMP values on all ranks. The
+topology/cpuset gates passed on both hosts. The PBS stderr's repeated
+`unknown groupid 1304617061` warnings are preserved and did not prevent probe
+or arm completion. The OpenMP place-list check was a topology/cpuset-based
+legality calculation from the approved policy; no separate runtime
+enumeration of instantiated Intel OpenMP places was captured.
+
+The worker exercised the carry-forward mechanics in a temporary mocked
+harness and ran `bash -n` and `git diff --check` on authored changes. Codex
+validated the local evidence counts and status records, refreshed the raw
+results report, and ran final authored-file diff checks. SCP retrieval was
+authorized by the user. Hash comparison was explicitly declined and was not
+performed.
 
 ### 2.5 Evidence and Artifacts
 
-Pending execution.
+Primary evidence: `experiments/2x8-GAAS/phase3ab-host-runtime/outputs/`.
+This contains the v1 PBS `.o`/`.e`, v2 PBS `.o`/`.e`, 21 per-arm `.out`,
+`.err`, and `.status` files, and v2 rank-map, env-map, and carry-forward
+logs. The experiment README records the run and limitations. The 21 v2
+arm rows are in `results/metrics.csv`, with the generated raw report in
+`results/RESULTS.md`. Worker preparation commit:
+`e18ec8e2572710723e8fcbce808c247081db3c54`; corrected-extractor execution
+revision: `c3e897df001d86269e263f46074398b91f7679b1`.
 
 ### 2.6 Files Changed
 
-Pending execution.
+`experiments/2x8-GAAS/phase3ab-host-runtime/README.md`,
+`experiments/2x8-GAAS/phase3ab-host-runtime/scripts/run_phase3ab_host_runtime.pbs`,
+its `outputs/` evidence files, `results/metrics.csv`, `results/RESULTS.md`,
+this task report, and the new progress record
+`progress/2026-09-28-progress_s2.md`.
 
 ### 2.7 Missing / Unavailable Evidence
 
-Pending execution.
+No hash comparison is available because the user declined it. The evidence
+does not contain a separate runtime enumeration of the instantiated Intel
+OpenMP place list; only the documented topology/cpuset legality precheck is
+available. GPU monitoring was disabled as authorized, so continuous
+monitoring output was not collected.
 
 ### 2.8 Execution Errors / Exceptions
 
-Pending execution.
+The v1 parser defect and its preflight-only failure are described above and
+in the README. The v2 retry corrected the defect and completed all scored
+arms. Repeated unknown-group-ID warnings appeared in PBS stderr; no arm
+failed. The retrieval hash-comparison request was declined, so that check was
+skipped without another attempt.
 
 ### 2.9 Scope Compliance
 
-Pending execution.
+Execution stayed within the unchanged Section 1.16 scope: no controls outside
+Steps A/B/C changed, no baseline was rerun or promoted, no strategic winner
+was selected, and no dependency follow-on, memory-affinity, UCX, DGEMV, or
+other tuning run was started. Both submissions used an authorized queue and
+the `hpc_ebslee` project. Attempt evidence was preserved without overwriting.
 
 ### 2.10 Handoff to Strategic Analyst
 
-Pending execution.
+Execution is complete. Await the Human Leader's explicit `ANALYSE_RESULTS`
+authorization. The Strategic Analyst should then interpret all TASK-009
+evidence, include the TASK-000 original baseline and percentage-change
+columns in result tables, account for the unknown historical remote-rank
+`OMP_NUM_THREADS` values and the place-list validation limitation, and make
+the authorized dependency-checkpoint decision. Codex has not performed that
+analysis.
