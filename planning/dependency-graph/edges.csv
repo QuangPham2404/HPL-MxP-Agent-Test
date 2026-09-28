@@ -17,7 +17,7 @@ E15,"FP64 residency policy","Feasible/useful N","Strong","OBSERVED + MECHANISTIC
 E16,"fill-device / Anq-device mode","Fill buffer","Strong","OBSERVED + MECHANISTIC","Re-sweep safe coarse range after N/NB/release/residency changes"
 E17,"Residency amount / host-resident fraction","Host-register step","Weak / conditional","OBSERVED + MECHANISTIC","Normally keep default closed; lightly revalidate after large residency/interconnect change"
 E18,"N / per-rank refinement work","Host runtime/locality","Moderate","MECHANISTIC","Lightly revalidate at a materially different N/IR regime or ranks/node"
-E19,"CPU/memory affinity","OpenMP thread/place/bind policy","Strong","UNCERTAIN","Fully revalidate as coordinated group on new launcher/cpuset"
+E19,"CPU/memory affinity","OpenMP thread/place/bind policy","Strong","OBSERVED + MECHANISTIC","Revalidate as coordinated host-placement group after launcher/cpuset/topology change; reopen memory affinity after material NUMA-locality change"
 E20,"Host runtime/locality","DGEMV partition","Strong","MECHANISTIC","Fully re-sweep after a major host-runtime/resource change; otherwise retain the tested conditional control"
 E21,"N and FP64 residency","DGEMV partition","Moderate","MECHANISTIC","Lightly revalidate within the same regime; fully reopen after a major residency or IR/LU shift when IR remains material"
 E22,"NB","Panel transport","Strong","MECHANISTIC","Fully re-sweep after large NB change"
@@ -37,3 +37,4 @@ E35,"Sloppy precision","Solver/refinement and DGEMV policy","Strong","MECHANISTI
 E36,"Sloppy precision","Memory headroom/residency","Moderate","MECHANISTIC","Recheck VRAM headroom, fill buffer, and N feasibility"
 E37,"N / problem scale","LU stream and priority policy","Moderate","MECHANISTIC","Fully reopen after a material N/LU-geometry regime change; lightly revalidate for small local N movement"
 E38,"Process grid / nprow","DGEMV partition","Moderate","MECHANISTIC","Revalidate after a grid change when IR is material; fully reopen after material local-row/solver change"
+E39,"Host runtime/locality","Useful N / LU-IR operating point","Strong / conditional","MECHANISTIC + OBSERVED REGIME SHIFT","Reopen bounded N/residency sweep after a host-runtime change materially shifts IR/LU"
