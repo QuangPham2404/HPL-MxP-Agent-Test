@@ -627,23 +627,153 @@ cuts IR to 1.51 s, showing a real GPU-map × memory-locality interaction.
 Under G0, explicit memory affinity is slightly negative (-0.66%) and does not
 change LU.
 
-This result goes against the useful HPL intuition that **making the panel /
-process-column ranks as local as possible should be better**, because panel
-factorization and panel communication are major HPL bottlenecks. That
-intuition is still reasonable, but it is not the dominant effect at this
-HPL-MxP operating point. Phase 2A already showed that `4x4 row` is faster
-than `4x4 column` in **LU itself**, so the result is not simply an IR effect
-hiding a panel-locality advantage. In addition, G1 does not remove the
-inter-node process-column path: with two nodes, each process column still
-contains ranks on both nodes; G1 only places the two same-node members of a
-column into the same NUMA region. With all eight GPUs connected through the
-same NV18 fabric and the current NCCL-heavy panel policy
-(`--use-mpi-panel-broadcast 0`), that finer-grained panel-column NUMA
-locality is apparently not on the critical LU path. The cost/overlap of the
-other LU work — especially process-row communication, trailing updates, and
-readiness/synchronization — appears to outweigh any benefit from making the
-same-node panel-column ranks closer. TASK-007 then shows that forcing G1
-mainly perturbs host/NUMA locality and IR rather than improving LU.
+#### What A0 versus A2 actually changes
+
+At the retained `4x4 row` process grid, global ranks are arranged as:
+
+```text
+          process columns
+          c0   c1   c2   c3
+
+row 0      0    1    2    3
+row 1      4    5    6    7
+row 2      8    9   10   11
+row 3     12   13   14   15
+```
+
+Ranks 0-7 reside on one node and ranks 8-15 on the other.
+
+With the retained identity GPU map:
+
+```text
+A0:
+--gpu-affinity 0:1:2:3:4:5:6:7
+
+local ranks 0-3 -> GPU0-3 -> NUMA0
+local ranks 4-7 -> GPU4-7 -> NUMA1
+```
+
+the process rows are NUMA-local within each node:
+
+```text
+row 0: ranks 0 1 2 3   -> NUMA0
+row 1: ranks 4 5 6 7   -> NUMA1
+row 2: ranks 8 9 10 11 -> NUMA0 on node 2
+row 3: ranks12 13 14 15-> NUMA1 on node 2
+```
+
+but a process column alternates between the two NUMA domains on each node:
+
+```text
+col 0: ranks 0 4 8 12
+       NUMA0 NUMA1 NUMA0 NUMA1
+```
+
+A2 deliberately reverses that local NUMA preference:
+
+```text
+A2:
+--gpu-affinity 0:4:2:6:1:5:3:7
+```
+
+For example, the same-node members of process column 0 become:
+
+```text
+rank 0  -> GPU0 -> NUMA0
+rank 4  -> GPU1 -> NUMA0
+
+rank 8  -> GPU0 -> NUMA0 on node 2
+rank 12 -> GPU1 -> NUMA0 on node 2
+```
+
+so each local pair belonging to the same process column is placed in the same
+NUMA domain. The corresponding process rows now alternate between NUMA0 and
+NUMA1.
+
+This is an important distinction: **the inter-node path still exists in both
+A0 and A2.** A2 does not make an entire process column node-local; it only
+improves the NUMA locality of the two same-node members of each inter-node
+process column.
+
+#### Row versus column communication interpretation
+
+The useful HPL mental model is:
+
+```text
+process-column side:
+  panel factorization / cooperation on the current panel
+  plus column-direction data movement needed by the update path
+
+process-row side:
+  broadcast of the factorized L panel across the process row
+
+trailing GEMM:
+  local GPU computation once the required L/U panel data has arrived
+```
+
+Therefore process-row communication is not literally "the GEMM
+communication." GEMM itself is local. Rather, row-direction panel broadcast is
+one of the communication paths that determines when ranks can enter the large
+trailing-update GEMMs and how well update/look-ahead work can overlap.
+
+The original intuition behind A2 was therefore reasonable: in classical HPL,
+panel factorization is a critical-path bottleneck, so making the ranks that
+cooperate in a process column more local could plausibly help.
+
+However, **TASK-007 does not show an LU benefit from that change**:
+
+```text
+A0 identity:
+LU = 7.79 s
+IR = 1.39 s
+
+A2 column-local GPU map:
+LU = 7.78 s
+IR = 1.73 s
+```
+
+LU is effectively unchanged, while IR becomes about 24% slower. Therefore the
+A0-versus-A2 GPU-affinity experiment should be interpreted primarily as a
+**host/NUMA/refinement sensitivity result**, not as direct evidence that one
+LU communicator is faster than the other.
+
+The stronger LU-side clue comes from the earlier Phase-2A
+`nporder=row` versus `nporder=column` experiment, where the logical
+row/column placement changed and **LU itself moved materially**. Taken
+together, the evidence suggests the following working hypothesis for this
+HPL-MxP operating point:
+
+> Fine-grained NUMA localization of the process-column/panel ranks is not a
+> meaningful LU bottleneck under the current 2x8 H200 topology. The
+> row-direction broadcast/update-readiness side appears more LU-sensitive
+> than that extra process-column NUMA locality, while GPU-affinity remapping
+> itself mainly affects IR through the host/NUMA relationship.
+
+This is intentionally a **working mechanism**, not a universal HPL rule. A0
+versus A2 alone cannot prove that row communication dominates column
+communication in LU because their LU times are identical. The row-versus-
+column LU conclusion comes from the Phase-2A order experiment; TASK-007 adds
+the complementary observation that forcing better local process-column GPU
+placement does not improve LU and can disturb refinement-side locality.
+
+With all eight GPUs connected through the same NV18 fabric and the current
+NCCL-heavy panel policy (`--use-mpi-panel-broadcast 0`), the extra
+same-node column locality provided by A2 is therefore not worth the loss of
+the natural row/NUMA alignment.
+
+#### Memory-affinity interaction
+
+The A2 -> A3 recovery is still valuable evidence:
+
+```text
+A2: G1, mem omitted   IR = 1.73 s
+A3: G1 + matching mem IR = 1.51 s
+```
+
+Matching memory affinity repairs much of the penalty introduced by the G1 GPU
+permutation without changing LU. This confirms that the main A2 penalty is a
+GPU-map × host-memory/NUMA interaction on the refinement side, rather than an
+LU communication effect.
 
 Retain:
 
@@ -652,8 +782,9 @@ gpu-affinity = 0:1:2:3:4:5:6:7
 mem-affinity = omitted
 ```
 
-Identity is simpler and at least as fast; G1+memory is not proven inferior but
-does not justify the extra mapping complexity.
+Identity preserves the natural process-row/NUMA alignment, is simpler, and is
+at least as fast. G1+memory is not proven intrinsically inferior, but it
+provides no LU advantage and does not justify the extra placement complexity.
 
 ### 6.3 CPU affinity
 
