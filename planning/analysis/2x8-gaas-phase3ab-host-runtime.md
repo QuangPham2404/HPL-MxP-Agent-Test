@@ -148,10 +148,43 @@ The combination of a concrete launcher-contract difference, unchanged LU, and
 a very large refinement-only shift is strong evidence that the campaign has
 entered a **materially different host-runtime / IR regime**.
 
-Accordingly, older TASK-001–008 *within-task relative comparisons* remain
-valuable because each task used one consistent launcher convention, but their
-absolute IR behavior must not be assumed to transfer unchanged to the new
-verified host-runtime contract.
+Accordingly, the historical campaign should **not** be blanket-invalidated.
+The correct dependency-based interpretation is:
+
+- TASK-000 remains the immutable empirical baseline, but its effective
+  all-rank OpenMP state should not be described more strongly than the
+  evidence supports.
+- TASK-001/002 N conclusions are reopened because their ranking depended
+  strongly on IR, and TASK-009 materially changed the verified IR regime.
+- TASK-003 NB remains useful because its main separation was LU-side and all
+  candidates shared one common host-runtime state; it only needs reopening if
+  the newly retained N moves materially through E07.
+- TASK-004/005/006 grid/order remain useful because the important separation
+  included LU movement; they are reopened through E09 only if the new N/local
+  geometry changes materially.
+- TASK-007 CPU-affinity conclusions are superseded by TASK-009 because E19
+  directly couples CPU territory with OpenMP thread/place/bind.
+- TASK-007 GPU/memory-placement conclusions remain useful as conditional
+  placement evidence, but their old IR percentages should not be transferred
+  as universal magnitudes.
+- TASK-008 UCX auto-versus-PIX remains a valid same-runtime bracketed
+  comparison; no dependency edge requires reopening it solely because the
+  host runtime changed.
+
+The general rule is:
+
+```text
+an unknown fixed host-runtime control across one sweep
+  does not automatically invalidate the sweep's relative comparison
+
+but
+
+if that fixed control strongly interacts with the swept variable
+  the conclusion becomes conditional and must be reopened
+```
+
+This is why host-sensitive N, CPU affinity, and DGEMV are reopened, whereas
+LU-dominated NB/grid conclusions are not automatically discarded.
 
 ---
 
@@ -218,7 +251,12 @@ real in mechanism but should be refined:
 > evidence against a simplistic “more spare cores always wins” interpretation.
 
 The T=6 loose arm (+0.07%) does not establish a benefit over free placement,
-and free is simpler.
+and free is simpler. This is also consistent with the practical observation
+that the OS/runtime already schedules the broad CPU pool adequately: explicit
+CPU affinity is not solving an observed placement problem here, while narrow
+manual partitioning removes scheduling flexibility and makes IR slower. This
+should be treated as a workload-specific conclusion, not a universal rule
+against HPC CPU pinning.
 
 Retained Step-B policy:
 
@@ -289,16 +327,43 @@ core policy:
 So core-level placement is not merely a refinement-side penalty; it creates a
 system-wide host-placement failure.
 
-The likely mechanism is rank crowding / excessive core-level restriction:
-with CPU affinity free, all eight local MPI ranks see the same broad scheduled
-cpuset. A core-place policy plus binding can make independent rank-local
-OpenMP runtimes choose overlapping physical core places, producing severe
-cross-rank contention. This is consistent with the historical single-node
-failure mode.
+The likely mechanism has **two coupled failure modes**, not just contention.
 
-However, TASK-009 did **not** capture an actual runtime enumeration of Intel
-OpenMP's instantiated place list, so that exact crowding pattern remains a
-mechanistic explanation rather than directly observed placement proof. What is
+First, with CPU affinity free, every local MPI rank sees the full scheduled
+cpuset across both NUMA domains:
+
+```text
+NUMA0 CPUs = 0-49
+NUMA1 CPUs = 56-101
+rank cpuset = 0-49,56-101
+```
+
+but each rank's retained GPU has a natural NUMA side:
+
+```text
+local ranks 0-3 -> GPU0-3 -> NUMA0
+local ranks 4-7 -> GPU4-7 -> NUMA1
+```
+
+With `OMP_PLACES=cores`, the OpenMP runtime converts that broad shared cpuset
+into many singleton core places. A rank associated with a NUMA1 GPU can
+therefore bind host threads to individual NUMA0 cores, or vice versa, creating
+a **CPU-thread ↔ GPU/NIC/host-memory NUMA mismatch**. That can increase
+cross-NUMA synchronization, progress, and launch/control cost.
+
+Second, because all eight local MPI ranks see the same core-place list,
+independent rank-local OpenMP runtimes may also choose overlapping singleton
+places, creating **cross-rank core contention**.
+
+These two mechanisms are not mutually exclusive and may act together. Socket
+places are much broader: they preserve far more scheduling freedom inside a
+large CPU set and avoid forcing every worker onto a specific singleton core,
+which makes both wrong-core NUMA placement and exact core collisions much less
+severe.
+
+TASK-009 did **not** capture an actual Intel OpenMP runtime enumeration of the
+instantiated place-to-thread mapping, so it cannot separate how much of the
+collapse comes from cross-NUMA placement versus cross-rank contention. What is
 directly established is:
 
 > `OMP_PLACES=cores` is catastrophically unsafe under the current free-rank
@@ -369,8 +434,28 @@ The old Phase-1 N decision was driven heavily by the rise in IR above
 N=429056. Because host runtime now changes that exact scoring term
 dramatically, the previous N optimum cannot be assumed invariant.
 
-This is the reverse consequence of E18: once host runtime materially changes
-IR/LU, the useful N balance must be rechecked.
+This does **not** mean N has become a host-runtime parameter. N still controls
+the matrix geometry, FP64 footprint, local matrix size, residency/staging,
+panel/GEMM geometry, and the amount of refinement work. The new causal chain
+is simply more complete:
+
+```text
+N increases
+  -> matrix/residency/staging/refinement work changes
+  -> host runtime must process that work
+  -> observed IR time changes
+  -> end-to-end LU/IR balance changes
+```
+
+The earlier N sweep measured this chain under the old/unknown remote-rank
+OpenMP state. TASK-009 shows that the host-runtime layer can materially change
+the cost of IR without changing LU at N=429056. Therefore the old N decline
+may have been partly intrinsic matrix/residency cost and partly amplified by
+the previous host-runtime state. The bounded N re-sweep is needed to separate
+those effects empirically.
+
+This is already represented by E18 together with E39; no additional dependency
+edge is needed.
 
 ### E19 — CPU/memory affinity <-> OpenMP policy
 
@@ -488,16 +573,23 @@ Recommended first-pass N candidates:
 
 Why this range:
 
-1. The prior N optimum was selected because increasing N improved LU but made
-   IR grow quickly.
-2. TASK-009 has changed the IR regime without changing LU at N=429056.
-3. Therefore the old tradeoff may shift toward larger N.
-4. These five points deliberately span the known FP64 residency transition and
+1. The prior N optimum was selected from a matrix-driven tradeoff:
+   increasing N improved LU efficiency but also increased FP64
+   residency/staging and refinement work.
+2. TASK-009 did not change that matrix dependency. It revealed a **new layer
+   of causation** in the old N degradation: host runtime materially changes
+   how expensive the resulting refinement work becomes.
+3. At N=429056, LU is unchanged while verified IR has much more headroom
+   (0.29 s versus the historical ~1.4-1.6 s regime). That creates room to test
+   whether larger N can harvest its higher LU efficiency before IR again
+   becomes dominant.
+4. These five points span the known FP64 residency transition and the
    previously valid larger-N region without approaching the historical
    host-memory cliff near N=700k.
 5. Running the old anchors again under the **verified** host-runtime contract
-   directly answers whether larger credited work can now exploit the higher LU
-   throughput without paying the former IR penalty.
+   directly tests whether the previous larger-N deterioration was mostly
+   intrinsic matrix/residency cost or was materially amplified by the former
+   host-runtime state.
 
 Run all five sequentially in one allocation. Monitor correctness, LU, IR,
 IR/LU, host memory, device headroom, and the exact verified OpenMP environment.
