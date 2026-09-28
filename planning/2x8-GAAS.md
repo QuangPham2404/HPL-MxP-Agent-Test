@@ -727,3 +727,60 @@ Do not start `UCX_TLS × use-mpi-panel-broadcast` yet; that remains Phase 4.
 
 **Human decision state:** TASK-007 analysis complete. UCX confirmation proposed
 only; no execution is authorized.
+
+
+### 6.7 TASK-008 — UCX-affinity confirmation and Phase-2C closure
+
+TASK-008 bracketed the unresolved TASK-007 UCX result in one allocation:
+
+| Arm | UCX policy | Overall GFLOP/s | LU s | IR s |
+|---|---|---:|---:|---:|
+| C0a | automatic | 5.6421e+06 | 7.76 | 1.57 |
+| C1 | PIX-paired HCA | 5.5794e+06 | 7.75 | 1.69 |
+| C0b | automatic repeat | 5.6285e+06 | 7.75 | 1.61 |
+
+The automatic controls differ by only 0.24%. C1 is 1.11% below C0a, 0.87%
+below C0b, and 0.99% below their mean. Its IR time is also 4.97-7.64% slower
+than the two automatic controls while LU is unchanged.
+
+The earlier TASK-007 +2.01% PIX result therefore does not reproduce under a
+local control bracket. The previous IR improvement also reverses direction.
+
+**Phase 2C is closed with:**
+
+```text
+--ucx-affinity omitted
+UCX device selection = automatic/default
+```
+
+Retained physical placement:
+
+```text
+gpu-affinity = 0:1:2:3:4:5:6:7
+mem-affinity = omitted
+cpu-affinity = omitted/free   # provisional pending host-runtime tuning
+ucx-affinity = omitted/automatic
+```
+
+Detailed analysis:
+`planning/analysis/2x8-gaas-phase2c-ucx-affinity-confirm.md`.
+
+Dependency checkpoint:
+
+- E11 is satisfied: physical placement triggered by retained 4x4 row is closed.
+- E12/E13 remain downstream obligations for Phase-4 panel transport.
+- E18 remains active for host runtime.
+- **E19 is now the next active strong dependency:** CPU affinity and OpenMP
+  thread/place/bind must be revalidated as a coordinated group.
+- E20 DGEMV remains deferred until the host-runtime group is closed.
+- N/NB/grid/residency remain closed.
+
+**Proposed next action:** coordinated Phase-3A/3B host-runtime revalidation.
+First establish an OpenMP thread-count plateau with CPU/memory/UCX affinity
+unset; then compare free CPU placement against a topology-aligned
+non-overlapping medium policy at the retained OMP count(s); only after that
+test meaningful OMP place/bind policies. Do not independently stack TASK-007
+B2 with a separately selected OpenMP winner.
+
+**Human decision state:** Phase 2C closed. Host-runtime tuning is proposed only;
+no execution is authorized.
