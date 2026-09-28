@@ -13,7 +13,7 @@ last_updated: 2026-09-28
 
 <!-- Lifecycle: APPROVED / codex = ready to begin; EXECUTING / codex =
      started and resumable across sessions under unchanged approved Section
-     1.11. Recoverable Track 1 mechanics keep EXECUTING / codex. BLOCKED / user
+     1.16. Recoverable Track 1 mechanics keep EXECUTING / codex. BLOCKED / user
      requires actual human/external action or new authority. -->
 
 ## 1. STRATEGIC SPECIFICATION
