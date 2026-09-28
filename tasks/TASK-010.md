@@ -430,12 +430,25 @@ If the E08 back-check is not triggered, Step-D N is simply the Step-B carried N.
 
 #### 1.8A. Trigger and purpose
 
-Run Step D only when Steps A/B established a material N move and the N/NB pair
-has been operationally finalized through Step C.
+Run Step D after Steps A/B established a material N move and the N/NB pair has
+been operationally finalized through Step C **unless** the bounded E08
+back-check returns the operating point to the original effective geometry:
 
-A material N change triggers E09, so the old grid pruning is no longer assumed
-valid. Step D therefore re-evaluates the serious 16-rank factor pairs rather
-than only the previous TASK-006 finalists.
+~~~text
+N = 429056
+NB = 3072
+same residency / feasibility regime
+~~~
+
+with no remaining material geometry change. In that narrow case, record the
+reversion and stop TASK-010 without rerunning grid/order.
+
+Otherwise, a material N change triggers E09, and a material retained NB change
+reinforces grid revalidation through E10. The old grid pruning is therefore no
+longer assumed valid. Step D re-evaluates the serious 16-rank factor pairs
+rather than only the previous TASK-006 finalists.
+
+This gate is evaluated once. It is not permission to reopen earlier steps.
 
 #### 1.8B. Exact matrix
 
@@ -679,7 +692,9 @@ Step A materially moves N and:
 - Step B performs one bounded fine-N refinement;
 - Step C performs one bounded NB sweep;
 - at most one E08 local N back-check is performed when triggered;
-- Step D performs the exact six-arm grid/order matrix;
+- Step D performs the exact six-arm grid/order matrix unless the one-time
+  pre-Step-D gate shows the finalized pair has returned to the original
+  N=429056 / NB=3072 geometry with no remaining material regime change;
 - no recursive re-sweeping occurs;
 - all factual evidence and branch decisions are preserved;
 - task ownership returns to Strategic Analyst.
