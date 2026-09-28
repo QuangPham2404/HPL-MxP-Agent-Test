@@ -18,7 +18,8 @@ Step B — CPU-affinity matrix per carried T: free / loose / medium / strict
 Step C — OMP_PLACES x OMP_PROC_BIND matrix per carried host candidate
 ```
 
-**Status (2026-09-28): prepared; v1 attempt not yet executed.** TASK-009 is
+**Status (2026-09-28): v1 attempt aborted at preflight (Track-1 script
+defect, no scored arm); v2 retry prepared.** TASK-009 is
 `EXECUTING / codex`. Any rerun must use a new `ATTEMPT_TAG`, pass
 `-q gpu_as` or `-q gpu_ded` (the only authorized queues) with project
 `hpc_ebslee`, and never overwrite existing evidence.
@@ -508,7 +509,54 @@ review are reserved for the authorized `ANALYSE_RESULTS` step
 
 ## Run summary
 
-(pending; to be recorded after the v1 attempt)
+### v1 attempt (2026-09-28, PBS job 73172.gaas) — aborted at preflight, Track-1 script defect
+
+One authorized submission, exactly as approved by TASK-009 Section 1.16
+(one qsub, host-pinned g13+g15 on `gpu_as`, project `hpc_ebslee`,
+`ATTEMPT_TAG=v1`, execution worktree
+`.codex-worktrees/TASK-009-e18ec8e-phase3ab-v1` at
+`e18ec8e2572710723e8fcbce808c247081db3c54`).
+
+- **Node/queue selection (live preflight).** `gpu_as` was enabled/started
+  (walltime limit 336:00:00; ACL includes `hpc_ebslee_group`; so was
+  `gpu_ded`, but g13/g15 advertise `Qlist = gpu_as,gpu_ppu` only).
+  `hpc-gaas-g12` was NOT clean (job `72885.gaas` held all 96 CPUs / 8 GPUs,
+  same occupant as the TASK-008 preflight) and `hpc-gaas-g14` had job
+  `68707.gaas` assigned (1 GPU / 12 chunks). `hpc-gaas-g13` and
+  `hpc-gaas-g15` were both `free` with zero assigned CPU/GPU/memory — the
+  submitted pair was **g13+g15 on `gpu_as`** (the validated TASK-008 pair).
+- **Observed error.** The job aborted deterministically at the mother-node
+  topology gate after `00:00:01` (`Exit_status=1`, `run_count=1`), BEFORE
+  the module load, rank-map probe, and any scored arm:
+  `FATAL: extracted NUMA CPU ranges (NUMA0='N/A', NUMA1='N/A') differ from
+  the accepted Phase-0 values 0-49 / 56-101`. The topology data itself
+  matched Phase-0 (the fixed-string gate assertions GPU0 -> `0-49`,
+  GPU4 -> `56-101`, and the NIC legend all passed, and the full matrix is
+  preserved in the `.o`); only the NUMA-range EXTRACTION was wrong: the
+  script took the last whitespace field of the GPU0/GPU4 rows as the CPU
+  Affinity, but the live `nvidia-smi topo -m` output (identically in the
+  Phase-0 captures) ends with a `GPU NUMA ID` column whose value is `N/A`
+  after `CPU Affinity` and `NUMA Affinity`.
+- **Classification.** Deterministic workflow-machinery defect (incorrect
+  field extraction in the Step-B mask-derivation input; workflow/05
+  Track 1). No scientific control, resource, launcher or queue decision was
+  involved, and no scored evidence was collected, so a clean whole-attempt
+  Track-1 retry with a new attempt tag is allowed (TASK-009 Sections 1.10,
+  1.11).
+- **Planned patch (applied).** The extractor now takes the FIRST
+  range-shaped field (`^[0-9]+-[0-9]+$`) of the GPU0/GPU4 rows — the only
+  such field — instead of the last field, making it column-position
+  independent; the extracted values are still pinned to the accepted
+  Phase-0 values and any mis-extraction fails safely. Verified against both
+  the v1 failure matrix (g13) and the Phase-0 g12 capture.
+- **Evidence.** `outputs/2x8-GAAS-phase3ab-host-runtime_v1.o` (metadata,
+  worktree revision, hostfile-independent gates, full topology matrix) and
+  `outputs/2x8-GAAS-phase3ab-host-runtime_v1.e` (the FATAL line). No arm,
+  rank-map, env-map or carry-forward files exist for v1.
+
+### v2 attempt (2026-09-28) — pending
+
+(to be recorded after the v2 attempt)
 
 ## Evidence paths
 

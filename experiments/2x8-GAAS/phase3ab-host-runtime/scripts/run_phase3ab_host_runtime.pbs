@@ -350,11 +350,19 @@ for PAIR in "NIC0: mlx5_0" "NIC1: mlx5_1" "NIC2: mlx5_2" "NIC3: mlx5_3" "NIC4: m
     exit 1
   fi
 done
-# Extract the live NUMA CPU ranges for the Step-B mask builder (last field of
-# the GPU0/GPU4 data rows = CPU Affinity column) and pin them to the accepted
-# Phase-0 values; all Step-B masks are derived from these live ranges.
-NUMA0_RANGE="$(printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU0[[:space:]]' | awk '{print $NF}' | head -n 1)"
-NUMA1_RANGE="$(printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU4[[:space:]]' | awk '{print $NF}' | head -n 1)"
+# Extract the live NUMA CPU ranges for the Step-B mask builder and pin them
+# to the accepted Phase-0 values; all Step-B masks are derived from these
+# live ranges. The extraction is column-position independent (Track-1 fix
+# for attempt v1, PBS job 73172.gaas): the live nvidia-smi topo -m on
+# hpc-gaas-g13/g15 emits a trailing "GPU NUMA ID" column with value N/A
+# after "CPU Affinity" and "NUMA Affinity", so "CPU Affinity" is NOT the
+# last field of the GPU data rows; the extractor therefore takes the FIRST
+# range-shaped field (^[0-9]+-[0-9]+$) of the GPU0/GPU4 row - the only such
+# field, since GPU/NIC link markers, the NUMA node index ("0"/"1") and
+# "N/A" do not match the range pattern. The pin check below still fails
+# safely on any mis-extraction.
+NUMA0_RANGE="$(printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU0[[:space:]]' | head -n 1 | awk '{ for (i = 1; i <= NF; i++) if ($i ~ /^[0-9]+-[0-9]+$/) { print $i; exit } }')"
+NUMA1_RANGE="$(printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU4[[:space:]]' | head -n 1 | awk '{ for (i = 1; i <= NF; i++) if ($i ~ /^[0-9]+-[0-9]+$/) { print $i; exit } }')"
 if [ "$NUMA0_RANGE" != "0-49" ] || [ "$NUMA1_RANGE" != "56-101" ]; then
   echo "FATAL: extracted NUMA CPU ranges (NUMA0='${NUMA0_RANGE}', NUMA1='${NUMA1_RANGE}') differ from the accepted Phase-0 values 0-49 / 56-101 (TASK-009 Sections 1.2, 1.6B, 1.13; Track 2 stop)" >&2
   exit 1
