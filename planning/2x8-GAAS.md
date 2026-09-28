@@ -744,10 +744,12 @@ together, the evidence suggests the following working hypothesis for this
 HPL-MxP operating point:
 
 > Fine-grained NUMA localization of the process-column/panel ranks is not a
-> meaningful LU bottleneck under the current 2x8 H200 topology. The
-> row-direction broadcast/update-readiness side appears more LU-sensitive
-> than that extra process-column NUMA locality, while GPU-affinity remapping
-> itself mainly affects IR through the host/NUMA relationship.
+> meaningful LU bottleneck under the current 2x8 H200 topology. The A0-versus-A2
+> GPU-affinity remapping leaves LU essentially unchanged and mainly affects IR
+> through the host/NUMA relationship. The separate Phase-2A `nporder`
+> experiment is the evidence that broader logical row/column placement can
+> change LU; that LU result should not be attributed to the fine-grained
+> GPU-affinity/NUMA remapping tested here.
 
 This is intentionally a **working mechanism**, not a universal HPL rule. A0
 versus A2 alone cannot prove that row communication dominates column
