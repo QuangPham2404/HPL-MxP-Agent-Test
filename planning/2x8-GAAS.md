@@ -597,18 +597,18 @@ g12+g15. All passed with the same residual and three IR iterations.
 
 ### 6.1 Results and main mechanism
 
-| Arm | Change | Overall GFLOP/s | LU s | IR s |
-|---|---|---:|---:|---:|
-| A0 | G0 identity, mem omitted | 5.7363e+06 | 7.79 | 1.39 |
-| A1 | G0 + mem affinity | 5.6984e+06 | 7.79 | 1.45 |
-| A2 | G1 column-local, mem omitted | 5.5378e+06 | 7.78 | 1.73 |
-| A3 | G1 + matching mem affinity | 5.6699e+06 | 7.78 | 1.51 |
-| B0 | CPU free | 5.6247e+06 | 7.81 | 1.56 |
-| B1 | CPU loose | 5.5530e+06 | 7.77 | 1.72 |
-| B2 | CPU medium, 10 CPUs/rank | 5.6912e+06 | 7.78 | 1.48 |
-| B3 | CPU strict, 8 CPUs/rank | 5.3783e+06 | 7.77 | 2.02 |
-| C0 | UCX automatic | 5.5828e+06 | 7.80 | 1.64 |
-| C1 | PIX-paired UCX HCA | 5.6949e+06 | 7.78 | 1.47 |
+| Arm | Change | Exact affinity flags | Overall GFLOP/s | LU s | IR s |
+|---|---|---|---:|---:|---:|
+| A0 | G0 identity, mem omitted | `--gpu-affinity 0:1:2:3:4:5:6:7`; mem/cpu/ucx affinity omitted | 5.7363e+06 | 7.79 | 1.39 |
+| A1 | G0 + mem affinity | `--gpu-affinity 0:1:2:3:4:5:6:7 --mem-affinity 0:0:0:0:1:1:1:1`; cpu/ucx omitted | 5.6984e+06 | 7.79 | 1.45 |
+| A2 | G1 column-local, mem omitted | `--gpu-affinity 0:4:2:6:1:5:3:7`; mem/cpu/ucx affinity omitted | 5.5378e+06 | 7.78 | 1.73 |
+| A3 | G1 + matching mem affinity | `--gpu-affinity 0:4:2:6:1:5:3:7 --mem-affinity 0:1:0:1:0:1:0:1`; cpu/ucx omitted | 5.6699e+06 | 7.78 | 1.51 |
+| B0 | CPU free | `--gpu-affinity 0:1:2:3:4:5:6:7`; mem/cpu/ucx affinity omitted | 5.6247e+06 | 7.81 | 1.56 |
+| B1 | CPU loose | `--gpu-affinity 0:1:2:3:4:5:6:7 --cpu-affinity 0-49:0-49:0-49:0-49:56-101:56-101:56-101:56-101`; mem/ucx omitted | 5.5530e+06 | 7.77 | 1.72 |
+| B2 | CPU medium, 10 CPUs/rank | `--gpu-affinity 0:1:2:3:4:5:6:7 --cpu-affinity 0-9:10-19:20-29:30-39:56-65:66-75:76-85:86-95`; mem/ucx omitted | 5.6912e+06 | 7.78 | 1.48 |
+| B3 | CPU strict, 8 CPUs/rank | `--gpu-affinity 0:1:2:3:4:5:6:7 --cpu-affinity 0-7:8-15:16-23:24-31:56-63:64-71:72-79:80-87`; mem/ucx omitted | 5.3783e+06 | 7.77 | 2.02 |
+| C0 | UCX automatic | `--gpu-affinity 0:1:2:3:4:5:6:7`; mem/cpu/ucx affinity omitted | 5.5828e+06 | 7.80 | 1.64 |
+| C1 | PIX-paired UCX HCA | `--gpu-affinity 0:1:2:3:4:5:6:7 --ucx-affinity mlx5_0:mlx5_1:mlx5_2:mlx5_3:mlx5_4:mlx5_5:mlx5_8:mlx5_9`; mem/cpu omitted | 5.6949e+06 | 7.78 | 1.47 |
 
 The important result is that LU is essentially flat (7.77–7.81 s) across the
 entire sweep while IR ranges from 1.39 to 2.02 s. Placement therefore affects
@@ -626,6 +626,24 @@ cuts IR to 1.51 s, showing a real GPU-map × memory-locality interaction.
 
 Under G0, explicit memory affinity is slightly negative (-0.66%) and does not
 change LU.
+
+This result goes against the useful HPL intuition that **making the panel /
+process-column ranks as local as possible should be better**, because panel
+factorization and panel communication are major HPL bottlenecks. That
+intuition is still reasonable, but it is not the dominant effect at this
+HPL-MxP operating point. Phase 2A already showed that `4x4 row` is faster
+than `4x4 column` in **LU itself**, so the result is not simply an IR effect
+hiding a panel-locality advantage. In addition, G1 does not remove the
+inter-node process-column path: with two nodes, each process column still
+contains ranks on both nodes; G1 only places the two same-node members of a
+column into the same NUMA region. With all eight GPUs connected through the
+same NV18 fabric and the current NCCL-heavy panel policy
+(`--use-mpi-panel-broadcast 0`), that finer-grained panel-column NUMA
+locality is apparently not on the critical LU path. The cost/overlap of the
+other LU work — especially process-row communication, trailing updates, and
+readiness/synchronization — appears to outweigh any benefit from making the
+same-node panel-column ranks closer. TASK-007 then shows that forcing G1
+mainly perturbs host/NUMA locality and IR rather than improving LU.
 
 Retain:
 
