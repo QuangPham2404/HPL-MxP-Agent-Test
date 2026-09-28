@@ -967,6 +967,14 @@ remote-rank OpenMP environment is not recorded, this cross-task difference is
 not a clean causal measurement, but it establishes a materially different
 verified host-runtime/IR regime.
 
+This does **not** blanket-invalidate TASK-001–008. Within-task comparisons
+remain useful when every arm shared the same launcher state. The dependency
+impact is selective: N is reopened because its ranking depended heavily on IR;
+TASK-007 CPU-affinity conclusions are superseded by the coordinated E19 test;
+DGEMV reopens downstream. LU-dominated NB and grid/order conclusions are not
+discarded automatically, but they may reopen later if the newly retained N
+moves materially through their existing dependency edges.
+
 ### 7.2 Step B — CPU affinity
 
 At both retained thread counts, free and broad loose CPU territory are tied,
@@ -989,6 +997,9 @@ strict 6.3429e+06, IR 0.56
 The mechanism is broader than “leave exactly two spare CPUs.” The repeated
 result is that **narrow private CPU territories themselves are harmful to the
 refinement/progress path**, while broad free/shared territory is sufficient.
+This is consistent with the OS/runtime already scheduling the broad CPU pool
+adequately: explicit affinity adds no measured benefit here, while narrow
+manual partitioning removes scheduling flexibility and slows IR.
 
 Retain:
 
@@ -1004,8 +1015,14 @@ package-default control and leave LU/IR unchanged.
 
 Every `OMP_PLACES=cores` policy collapses performance to about
 `1.84–1.86e+06 GFLOP/s`, with LU rising to about 12.7–13.1 s and IR to
-15.5–16.0 s. Core-level binding is therefore rejected under the current free
-rank/cpuset launcher contract.
+15.5–16.0 s. The likely failure has two coupled parts: every free MPI rank sees
+the same full two-NUMA cpuset, so singleton core places can bind a rank's host
+threads to cores remote from its GPU/NIC NUMA side, and independent ranks may
+also choose overlapping singleton core places and contend. TASK-009 does not
+enumerate the actual Intel OpenMP place-to-thread mapping, so cross-NUMA
+misplacement versus contention cannot be separated quantitatively. Core-level
+binding is therefore rejected under the current free-rank/cpuset launcher
+contract.
 
 Retain:
 
@@ -1031,9 +1048,12 @@ T=4 is a representative of the 4–8 plateau, not a uniquely proven optimum.
 
 ### 7.5 Dependency checkpoint
 
-- **E18:** host runtime is validated at N=429056, but the useful N operating
-  point is reopened because TASK-009 materially changes the IR/LU regime that
-  originally selected N=429056.
+- **E18 + E39:** host runtime is validated at N=429056, but the useful N
+  operating point is reopened because TASK-009 materially changes the IR/LU
+  regime that originally selected N=429056. N remains fundamentally a
+  matrix/residency variable; the new insight is that host runtime is an
+  additional causal layer controlling how expensive N-induced refinement work
+  becomes.
 - **E19:** CPU/OpenMP interaction is now directly observed and resolved for the
   current launcher/cpuset. No immediate memory-affinity resweep is required
   because the retained CPU policy remains free and socket-level; retain memory
@@ -1059,8 +1079,11 @@ OMP_NUM_THREADS=4, OMP place/bind omitted, and every other current scientific
 control fixed. Explicitly forward and verify OMP_NUM_THREADS on all 16 ranks.
 
 This re-tests the old LU-versus-IR tradeoff across the known FP64-residency
-transition. Do not start DGEMV or Phase-4 communication before this N
-revalidation closes.
+transition under the corrected/verified host-runtime contract. The purpose is
+not to assume larger N will win, but to determine whether the previous larger-N
+decline was intrinsic matrix/residency cost or was materially amplified by the
+former host-runtime state. Do not start DGEMV or Phase-4 communication before
+this N revalidation closes.
 
 **Human decision state:** TASK-009 analysis complete. N re-sweep proposed only;
 no execution is authorized.
