@@ -1,7 +1,7 @@
 ---
 task_id: TASK-009
 title: Phase 3A/3B — Coordinated OpenMP and CPU Host-Runtime Sweep
-status: APPROVED
+status: EXECUTING
 current_owner: codex
 parent_task: TASK-008
 analysis_id: 2x8-gaas-phase3ab-host-runtime

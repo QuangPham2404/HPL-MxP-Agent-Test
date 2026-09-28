@@ -1,0 +1,1404 @@
+#!/bin/bash
+# HPL-MxP 2x8-GAAS Phase-3A/3B coordinated host-runtime sweep: 2 GAAS nodes x 8
+# H200 GPUs (16 ranks). The TASK-009-approved Step A/B/C arms run sequentially
+# within this single PBS allocation at the retained Phase-2A operating point
+# N=429056, NB=3072, 4x4 row, identity GPU affinity and the fixed retained
+# scientific controls (tasks/TASK-009.md Section 1.2); ONLY the host-runtime
+# controls explicitly authorized by TASK-009 vary:
+#
+#   Step A - OMP_NUM_THREADS sweep: 4, 6, 8, 10, 12 exactly once each
+#            (--cpu-affinity/--mem-affinity/--ucx-affinity omitted;
+#             OMP_PLACES/OMP_PROC_BIND omitted so the installed launcher's
+#             package defaults remain the effective placement policy;
+#             TASK-009 Section 1.5)
+#     -> bounded 2.0% plateau carry-forward of at most two thread counts
+#        (TASK-009 Section 1.5D, mechanical rule, no repeats, no new counts)
+#   Step B - CPU-affinity matrix per carried thread count T:
+#            B1 loose / B2 medium / B3 strict masks derived from the live
+#            scheduled cpuset and the retained GPU/NUMA map (ranks 0-3 ->
+#            GPU0-3 -> NUMA0, ranks 4-7 -> GPU4-7 -> NUMA1); B0 free control =
+#            the identical-configuration Step-A arm at T, reused, NOT rerun;
+#            infeasible policies are documented and skipped, never replaced
+#            with cross-NUMA/overlapping improvised masks (TASK-009 1.6B/1.6C)
+#     -> bounded carry-forward of at most two total host candidates
+#        (TASK-009 Section 1.6D, >2.0% gates against the same-T free control)
+#   Step C - OMP_PLACES x OMP_PROC_BIND matrix per carried host candidate:
+#            package-default control C0 (both omitted; expected effective
+#            sockets/TRUE) plus sockets x {CLOSE,SPREAD} and cores x
+#            {TRUE,CLOSE,SPREAD} when legal and non-redundant, maximum 6
+#            scored Step-C arms per carried candidate (TASK-009 1.7)
+#
+# Environment-propagation contract (Blocker E, multi-node-test/
+# GAAS_MULTINODE_SETUP.md): with this launcher combination, remote-node ranks
+# inherit the remote orted/container environment and receive ONLY variables
+# explicitly forwarded through mpirun -x (PATH and LD_LIBRARY_PATH were the
+# validated precedents). OMP_NUM_THREADS is TASK-009's Step-A control
+# variable, so every scored arm (a) re-exports the selected thread count in
+# the job shell AFTER the module/job environment is established (TASK-009
+# Section 1.3: PBS has previously clobbered OMP_NUM_THREADS with the
+# allocation CPU count) and (b) forwards it with -x OMP_NUM_THREADS so it is
+# effective on ALL 16 ranks; Step-C explicit arms additionally forward
+# -x OMP_PLACES -x OMP_PROC_BIND. Step-A/B arms deliberately do NOT forward
+# OMP_PLACES/OMP_PROC_BIND: they are unset in the job shell and the
+# allocation-level incoming-environment gate below verifies they are unset on
+# every rank, so the installed launcher's package defaults
+# (OMP_PROC_BIND=TRUE, OMP_PLACES=sockets) remain the effective policy
+# unchanged. A lightweight 16-rank environment probe with the exact per-arm
+# -x set runs immediately before every scored arm and records the effective
+# OMP values seen on all 16 ranks (TASK-009 Section 1.3/1.8 deliverable); a
+# probe mismatch aborts before that arm's scored launch (control-application
+# failure; TASK-009 Section 1.13 stop condition, evidence preserved).
+#
+# An arm with a nonzero exit or an invalid verification is recorded as
+# evidence and the sweep CONTINUES with the next arm (isolated arm failure is
+# evidence; there is no in-script retry); the job returns nonzero overall if
+# any arm exited nonzero or failed verification. One mechanical hard stop
+# exists before Step B: if NO Step-A candidate is valid, the carry-forward
+# has no basis and later steps are not run (TASK-009 Section 1.13 systemic
+# condition; Step-A evidence preserved).
+#
+# Observational preflight failures abort BEFORE any scored arm (Track 2 stop
+# rules; workflow/05-Workflow-Error-Patching-Procedures.md and
+# workflow/08-Workflow-Multinode-Tuning.md Section 5): (1) an allocated
+# cpuset/topology that differs from the accepted Phase-0 topology on EITHER
+# allocated node invalidates the retained GPU/NUMA identity map and all
+# Step-B mask derivations (tasks/TASK-009.md Sections 1.2, 1.6B, 1.13) - the
+# mother node is gated from the job shell and BOTH nodes are gated per host
+# inside the rank-map probe stage, exactly as validated for TASK-008
+# (replacement-node eligibility); (2) a rank-map probe that fails its
+# mechanical 16-rank/8-per-node/2-host check indicates a launch or
+# rank-mapping problem; (3) any rank reporting an incoming OMP_PLACES or
+# OMP_PROC_BIND value means the "omitted" placement controls cannot be
+# guaranteed on all ranks and the Step-A control family cannot execute as
+# approved (TASK-009 Section 1.13). In all cases evidence is preserved, no
+# scored arm runs, and any rerun needs a new ATTEMPT_TAG plus human
+# direction; the script never retries a hang, failed MPI_Init, rank
+# misplacement, transport fallback, or uncertain correctness result.
+#
+# Purpose: TASK-009 coordinated host-runtime sweep. Execution records factual
+# scores/evidence and applies ONLY the pre-authorized mechanical carry-forward
+# rules; the final strategic host-runtime retention decision is reserved for
+# the post-task Strategic Analyst via ANALYSE_RESULTS (tasks/TASK-009.md
+# Sections 1.1, 1.10, 1.15). This script computes no percentage deltas and
+# performs no ranking.
+#
+# Expected working directory: this experiment directory
+# (experiments/2x8-GAAS/phase3ab-host-runtime/) on GAAS. Submit with
+# (the queue is deliberately NOT selected in this script; pass an approved
+# one at qsub):
+#   qsub -q <gpu_as|gpu_ded> -v "ATTEMPT_TAG=v1" \
+#        -o outputs/2x8-GAAS-phase3ab-host-runtime_v1.o \
+#        -e outputs/2x8-GAAS-phase3ab-host-runtime_v1.e \
+#        scripts/run_phase3ab_host_runtime.pbs
+#
+# Inputs (environment, via qsub -v):
+#   ATTEMPT_TAG  REQUIRED sweep attempt tag (e.g. v1); it names every
+#                per-arm evidence file. A rerun must use a new tag. Before
+#                any use the tag is validated against a conservative
+#                filename-safe pattern: nonempty, only ASCII alphanumeric
+#                characters, dot, underscore, and hyphen, and not '.' or
+#                '..' (matched under LC_ALL=C inside a subshell, so the
+#                check is locale-independent and leaves the job environment
+#                untouched); anything else aborts before anything runs.
+# Outputs: per-arm application stdout/stderr and status files under
+#   outputs/2x8-GAAS-phase3ab-host-runtime_<arm-label>_<ATTEMPT_TAG>.{out,err,status};
+#   the allocation-level rank-map log (16 rank lines with the incoming
+#   OMP environment plus the per-host local-rank-0 topology reports for both
+#   allocated nodes) outputs/2x8-GAAS-phase3ab-host-runtime_rankmap_<ATTEMPT_TAG>.log;
+#   the per-arm effective-OMP environment probe log
+#   outputs/2x8-GAAS-phase3ab-host-runtime_envmap_<ATTEMPT_TAG>.log;
+#   the mechanical carry-forward decision log
+#   outputs/2x8-GAAS-phase3ab-host-runtime_carryforward_<ATTEMPT_TAG>.log;
+#   environment provenance records echoed to the PBS .o after the validated
+#   module load: loaded modules ('module list', an optional record that must
+#   not fail the job), the Apptainer version, and the container MPI version
+#   (/usr/local/mpi/bin/mpirun --version, a lightweight read-only query of
+#   the exact container mpirun the probe and arms launch, run before the
+#   rank-map probe; both version invocations are required-runtime checks
+#   handled deterministically: explicit rc capture and a fatal abort before
+#   any scored work on nonzero rc), plus the execution-worktree git revision
+#   (git -C "$REPO_ROOT" rev-parse HEAD; non-fatal provenance: REPO_ROOT
+#   stays inside the approved remote project root and a commit SHA exposes
+#   no secrets; no external image-digest inspection is performed);
+#   PBS-level stdout/stderr names are passed at qsub with -o/-e (this script
+#   deliberately has no #PBS -o/-e directives). Existing attempt files are
+#   never overwritten: the script aborts before running anything if any
+#   POSSIBLE arm target file already exists (the arm set is carry-forward
+#   dependent, so the guard covers the maximal approved label set). An arm
+#   killed mid-run (e.g. by walltime) keeps its .out/.err but has no
+#   .status file.
+# Assumptions: approved container and modules exist on GAAS; one GPU per MPI
+# process; validated Approach-1 multinode launch (container mpirun +
+# rsh_pbsdsh_container.sh bridge; see multi-node-test/GAAS_MULTINODE_SETUP.md);
+# the installed v26.02 launcher implements the captured affinity/OpenMP
+# semantics (--gpu-affinity/--mem-affinity/--cpu-affinity/--ucx-affinity per
+# local rank, --cpu-affinity -> numactl --physcpubind=<range>;
+# OMP_PROC_BIND=${OMP_PROC_BIND:-TRUE}, OMP_PLACES=${OMP_PLACES:-sockets}
+# package defaults; see todo.md captured launcher and the flag check evidence
+# in experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log);
+# the accepted Phase-0 topology: PBS-visible cpuset 0-49,56-101 (96 CPUs:
+# 50 on NUMA0/socket0, 46 on NUMA1/socket1; 1 thread per core, no SMT),
+# GPUs 0-3 -> NUMA0, GPUs 4-7 -> NUMA1 (scripts/probing_report.md 2x8
+# supplement).
+#
+# Queue policy: no queue is preselected here. TASK-009 authorizes only gpu_as
+# and gpu_ded (Section 1.12); the submitting qsub must pass -q explicitly, and
+# this script verifies the actually-assigned queue and aborts on anything
+# else. select=2:ngpus=8 (no mpiprocs) may likewise be overridden on the qsub
+# command line by a documented host-pinned select (see README.md).
+
+#PBS -N 2x8_phase3ab_hrt
+#PBS -P hpc_ebslee
+#PBS -l select=2:ngpus=8
+#PBS -l place=scatter
+#PBS -l walltime=01:30:00
+
+set -euo pipefail
+
+# --- Experiment metadata --------------------------------------------------------
+cd "$PBS_O_WORKDIR"
+EXPERIMENT_ID="2x8-GAAS-phase3ab-host-runtime"
+OUTDIR="$PWD/outputs"
+mkdir -p "$OUTDIR"
+
+ATTEMPT_TAG="${ATTEMPT_TAG:-}"
+if [ -z "$ATTEMPT_TAG" ]; then
+  echo "FATAL: ATTEMPT_TAG is required (e.g. -v \"ATTEMPT_TAG=v1\"); it names this sweep's evidence files" >&2
+  exit 1
+fi
+# ATTEMPT_TAG is embedded in every evidence filename, so before it is used
+# anywhere it must pass a conservative filename-safety gate: nonempty
+# (checked above), only ASCII alphanumeric characters, dot, underscore and
+# hyphen, and not '.' or '..'. The match runs under LC_ALL=C inside a
+# subshell, making the character ranges byte-exact and locale-independent
+# without modifying the job environment; any other value aborts before
+# anything runs.
+if ( LC_ALL=C
+     case "$ATTEMPT_TAG" in
+       '.'|'..'|*[!A-Za-z0-9._-]*) exit 1 ;;
+     esac
+   )
+then
+  echo "attempt_tag_validation=PASS (conservative filename-safe pattern: nonempty, ASCII alphanumeric '.' '_' '-' only, not '.' or '..')"
+else
+  echo "FATAL: ATTEMPT_TAG='${ATTEMPT_TAG}' is not a conservative filename-safe tag (required: nonempty, only ASCII alphanumeric characters, '.', '_', '-'; '.' and '..' are not valid tags); it names this sweep's evidence files" >&2
+  exit 1
+fi
+
+# Only gpu_as and gpu_ded are authorized for TASK-009 (Section 1.12). The
+# queue is not preselected in this script; fail fast if PBS assigned any
+# other queue (including an omitted -q falling through to a default queue).
+QUEUE="${PBS_O_QUEUE:-unknown}"
+case "$QUEUE" in
+  gpu_as|gpu_ded) ;;
+  *) echo "FATAL: queue '${QUEUE}' is not authorized for TASK-009 (only gpu_as or gpu_ded); pass -q at qsub" >&2; exit 1 ;;
+esac
+
+# --- Fixed scientific controls (TASK-009 Section 1.2) -----------------------------
+# Only the host-runtime controls authorized by Steps A/B/C vary (OMP_NUM_THREADS
+# in Step A; --cpu-affinity in Step B; OMP_PLACES/OMP_PROC_BIND in Step C).
+# Everything below is fixed and identical for all arms.
+N_FIXED=429056
+NB_FIXED=3072
+NPROW=4
+NPCOL=4
+NPORDER=row
+
+# Fixed identity GPU map (TASK-009 Section 1.2): local rank r -> GPU r.
+# --mem-affinity and --ucx-affinity are omitted for every arm (memory affinity
+# deferred by design; UCX device policy stays automatic/default, the retained
+# TASK-008 outcome).
+GPU_AFFINITY_FIXED="0:1:2:3:4:5:6:7"
+
+# Step-A approved candidates (TASK-009 Section 1.5B): exactly these five
+# thread counts, once each, no additions, no repeats of valid points.
+STEP_A_THREADS=(4 6 8 10 12)
+
+echo "experiment_id=${EXPERIMENT_ID}"
+echo "attempt_tag=${ATTEMPT_TAG}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "queue=${QUEUE}"
+echo "project=hpc_ebslee"
+date --iso-8601=seconds
+echo "fixed scientific controls (identical across all arms; only the authorized host-runtime controls vary):"
+echo "--n 429056"
+echo "--nb 3072"
+echo "--nprow 4 --npcol 4 --nporder row"
+echo "--gpu-affinity 0:1:2:3:4:5:6:7 (fixed identity map; --mem-affinity omitted, --ucx-affinity omitted/automatic for every arm)"
+echo "--sloppy-type FP16"
+echo "--use-mpi-panel-broadcast 0"
+echo "--use-separate-stream-for-gemm 1"
+echo "--prioritize-trsm 0"
+echo "--prioritize-factorization 0"
+echo "--fill-device 1"
+echo "--test-loop 1"
+echo "--skip-tests 0"
+echo "--monitor-gpu 0"
+echo "deferred controls NOT used anywhere in this sweep (TASK-009 Section 1.10 prohibited): --mem-affinity, --ucx-affinity/--ucx-tls/UCX_TLS, panel-broadcast/MPI fallback/chunk policy, DGEMV, N/NB/grid/order, fill-device/residency/buffer, precision/GEMM kernel, TRSM/factorization/separate-stream scheduling"
+echo "step order: A (OMP_NUM_THREADS 4,6,8,10,12) -> B (CPU-affinity matrix per carried T) -> C (OMP_PLACES x OMP_PROC_BIND per carried host candidate) with the pre-authorized bounded carry-forward rules (TASK-009 Sections 1.5D, 1.6D, 1.7C/1.7D)"
+echo "step_a_candidates=${STEP_A_THREADS[*]}"
+
+# --- Locate repo root and the validated launch bridge ---------------------------
+# Submission dir is experiments/2x8-GAAS/phase3ab-host-runtime/, so the
+# repo root is three levels up.
+REPO_ROOT="$(cd "${PBS_O_WORKDIR}/../../.." && pwd)"
+BRIDGE="${REPO_ROOT}/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+if [ ! -f "$BRIDGE" ]; then
+  echo "FATAL: bridge not found at ${BRIDGE}; submit from the experiment directory (experiments/2x8-GAAS/phase3ab-host-runtime/)" >&2
+  exit 1
+fi
+if [ ! -f "$SIF" ]; then
+  echo "FATAL: container image not found: ${SIF}" >&2
+  exit 1
+fi
+
+# --- Execution-worktree revision record (provenance; non-fatal) --------------------
+# Print the Git revision of the tree this script executes from. REPO_ROOT is
+# derived from the submission directory and stays inside the approved remote
+# project root (the primary clone or a detached .codex-worktrees/ execution
+# worktree beneath it), and 'git rev-parse HEAD' prints only a commit SHA, so
+# the record cannot expose secrets. Provenance tool, not a required runtime:
+# warn and record 'unknown' if git or the revision is unavailable
+# (workflow/03: provenance tools must not block an otherwise valid run).
+GIT_RC=0
+GIT_REVISION="$(git -C "$REPO_ROOT" rev-parse HEAD 2>&1)" || GIT_RC=$?
+if [ "$GIT_RC" -ne 0 ]; then
+  echo "warn: 'git -C ${REPO_ROOT} rev-parse HEAD' failed with rc=${GIT_RC}: ${GIT_REVISION}"
+  echo "execution_worktree_git_revision=unknown"
+else
+  echo "execution_worktree_root=${REPO_ROOT}"
+  echo "execution_worktree_git_revision=${GIT_REVISION}"
+fi
+
+# --- Allocation checks (place=scatter, no mpiprocs; fixed 4x4 grid) ---------------
+GPUS=8                                   # GPUs (and ranks) per node
+EXPECTED_NODES=2
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+if [ "$NNODES" -ne "$EXPECTED_NODES" ]; then
+  echo "FATAL: expected ${EXPECTED_NODES} distinct nodes, got ${NNODES}" >&2
+  exit 1
+fi
+NPROCS=$((NNODES * GPUS))
+if [ "$NPROCS" -ne $((NPROW * NPCOL)) ]; then
+  echo "FATAL: fixed grid ${NPROW}x${NPCOL} requires $((NPROW * NPCOL)) ranks, got ${NPROCS}" >&2
+  exit 1
+fi
+
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "bridge=${BRIDGE}"
+echo "container=${SIF}"
+
+# --- Phase-0 topology consistency gates (TASK-009 Sections 1.2, 1.6B, 1.13; Track 2) ---
+# The retained identity GPU/NUMA map (local ranks 0-3 -> GPU0-3 -> NUMA0,
+# local ranks 4-7 -> GPU4-7 -> NUMA1) and every Step-B mask derivation are
+# valid only for the accepted Phase-0 topology. This block gates the mother
+# node (where this script and rank 0 run) from the job shell; the rank-map
+# probe stage below additionally validates EVERY allocated host per host
+# (two-host gate, retained unchanged from the validated TASK-008 script, so
+# a replacement node pair such as g13+g15 is verified live per host before
+# any scored arm). The gate also EXTRACTS the live NUMA CPU ranges (GPU0 row
+# -> NUMA0 range, GPU4 row -> NUMA1 range) that the Step-B mask builder uses,
+# so every mask is derived from the live scheduled cpuset after the gate has
+# pinned the accepted topology.
+CPUSET="$(grep -F 'Cpus_allowed_list:' /proc/self/status | awk '{print $2}')"
+if [ "$CPUSET" != "0-49,56-101" ]; then
+  echo "FATAL: allocated cpuset '${CPUSET}' differs from the accepted Phase-0 cpuset '0-49,56-101'; the retained GPU/NUMA map and all Step-B mask derivations are no longer valid (TASK-009 Sections 1.2, 1.6B, 1.13; Track 2 stop)" >&2
+  exit 1
+fi
+MEMSET="$(grep -F 'Mems_allowed_list:' /proc/self/status | awk '{print $2}')"
+if [ "$MEMSET" != "0-1" ]; then
+  echo "FATAL: allocated Mems_allowed_list '${MEMSET}' differs from the accepted Phase-0 value '0-1'; the retained GPU/NUMA map is no longer valid (TASK-009 Sections 1.2, 1.13; Track 2 stop)" >&2
+  exit 1
+fi
+NGPU_VISIBLE="$(nvidia-smi -L 2>/dev/null | wc -l || true)"
+if [ "$NGPU_VISIBLE" -ne "$GPUS" ]; then
+  echo "FATAL: expected ${GPUS} GPUs on the mother node, saw '${NGPU_VISIBLE}'" >&2
+  exit 1
+fi
+for HCA in mlx5_0 mlx5_1 mlx5_2 mlx5_3 mlx5_4 mlx5_5 mlx5_8 mlx5_9; do
+  if [ ! -d "/sys/class/infiniband/${HCA}" ]; then
+    echo "FATAL: expected IB HCA ${HCA} is absent; the retained platform identity (automatic UCX device policy) is no longer valid (TASK-009 Sections 1.2, 1.13; Track 2 stop)" >&2
+    exit 1
+  fi
+done
+TOPO_MATRIX="$(nvidia-smi topo -m 2>/dev/null || true)"
+echo "=== mother-node GPU topology matrix (gate input + evidence) ==="
+echo "$TOPO_MATRIX"
+# Row selection is whitespace-tolerant: in the accepted Phase-0 evidence the
+# GPU data rows start at column 0 and only the header is tab-indented
+# (header bytes: TAB ESC[4m GPU0 TAB GPU1 ...), so the tolerant anchor still
+# excludes the header while also accepting a matrix whose data rows arrive
+# with leading whitespace. The gate assertion itself is the second-stage
+# fixed-string check (CPU-affinity column value), unchanged. The GPU0/GPU4
+# NUMA anchors verify that the GPU enumeration still matches the Phase-0
+# identity map the Step-B masks are derived from.
+if ! printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU0' | grep -Fq '0-49'; then
+  echo "FATAL: GPU0 is not on NUMA0 CPUs 0-49 as in the accepted Phase-0 topology; the fixed identity GPU map and the Step-B mask derivations are no longer valid (TASK-009 Sections 1.2, 1.6B, 1.13; Track 2 stop)" >&2
+  exit 1
+fi
+if ! printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU4' | grep -Fq '56-101'; then
+  echo "FATAL: GPU4 is not on NUMA1 CPUs 56-101 as in the accepted Phase-0 topology; the fixed identity GPU map and the Step-B mask derivations are no longer valid (TASK-009 Sections 1.2, 1.6B, 1.13; Track 2 stop)" >&2
+  exit 1
+fi
+for PAIR in "NIC0: mlx5_0" "NIC1: mlx5_1" "NIC2: mlx5_2" "NIC3: mlx5_3" "NIC4: mlx5_4" "NIC5: mlx5_5" "NIC6: mlx5_8" "NIC7: mlx5_9"; do
+  if ! printf '%s\n' "$TOPO_MATRIX" | grep -Fq "$PAIR"; then
+    echo "FATAL: topology legend no longer maps '${PAIR}'; the retained platform identity is no longer valid (TASK-009 Section 1.13; Track 2 stop)" >&2
+    exit 1
+  fi
+done
+# Extract the live NUMA CPU ranges for the Step-B mask builder (last field of
+# the GPU0/GPU4 data rows = CPU Affinity column) and pin them to the accepted
+# Phase-0 values; all Step-B masks are derived from these live ranges.
+NUMA0_RANGE="$(printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU0[[:space:]]' | awk '{print $NF}' | head -n 1)"
+NUMA1_RANGE="$(printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU4[[:space:]]' | awk '{print $NF}' | head -n 1)"
+if [ "$NUMA0_RANGE" != "0-49" ] || [ "$NUMA1_RANGE" != "56-101" ]; then
+  echo "FATAL: extracted NUMA CPU ranges (NUMA0='${NUMA0_RANGE}', NUMA1='${NUMA1_RANGE}') differ from the accepted Phase-0 values 0-49 / 56-101 (TASK-009 Sections 1.2, 1.6B, 1.13; Track 2 stop)" >&2
+  exit 1
+fi
+NUMA0_START="${NUMA0_RANGE%%-*}"; NUMA0_END="${NUMA0_RANGE##*-}"
+NUMA1_START="${NUMA1_RANGE%%-*}"; NUMA1_END="${NUMA1_RANGE##*-}"
+NUMA0_COUNT=$((NUMA0_END - NUMA0_START + 1))
+NUMA1_COUNT=$((NUMA1_END - NUMA1_START + 1))
+echo "topology_gate=PASS (cpuset=${CPUSET} mems=${MEMSET} gpus=${NGPU_VISIBLE} hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(${NUMA0_RANGE},${NUMA0_COUNT}cpus) GPU4->NUMA1(${NUMA1_RANGE},${NUMA1_COUNT}cpus) NIC legend matches Phase-0)"
+
+# --- Environment (validated module set) ------------------------------------------
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+# Record the incoming job-shell OpenMP environment BEFORE any per-arm
+# override (TASK-009 Section 1.3: PBS has previously populated/clobbered
+# OMP_NUM_THREADS with the allocation CPU count; the per-arm exports below
+# re-establish the selected controls after this environment is in place).
+echo "incoming job-shell OpenMP environment (before per-arm overrides):"
+echo "  OMP_NUM_THREADS=${OMP_NUM_THREADS:-UNSET}"
+echo "  OMP_PLACES=${OMP_PLACES:-UNSET}"
+echo "  OMP_PROC_BIND=${OMP_PROC_BIND:-UNSET}"
+# The Step-A/B arms and the C0 control policy require OMP_PLACES and
+# OMP_PROC_BIND to be OMITTED from the job environment (TASK-009 Sections
+# 1.3, 1.5A): guarantee the omission against any PBS/module clobbering.
+# run_arm re-applies this before every Step-A/B arm (and after any Step-C
+# explicit arm has set them), so a stale value can never leak into a
+# scored launch.
+unset OMP_PLACES OMP_PROC_BIND
+
+# --- Environment provenance records (PBS stdout) -----------------------------------
+# Read-only records for the PBS .o evidence, taken right after the validated
+# module load. 'module list' is an OPTIONAL record: it must not fail the job
+# (warn and continue). The Apptainer and container-MPI version invocations
+# are REQUIRED runtime checks (the rank-map probe and every scored arm launch
+# through these exact runtimes): each rc is captured explicitly and a nonzero
+# rc aborts deterministically BEFORE any scored work (workflow/03 preflight
+# rule: a tool check is fatal when the next command directly depends on the
+# tool). No external image-digest inspection is performed.
+echo "=== loaded modules (module list; optional record, non-fatal) ==="
+module list 2>&1 || echo "warn: 'module list' failed (optional provenance record; continuing)"
+
+APPTAINER_RC=0
+APPTAINER_VERSION_OUTPUT="$(apptainer --version 2>&1)" || APPTAINER_RC=$?
+echo "=== apptainer version (required runtime; rc=${APPTAINER_RC}) ==="
+echo "${APPTAINER_VERSION_OUTPUT:-<no output>}"
+if [ "$APPTAINER_RC" -ne 0 ]; then
+  echo "FATAL: 'apptainer --version' failed with rc=${APPTAINER_RC}; apptainer is the required container runtime for every launch in this sweep (deterministic abort before scored work)" >&2
+  exit 1
+fi
+
+# Container MPI version: lightweight read-only query of the exact container
+# mpirun binary the rank-map probe and every scored arm launch, through the
+# same apptainer exec prefix and bind mounts as those launches, run BEFORE
+# the rank-map probe. REQUIRED runtime: a nonzero rc aborts deterministically
+# before scored work (the probe and arms would fail identically).
+CONTAINER_MPI_RC=0
+CONTAINER_MPI_VERSION_OUTPUT="$(apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun --version 2>&1)" || CONTAINER_MPI_RC=$?
+echo "=== container MPI version (/usr/local/mpi/bin/mpirun --version; required runtime; rc=${CONTAINER_MPI_RC}) ==="
+echo "${CONTAINER_MPI_VERSION_OUTPUT:-<no output>}"
+if [ "$CONTAINER_MPI_RC" -ne 0 ]; then
+  echo "FATAL: container mpirun --version query failed with rc=${CONTAINER_MPI_RC}; the container MPI runtime is required for the rank-map probe and every scored arm (deterministic abort before scored work)" >&2
+  exit 1
+fi
+
+# --- Pre-sweep hardware-health snapshot (ordinary evidence; must not block) ------
+echo "=== pre-sweep hardware-health snapshot (mother node $(hostname)) ==="
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# De-duplicated hostfile with explicit per-node slot count (GAAS Blocker 8);
+# shared by the rank-map probe, the per-arm env probes and all arms in this
+# allocation.
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# --- Attempt-evidence guard (never overwrite existing evidence) -------------------
+# Every arm writes attempt-specific .out/.err/.status files, and the
+# allocation writes one rank-map .log, one env-map .log and one carry-forward
+# .log. The arm set is carry-forward dependent, so the guard covers the
+# MAXIMAL approved label set: Step A (5 thread counts), Step B (3 explicit
+# policies x 5 thread counts), Step C (5 placement cells x 4 CPU policies x
+# 5 thread counts). If any target file already exists, this ATTEMPT_TAG was
+# already (partially) used: abort before running anything; a rerun must take
+# a new ATTEMPT_TAG.
+GUARD_LABELS=()
+for T in "${STEP_A_THREADS[@]}"; do
+  GUARD_LABELS+=("a-omp${T}")
+done
+for T in "${STEP_A_THREADS[@]}"; do
+  GUARD_LABELS+=("b1-cpu-loose-t${T}" "b2-cpu-medium-t${T}" "b3-cpu-strict-t${T}")
+done
+for T in "${STEP_A_THREADS[@]}"; do
+  for POL in free loose medium strict; do
+    for CELL in sockets-close sockets-spread cores-true cores-close cores-spread; do
+      GUARD_LABELS+=("c-${CELL}-t${T}-${POL}")
+    done
+  done
+done
+for LABEL in "${GUARD_LABELS[@]}"; do
+  ATTEMPT="${EXPERIMENT_ID}_${LABEL}_${ATTEMPT_TAG}"
+  for SUFFIX in out err status; do
+    if [ -e "${OUTDIR}/${ATTEMPT}.${SUFFIX}" ]; then
+      echo "FATAL: refusing to overwrite existing evidence ${OUTDIR}/${ATTEMPT}.${SUFFIX}; resubmit with a new ATTEMPT_TAG" >&2
+      exit 1
+    fi
+  done
+done
+for LOGKIND in rankmap envmap carryforward; do
+  if [ -e "${OUTDIR}/${EXPERIMENT_ID}_${LOGKIND}_${ATTEMPT_TAG}.log" ]; then
+    echo "FATAL: refusing to overwrite existing evidence ${OUTDIR}/${EXPERIMENT_ID}_${LOGKIND}_${ATTEMPT_TAG}.log; resubmit with a new ATTEMPT_TAG" >&2
+    exit 1
+  fi
+done
+
+# --- Allocation-level rank-map probe (TASK-009 Sections 1.3, 1.8, 1.12) -----------
+# One lightweight 16-rank MPI mapping probe BEFORE any scored arm, using the
+# SAME shared hostfile and the SAME container mpirun + bridge + daemon flags
+# as the scored launch (only PATH/LD_LIBRARY_PATH are -x forwarded, exactly
+# like the validated launches). Diagnostic only: it adds no communication
+# tracing and must not alter scientific controls. It preserves global_rank /
+# local_rank / hostname for all 16 ranks (confirming 16 MPI ranks, 8
+# ranks/node) AND the INCOMING OMP_NUM_THREADS / OMP_PLACES / OMP_PROC_BIND
+# values seen inside each rank's execution environment with no OMP override
+# in effect (TASK-009 Section 1.3 deliverable: what the execution
+# environment supplies before TASK-009's per-arm controls are applied).
+#
+# The per-host topology validation is retained unchanged from the validated
+# TASK-008 two-host gate: node-local rank 0 on each allocated host reports
+# the local node topology facts into the SAME rank-map log (hostname,
+# cpuset, Mems_allowed_list, GPU count, the eight 400G IB HCAs, and the full
+# nvidia-smi topo -m), and the per-host gate below requires BOTH allocated
+# hosts to match the accepted Phase-0 topology before any scored arm
+# (replacement-node eligibility; a pair such as g13+g15 may include a node
+# with no accepted Phase-0 capture).
+RANKMAP_LOG="${OUTDIR}/${EXPERIMENT_ID}_rankmap_${ATTEMPT_TAG}.log"
+RC=0
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    bash -c '
+      # Mapping line for every rank, including the incoming OpenMP
+      # environment (no OMP variable is -x forwarded in this probe, so the
+      # reported values are what the rank execution environment supplies
+      # before TASK-009 per-arm overrides).
+      if [ "${OMPI_COMM_WORLD_LOCAL_RANK:-}" = "0" ]; then
+        # Node-local rank 0 only, once per host: read-only report of the
+        # local node topology facts into the same rank-map log. No
+        # scientific control is touched; a failed query yields a missing or
+        # empty fact, which the per-host gate below fails safely.
+        H="$(hostname)"
+        echo "topo host=${H} begin local_rank0 global_rank=${OMPI_COMM_WORLD_RANK}"
+        L="$(grep -F "Cpus_allowed_list:" /proc/self/status || true)"
+        L="${L#*:}"; L="${L//[[:space:]]/}"
+        echo "topo host=${H} cpuset=${L:-missing}"
+        M="$(grep -F "Mems_allowed_list:" /proc/self/status || true)"
+        M="${M#*:}"; M="${M//[[:space:]]/}"
+        echo "topo host=${H} mems=${M:-missing}"
+        NG="$(nvidia-smi -L 2>/dev/null | wc -l || true)"
+        NG="${NG//[[:space:]]/}"
+        echo "topo host=${H} ngpus=${NG:-missing}"
+        for D in mlx5_0 mlx5_1 mlx5_2 mlx5_3 mlx5_4 mlx5_5 mlx5_8 mlx5_9; do
+          if [ -d "/sys/class/infiniband/${D}" ]; then
+            echo "topo host=${H} hca=${D} present=yes"
+          else
+            echo "topo host=${H} hca=${D} present=no"
+          fi
+        done
+        nvidia-smi topo -m 2>/dev/null | while IFS= read -r LINE; do
+          echo "topo host=${H} topo_m=${LINE}"
+        done
+        echo "topo host=${H} end local_rank0"
+      fi
+      echo "rank=${OMPI_COMM_WORLD_RANK}/${OMPI_COMM_WORLD_SIZE} host=$(hostname) local_rank=${OMPI_COMM_WORLD_LOCAL_RANK}/${OMPI_COMM_WORLD_LOCAL_SIZE} omp_num_threads=${OMP_NUM_THREADS:-UNSET} omp_places=${OMP_PLACES:-UNSET} omp_proc_bind=${OMP_PROC_BIND:-UNSET}"
+    ' \
+  > "$RANKMAP_LOG" 2>&1 || RC=$?
+
+# Mechanical gate: the probe must have exited 0, emitted exactly NPROCS rank
+# lines, exactly EXPECTED_NODES distinct hostnames, and exactly GPUS rank
+# lines per host. Otherwise abort BEFORE any scored arm (launch/rank-mapping
+# problem; Track 2 stop); the probe evidence is preserved in RANKMAP_LOG and
+# a rerun needs a new ATTEMPT_TAG.
+RANK_LINES=$(grep -c "^rank=" "$RANKMAP_LOG" || true)
+HOST_COUNT=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); seen[$2] = 1 } END { n = 0; for (h in seen) n++; print n }' || true)
+MIN_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] < m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+MAX_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] > m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+if [ "$MIN_RANKS_PER_HOST" = "$MAX_RANKS_PER_HOST" ]; then
+  RANKS_PER_HOST_SUMMARY="$MIN_RANKS_PER_HOST"
+else
+  RANKS_PER_HOST_SUMMARY="${MIN_RANKS_PER_HOST}-${MAX_RANKS_PER_HOST}"
+fi
+echo "=== rank-map probe: rc=${RC} rank_lines=${RANK_LINES} hosts=${HOST_COUNT} ranks_per_host=${RANKS_PER_HOST_SUMMARY} log=${RANKMAP_LOG} ==="
+if [ "$RC" -ne 0 ] || [ "$RANK_LINES" -ne "$NPROCS" ] || [ "$HOST_COUNT" -ne "$EXPECTED_NODES" ] || [ "$MIN_RANKS_PER_HOST" -ne "$GPUS" ] || [ "$MAX_RANKS_PER_HOST" -ne "$GPUS" ]; then
+  echo "FATAL: rank-map probe failed its mechanical check (rc=${RC} rank_lines=${RANK_LINES} hosts=${HOST_COUNT} ranks_per_host=${RANKS_PER_HOST_SUMMARY}; launch/rank-mapping problem; Track 2 stop; evidence preserved in ${RANKMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+  exit 1
+fi
+
+# Incoming-OpenMP-environment gate (TASK-009 Sections 1.3, 1.5A, 1.13): the
+# Step-A/B arms and the C0 control policy require OMP_PLACES and OMP_PROC_BIND
+# to be omitted from the rank execution environment so the installed
+# launcher's package defaults (OMP_PROC_BIND=TRUE, OMP_PLACES=sockets) remain
+# the effective policy. The job shell unsets them above; this gate verifies
+# the INCOMING values on every rank (no -x override in the probe). Any rank
+# reporting a set OMP_PLACES or OMP_PROC_BIND means the omission cannot be
+# guaranteed on all ranks and the Step-A control family cannot execute as
+# approved (Track 2 stop before scored work; evidence preserved). The
+# incoming OMP_NUM_THREADS values are recorded as evidence only: PBS has
+# previously clobbered it with the allocation CPU count, and every scored
+# arm re-exports the selected thread count and -x forwards it, which
+# overrides any incoming value on every rank.
+OMP_PLACES_SET_LINES=$(grep "^rank=" "$RANKMAP_LOG" | grep -vcF "omp_places=UNSET" || true)
+OMP_BIND_SET_LINES=$(grep "^rank=" "$RANKMAP_LOG" | grep -vcF "omp_proc_bind=UNSET" || true)
+echo "incoming OMP environment across ${RANK_LINES} ranks: ranks_with_OMP_PLACES_set=${OMP_PLACES_SET_LINES} ranks_with_OMP_PROC_BIND_set=${OMP_BIND_SET_LINES}"
+echo "incoming OMP_NUM_THREADS values seen (evidence; neutralized per arm by explicit export + -x forwarding):"
+grep "^rank=" "$RANKMAP_LOG" | sed 's/^/  /'
+if [ "$OMP_PLACES_SET_LINES" -ne 0 ] || [ "$OMP_BIND_SET_LINES" -ne 0 ]; then
+  echo "FATAL: incoming OMP_PLACES/OMP_PROC_BIND are set on some ranks (OMP_PLACES_set=${OMP_PLACES_SET_LINES}, OMP_PROC_BIND_set=${OMP_BIND_SET_LINES}); the 'omitted' placement-control policy required by TASK-009 Sections 1.5A/1.6A cannot be guaranteed on all ranks, so the Step-A control family cannot execute as approved (TASK-009 Section 1.13; Track 2 stop; evidence preserved in ${RANKMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+  exit 1
+fi
+echo "incoming_openmp_gate=PASS (OMP_PLACES/OMP_PROC_BIND unset on all ${RANK_LINES} ranks; launcher package defaults remain the effective placement policy for omitted arms)"
+
+# Per-host topology gate (two-host gate; TASK-009 Sections 1.2, 1.12, 1.13):
+# verify the local-rank-0 topology report collected by the probe above for
+# EVERY distinct host in the rank map (the mechanical gate already fixed the
+# host set at exactly EXPECTED_NODES hosts with GPUS ranks each). Each host
+# must match the accepted Phase-0 topology the retained GPU/NUMA identity
+# map and the Step-B mask derivations require - the same assertions as the
+# mother-node gate above, now applied to BOTH allocated nodes. Any mismatch
+# means the retained topology assumptions are invalid on that host: the
+# rank-map stage FAILS and aborts BEFORE any scored arm (observational
+# preflight failure; Track 2 stop, no auto retry), with the per-host reports
+# preserved in RANKMAP_LOG; a rerun needs a new ATTEMPT_TAG.
+TOPO_FAILED_HOSTS=""
+for TOPO_HOST in $(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); print $2 }' | sort -u); do
+  TOPO_OK=1
+  if [ "$(grep -c "^topo host=${TOPO_HOST} begin local_rank0" "$RANKMAP_LOG" || true)" -ne 1 ] \
+     || [ "$(grep -c "^topo host=${TOPO_HOST} end local_rank0$" "$RANKMAP_LOG" || true)" -ne 1 ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: expected exactly one local-rank-0 topology report (begin=$(grep -c "^topo host=${TOPO_HOST} begin local_rank0" "$RANKMAP_LOG" || true) end=$(grep -c "^topo host=${TOPO_HOST} end local_rank0$" "$RANKMAP_LOG" || true))" >&2
+    TOPO_OK=0
+  fi
+  TOPO_VAL="$(grep "^topo host=${TOPO_HOST} cpuset=" "$RANKMAP_LOG" | head -n 1 || true)"
+  if [ "$TOPO_VAL" != "topo host=${TOPO_HOST} cpuset=0-49,56-101" ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: cpuset is not the accepted Phase-0 value 0-49,56-101 (reported: '${TOPO_VAL:-<none>}')" >&2
+    TOPO_OK=0
+  fi
+  TOPO_VAL="$(grep "^topo host=${TOPO_HOST} mems=" "$RANKMAP_LOG" | head -n 1 || true)"
+  if [ "$TOPO_VAL" != "topo host=${TOPO_HOST} mems=0-1" ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: Mems_allowed_list is not the accepted Phase-0 value 0-1 (reported: '${TOPO_VAL:-<none>}')" >&2
+    TOPO_OK=0
+  fi
+  TOPO_VAL="$(grep "^topo host=${TOPO_HOST} ngpus=" "$RANKMAP_LOG" | head -n 1 || true)"
+  if [ "$TOPO_VAL" != "topo host=${TOPO_HOST} ngpus=8" ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: expected 8 GPUs on this host (reported: '${TOPO_VAL:-<none>}')" >&2
+    TOPO_OK=0
+  fi
+  for TOPO_HCA in mlx5_0 mlx5_1 mlx5_2 mlx5_3 mlx5_4 mlx5_5 mlx5_8 mlx5_9; do
+    if ! grep -q "^topo host=${TOPO_HOST} hca=${TOPO_HCA} present=yes$" "$RANKMAP_LOG"; then
+      echo "  host=${TOPO_HOST} topology_gate=FAIL: expected IB HCA ${TOPO_HCA} not reported present (accepted Phase-0 inventory: mlx5_0..mlx5_5,mlx5_8,mlx5_9)" >&2
+      TOPO_OK=0
+    fi
+  done
+  # Row selection is whitespace-tolerant (same precedent as the mother-node
+  # gate): the GPU0/GPU4 NUMA anchors verify the GPU enumeration still
+  # matches the Phase-0 identity map the Step-B masks are derived from.
+  if ! grep "^topo host=${TOPO_HOST} topo_m=" "$RANKMAP_LOG" | grep "topo_m=[[:space:]]*GPU0[[:space:]]" | grep -Fq "0-49"; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: GPU0 is not on NUMA0 CPUs 0-49 as in the accepted Phase-0 topology (full matrix preserved in the rank-map log)" >&2
+    TOPO_OK=0
+  fi
+  if ! grep "^topo host=${TOPO_HOST} topo_m=" "$RANKMAP_LOG" | grep "topo_m=[[:space:]]*GPU4[[:space:]]" | grep -Fq "56-101"; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: GPU4 is not on NUMA1 CPUs 56-101 as in the accepted Phase-0 topology (full matrix preserved in the rank-map log)" >&2
+    TOPO_OK=0
+  fi
+  for TOPO_PAIR in "NIC0: mlx5_0" "NIC1: mlx5_1" "NIC2: mlx5_2" "NIC3: mlx5_3" "NIC4: mlx5_4" "NIC5: mlx5_5" "NIC6: mlx5_8" "NIC7: mlx5_9"; do
+    if ! grep "^topo host=${TOPO_HOST} topo_m=" "$RANKMAP_LOG" | grep -Fq "$TOPO_PAIR"; then
+      echo "  host=${TOPO_HOST} topology_gate=FAIL: topology legend no longer maps '${TOPO_PAIR}' (retained platform identity invalid on this host)" >&2
+      TOPO_OK=0
+    fi
+  done
+  if [ "$TOPO_OK" -eq 1 ]; then
+    echo "  host=${TOPO_HOST} topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)"
+  else
+    TOPO_FAILED_HOSTS="${TOPO_FAILED_HOSTS} ${TOPO_HOST}"
+  fi
+done
+if [ -n "$TOPO_FAILED_HOSTS" ]; then
+  echo "rankmap_per_host_topology_gate=FAIL (failed hosts:${TOPO_FAILED_HOSTS})" >&2
+  echo "FATAL: rank-map probe per-host topology gate failed on${TOPO_FAILED_HOSTS}; a host that does not match the accepted Phase-0 topology invalidates the retained GPU/NUMA identity map and the Step-B mask derivations (TASK-009 Sections 1.2, 1.6B, 1.12, 1.13; aborting BEFORE any scored arm; Track 2 stop; evidence preserved in ${RANKMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+  exit 1
+fi
+echo "rankmap_per_host_topology_gate=PASS (every allocated host matches the accepted Phase-0 topology; per-host reports preserved in ${RANKMAP_LOG})"
+
+# --- Step-A executability confirmation (TASK-009 Section 1.5B) ---------------------
+# Record the allocated cpuset on both nodes (done above: mother-node gate +
+# per-host gate, both pinned to 0-49,56-101) and confirm the five thread
+# counts are executable without changing the approved resource shape: the
+# free CPU policy leaves all 96 scheduled CPUs per node available to each
+# rank, so even the largest approved count (12) is far below the available
+# CPUs; Step A intentionally allows the runtime to use the retained free CPU
+# policy (the candidate list does not imply one private CPU per OpenMP
+# thread). The explicit-policy feasibility table for Step B is derived and
+# recorded in the carry-forward log below.
+TOTAL_SCHEDULED_CPUS=$((NUMA0_COUNT + NUMA1_COUNT))
+STEP_A_MAX_T=12
+if [ "$STEP_A_MAX_T" -gt "$TOTAL_SCHEDULED_CPUS" ]; then
+  echo "FATAL: largest approved Step-A thread count ${STEP_A_MAX_T} exceeds the ${TOTAL_SCHEDULED_CPUS} scheduled CPUs per node (TASK-009 Section 1.5B)" >&2
+  exit 1
+fi
+echo "stepA_executability=PASS (allocated cpuset ${CPUSET} on both nodes = ${TOTAL_SCHEDULED_CPUS} CPUs/node; largest approved OMP_NUM_THREADS=${STEP_A_MAX_T} << ${TOTAL_SCHEDULED_CPUS}; free CPU policy retained for Step A)"
+
+# --- Helper functions --------------------------------------------------------------
+# Overall HPL-MxP GFLOP/s from an application .out file (first "GFLOPS = "
+# match is the overall score; "LU GFLOPS" appears later), or empty.
+extract_gflops() {
+  grep -o 'GFLOPS = [0-9.eE+-]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $3 }' || true
+}
+
+# LU factorization time (AVG seconds) from "LU seconds: AVG = <v>, ...".
+extract_lu_seconds() {
+  grep -o 'LU seconds: AVG = [0-9.]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $5 }' || true
+}
+
+# LU GFLOP/s from "LU GFLOPS = <v>, per GPU = ...".
+extract_lu_gflops() {
+  grep -o 'LU GFLOPS = [0-9.eE+-]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $4 }' || true
+}
+
+# Iterative-refinement time (AVG seconds) from
+# "Iterative Solver seconds: AVG = <v>, ...".
+extract_ir_seconds() {
+  grep -o 'Iterative Solver seconds: AVG = [0-9.]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $6 }' || true
+}
+
+# Solver iteration count from the "Solver iteration <k>, ..." lines.
+count_solver_iterations() {
+  grep -c '^Solver iteration' "$1" 2>/dev/null || true
+}
+
+# Last line of the .out containing the fixed string (raw emitted evidence).
+capture_line() {
+  grep -F "$2" "$1" 2>/dev/null | tail -n 1 || true
+}
+
+# Mechanical IR/LU time ratio (TASK-009 Section 1.8 factual derived value),
+# or empty when either input is missing/non-numeric.
+ir_lu_ratio() {
+  awk -v ir="$1" -v lu="$2" 'BEGIN { if (ir ~ /^[0-9.]+$/ && lu ~ /^[0-9.]+$/ && lu > 0) printf "%.3f", ir / lu }' || true
+}
+
+# gt2pct <candidate> <base>: returns 0 iff candidate is strictly >2.0% above
+# base (the TASK-009 pre-authorized gate; a value exactly 2.0% above does NOT
+# clear the gate).
+gt2pct() {
+  awk -v c="$1" -v b="$2" 'BEGIN { exit (c > b * 1.02) ? 0 : 1 }'
+}
+
+# within2pct <candidate> <reference>: returns 0 iff candidate is within 2.0%
+# of reference (candidate >= reference * 0.98); the Step-A plateau membership
+# rule (TASK-009 Section 1.5D rule 2: candidates within 2.0% of the highest
+# valid score form the plateau).
+within2pct() {
+  awk -v c="$1" -v r="$2" 'BEGIN { exit (c >= r * 0.98) ? 0 : 1 }'
+}
+
+# gt_num <a> <b>: returns 0 iff a > b (plain numeric comparison for
+# tie-breaking).
+gt_num() {
+  awk -v a="$1" -v b="$2" 'BEGIN { exit (a > b) ? 0 : 1 }'
+}
+
+# Mechanical carry-forward decision log (evidence; also echoed to job stdout).
+CFLOG="${OUTDIR}/${EXPERIMENT_ID}_carryforward_${ATTEMPT_TAG}.log"
+cflog() { echo "$*" | tee -a "$CFLOG"; }
+
+# Per-arm effective-OMP environment probe log (evidence).
+ENVMAP_LOG="${OUTDIR}/${EXPERIMENT_ID}_envmap_${ATTEMPT_TAG}.log"
+: > "$ENVMAP_LOG"
+
+# CPU-mask builders (TASK-009 Section 1.6B). All masks are derived from the
+# live NUMA ranges extracted above (NUMA0_RANGE / NUMA1_RANGE, pinned to the
+# accepted Phase-0 values by the topology gates) and the retained GPU/NUMA
+# map: node-local ranks 0-3 belong to NUMA0 (GPU0-3), ranks 4-7 to NUMA1
+# (GPU4-7). Slices are packed consecutively from the first CPU of each NUMA
+# domain (the TASK-007 mask convention: for T=8 the medium mask below is
+# exactly the validated TASK-007 B2 mask and the strict mask exactly B3).
+# build_slices <width>: emits the 8 per-rank ranges joined by ':'.
+build_slices() {
+  local W="$1" OUT="" I S E
+  for I in 0 1 2 3; do
+    S=$((NUMA0_START + I * W)); E=$((S + W - 1))
+    OUT+="${S}-${E}"
+    [ "$I" -lt 3 ] && OUT+=":"
+  done
+  OUT+=":"
+  for I in 0 1 2 3; do
+    S=$((NUMA1_START + I * W)); E=$((S + W - 1))
+    OUT+="${S}-${E}"
+    [ "$I" -lt 3 ] && OUT+=":"
+  done
+  printf '%s' "${OUT%:}"
+}
+
+# B1 loose mask: each rank receives the whole CPU set of the NUMA domain of
+# its assigned GPU; same-NUMA ranks share that broad territory (TASK-007 B1
+# mechanism, exact same mask string for every T).
+loose_mask() {
+  printf '%s' "${NUMA0_RANGE}:${NUMA0_RANGE}:${NUMA0_RANGE}:${NUMA0_RANGE}:${NUMA1_RANGE}:${NUMA1_RANGE}:${NUMA1_RANGE}:${NUMA1_RANGE}"
+}
+
+# B2 medium width for thread count T (TASK-009 Section 1.6B): T+2 CPUs/rank
+# when that width fits non-overlapping into BOTH NUMA domains (4 slices per
+# domain); otherwise the NEAREST LEGAL uniform width that still leaves
+# helper/progress headroom beyond T (width > T), if one exists. With the
+# accepted topology (50 CPUs on NUMA0, 46 on NUMA1) the binding constraint
+# is NUMA1: max legal uniform width = floor(46/4) = 11. Prints the width, or
+# nothing when infeasible.
+medium_width() {
+  local T="$1" W_MAX
+  W_MAX=$(( NUMA1_COUNT / 4 ))
+  if [ "$NUMA0_COUNT" -lt "$NUMA1_COUNT" ]; then W_MAX=$(( NUMA0_COUNT / 4 )); fi
+  if [ $((4 * (T + 2))) -le "$NUMA0_COUNT" ] && [ $((4 * (T + 2))) -le "$NUMA1_COUNT" ]; then
+    echo $((T + 2))
+  elif [ "$W_MAX" -gt "$T" ]; then
+    echo "$W_MAX"
+  fi
+}
+
+# B3 strict width for thread count T: exactly T CPUs/rank when that fits
+# non-overlapping into BOTH NUMA domains; otherwise infeasible (recorded and
+# skipped per TASK-009 Section 1.6C: no improvised approximation).
+# Prints the width, or nothing when infeasible.
+strict_width() {
+  local T="$1"
+  if [ $((4 * T)) -le "$NUMA0_COUNT" ] && [ $((4 * T)) -le "$NUMA1_COUNT" ]; then
+    echo "$T"
+  fi
+}
+
+# Per-arm score/validity/exit records.
+declare -A ARM_SCORE ARM_VALID ARM_EXIT
+# Step-B mask cache: CPU_MASK[t<T>-<policy>] for loose/medium/strict.
+declare -A CPU_MASK
+# Host candidate registry: HOSTC_T[i] / HOSTC_POL[i] / HOSTC_SCORE[i].
+HOSTC_T=(); HOSTC_POL=(); HOSTC_SCORE=()
+FAILURES=0
+INVALID_ARMS=0
+ARMS_RUN=0
+
+# run_env_probe <key> <omp_threads> <omp_places|"_UNSET_"> <omp_bind|"_UNSET_">
+# Establishes the arm's OpenMP environment (explicit OMP_NUM_THREADS export
+# plus OMP_PLACES/OMP_PROC_BIND exports for Step-C explicit arms, guaranteed
+# unset otherwise), runs one lightweight 16-rank probe with the EXACT -x
+# forwarding set of the arm it precedes (PATH, LD_LIBRARY_PATH,
+# OMP_NUM_THREADS, plus OMP_PLACES/OMP_PROC_BIND for Step-C explicit arms)
+# and the same hostfile/daemon flags as the scored launch, then verifies
+# every rank reports the intended effective OMP values and appends the
+# per-rank lines to ENVMAP_LOG. This is the TASK-009 Section 1.3/1.8
+# "effective OpenMP values seen inside the execution environment" evidence.
+# On success the shell environment is left in the arm's intended state so
+# the immediately following scored launch inherits exactly the verified
+# controls. A mismatch means the arm's controls are not effectively applied
+# on all ranks: abort BEFORE that arm's scored launch
+# (control-application failure; TASK-009 Section 1.13; evidence preserved).
+# No workload runs in the probe.
+run_env_probe() {
+  PROBE_KEY="$1"; PROBE_T="$2"; PROBE_PL="$3"; PROBE_PB="$4"
+  local XARGS=(-x PATH -x LD_LIBRARY_PATH -x OMP_NUM_THREADS)
+  local EXPECT_PL="UNSET" EXPECT_PB="UNSET"
+  export OMP_NUM_THREADS="$PROBE_T"
+  if [ "$PROBE_PL" != "_UNSET_" ]; then
+    XARGS+=(-x OMP_PLACES -x OMP_PROC_BIND)
+    export OMP_PLACES="$PROBE_PL"; export OMP_PROC_BIND="$PROBE_PB"
+    EXPECT_PL="$PROBE_PL"; EXPECT_PB="$PROBE_PB"
+  else
+    unset OMP_PLACES OMP_PROC_BIND
+  fi
+  local TMP; TMP="$PWD/envprobe.tmp"
+  local PRC=0
+  apptainer exec --nv \
+    -B /opt/pbs:/opt/pbs \
+    -B /var/spool/pbs:/var/spool/pbs \
+    -B "$REPO_ROOT":"$REPO_ROOT" \
+    "$SIF" \
+    /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+      --hostfile "$PWD/hostfile" \
+      --mca plm_rsh_agent "$BRIDGE" \
+      --mca plm_rsh_no_tree_spawn 1 \
+      --mca plm_rsh_num_concurrent 1 \
+      --mca routed direct \
+      "${XARGS[@]}" \
+      --bind-to none \
+      bash -c 'echo "rank=${OMPI_COMM_WORLD_RANK}/${OMPI_COMM_WORLD_SIZE} host=$(hostname) local_rank=${OMPI_COMM_WORLD_LOCAL_RANK}/${OMPI_COMM_WORLD_LOCAL_SIZE} omp_num_threads=${OMP_NUM_THREADS:-UNSET} omp_places=${OMP_PLACES:-UNSET} omp_proc_bind=${OMP_PROC_BIND:-UNSET}"' \
+    > "$TMP" 2>&1 || PRC=$?
+  local LINES NT_OK PL_OK PB_OK
+  LINES=$(grep -c '^rank=' "$TMP" || true)
+  NT_OK=$(grep -cF " omp_num_threads=${PROBE_T} omp_places=" "$TMP" || true)
+  PL_OK=$(grep -cF " omp_places=${EXPECT_PL} omp_proc_bind=" "$TMP" || true)
+  PB_OK=$(grep -F " omp_proc_bind=${EXPECT_PB}" "$TMP" | grep -c '^rank=' || true)
+  {
+    echo "envprobe arm=${PROBE_KEY} start=$(date --iso-8601=seconds) rc=${PRC}"
+    sed "s/^/arm=${PROBE_KEY} /" "$TMP"
+  } >> "$ENVMAP_LOG"
+  echo "=== env probe arm=${PROBE_KEY}: rc=${PRC} rank_lines=${LINES} omp_num_threads=${PROBE_T}_ok=${NT_OK} omp_places=${EXPECT_PL}_ok=${PL_OK} omp_proc_bind=${EXPECT_PB}_ok=${PB_OK} ==="
+  if [ "$PRC" -ne 0 ] || [ "$LINES" -ne "$NPROCS" ] || [ "$NT_OK" -ne "$NPROCS" ] || [ "$PL_OK" -ne "$NPROCS" ] || [ "$PB_OK" -ne "$NPROCS" ]; then
+    echo "FATAL: env probe for arm ${PROBE_KEY} failed its control-application check (rc=${PRC} rank_lines=${LINES}/${NPROCS} omp_num_threads=${PROBE_T}_ok=${NT_OK}/${NPROCS} omp_places=${EXPECT_PL}_ok=${PL_OK}/${NPROCS} omp_proc_bind=${EXPECT_PB}_ok=${PB_OK}/${NPROCS}); the arm's OpenMP controls would not be effectively applied on all ranks, so the scored launch is aborted (TASK-009 Section 1.13; evidence preserved in ${ENVMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+    exit 1
+  fi
+}
+
+# run_arm <key> <label> <step> <omp_threads> <omp_places|""> <omp_bind|""> <cpu_affinity|"">
+# Runs one scored arm with the validated Approach-1 launch at the fixed
+# controls, then extracts the overall GFLOP/s, LU/IR timing, iteration count,
+# memory evidence, and verification verdict, and writes the arm's .status
+# file (TASK-009 Section 1.8). The per-arm environment is established first
+# (explicit OMP_NUM_THREADS re-export after the module/job environment,
+# OMP_PLACES/OMP_PROC_BIND set only for Step-C explicit arms and guaranteed
+# unset otherwise), verified by the per-arm env probe, and then launched with
+# the matching -x forwarding set. A nonzero exit or an invalid verification
+# is recorded and the sweep continues (isolated arm failure is evidence; no
+# in-script retry).
+run_arm() {
+  KEY="$1"; LABEL="$2"; STEP="$3"; OMP_T="$4"; OMP_PL="$5"; OMP_PB="$6"; CA="$7"
+  ATTEMPT="${EXPERIMENT_ID}_${LABEL}_${ATTEMPT_TAG}"
+  STDOUT_FILE="${OUTDIR}/${ATTEMPT}.out"
+  STDERR_FILE="${OUTDIR}/${ATTEMPT}.err"
+  STATUS_FILE="${OUTDIR}/${ATTEMPT}.status"
+
+  # Establish the arm's OpenMP environment (TASK-009 Section 1.3): explicitly
+  # re-export the selected thread count after the module/job environment,
+  # guarantee the placement-policy omission for Step-A/B arms, and run the
+  # control-application probe with the arm's exact -x set. On success the
+  # probe leaves the shell environment in this arm's intended state, which
+  # the scored launch below inherits (OMP_NUM_THREADS plus, for Step-C
+  # explicit arms, OMP_PLACES/OMP_PROC_BIND).
+  unset OMP_PLACES OMP_PROC_BIND
+  if [ -n "$OMP_PL" ]; then
+    run_env_probe "$KEY" "$OMP_T" "$OMP_PL" "$OMP_PB"
+  else
+    run_env_probe "$KEY" "$OMP_T" "_UNSET_" "_UNSET_"
+  fi
+
+  # Effective OpenMP policy for the record: supplied values, or the installed
+  # launcher's package defaults when omitted (captured v26.02 launcher:
+  # OMP_PROC_BIND=${OMP_PROC_BIND:-TRUE}, OMP_PLACES=${OMP_PLACES:-sockets}).
+  if [ -n "$OMP_PL" ]; then
+    EFF_PL="${OMP_PL} (explicit)"; EFF_PB="${OMP_PB} (explicit)"
+    ENV_XARGS=(-x PATH -x LD_LIBRARY_PATH -x OMP_NUM_THREADS -x OMP_PLACES -x OMP_PROC_BIND)
+  else
+    EFF_PL="sockets (launcher package default)"; EFF_PB="TRUE (launcher package default)"
+    ENV_XARGS=(-x PATH -x LD_LIBRARY_PATH -x OMP_NUM_THREADS)
+  fi
+
+  START_TS="$(date --iso-8601=seconds)"
+  echo "=== arm ${KEY} (${LABEL}) step=${STEP} attempt=${ATTEMPT} omp_num_threads=${OMP_T} omp_places_supplied=${OMP_PL:-omitted} omp_proc_bind_supplied=${OMP_PB:-omitted} cpu_affinity=${CA:-omitted} start=${START_TS} ==="
+
+  APP_ARGS=(--n "$N_FIXED" --nb "$NB_FIXED" --nprow "$NPROW" --npcol "$NPCOL" --nporder "$NPORDER")
+  APP_ARGS+=(--gpu-affinity "$GPU_AFFINITY_FIXED")
+  if [ -n "$CA" ]; then APP_ARGS+=(--cpu-affinity "$CA"); fi
+  APP_ARGS+=(--sloppy-type FP16 --use-mpi-panel-broadcast 0 --use-separate-stream-for-gemm 1)
+  APP_ARGS+=(--prioritize-trsm 0 --prioritize-factorization 0 --fill-device 1)
+  APP_ARGS+=(--test-loop 1 --skip-tests 0 --monitor-gpu 0)
+
+  RC=0
+  apptainer exec --nv \
+    -B /opt/pbs:/opt/pbs \
+    -B /var/spool/pbs:/var/spool/pbs \
+    -B "$REPO_ROOT":"$REPO_ROOT" \
+    "$SIF" \
+    /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+      --hostfile "$PWD/hostfile" \
+      --mca plm_rsh_agent "$BRIDGE" \
+      --mca plm_rsh_no_tree_spawn 1 \
+      --mca plm_rsh_num_concurrent 1 \
+      --mca routed direct \
+      "${ENV_XARGS[@]}" \
+      --bind-to none \
+      /workspace/hpl-mxp.sh "${APP_ARGS[@]}" \
+    > "$STDOUT_FILE" 2> "$STDERR_FILE" || RC=$?
+
+  END_TS="$(date --iso-8601=seconds)"
+
+  # Extract the score, timing/iteration/memory evidence, and the verification
+  # verdict (mechanical, TASK-009 Section 1.8 / APPLICATION.md correctness
+  # criteria).
+  SCORE="$(extract_gflops "$STDOUT_FILE")"
+  LU_SECONDS="$(extract_lu_seconds "$STDOUT_FILE")"
+  LU_GFLOPS="$(extract_lu_gflops "$STDOUT_FILE")"
+  IR_SECONDS="$(extract_ir_seconds "$STDOUT_FILE")"
+  SOLVER_ITERATIONS="$(count_solver_iterations "$STDOUT_FILE")"
+  IR_LU_RATIO="$(ir_lu_ratio "${IR_SECONDS}" "${LU_SECONDS}")"
+  HOST_MEM_LINE="$(capture_line "$STDOUT_FILE" 'Per process host memory consumption MAX =')"
+  DEVICE_MEM_LINE="$(capture_line "$STDOUT_FILE" 'Per process device memory consumption MAX =')"
+  MATGEN_HEADROOM_LINE="$(capture_line "$STDOUT_FILE" 'Per process memory available MIN system =')"
+  VERDICT="INVALID"
+  RES_VAL=""
+  RES_LINE="$(grep -F '||Ax-b||_oo / (EPS' "$STDOUT_FILE" 2>/dev/null | tail -n 1 || true)"
+  if [ -n "$RES_LINE" ]; then
+    case "$RES_LINE" in
+      *PASSED*) VERDICT="PASSED" ;;
+      *FAILED*) VERDICT="FAILED" ;;
+    esac
+    case "$RES_LINE" in
+      *[Nn][Aa][Nn]*|*[Ii][Nn][Ff]*) VERDICT="INVALID_NONFINITE" ;;
+    esac
+    RES_VAL="$(printf '%s\n' "$RES_LINE" | sed -E 's/^.*= +([0-9][0-9.Ee+-]*).*$/\1/' || true)"
+    if [ -z "$RES_VAL" ]; then VERDICT="INVALID"; fi
+  fi
+  if grep -Fq 'FAILED' "$STDOUT_FILE" 2>/dev/null; then VERDICT="FAILED"; fi
+  if [ -z "$SCORE" ]; then VERDICT="INVALID_NO_SCORE"; fi
+  if ! grep -Fq '****** Matrix Generation ******' "$STDOUT_FILE" 2>/dev/null; then VERDICT="INVALID_NO_MATGEN"; fi
+  if ! grep -Fq 'LU seconds: AVG =' "$STDOUT_FILE" 2>/dev/null; then VERDICT="INVALID_NO_LU"; fi
+  if [ "$RC" -ne 0 ]; then VERDICT="INVALID_EXIT_${RC}"; fi
+
+  ARM_SCORE[$KEY]="$SCORE"
+  ARM_EXIT[$KEY]="$RC"
+  if [ "$VERDICT" = "PASSED" ]; then
+    ARM_VALID[$KEY]="yes"
+  else
+    ARM_VALID[$KEY]="no"
+    INVALID_ARMS=$((INVALID_ARMS + 1))
+  fi
+  if [ "$RC" -ne 0 ]; then
+    FAILURES=$((FAILURES + 1))
+  fi
+  ARMS_RUN=$((ARMS_RUN + 1))
+
+  if [ "$RC" -ne 0 ]; then
+    echo "=== arm ${KEY} (${LABEL}) FAILED exit_status=${RC} verdict=${VERDICT} end=${END_TS}; continuing with the next arm ==="
+  else
+    echo "=== arm ${KEY} (${LABEL}) exit_status=0 verdict=${VERDICT} gflops=${SCORE:-none} end=${END_TS} ==="
+  fi
+  {
+    echo "attempt=${ATTEMPT}"
+    echo "experiment_id=${EXPERIMENT_ID}"
+    echo "task_step=${STEP}"
+    echo "step_arm=${KEY}"
+    echo "arm_label=${LABEL}"
+    echo "pbs_job_id=${PBS_JOBID:-unknown}"
+    echo "queue=${QUEUE}"
+    echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+    echo "omp_num_threads=${OMP_T}"
+    echo "omp_num_threads_supplied_by_task=explicit job-shell export + mpirun -x OMP_NUM_THREADS (effective on all 16 ranks; verified by env probe, see ${ENVMAP_LOG})"
+    echo "omp_places_supplied=${OMP_PL:-omitted}"
+    echo "omp_proc_bind_supplied=${OMP_PB:-omitted}"
+    echo "omp_places_effective=${EFF_PL}"
+    echo "omp_proc_bind_effective=${EFF_PB}"
+    echo "gpu_affinity=${GPU_AFFINITY_FIXED}"
+    echo "mem_affinity=omitted"
+    echo "cpu_affinity=${CA:-omitted}"
+    echo "ucx_affinity=omitted"
+    echo "n=${N_FIXED}"
+    echo "nb=${NB_FIXED}"
+    echo "nprow=${NPROW}"
+    echo "npcol=${NPCOL}"
+    echo "nporder=${NPORDER}"
+    echo "fixed_controls=--n 429056 --nb 3072 --nprow 4 --npcol 4 --nporder row --gpu-affinity ${GPU_AFFINITY_FIXED} --mem-affinity omitted --ucx-affinity omitted --sloppy-type FP16 --use-mpi-panel-broadcast 0 --use-separate-stream-for-gemm 1 --prioritize-trsm 0 --prioritize-factorization 0 --fill-device 1 --test-loop 1 --skip-tests 0 --monitor-gpu 0"
+    echo "allocated_cpuset=${CPUSET}"
+    echo "numa_topology=NUMA0=${NUMA0_RANGE}(${NUMA0_COUNT}cpus) NUMA1=${NUMA1_RANGE}(${NUMA1_COUNT}cpus) ranks0-3->NUMA0 ranks4-7->NUMA1"
+    echo "start=${START_TS}"
+    echo "end=${END_TS}"
+    echo "exit_status=${RC}"
+    echo "gflops=${SCORE:-unknown}"
+    echo "lu_seconds=${LU_SECONDS:-unknown}"
+    echo "lu_gflops=${LU_GFLOPS:-unknown}"
+    echo "ir_seconds=${IR_SECONDS:-unknown}"
+    echo "solver_iterations=${SOLVER_ITERATIONS:-unknown}"
+    echo "ir_lu_ratio=${IR_LU_RATIO:-unknown}"
+    echo "host_memory=${HOST_MEM_LINE:-unknown}"
+    echo "device_memory=${DEVICE_MEM_LINE:-unknown}"
+    echo "matgen_headroom=${MATGEN_HEADROOM_LINE:-unknown}"
+    echo "verification=${VERDICT}"
+    echo "normalized_residual=${RES_VAL:-unknown}"
+    echo "stdout=${STDOUT_FILE}"
+    echo "stderr=${STDERR_FILE}"
+  } > "$STATUS_FILE"
+}
+
+# --- Step A: OMP_NUM_THREADS sweep (TASK-009 Section 1.5) --------------------------
+# Exactly the five approved thread counts, once each, in order. Controls per
+# Section 1.5A: --cpu-affinity omitted, --mem-affinity omitted, --ucx-affinity
+# omitted, OMP_PLACES/OMP_PROC_BIND omitted (launcher package defaults remain
+# the effective policy). Only OMP_NUM_THREADS varies.
+cflog "=== Step A: OMP_NUM_THREADS sweep (TASK-009 Section 1.5; candidates ${STEP_A_THREADS[*]}; one scored attempt each; only OMP_NUM_THREADS varies) ==="
+for T in "${STEP_A_THREADS[@]}"; do
+  run_arm "a${T}" "a-omp${T}" "A" "$T" "" "" ""
+done
+
+cflog "=== Step-A scores (TASK-009 Section 1.5C primary evidence; valid = exit 0 + PASSED + finite residual) ==="
+for T in "${STEP_A_THREADS[@]}"; do
+  cflog "stepA a${T}: OMP_NUM_THREADS=${T} score=${ARM_SCORE[a${T}]:-none} valid=${ARM_VALID[a${T}]:-no} exit=${ARM_EXIT[a${T}]:-unknown}"
+done
+
+# Step-A bounded carry-forward (TASK-009 Section 1.5D, mechanical rules):
+# 1. highest valid end-to-end score; 2. plateau = valid candidates within
+# 2.0% of it; 3. carry one candidate when the leader is >2.0% above every
+# other valid candidate; 4. otherwise carry at most two; 5. include the
+# numerical leader plus one neighboring/lower-overhead plateau member,
+# preferring the smaller thread count when scores are effectively tied;
+# 6. OMP=8 receives no automatic promotion; 7. invalid candidates cannot be
+# promoted; 8./9. no repeats, no added counts.
+STEP_A_LEADER_T=""
+STEP_A_LEADER_SCORE=""
+for T in "${STEP_A_THREADS[@]}"; do
+  if [ "${ARM_VALID[a${T}]:-no}" = "yes" ]; then
+    if [ -z "$STEP_A_LEADER_T" ] || gt_num "${ARM_SCORE[a${T}]}" "$STEP_A_LEADER_SCORE"; then
+      STEP_A_LEADER_T="$T"; STEP_A_LEADER_SCORE="${ARM_SCORE[a${T}]}"
+    fi
+  fi
+done
+if [ -z "$STEP_A_LEADER_T" ]; then
+  cflog "STOP: no valid Step-A candidate exists (every arm invalid); the Step-A/Step-B/Step-C carry-forward has no valid basis (TASK-009 Section 1.13 systemic condition). Step-A evidence is preserved; Steps B and C are not run."
+  echo "FATAL: no valid Step-A candidate; stopping before Step B/C; Step-A evidence preserved" >&2
+  exit 1
+fi
+cflog "stepA leader: T=${STEP_A_LEADER_T} score=${STEP_A_LEADER_SCORE} (highest valid end-to-end score)"
+cflog "stepA plateau rule (Section 1.5D rule 2): valid candidates within 2.0% of the leader (score >= leader * 0.98)"
+STEP_A_PLATEAU=()
+for T in "${STEP_A_THREADS[@]}"; do
+  if [ "${ARM_VALID[a${T}]:-no}" = "yes" ] && within2pct "${ARM_SCORE[a${T}]}" "$STEP_A_LEADER_SCORE"; then
+    STEP_A_PLATEAU+=("$T")
+    cflog "stepA plateau member: T=${T} score=${ARM_SCORE[a${T}]}"
+  else
+    cflog "stepA non-plateau: T=${T} score=${ARM_SCORE[a${T}]:-none} valid=${ARM_VALID[a${T}]:-no}"
+  fi
+done
+CARRIED_A_T=()
+if [ "${#STEP_A_PLATEAU[@]}" -eq 1 ]; then
+  CARRIED_A_T=("${STEP_A_LEADER_T}")
+  cflog "stepA carry-forward: leader T=${STEP_A_LEADER_T} is >2.0% above every other valid candidate (plateau has one member) -> carry ONE thread count T=${STEP_A_LEADER_T} (Section 1.5D rule 3)"
+else
+  CARRIED_A_T=("${STEP_A_LEADER_T}")
+  # Second representative: prefer a neighboring count (leader +/- 2 in the
+  # 4,6,8,10,12 sequence) that is also in the plateau; otherwise the best
+  # remaining plateau member; ties prefer the smaller thread count
+  # (lower overhead / more host headroom).
+  SECOND_T=""
+  for CAND in "$((STEP_A_LEADER_T - 2))" "$((STEP_A_LEADER_T + 2))"; do
+    for P in "${STEP_A_PLATEAU[@]}"; do
+      if [ "$P" = "$CAND" ]; then
+        if [ -z "$SECOND_T" ] || gt_num "${ARM_SCORE[a${P}]}" "${ARM_SCORE[a${SECOND_T}]}"; then
+          SECOND_T="$P"
+        elif [ "${ARM_SCORE[a${P}]}" = "${ARM_SCORE[a${SECOND_T}]}" ] && [ "$P" -lt "$SECOND_T" ]; then
+          SECOND_T="$P"
+        fi
+      fi
+    done
+  done
+  if [ -z "$SECOND_T" ]; then
+    for P in "${STEP_A_PLATEAU[@]}"; do
+      if [ "$P" = "$STEP_A_LEADER_T" ]; then continue; fi
+      if [ -z "$SECOND_T" ] || gt_num "${ARM_SCORE[a${P}]}" "${ARM_SCORE[a${SECOND_T}]}"; then
+        SECOND_T="$P"
+      elif [ "${ARM_SCORE[a${P}]}" = "${ARM_SCORE[a${SECOND_T}]}" ] && [ "$P" -lt "$SECOND_T" ]; then
+        SECOND_T="$P"
+      fi
+    done
+    cflog "stepA second pick: no neighboring plateau member; selected best remaining plateau member T=${SECOND_T} (score ${ARM_SCORE[a${SECOND_T}]})"
+  else
+    cflog "stepA second pick: neighboring plateau member T=${SECOND_T} (score ${ARM_SCORE[a${SECOND_T}]})"
+  fi
+  CARRIED_A_T+=("$SECOND_T")
+  cflog "stepA carry-forward: plateau has ${#STEP_A_PLATEAU[@]} members -> carry TWO thread counts T=${CARRIED_A_T[*]} (numerical leader ${STEP_A_LEADER_T} + one neighboring/lower-overhead member; Section 1.5D rules 4-5)"
+fi
+cflog "stepA carried thread counts into Step B: ${CARRIED_A_T[*]}"
+
+# --- Step B: CPU-affinity matrix (TASK-009 Section 1.6) -----------------------------
+# For each Step-A carried T: B0 free control = the identical-configuration
+# Step-A arm at T (cpu-affinity omitted, placement omitted, OMP_NUM_THREADS=T),
+# REUSED, not rerun (identical controls per Sections 1.5A/1.6B; 1.6C collapse
+# principle; 1.5D rule 8 forbids repeating valid points). B1/B2/B3 masks are
+# derived from the live NUMA ranges; infeasible policies are recorded and
+# skipped, never replaced with cross-NUMA/overlapping improvised masks
+# (Section 1.6C anti-stall rule). OMP_PLACES/OMP_PROC_BIND remain omitted.
+cflog "=== Step B: CPU-affinity matrix per carried thread count (TASK-009 Section 1.6) ==="
+cflog "stepB mask derivation inputs (live, gate-pinned): NUMA0=${NUMA0_RANGE} (${NUMA0_COUNT} CPUs, ranks 0-3) NUMA1=${NUMA1_RANGE} (${NUMA1_COUNT} CPUs, ranks 4-7); slice convention: consecutive non-overlapping rank-local slices packed from the first CPU of each NUMA domain (TASK-007 mask convention)"
+cflog "stepB width rules: B1 loose = whole NUMA domain of the rank's GPU (shared same-NUMA territory); B2 medium = T+2 CPUs/rank when 4*(T+2) fits BOTH domains, else the nearest legal uniform width that still leaves helper/progress headroom (width > T), else infeasible; B3 strict = exactly T CPUs/rank when 4*T fits BOTH domains, else infeasible (Section 1.6B/1.6C; with the accepted topology the binding constraint is NUMA1: floor(${NUMA1_COUNT}/4) = $((NUMA1_COUNT / 4)) max uniform width)"
+
+for T in "${CARRIED_A_T[@]}"; do
+  cflog "--- Step B mini-matrix for T=${T} (free control reused from Step-A arm a${T}: score ${ARM_SCORE[a${T}]}, identical configuration) ---"
+  CPU_MASK["t${T}-loose"]="$(loose_mask)"
+  cflog "stepB T=${T} B1 loose mask: ${CPU_MASK[t${T}-loose]} (whole-NUMA shared territory; always legal under the retained topology)"
+  MW="$(medium_width "$T")"
+  if [ -n "$MW" ]; then
+    CPU_MASK["t${T}-medium"]="$(build_slices "$MW")"
+    if [ "$MW" -eq $((T + 2)) ]; then
+      cflog "stepB T=${T} B2 medium mask (width ${MW} = T+2, fits both NUMA domains): ${CPU_MASK[t${T}-medium]}"
+    else
+      cflog "stepB T=${T} B2 medium mask (width ${MW} = nearest legal uniform width below T+2=$((T+2)) that still leaves helper/progress headroom beyond T; 4*(T+2) does not fit the ${NUMA1_COUNT}-CPU NUMA1 domain): ${CPU_MASK[t${T}-medium]}"
+    fi
+  else
+    CPU_MASK["t${T}-medium"]=""
+    cflog "stepB T=${T} B2 medium: NOT SCIENTIFICALLY INSTANTIATED / INFEASIBLE under the approved topology constraint (no legal uniform width > T fits both NUMA domains: T+2=$((T+2)) needs 4*$((T+2))=$((4 * (T + 2))) CPUs but NUMA1 provides ${NUMA1_COUNT}; per Section 1.6C recorded and skipped, no cross-NUMA/overlapping improvised mask)"
+  fi
+  SW="$(strict_width "$T")"
+  if [ -n "$SW" ]; then
+    CPU_MASK["t${T}-strict"]="$(build_slices "$SW")"
+    cflog "stepB T=${T} B3 strict mask (width ${SW} = T): ${CPU_MASK[t${T}-strict]}"
+  else
+    CPU_MASK["t${T}-strict"]=""
+    cflog "stepB T=${T} B3 strict: NOT SCIENTIFICALLY INSTANTIATED / INFEASIBLE under the approved topology constraint (exact T-sized slices need 4*${T}=$((4 * T)) CPUs but NUMA1 provides ${NUMA1_COUNT}; per Section 1.6C recorded and skipped, no approximation)"
+  fi
+  # Same-T medium/strict collapse check (Section 1.6C): medium width is T+2
+  # (or the nearest legal width > T) and strict width is T, so they can never
+  # be the same effective mask for the same T; recorded for completeness.
+  if [ -n "${CPU_MASK[t${T}-medium]}" ] && [ "${CPU_MASK[t${T}-medium]}" = "${CPU_MASK[t${T}-strict]}" ]; then
+    cflog "stepB T=${T}: medium and strict masks are identical -> strict would be a duplicate of medium and is not run twice (Section 1.6C); masks: ${CPU_MASK[t${T}-medium]}"
+    CPU_MASK["t${T}-strict"]=""
+  fi
+  # Run the legal explicit arms in policy order.
+  if [ -n "${CPU_MASK[t${T}-loose]}" ]; then
+    run_arm "b1t${T}" "b1-cpu-loose-t${T}" "B" "$T" "" "" "${CPU_MASK[t${T}-loose]}"
+  fi
+  if [ -n "${CPU_MASK[t${T}-medium]}" ]; then
+    run_arm "b2t${T}" "b2-cpu-medium-t${T}" "B" "$T" "" "" "${CPU_MASK[t${T}-medium]}"
+  fi
+  if [ -n "${CPU_MASK[t${T}-strict]}" ]; then
+    run_arm "b3t${T}" "b3-cpu-strict-t${T}" "B" "$T" "" "" "${CPU_MASK[t${T}-strict]}"
+  fi
+  cflog "stepB T=${T} explicit-policy scores: B1 loose=${ARM_SCORE[b1t${T}]:-not-run} valid=${ARM_VALID[b1t${T}]:-n/a} | B2 medium=${ARM_SCORE[b2t${T}]:-not-run} valid=${ARM_VALID[b2t${T}]:-n/a} | B3 strict=${ARM_SCORE[b3t${T}]:-not-run} valid=${ARM_VALID[b3t${T}]:-n/a} | B0 free control (reused a${T})=${ARM_SCORE[a${T}]}"
+done
+
+# Step-B bounded carry-forward (TASK-009 Section 1.6D, mechanical rules):
+# per carried T, an explicit policy is operationally promotable when valid
+# and >2.0% above the same-T free control (the reused Step-A score); if none
+# clears, free remains that T's candidate; if several clear, carry the
+# highest, or the top two when they are within 2.0% of each other (distinct
+# B policies are distinct CPU-territory mechanisms). Across all thread
+# counts, carry at most two total host candidates; one candidate is carried
+# alone when >2.0% above every other; ties prefer the simpler/free policy
+# and then the smaller thread count.
+cflog "=== Step-B mechanical carry-forward (TASK-009 Section 1.6D; >2.0% gates against the same-T free control) ==="
+for T in "${CARRIED_A_T[@]}"; do
+  BASE="${ARM_SCORE[a${T}]}"
+  cflog "stepB T=${T}: same-T free control score = ${BASE} (reused Step-A arm a${T})"
+  T_ELIGIBLE_POL=(); T_ELIGIBLE_SCORE=(); T_ELIGIBLE_KEY=()
+  for POLSPEC in "loose b1t${T}" "medium b2t${T}" "strict b3t${T}"; do
+    POL="${POLSPEC%% *}"; BKEY="${POLSPEC##* }"
+    if [ -z "${CPU_MASK[t${T}-${POL}]}" ]; then
+      cflog "stepB T=${T} ${POL}: infeasible under the approved topology (see above); not promotable, not rerun"
+      continue
+    fi
+    if [ "${ARM_VALID[$BKEY]:-no}" != "yes" ]; then
+      cflog "stepB T=${T} ${POL}: invalid arm (verdict not PASSED); invalid candidates cannot be promoted; evidence preserved"
+      continue
+    fi
+    if gt2pct "${ARM_SCORE[$BKEY]}" "$BASE"; then
+      cflog "stepB T=${T} ${POL}: score ${ARM_SCORE[$BKEY]} is >2.0% above the same-T free control ${BASE} -> operationally promotable"
+      T_ELIGIBLE_POL+=("$POL"); T_ELIGIBLE_SCORE+=("${ARM_SCORE[$BKEY]}"); T_ELIGIBLE_KEY+=("$BKEY")
+    else
+      cflog "stepB T=${T} ${POL}: score ${ARM_SCORE[$BKEY]} is NOT >2.0% above the same-T free control ${BASE} -> the simpler/free policy is preferred for this policy dimension (Section 1.6D rule 7)"
+    fi
+  done
+  if [ "${#T_ELIGIBLE_POL[@]}" -eq 0 ]; then
+    cflog "stepB T=${T}: no explicit policy cleared the >2.0% gate -> the free policy remains the carry-forward candidate for T=${T}"
+    HOSTC_T+=("$T"); HOSTC_POL+=("free"); HOSTC_SCORE+=("$BASE")
+  else
+    # Sort eligible policies by score (simple selection of top and optional
+    # second within 2.0% of the top).
+    BEST_I=0
+    for I in 1 2; do
+      [ "$I" -ge "${#T_ELIGIBLE_POL[@]}" ] && break
+      if gt_num "${T_ELIGIBLE_SCORE[$I]}" "${T_ELIGIBLE_SCORE[$BEST_I]}"; then
+        BEST_I="$I"
+      fi
+    done
+    cflog "stepB T=${T}: highest clearing explicit policy = ${T_ELIGIBLE_POL[$BEST_I]} (score ${T_ELIGIBLE_SCORE[$BEST_I]})"
+    SECOND_I=-1
+    for I in 0 1 2; do
+      [ "$I" -ge "${#T_ELIGIBLE_POL[@]}" ] && break
+      [ "$I" -eq "$BEST_I" ] && continue
+      if within2pct "${T_ELIGIBLE_SCORE[$I]}" "${T_ELIGIBLE_SCORE[$BEST_I]}"; then
+        if [ "$SECOND_I" -lt 0 ] || gt_num "${T_ELIGIBLE_SCORE[$I]}" "${T_ELIGIBLE_SCORE[$SECOND_I]}"; then
+          SECOND_I="$I"
+        fi
+      fi
+    done
+    if [ "$SECOND_I" -ge 0 ]; then
+      cflog "stepB T=${T}: ${T_ELIGIBLE_POL[$SECOND_I]} (score ${T_ELIGIBLE_SCORE[$SECOND_I]}) is within 2.0% of ${T_ELIGIBLE_POL[$BEST_I]} and represents a materially different CPU-territory mechanism -> both remain eligible for the cross-T pruning (Section 1.6D rule 3)"
+      HOSTC_T+=("$T"); HOSTC_POL+=("${T_ELIGIBLE_POL[$BEST_I]}"); HOSTC_SCORE+=("${T_ELIGIBLE_SCORE[$BEST_I]}")
+      HOSTC_T+=("$T"); HOSTC_POL+=("${T_ELIGIBLE_POL[$SECOND_I]}"); HOSTC_SCORE+=("${T_ELIGIBLE_SCORE[$SECOND_I]}")
+    else
+      HOSTC_T+=("$T"); HOSTC_POL+=("${T_ELIGIBLE_POL[$BEST_I]}"); HOSTC_SCORE+=("${T_ELIGIBLE_SCORE[$BEST_I]}")
+    fi
+  fi
+done
+
+# Cross-T pruning (Section 1.6D rules 4-6): at most two total host candidates
+# into Step C; carry one alone when >2.0% above every other candidate;
+# otherwise the best two (tie-break: free before explicit, smaller T first).
+cflog "stepB cross-T candidate pool before pruning: ${#HOSTC_POL[@]} candidate(s)"
+for I in "${!HOSTC_POL[@]}"; do
+  cflog "stepB candidate[$((I + 1))]: T=${HOSTC_T[$I]} cpu_policy=${HOSTC_POL[$I]} score=${HOSTC_SCORE[$I]}"
+done
+if [ "${#HOSTC_POL[@]}" -gt 2 ]; then
+  # Rank candidates: score desc; tie-break free-first, then smaller T.
+  RANKED_INDICES=$(for I in "${!HOSTC_POL[@]}"; do
+    ISFREE=0; [ "${HOSTC_POL[$I]}" = "free" ] && ISFREE=1
+    echo "${HOSTC_SCORE[$I]} ${ISFREE} $((1000 - HOSTC_T[$I])) ${I}"
+  done | sort -k1,1gr -k2,2nr -k3,3nr | awk '{ print $4 }')
+  BEST_CI="$(echo "$RANKED_INDICES" | head -n 1)"
+  SECOND_CI="$(echo "$RANKED_INDICES" | sed -n '2p')"
+  LONE=1
+  for I in "${!HOSTC_POL[@]}"; do
+    [ "$I" -eq "$BEST_CI" ] && continue
+    if ! gt2pct "${HOSTC_SCORE[$BEST_CI]}" "${HOSTC_SCORE[$I]}"; then
+      LONE=0
+    fi
+  done
+  if [ "$LONE" -eq 1 ]; then
+    cflog "stepB cross-T pruning: candidate T=${HOSTC_T[$BEST_CI]}/${HOSTC_POL[$BEST_CI]} (score ${HOSTC_SCORE[$BEST_CI]}) is >2.0% above every other candidate -> carry ONE host candidate (Section 1.6D rule 5)"
+    NEW_T=("${HOSTC_T[$BEST_CI]}"); NEW_POL=("${HOSTC_POL[$BEST_CI]}"); NEW_SCORE=("${HOSTC_SCORE[$BEST_CI]}")
+  else
+    cflog "stepB cross-T pruning: no candidate is >2.0% above all others -> carry the best TWO (ranked by score; tie-break free-policy-first, then smaller T) = T=${HOSTC_T[$BEST_CI]}/${HOSTC_POL[$BEST_CI]} (score ${HOSTC_SCORE[$BEST_CI]}) and T=${HOSTC_T[$SECOND_CI]}/${HOSTC_POL[$SECOND_CI]} (score ${HOSTC_SCORE[$SECOND_CI]}) (Section 1.6D rule 6)"
+    NEW_T=("${HOSTC_T[$BEST_CI]}" "${HOSTC_T[$SECOND_CI]}"); NEW_POL=("${HOSTC_POL[$BEST_CI]}" "${HOSTC_POL[$SECOND_CI]}"); NEW_SCORE=("${HOSTC_SCORE[$BEST_CI]}" "${HOSTC_SCORE[$SECOND_CI]}")
+  fi
+  HOSTC_T=("${NEW_T[@]}"); HOSTC_POL=("${NEW_POL[@]}"); HOSTC_SCORE=("${NEW_SCORE[@]}")
+fi
+cflog "stepB carried host candidates into Step C: ${#HOSTC_POL[@]}"
+for I in "${!HOSTC_POL[@]}"; do
+  cflog "stepB carried candidate $((I + 1)): T=${HOSTC_T[$I]} cpu_policy=${HOSTC_POL[$I]} score=${HOSTC_SCORE[$I]} cpu_affinity=$(if [ "${HOSTC_POL[$I]}" = "free" ]; then echo omitted; else echo "${CPU_MASK[t${HOSTC_T[$I]}-${HOSTC_POL[$I]}]}"; fi)"
+done
+
+# --- Step C: OMP_PLACES x OMP_PROC_BIND matrix (TASK-009 Section 1.7) ----------------
+# For each carried host candidate (T, cpu_policy): the package-default
+# control C0 (OMP_PLACES/OMP_PROC_BIND omitted; expected effective
+# sockets/TRUE) is the establishing arm of that candidate - the Step-A arm
+# for a free candidate or the winning Step-B arm for an explicit candidate -
+# whose configuration is IDENTICAL (same T, same CPU policy, placement
+# omitted); per Section 1.7C ("do not run a cell whose verified effective
+# placement is identical to another already-scored cell under the same
+# carried host candidate") C0 is recorded as redundant and its existing
+# score reused as the control, NOT rerun. The five approved explicit cells
+# (sockets x {CLOSE,SPREAD}, cores x {TRUE,CLOSE,SPREAD}) are legality-checked
+# against the candidate's effective rank CPU territory before running
+# (Section 1.7B lightweight verification: place lists computed from the
+# live topology - sockets = one place per NUMA domain intersected with the
+# rank's CPU set, cores = one place per CPU, 1 thread/core, no SMT - with
+# no out-of-mask placement and no impossible binding request). Redundant or
+# illegal cells are recorded and skipped. Maximum 6 scored Step-C arms per
+# carried candidate (5 explicit cells + the reused C0 control fit the cap).
+cflog "=== Step C: OMP_PLACES x OMP_PROC_BIND matrix per carried host candidate (TASK-009 Section 1.7) ==="
+for CI in "${!HOSTC_POL[@]}"; do
+  CT="${HOSTC_T[$CI]}"; CPOL="${HOSTC_POL[$CI]}"
+  if [ "$CPOL" = "free" ]; then
+    C_CA=""; C0_KEY="a${CT}"; C0_LABEL="a-omp${CT}"
+  else
+    C_CA="${CPU_MASK[t${CT}-${CPOL}]}"
+    case "$CPOL" in
+      loose)  C0_KEY="b1t${CT}"; C0_LABEL="b1-cpu-loose-t${CT}" ;;
+      medium) C0_KEY="b2t${CT}"; C0_LABEL="b2-cpu-medium-t${CT}" ;;
+      strict) C0_KEY="b3t${CT}"; C0_LABEL="b3-cpu-strict-t${CT}" ;;
+    esac
+  fi
+  cflog "--- Step C matrix for carried candidate $((CI + 1)): T=${CT} cpu_policy=${CPOL} cpu_affinity=${C_CA:-omitted} (candidate score ${HOSTC_SCORE[$CI]}) ---"
+  cflog "stepC C0 default control (OMP_PLACES/OMP_PROC_BIND omitted; expected effective sockets/TRUE): REDUNDANT with the already-scored ${C0_LABEL} arm (identical configuration: same T=${CT}, same CPU policy '${CPOL}', placement controls omitted); existing score ${ARM_SCORE[$C0_KEY]:-none} reused as the Step-C control per Section 1.7C; not rerun (Section 1.5D rule 8 forbids repeating valid points)"
+  if [ "${ARM_VALID[$C0_KEY]:-no}" != "yes" ]; then
+    cflog "stepC NOTE: the C0 establishing arm ${C0_LABEL} is not valid; its score is still recorded factually and the Step-C cells of this candidate are scored against it (invalid candidates cannot be promoted, but the approved matrix is still attempted and preserved)"
+  fi
+
+  # Effective rank CPU territory for place-list verification (Section 1.7B),
+  # per rank class: free = the full scheduled cpuset (unpinned ranks inherit
+  # the job cpuset under --bind-to none); loose = the rank's whole NUMA
+  # domain; medium/strict = the rank's non-overlapping slice. OpenMP places
+  # respect the process affinity mask (OpenMP default 'respect' behavior),
+  # so: sockets -> one place per NUMA domain intersected with the territory;
+  # cores -> one place per CPU in the territory (1 thread per core).
+  if [ "$CPOL" = "free" ]; then
+    PLACE_COUNT_SOCKETS=2; PLACE_SIZE_A0="${NUMA0_COUNT}"; PLACE_SIZE_A1="${NUMA1_COUNT}"
+    CORES_PLACES=$((NUMA0_COUNT + NUMA1_COUNT))
+    cflog "stepC legality (candidate T=${CT}/${CPOL}): rank territory = full scheduled cpuset ${CPUSET} (unpinned); OMP_PLACES=sockets -> 2 places/rank (sizes ${NUMA0_COUNT} and ${NUMA1_COUNT} CPUs); OMP_PLACES=cores -> ${CORES_PLACES} single-CPU places/rank (1 thread/core); all binding requests (TRUE/CLOSE/SPREAD) satisfiable; no out-of-mask placement possible (places are built from the mask)"
+  else
+    if [ "$CPOL" = "loose" ]; then
+      SLICE_W0="$NUMA0_COUNT"; SLICE_W1="$NUMA1_COUNT"
+    else
+      SLICE_W0="${C_CA%%:*}"; SLICE_W0="$(( ${SLICE_W0##*-} - ${SLICE_W0%%-*} + 1 ))"
+      SLICE_W1="$(printf '%s' "$C_CA" | cut -d: -f5)"; SLICE_W1="$(( ${SLICE_W1##*-} - ${SLICE_W1%%*-} + 1 ))"
+    fi
+    PLACE_COUNT_SOCKETS=1; PLACE_SIZE_A0="$SLICE_W0"; PLACE_SIZE_A1="$SLICE_W1"
+    CORES_PLACES="$SLICE_W0"
+    cflog "stepC legality (candidate T=${CT}/${CPOL}): rank territory = NUMA-local CPU set (ranks 0-3: ${SLICE_W0} CPUs inside ${NUMA0_RANGE}; ranks 4-7: ${SLICE_W1} CPUs inside ${NUMA1_RANGE}); OMP_PLACES=sockets -> 1 place/rank (the whole territory: ${SLICE_W0} or ${SLICE_W1} CPUs); OMP_PLACES=cores -> ${SLICE_W0}/${SLICE_W1} single-CPU places/rank; all binding requests satisfiable; no out-of-mask placement possible"
+    cflog "stepC redundancy proof (candidate T=${CT}/${CPOL}): with exactly ONE socket-place, OMP_PROC_BIND CLOSE, SPREAD and TRUE all bind every thread to that single place, so sockets x CLOSE and sockets x SPREAD are provably identical in effective placement to the C0 default (sockets/TRUE) -> both recorded REDUNDANT and skipped (Section 1.7C)"
+  fi
+
+  STEP_C_CELLS=()
+  if [ "$PLACE_COUNT_SOCKETS" -ge 2 ]; then
+    STEP_C_CELLS+=("sockets-close sockets CLOSE" "sockets-spread sockets SPREAD")
+  else
+    cflog "stepC candidate T=${CT}/${CPOL}: sockets-close and sockets-spread cells skipped as redundant (single-place proof above)"
+  fi
+  STEP_C_CELLS+=("cores-true cores TRUE" "cores-close cores CLOSE" "cores-spread cores SPREAD")
+  SCORED_C_ARMS=0
+  for CELLSPEC in "${STEP_C_CELLS[@]}"; do
+    CELLNAME="$(printf '%s' "$CELLSPEC" | cut -d' ' -f1)"
+    CELLPL="$(printf '%s' "$CELLSPEC" | cut -d' ' -f2)"
+    CELLBIND="$(printf '%s' "$CELLSPEC" | cut -d' ' -f3)"
+    if [ "$SCORED_C_ARMS" -ge 6 ]; then
+      cflog "stepC candidate T=${CT}/${CPOL} cell ${CELLNAME}: SKIPPED - maximum of 6 scored Step-C arms per carried candidate reached (Section 1.7D)"
+      continue
+    fi
+    run_arm "c${CI}-${CELLNAME}" "c-${CELLNAME}-t${CT}-${CPOL}" "C" "$CT" "$CELLPL" "$CELLBIND" "$C_CA"
+    SCORED_C_ARMS=$((SCORED_C_ARMS + 1))
+    cflog "stepC candidate T=${CT}/${CPOL} cell ${CELLNAME} (OMP_PLACES=${CELLPL} OMP_PROC_BIND=${CELLBIND}): score=${ARM_SCORE[c${CI}-${CELLNAME}]:-none} valid=${ARM_VALID[c${CI}-${CELLNAME}]:-no} exit=${ARM_EXIT[c${CI}-${CELLNAME}]:-unknown}"
+  done
+  cflog "stepC candidate T=${CT}/${CPOL}: ${SCORED_C_ARMS} explicit cell(s) scored + C0 control reused from ${C0_LABEL} (total scored arms vs the 6-arm cap: ${SCORED_C_ARMS} + 1 reused control)"
+done
+
+cflog "final execution carry-forward outcome (mechanical task-rule results only; NO final strategic host-runtime winner is selected during execution; final retention requires explicit ANALYSE_RESULTS per TASK-009 Sections 1.1, 1.10, 1.15): stepA_carried_T=${CARRIED_A_T[*]} stepB_carried_host_candidates=$(for I in "${!HOSTC_POL[@]}"; do printf 'T=%s/%s ' "${HOSTC_T[$I]}" "${HOSTC_POL[$I]}"; done)"
+
+# --- Post-sweep hardware-health snapshot (ordinary evidence; must not block) ------
+echo "=== post-sweep hardware-health snapshot (mother node $(hostname)) ==="
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# --- Overall sweep result -----------------------------------------------------------
+# Factual per-arm recap only (no percentages, no ranking, no retention
+# decision; the strategic interpretation is reserved for the post-task
+# Strategic Analyst via ANALYSE_RESULTS, TASK-009 Sections 1.10, 1.15).
+# Nonzero overall if any arm exited nonzero or failed verification, even
+# though later arms were still attempted and their evidence preserved. Do
+# not classify success from exit status alone; the per-arm .status files and
+# .out verification markers are the validity record.
+echo "=== sweep recap (factual scores only; interpretation reserved for ANALYSE_RESULTS) ==="
+echo "arms_run=${ARMS_RUN} arms_exited_nonzero=${FAILURES} arms_without_passed_verification=${INVALID_ARMS}"
+for KEY in "${!ARM_SCORE[@]}"; do
+  echo "arm=${KEY} gflops=${ARM_SCORE[$KEY]:-none} valid=${ARM_VALID[$KEY]:-no} exit=${ARM_EXIT[$KEY]:-unknown}"
+done
+if [ "$FAILURES" -ne 0 ] || [ "$INVALID_ARMS" -ne 0 ]; then
+  echo "=== HPL-MxP 2x8-GAAS phase3ab-host-runtime sweep finished with ${FAILURES} arm(s) exited nonzero and ${INVALID_ARMS} arm(s) without PASSED verification of ${ARMS_RUN} run (tag ${ATTEMPT_TAG}) ==="
+  exit 1
+fi
+echo "=== HPL-MxP 2x8-GAAS phase3ab-host-runtime sweep complete: all ${ARMS_RUN} run arm(s) exited 0 with PASSED verification (tag ${ATTEMPT_TAG}) ==="
