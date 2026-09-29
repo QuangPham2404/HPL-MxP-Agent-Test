@@ -7,7 +7,7 @@ workflow; Workflow v2 governs new work.
 
 ## Additional notes
 
-These two rules are active overrides: wherever they contradict any rule stated
+These rules are active overrides: wherever they contradict any rule stated
 below them (including queue/group references in older instructions), these
 rules take precedence.
 
@@ -18,6 +18,8 @@ rules take precedence.
    available to choose from. Every queue not in this list is off-limits.
    (Probe note, 2026-09-15: `gpu_free` is currently disabled; its successors
    `gpu_free_normal`/`gpu_free_high` serve the same single node `g25`.)
+3. **Task naming:** new tasks use `TASK-2X8-XXX.md` for 2×8 and `TASK-3X4-XXX.md` for 3×4.
+   Existing `TASK-000.md`–`TASK-010.md` stay unchanged; 2×8 continues at `TASK-2X8-011.md`, while 3×4 starts at `TASK-3X4-000.md`.
 
 ## Required startup reading
 
