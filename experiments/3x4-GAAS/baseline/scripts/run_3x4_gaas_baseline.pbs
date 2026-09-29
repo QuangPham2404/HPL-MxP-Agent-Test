@@ -1,0 +1,284 @@
+#!/bin/bash
+# HPL-MxP 3x4-GAAS baseline: 3 GAAS nodes x 4 H200 GPUs (12 ranks, grid 4x3,
+# column order).
+#
+# Purpose: TASK-3X4-000 Phase-0 immutable 3x4-GAAS original baseline. Fixed
+# Strategic-Analyst-supplied configuration (see tasks/TASK-3X4-000.md Section
+# 1.4B); this script launches the identical fixed configuration; no parameter
+# is varied and no tuning is performed. The first valid PASSED attempt
+# produced with this script becomes the immutable 3x4-GAAS original baseline.
+#
+# Expected working directory: this experiment directory
+# (experiments/3x4-GAAS/baseline/) on GAAS. Submit with (the queue is
+# deliberately NOT selected in this script; pass an approved one at qsub,
+# chosen from the live pbsnodes -aSj contention snapshot immediately before
+# submission, and host-pin the least-contended eligible trio within that one
+# queue):
+#   qsub -q <gpu_as|gpu_ded> -v "ATTEMPT=3x4-GAAS-baseline_v1" \
+#        -l "select=host=<h1>:ngpus=4:ncpus=48:mem=1000GB+host=<h2>:ngpus=4:ncpus=48:mem=1000GB+host=<h3>:ngpus=4:ncpus=48:mem=1000GB,place=scatter" \
+#        -o outputs/3x4-GAAS-baseline_v1.o -e outputs/3x4-GAAS-baseline_v1.e \
+#        scripts/run_3x4_gaas_baseline.pbs
+#
+# Inputs: ATTEMPT (attempt/output stem) via environment (-v).
+# Outputs: attempt-specific PBS stdout/stderr under outputs/ (names are passed
+# at qsub with -o/-e; this script deliberately has no #PBS -o/-e directives)
+# plus outputs/${ATTEMPT}.rankmap.log (per-rank rank/node/GPU/cpuset/OMP/
+# NCCL_IB_HCA environment map and per-host topology facts from the pre-launch
+# probe).
+# Assumptions: approved container and modules exist on GAAS; one GPU per MPI
+# process; validated Approach-1 multinode launch (container mpirun +
+# rsh_pbsdsh_container.sh bridge; see multi-node-test/GAAS_MULTINODE_SETUP.md);
+# the NCCL_IB_HCA bond-exclusion transport setting validated on this exact 3x4
+# topology (job 67974.gaas; scripts/gaas-internode-coms-debug/debug-scripts/
+# phase2-stage2/). Remote ranks inherit the remote container environment and
+# receive only variables explicitly -x forwarded by mpirun (Blocker E), so
+# NCCL_IB_HCA is both exported in the job shell and -x forwarded.
+#
+# select=3:ngpus=4:ncpus=48:mem=1000GB (no mpiprocs) is the in-script default
+# resource shape (TASK-3X4-000 Section 1.4E) and is normally overridden on the
+# qsub command line by the documented host-pinned select; place=scatter is
+# fixed.
+
+#PBS -N 3x4_gaas_baseline
+#PBS -P hpc_ebslee
+#PBS -l select=3:ngpus=4:ncpus=48:mem=1000GB
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+
+set -euo pipefail
+
+# --- Experiment metadata --------------------------------------------------------
+cd "$PBS_O_WORKDIR"
+mkdir -p "$PWD/outputs"
+EXPERIMENT_ID="3x4-GAAS-baseline"
+ATTEMPT="${ATTEMPT:-unknown}"
+
+echo "experiment_id=${EXPERIMENT_ID}"
+echo "attempt=${ATTEMPT}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "queue=${PBS_O_QUEUE:-unknown}"
+echo "project=hpc_ebslee"
+date --iso-8601=seconds
+echo "fixed configuration (TASK-3X4-000 Section 1.4B; identical across attempts):"
+echo "--n 480000"
+echo "--nb 3072"
+echo "--nprow 4"
+echo "--npcol 3"
+echo "--nporder column"
+echo "--gpu-affinity 0:1:2:3"
+echo "--sloppy-type FP16"
+echo "--use-mpi-panel-broadcast 0"
+echo "--use-separate-stream-for-gemm 1"
+echo "--prioritize-trsm 0"
+echo "--prioritize-factorization 0"
+echo "--test-loop 1"
+echo "--skip-tests 0"
+echo "--monitor-gpu 0"
+echo "NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_8,mlx5_9"
+echo "OMP/CPU/memory-affinity tuning controls: deliberately not set (incoming/default host-runtime state preserved and recorded)"
+
+# --- Queue guard (TASK-3X4-000 authorizes only gpu_as or gpu_ded) ---------------
+case "${PBS_O_QUEUE:-unknown}" in
+  gpu_as|gpu_ded) echo "queue_check=OK (${PBS_O_QUEUE})" ;;
+  *) echo "FATAL: assigned queue '${PBS_O_QUEUE}' is not gpu_as or gpu_ded (TASK-3X4-000 Section 1.6)" >&2; exit 1 ;;
+esac
+
+# --- Record the job-shell OMP environment (effective values incl. unset) --------
+# TASK-3X4-000 Section 1.4B: no OMP/CPU/memory-affinity tuning choice is made;
+# the incoming/default host-runtime state is preserved and recorded. The
+# package wrapper applies OMP_PROC_BIND=TRUE / OMP_PLACES=sockets defaults when
+# these are unset (captured v26.02 launcher, todo.md; flag-check evidence in
+# experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log); an
+# unset OMP_NUM_THREADS keeps the OpenMP runtime default.
+echo "job_shell_OMP_NUM_THREADS=${OMP_NUM_THREADS:-unset}"
+echo "job_shell_OMP_PLACES=${OMP_PLACES:-unset}"
+echo "job_shell_OMP_PROC_BIND=${OMP_PROC_BIND:-unset}"
+
+# --- Attempt-evidence guard (never overwrite existing evidence) ------------------
+if [ -e "outputs/${ATTEMPT}.rankmap.log" ]; then
+  echo "FATAL: refusing to overwrite existing evidence outputs/${ATTEMPT}.rankmap.log; resubmit with a new ATTEMPT label" >&2
+  exit 1
+fi
+
+# --- Locate repo root and the validated launch bridge ---------------------------
+# Submission dir is experiments/3x4-GAAS/baseline/, so the repo root is three
+# levels up.
+REPO_ROOT="$(cd "${PBS_O_WORKDIR}/../../.." && pwd)"
+BRIDGE="${REPO_ROOT}/multi-node-test/rsh_pbsdsh_container.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+[ -f "$BRIDGE" ] || { echo "FATAL: bridge not found at ${BRIDGE}; submit from the experiment directory (experiments/3x4-GAAS/baseline/)" >&2; exit 1; }
+[ -f "$SIF" ] || { echo "FATAL: container image not found: ${SIF}" >&2; exit 1; }
+
+# --- Allocation checks (place=scatter, no mpiprocs; fixed 4x3 grid) --------------
+GPUS=4                                   # GPUs (and ranks) per node
+EXPECTED_NODES=3
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+[ "$NNODES" -eq "$EXPECTED_NODES" ] || { echo "FATAL: expected ${EXPECTED_NODES} distinct nodes, got ${NNODES}" >&2; exit 1; }
+NPROCS=$((NNODES * GPUS))
+
+# Fixed process grid and order (supplied configuration; do NOT auto-derive).
+NPROW=4
+NPCOL=3
+NPORDER=column
+GPU_AFFINITY=0:1:2:3
+[ "$NPROCS" -eq $((NPROW * NPCOL)) ] || { echo "FATAL: fixed grid ${NPROW}x${NPCOL} requires $((NPROW * NPCOL)) ranks, got ${NPROCS}" >&2; exit 1; }
+
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks"
+echo "grid=nprow=${NPROW} npcol=${NPCOL} nporder=${NPORDER}"
+echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+echo "gpu_affinity=${GPU_AFFINITY}"
+echo "bridge=${BRIDGE}"
+echo "container=${SIF}"
+
+# --- Environment (validated module set) ------------------------------------------
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+
+# Validated 3x4 transport correctness setting (bond-excluded NCCL IB HCA list;
+# TASK-3X4-000 Section 1.4B; validated on this topology in job 67974.gaas).
+# Exported in the job shell (mother-node rank and apptainer environment) and
+# -x forwarded to every MPI rank below (Blocker E forwarding contract).
+export NCCL_IB_HCA="mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_8,mlx5_9"
+
+# --- Pre-run hardware-health snapshot (ordinary evidence; must not block) --------
+echo "=== pre-run hardware-health snapshot (mother node $(hostname)) ==="
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# De-duplicated hostfile with explicit per-node slot count (GAAS Blocker 8).
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$PWD/hostfile"
+echo "=== hostfile ==="
+cat "$PWD/hostfile"
+
+# --- Pre-launch rank/node/GPU/cpuset/OMP/NCCL environment map (lightweight probe)
+# One lightweight 12-rank MPI probe BEFORE the scored launch, using the SAME
+# shared hostfile, container mpirun + bridge + daemon flags and -x set as the
+# scored launch (only PATH, LD_LIBRARY_PATH and NCCL_IB_HCA are -x forwarded,
+# exactly like the scored run). Diagnostic only; it adds no communication
+# tracing and alters no scientific controls. It records, per rank, the global
+# rank, local rank, host, the INCOMING OMP_NUM_THREADS / OMP_PLACES /
+# OMP_PROC_BIND values (TASK-3X4-000 Section 1.4B deliverable: the effective
+# default host-runtime state, including unset) and the per-rank NCCL_IB_HCA
+# value (proving the required transport setting reached every rank). The
+# node-local rank 0 on each allocated host additionally reports the local node
+# topology facts (cpuset, Mems_allowed, container-visible GPU inventory and
+# UUIDs, the eight bond-excluded 400G IB HCAs, full nvidia-smi topo) into the
+# same log. One-rank-per-GPU is established by the validated per-local-rank
+# --gpu-affinity 0:1:2:3 mechanism over the container-renumbered 4-GPU set
+# (multi-node-test/GAAS_MULTINODE_SETUP.md, "Per-rank GPU affinity").
+RANKMAP_LOG="outputs/${ATTEMPT}.rankmap.log"
+RC=0
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH -x NCCL_IB_HCA \
+    --bind-to none \
+    bash -c '
+      if [ "${OMPI_COMM_WORLD_LOCAL_RANK:-}" = "0" ]; then
+        H="$(hostname)"
+        echo "topo host=${H} begin local_rank0 global_rank=${OMPI_COMM_WORLD_RANK}"
+        L="$(grep -F "Cpus_allowed_list:" /proc/self/status || true)"
+        L="${L#*:}"; L="${L//[[:space:]]/}"
+        echo "topo host=${H} cpuset=${L:-missing}"
+        M="$(grep -F "Mems_allowed_list:" /proc/self/status || true)"
+        M="${M#*:}"; M="${M//[[:space:]]/}"
+        echo "topo host=${H} mems=${M:-missing}"
+        echo "topo host=${H} gpu_inventory_begin"
+        nvidia-smi -L 2>/dev/null || echo "topo host=${H} nvidia-smi -L failed"
+        echo "topo host=${H} gpu_inventory_end"
+        for D in mlx5_0 mlx5_1 mlx5_2 mlx5_3 mlx5_4 mlx5_5 mlx5_8 mlx5_9; do
+          if [ -d "/sys/class/infiniband/${D}" ]; then
+            echo "topo host=${H} hca=${D} present=yes"
+          else
+            echo "topo host=${H} hca=${D} present=no"
+          fi
+        done
+        nvidia-smi topo -m 2>/dev/null | while IFS= read -r LINE; do
+          echo "topo host=${H} topo_m=${LINE}"
+        done
+        echo "topo host=${H} end local_rank0"
+      fi
+      echo "rank=${OMPI_COMM_WORLD_RANK}/${OMPI_COMM_WORLD_SIZE} host=$(hostname) local_rank=${OMPI_COMM_WORLD_LOCAL_RANK}/${OMPI_COMM_WORLD_LOCAL_SIZE} omp_num_threads=${OMP_NUM_THREADS:-UNSET} omp_places=${OMP_PLACES:-UNSET} omp_proc_bind=${OMP_PROC_BIND:-UNSET} nccl_ib_hca=${NCCL_IB_HCA:-UNSET}"
+    ' \
+  > "$RANKMAP_LOG" 2>&1 || RC=$?
+
+# --- Mechanical mapping/transport gates (abort BEFORE the scored launch) ---------
+# Required: probe rc=0; exactly NPROCS rank lines; exactly EXPECTED_NODES
+# distinct hosts with exactly GPUS ranks per host; every rank reports the
+# required NCCL_IB_HCA value (control-application failure otherwise;
+# TASK-3X4-000 Section 1.9 stop condition, checked before a scored attempt is
+# consumed). The per-host GPU inventory (4 container-visible GPUs) is verified
+# from the local-rank-0 report. Incoming OMP values are recorded as evidence
+# only (record-only by design; the task preserves whatever default state the
+# environment supplies).
+RANK_LINES=$(grep -c "^rank=" "$RANKMAP_LOG" || true)
+HOST_COUNT=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); seen[$2] = 1 } END { n = 0; for (h in seen) n++; print n }' || true)
+MIN_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] < m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+MAX_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] > m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+NCCL_MISSING_LINES=$(grep "^rank=" "$RANKMAP_LOG" | grep -vcF "nccl_ib_hca=mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_8,mlx5_9" || true)
+NGPU_HOSTS_OK=$(grep "^topo " "$RANKMAP_LOG" | grep -F "gpu_inventory_begin" | wc -l || true)
+GPU_COUNT_OK=1
+while IFS= read -r H; do
+  N=$(sed -n "/topo host=${H} gpu_inventory_begin/,/topo host=${H} gpu_inventory_end/p" "$RANKMAP_LOG" | grep -c "^GPU " || true)
+  [ "$N" -eq 4 ] || GPU_COUNT_OK=0
+done < <(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); seen[$2] = 1 } END { for (h in seen) print h }')
+echo "=== rank-map probe: rc=${RC} rank_lines=${RANK_LINES} hosts=${HOST_COUNT} nccl_missing=${NCCL_MISSING_LINES} gpu_inventory_hosts=${NGPU_HOSTS_OK} gpu_count_ok=${GPU_COUNT_OK} log=${RANKMAP_LOG} ==="
+echo "incoming OMP environment across ${RANK_LINES} ranks (record-only):"
+grep "^rank=" "$RANKMAP_LOG" | sed 's/^/  /'
+if [ "$RC" -ne 0 ] || [ "$RANK_LINES" -ne "$NPROCS" ] || [ "$HOST_COUNT" -ne "$EXPECTED_NODES" ] || [ "$MIN_RANKS_PER_HOST" -ne "$GPUS" ] || [ "$MAX_RANKS_PER_HOST" -ne "$GPUS" ] || [ "$NCCL_MISSING_LINES" -ne 0 ] || [ "$GPU_COUNT_OK" -ne 1 ]; then
+  echo "FATAL: pre-launch gate failed (rc=${RC} rank_lines=${RANK_LINES}/${NPROCS} hosts=${HOST_COUNT}/${EXPECTED_NODES} ranks_per_host=${MIN_RANKS_PER_HOST}-${MAX_RANKS_PER_HOST} nccl_missing=${NCCL_MISSING_LINES} gpu_count_ok=${GPU_COUNT_OK}); launch/rank-mapping/transport-control problem; evidence preserved in ${RANKMAP_LOG}; no scored attempt consumed; rerun requires a new ATTEMPT label and human direction per TASK-3X4-000 Section 1.9" >&2
+  exit 1
+fi
+echo "prelaunch_gate=PASS (12 ranks, 4 per host, 3 distinct hosts, 4 container-visible GPUs per host, NCCL_IB_HCA set on all ranks)"
+
+# --- Launch: container mpirun + pbsdsh bridge (Approach 1, validated) ------------
+# No OMP/CPU/memory-affinity variables are set or forwarded; the incoming
+# default host-runtime state recorded above is preserved, and the package
+# wrapper's documented defaults apply (OMP_PROC_BIND=TRUE, OMP_PLACES=sockets
+# when unset; OMP_NUM_THREADS left to the OpenMP runtime default).
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$PWD/hostfile" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH -x NCCL_IB_HCA \
+    --bind-to none \
+    /workspace/hpl-mxp.sh \
+      --n 480000 \
+      --nb 3072 \
+      --nprow 4 \
+      --npcol 3 \
+      --nporder column \
+      --gpu-affinity 0:1:2:3 \
+      --sloppy-type FP16 \
+      --use-mpi-panel-broadcast 0 \
+      --use-separate-stream-for-gemm 1 \
+      --prioritize-trsm 0 \
+      --prioritize-factorization 0 \
+      --test-loop 1 \
+      --skip-tests 0 \
+      --monitor-gpu 0
+
+# --- Post-run hardware-health snapshot (ordinary evidence; must not block) -------
+echo "=== post-run hardware-health snapshot (mother node $(hostname)) ==="
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+echo "=== HPL-MxP 3x4-GAAS baseline complete: ${ATTEMPT} ==="
