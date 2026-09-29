@@ -87,4 +87,87 @@ live snapshot; the snapshot and selection record are preserved as
 
 | Attempt | PBS job | Queue / nodes | Result | GFLOP/s | Evidence |
 |---|---|---|---|---|---|
-| *(to be recorded after the single authorized scored attempt)* | | | | | |
+| `3x4-GAAS-baseline_v1` | `73926.gaas` | `gpu_as` / g14+g10+g09 | PASSED (`3.784553E-04`), exit 0, walltime 00:04:15 | `2.0193e+06` (168271.05/GPU) | `outputs/3x4-GAAS-baseline_v1.{o,e}`, `outputs/3x4-GAAS-baseline_v1.rankmap.log`, `outputs/3x4-GAAS-baseline_v1.presubmit_pbsnodes.log` |
+
+## Run record — `3x4-GAAS-baseline_v1` (job `73926.gaas`, 2026-09-29)
+
+Per TASK-3X4-000 Section 1.4E, this first valid `PASSED` scored attempt is
+designated the **immutable `3x4-GAAS` original baseline** and the future
+percentage denominator for the 3×4 campaign. No second scored run was
+performed or is authorized by TASK-3X4-000.
+
+Scheduler and allocation:
+
+- PBS job `73926.gaas`, queue `gpu_as`, project `hpc_ebslee`, state `F`,
+  exit status 0, walltime `00:04:15` (qtime 2026-09-29 09:53:54, mtime
+  09:58:15 +08:00).
+- Host-pinned select `host=hpc-gaas-g14 + hpc-gaas-g10 + hpc-gaas-g09`, each
+  `ngpus=4:ncpus=48:mem=1000GB`, `place=scatter`, no `mpiprocs`; 12 ranks,
+  4 per node, one rank per GPU (rank-map gate PASS: 12 rank lines, 4 per
+  host on 3 distinct hosts, 4 container-visible GPUs per host).
+- Pre-submit contention snapshot (both approved queues inspected): no
+  eligible node existed in `gpu_ded` (all of g01/g02/g03/g20/g21/g22 lacked
+  ≥4 free GPUs); eligible `gpu_as` nodes were g09/g10/g13/g14 only (the
+  pristine-capable g16/g17 and g04/g05 now carry `Qlist=gpu_aisg` and are
+  off-limits). No pristine trio existed; the least-contended eligible trio
+  g14+g10+g09 was selected and host-pinned. Recorded co-tenant state at
+  submission: g14 one light-active job (1 GPU + 12 CPUs, ~300% CPU, ~19 GB
+  resident); g10 one light-active job (2 GPUs + 24 CPUs, ~191% CPU);
+  g09 two light-active jobs (3 GPUs + 36 CPUs total). g13 was rejected for
+  the third slot (single heavy holder: 4 GPUs + 48 CPUs + 1 TB allocated,
+  ~275 GB resident). Full snapshot: `outputs/3x4-GAAS-baseline_v1.presubmit_pbsnodes.log`.
+
+Launch and environment:
+
+- Execution tree: clean detached worktree
+  `.codex-worktrees/TASK-3X4-000-9230b5a` at
+  `9230b5a27d5a0b6365380a1a3b6814670c6ea1e7` (remote primary clone preserved
+  untouched; Workflow 01 Mode B).
+- Validated Approach-1 launch: container `/usr/local/mpi/bin/mpirun` +
+  `multi-node-test/rsh_pbsdsh_container.sh` bridge, `plm_rsh_no_tree_spawn=1`,
+  `plm_rsh_num_concurrent=1`, `routed=direct`, `--bind-to none`,
+  `-x PATH -x LD_LIBRARY_PATH -x NCCL_IB_HCA`, de-duplicated hostfile with
+  `slots=4`; NVIDIA HPC Benchmarks v26.02 container; modules
+  `apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0`.
+- `NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_8,mlx5_9`
+  verified set on all 12 ranks by the pre-launch probe.
+- OMP record (no tuning choice made; incoming/default state preserved):
+  incoming `OMP_NUM_THREADS=48` on all 12 ranks (PBS-supplied allocation CPU
+  count), `OMP_PLACES`/`OMP_PROC_BIND` unset in the rank environment; the
+  v26.02 wrapper's documented defaults (`OMP_PLACES=sockets`,
+  `OMP_PROC_BIND=TRUE`) therefore applied at application launch. No
+  OMP/CPU/memory-affinity flag was set or forwarded.
+- Effective application defaults echoed by the package: `--tolerance 1e-12`,
+  `--preset-gemm-kernel 90`, `--u-panel-chunk-nbs 8`,
+  `--call-dgemv-with-multiple-threads 0`, `--Anq-device 0`,
+  `--cuda-host-register-step 2048`, `--fill-device 0`,
+  `--fill-device-buffer-size 3048`, `--mpi-use-host-threads 1`.
+
+Result (factual, from `outputs/3x4-GAAS-baseline_v1.o`):
+
+- Internal test phase ran (`--skip-tests 0`): GEMM test 9.76 s AVG
+  (604277.19 GFLOPS AVG); MPI/NCCL broadcast and pdgemv component tests
+  present.
+- Phases: Constructor 0.09 s; RNG 108.26 s AVG (MAX 113.71 on g09);
+  Set Diagonal 0.02 s; Get Anorm 0.12 s; Sp 20.59 s; matgen 134.58 s;
+  **LU 16.52 s**; **iterative solver 19.99 s** (3 iterations).
+- Solver L-infinite residuals (finite, converging): `4.88488318e-04`,
+  `9.94571092e-10`, `1.09573917e-13`.
+- Normalized residual `3.784553E-04` — **PASSED** (threshold 16).
+- **Overall: `GFLOPS = 2.0193e+06`, per GPU = 168271.05** (the HPL-MxP
+  performance to report). LU-only: `4.4619e+06` GFLOPS, 371823.91 per GPU.
+- Memory evidence: per-process host consumption MAX 144.203 GB (available
+  MIN 17.718 GB; 2.097 GB available at the matgen peak); per-process device
+  consumption MAX 79.561 GB (available MIN 138.843 GB; 58.608 GB during the
+  solve). Continuous GPU-monitoring output is unavailable by design
+  (`--monitor-gpu 0`); pre/post-run `nvidia-smi` snapshots on the mother
+  node (g14) show healthy hardware (H200, driver 580.126.20, 30–34 °C,
+  1980 MHz SM clocks post-run, 0 MiB residual GPU memory).
+- Stderr records the known non-fatal recurring notes (`cuda/13.1` module
+  hint, unknown-groupid warnings) and the two remote bridge/orted spawn
+  lines (g10, g09) as provenance.
+
+## Runtime error-patching attempts
+
+None. The single authorized scored attempt completed normally; no retry was
+needed and none is authorized by TASK-3X4-000.

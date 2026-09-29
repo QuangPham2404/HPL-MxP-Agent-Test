@@ -1,0 +1,161 @@
+# TASK-3X4-000 pre-submit contention snapshot and trio selection record
+# Experiment: 3x4-GAAS-baseline / attempt 3x4-GAAS-baseline_v1
+# Captured: 2026-09-29T09:53:50+08:00 (local assembly; remote capture timestamp at end of file)
+
+## Selection summary
+
+- Approved queue scope: gpu_as, gpu_ded only. gpu_free and its successors
+  serve a single node and are outside the approved scope; gpu_aisg is off-limits.
+- Queue/Qlist state (current, supersedes the stale historical g06-g17=gpu_as map):
+  gpu_ded = g01,g02,g03,g20,g21,g22; gpu_as(+gpu_ppu) = g06..g15;
+  gpu_aisg = g04,g05,g16..g19,g23,g24; gpu_free = g25.
+- gpu_ded eligibility: NO node has >=4 free GPUs (g01/g03/g21/g22 0 free,
+  g02 2 free, g20 3 free). No gpu_ded trio is possible.
+- gpu_as eligibility (need >=4 free GPUs, >=48 free CPUs, >=1000GB free mem):
+  g09 (5 GPU, 64 CPU, 1tb free; 2 jobs), g10 (6 GPU, 76 CPU, 1tb; 1 job),
+  g13 (4 GPU, 52 CPU, 1tb; 1 job), g14 (7 GPU, 88 CPU, 2tb; 1 job).
+  g06/g07/g08/g11/g12/g15 lack >=4 free GPUs. The pristine nodes g16/g17
+  (and g04/g05) are now Qlist=gpu_aisg and therefore not eligible.
+- No pristine trio exists in either approved queue. Per TASK-3X4-000
+  Section 1.4D the least-contended eligible trio is selected.
+- Co-tenant condition (from qstat -f below):
+  * g14: job 68707, 1 GPU + 12 CPUs, ~300% CPU active, ~19 GB resident,
+    231h walltime - light-active.
+  * g10: job 73732, 2 GPUs + 24 CPUs, ~191% CPU, ~8 GB resident - light-active.
+  * g09: jobs 73863 (1 GPU + 12 CPUs, ~110%) + 73832 (2 GPUs + 24 CPUs,
+    ~282%), ~14 GB resident total - two light-active tenants.
+  * g13: job 73217, 4 GPUs + 48 CPUs + 1 TB allocated, ~400% CPU,
+    ~275 GB RESIDENT - heavy-idle-holder profile (exp-5 risk profile:
+    large resident holdings degrade host-memory phases even when idle).
+- SELECTED TRIO: g14 + g10 + g09 in queue gpu_as (all three nodes carry
+  only light-active co-tenants with small resident memory). Alternative
+  {g14,g10,g13} was rejected because g13 carries the single heaviest
+  co-tenant (4 GPU + 48 CPU + 1 TB allocation, 275 GB resident).
+- Remaining contention: all three selected nodes are non-pristine with
+  1-2 light-active co-tenant jobs each; a mid-run co-tenant arrival/departure
+  race between snapshot and run completion is possible and is recorded as a
+  known limitation.
+
+## Raw snapshot (pbsnodes -aSj, Qlist map, queue defs, co-tenant qstat -f)
+
+                                                        mem       ncpus   nmics   ngpus
+vnode           state           njobs   run   susp      f/t        f/t     f/t     f/t   jobs
+--------------- --------------- ------ ----- ------ ------------ ------- ------- ------- -------
+hpc-gaas-g01    free                 5     5      0     15gb/2tb   4/100     0/0     0/8 73078,73079,73118,73603,73807[1]
+hpc-gaas-g02    free                 3     3      0    515gb/2tb  28/100     0/0     2/8 73807[3],73917,73391[0]
+hpc-gaas-g03    free                 4     4      0     15gb/2tb   4/100     0/0     0/8 67044,73391[1],67044,73391[1]
+hpc-gaas-g04    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g05    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g06    free                 8     8      0     15gb/2tb   4/100     0/0     0/8 72600,68937,73656,70448,73869,71885,73221,73278
+hpc-gaas-g07    free                 6     6      0    515gb/2tb  28/100     0/0     2/8 73870,73924,73290,73374,73925,73291
+hpc-gaas-g08    free                 6     6      0     15gb/2tb   4/100     0/0     0/8 72869,71513,73375,71886,71513,72038
+hpc-gaas-g09    free                 2     2      0      1tb/2tb  64/100     0/0     5/8 73863,73832
+hpc-gaas-g10    free                 1     1      0      1tb/2tb  76/100     0/0     6/8 73732
+hpc-gaas-g11    free                 4     4      0    515gb/2tb  28/100     0/0     2/8 71787,73307,71787,73307
+hpc-gaas-g12    free                 1     1      0     15gb/2tb   4/100     0/0     0/8 72885
+hpc-gaas-g13    free                 1     1      0      1tb/2tb  52/100     0/0     4/8 73217
+hpc-gaas-g14    free                 1     1      0      2tb/2tb  88/100     0/0     7/8 68707
+hpc-gaas-g15    free                 1     1      0     15gb/2tb   4/100     0/0     0/8 73740
+hpc-gaas-g16    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g17    free                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g18    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g19    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g20    free                 3     3      0    765gb/2tb  40/100     0/0     3/8 73807[2],67357,73672
+hpc-gaas-g21    free                 1     1      0     15gb/2tb   4/100     0/0     0/8 67045
+hpc-gaas-g22    free                 2     2      0     15gb/2tb   4/100     0/0     0/8 73391[3],73391[4]
+hpc-gaas-g23    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g24    down                 0     0      0      2tb/2tb 100/100     0/0     8/8 --
+hpc-gaas-g25    free                 3     3      0      1tb/2tb  64/100     0/0     5/8 73442,73852,73918
+hpc-gaas-dm1    free                 0     0      0      1tb/1tb 256/256     0/0     0/0 --
+hpc-gaas-dm2    free                 0     0      0      1tb/1tb 128/128     0/0     0/0 --
+
+=== per-node Qlist map (pbsnodes <node> | grep Qlist) ===
+hpc-gaas-g01 Qlist=gpu_ded
+hpc-gaas-g02 Qlist=gpu_ded
+hpc-gaas-g03 Qlist=gpu_ded
+hpc-gaas-g04 Qlist=gpu_aisg
+hpc-gaas-g05 Qlist=gpu_aisg
+hpc-gaas-g06 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g07 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g08 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g09 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g10 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g11 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g12 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g13 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g14 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g15 Qlist=gpu_as,gpu_ppu
+hpc-gaas-g16 Qlist=gpu_aisg
+hpc-gaas-g17 Qlist=gpu_aisg
+hpc-gaas-g18 Qlist=gpu_aisg
+hpc-gaas-g19 Qlist=gpu_aisg
+hpc-gaas-g20 Qlist=gpu_ded
+hpc-gaas-g21 Qlist=gpu_ded
+hpc-gaas-g22 Qlist=gpu_ded
+hpc-gaas-g23 Qlist=gpu_aisg
+hpc-gaas-g24 Qlist=gpu_aisg
+hpc-gaas-g25 Qlist=gpu_free
+
+=== queue definitions gpu_as / gpu_ded ===
+    queue_type = Execution
+    acl_groups = as_hpc_sblee,hpc_admin,hpc_angel_ascymiao_group,
+    enabled = True
+    started = True
+    queue_type = Execution
+    acl_groups = hpc_admin,hpc_asjagath_group,hpc_astjcham_group,
+    enabled = True
+    started = True
+
+=== co-tenant job details (eligible gpu_as nodes) ===
+--- job 68707 ---
+    Job_Name = LLM_MULTI
+    resources_used.cpupercent = 300
+    resources_used.mem = 19180284kb
+    resources_used.walltime = 231:49:44
+    job_state = R
+    exec_vnode = (hpc-gaas-g14:ncpus=12:ngpus=1:mem=262144000kb)
+    Resource_List.mem = 250gb
+    Resource_List.ncpus = 12
+    Resource_List.ngpus = 1
+--- job 73732 ---
+    Job_Name = elf_owt_gpt2_hm3
+    resources_used.cpupercent = 191
+    resources_used.mem = 8250912kb
+    resources_used.walltime = 11:25:56
+    job_state = R
+    exec_vnode = (hpc-gaas-g10:ncpus=24:ngpus=2:mem=524288000kb)
+    Resource_List.mem = 500gb
+    Resource_List.ncpus = 24
+    Resource_List.ngpus = 2
+--- job 73217 ---
+    Job_Name = pusht9b-nc-e345
+    resources_used.cpupercent = 400
+    resources_used.mem = 288834652kb
+    resources_used.walltime = 15:02:10
+    job_state = R
+    exec_vnode = (hpc-gaas-g13:ncpus=48:ngpus=4:mem=1048576000kb)
+    Resource_List.mem = 1000gb
+    Resource_List.ncpus = 48
+    Resource_List.ngpus = 4
+    estimated.exec_vnode = (hpc-gaas-g14:ncpus=48:ngpus=4:mem=1048576000kb)
+--- job 73863 ---
+    Job_Name = LLM_MERALION33BASR
+    resources_used.cpupercent = 110
+    resources_used.mem = 3879324kb
+    resources_used.walltime = 04:03:09
+    job_state = R
+    exec_vnode = (hpc-gaas-g09:ncpus=12:ngpus=1:mem=262144000kb)
+    Resource_List.mem = 250gb
+    Resource_List.ncpus = 12
+    Resource_List.ngpus = 1
+--- job 73832 ---
+    Job_Name = secalign70b_api
+    resources_used.cpupercent = 282
+    resources_used.mem = 10047072kb
+    resources_used.walltime = 08:48:11
+    job_state = R
+    exec_vnode = (hpc-gaas-g09:ncpus=24:ngpus=2:mem=524288000kb)
+    Resource_List.mem = 500gb
+    Resource_List.ncpus = 24
+    Resource_List.ngpus = 2
+2026-09-29T09:53:44+08:00

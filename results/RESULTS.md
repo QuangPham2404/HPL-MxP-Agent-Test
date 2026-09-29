@@ -259,5 +259,6 @@ This report records validated raw result data only. No optimization analysis or 
 | 2x8-GAAS-phase3ab-host-runtime | 2x8-GAAS-phase3ab-host-runtime_c-sockets-close-t6-free_v2 | 429056 | 3072 | 4x4 | row | 6 | sockets | CLOSE | PASSED | 6.5575e+06 | experiments/2x8-GAAS/phase3ab-host-runtime/outputs/2x8-GAAS-phase3ab-host-runtime_c-sockets-close-t6-free_v2.out |
 | 2x8-GAAS-phase3ab-host-runtime | 2x8-GAAS-phase3ab-host-runtime_c-sockets-spread-t4-free_v2 | 429056 | 3072 | 4x4 | row | 4 | sockets | SPREAD | PASSED | 6.5355e+06 | experiments/2x8-GAAS/phase3ab-host-runtime/outputs/2x8-GAAS-phase3ab-host-runtime_c-sockets-spread-t4-free_v2.out |
 | 2x8-GAAS-phase3ab-host-runtime | 2x8-GAAS-phase3ab-host-runtime_c-sockets-spread-t6-free_v2 | 429056 | 3072 | 4x4 | row | 6 | sockets | SPREAD | PASSED | 6.5575e+06 | experiments/2x8-GAAS/phase3ab-host-runtime/outputs/2x8-GAAS-phase3ab-host-runtime_c-sockets-spread-t6-free_v2.out |
+| 3x4-GAAS-baseline | 3x4-GAAS-baseline_v1 | 480000 | 3072 | 4x3 | column | 48 | sockets | TRUE | PASSED | 2.0193e+06 | experiments/3x4-GAAS/baseline/outputs/3x4-GAAS-baseline_v1.o |
 
 Source: `results/metrics.csv`.
