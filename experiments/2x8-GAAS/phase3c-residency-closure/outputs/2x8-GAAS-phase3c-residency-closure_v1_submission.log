@@ -1,0 +1,106 @@
+TASK-2X8-011 phase3c-residency-closure — v1 submission record
+==============================================================
+
+Pre-submission state determination (bounded check, 2026-10-01T14:04:02+08:00)
+- qstat -u pham0094: no jobs at all — no task job (name 2x8_phase3c_res)
+  existed; the earlier interrupted Codex qsub did NOT create a job.
+- Exact remote v1 PBS output paths in the execution worktree
+  (.codex-worktrees/TASK-2X8-011-ad541ac-residency-v1/experiments/
+  2x8-GAAS/phase3c-residency-closure/outputs/):
+  2x8-GAAS-phase3c-residency-closure_v1.o and _v1.e — both ABSENT.
+- No v1 attempt artifacts (stagea/stageb/conf arm files, hostfile, logs)
+  anywhere in the execution worktree, the 689fafd worktree (outputs/ contains
+  only .gitkeep), or the primary clone (no experiments/2x8-GAAS/ directory).
+- Execution worktree verified: detached HEAD, clean status, commit
+  ad541ac946ffe69a060ecb7e595607cfe38acc5c; script present at
+  scripts/run_phase3c_residency_closure.pbs.
+- Decision per worker instruction: no such job exists and both PBS-level v1
+  files are absent -> submit exactly once using the approved README command.
+
+Submission
+- Submission timestamp (cluster): 2026-10-01T14:06:57+08:00
+- Working directory: /home/pham0094/hpl_hpcg_hplmxp_container/
+  HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/
+  TASK-2X8-011-ad541ac-residency-v1/experiments/2x8-GAAS/
+  phase3c-residency-closure
+- Command (approved README form, host-pinned):
+  qsub -q gpu_as \
+    -l "select=host=hpc-gaas-g12:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00" \
+    -v "ATTEMPT_TAG=v1" \
+    -o outputs/2x8-GAAS-phase3c-residency-closure_v1.o \
+    -e outputs/2x8-GAAS-phase3c-residency-closure_v1.e \
+    scripts/run_phase3c_residency_closure.pbs
+- qsub exit code: 0
+- PBS job ID: 76167.gaas
+- Submitted exactly once (single qsub; ATTEMPT_TAG=v1; script, controls,
+  resources, nodes, branch, and attempt tag unchanged from the approved form).
+
+Bounded monitoring record (qstat -u $USER, >=5 min apart, <=12 checks)
+[poll 1] 2026-10-01T14:07:53+08:00 :: 76167.gaas      pham0094 gpu_as   2x8_phase* 151555   2 192  4000g 02:00 R 00:00
+[poll 2] 2026-10-01T14:12:54+08:00 :: 76167.gaas      pham0094 gpu_as   2x8_phase* 151555   2 192  4000g 02:00 R 00:05
+[poll 3] 2026-10-01T14:17:54+08:00 :: 76167.gaas      pham0094 gpu_as   2x8_phase* 151555   2 192  4000g 02:00 R 00:10
+[poll 4] 2026-10-01T14:22:55+08:00 :: 76167.gaas      pham0094 gpu_as   2x8_phase* 151555   2 192  4000g 02:00 R 00:14
+[poll 5] 2026-10-01T14:27:55+08:00 :: 76167.gaas not listed in qstat -u $USER (rc=0, output below)
+    qstat-output> (empty)
+[poll 5] job ended -> fetching final state with qstat -f 76167.gaas (final status check)
+qstat -f 76167.gaas rc=35 (saved /tmp/opencode/qstat_f_76167_final.txt)
+- [poll 1] 2026-10-01T14:07:53+08:00 :: 76167.gaas pham0094 gpu_as 2x8_phase3c_res R (elapsed 00:00)
+- [poll 2] 2026-10-01T14:12:54+08:00 :: 76167.gaas pham0094 gpu_as 2x8_phase3c_res R (elapsed 00:05)
+- [poll 3] 2026-10-01T14:17:54+08:00 :: 76167.gaas pham0094 gpu_as 2x8_phase3c_res R (elapsed 00:10)
+- [poll 4] 2026-10-01T14:22:55+08:00 :: 76167.gaas pham0094 gpu_as 2x8_phase3c_res R (elapsed 00:14)
+- [poll 5] 2026-10-01T14:27:55+08:00 :: 76167.gaas not listed in qstat -u $USER (rc=0) -> job ended
+- [final check] qstat -f 76167.gaas -> "Job has finished, use -x or -H" (rc=35);
+  qstat -xf 76167.gaas succeeded (rc=0).
+
+Final job metadata (qstat -xf 76167.gaas, 2026-10-01T14:2x+08:00)
+- Job_Name = 2x8_phase3c_res
+- Job_Owner = pham0094@hpc-gaas-hn2
+- job_state = F (finished), substate = 92, run_count = 1
+- Exit_status = 0
+- queue = gpu_as; project = hpc_ebslee; server = gaas
+- ctime (submitted) = Thu Oct  1 14:06:57 2026
+- qtime = Thu Oct  1 14:06:58 2026; stime (started) = Thu Oct  1 14:06:58 2026
+- mtime = obittime = Thu Oct  1 14:25:03 2026 (finished)
+- resources_used.walltime = 00:18:04
+- exec_host = hpc-gaas-g12/0*96+hpc-gaas-g14/0*96
+- exec_vnode = (hpc-gaas-g12:ncpus=96:ngpus=8:mem=2097152000kb)+(hpc-gaas-g14:ncpus=96:ngpus=8:mem=2097152000kb)
+- Resource_List.select = host=hpc-gaas-g12:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB
+- Resource_List.place = scatter; Resource_List.walltime = 02:00:00
+- resources_used: ncpus=192, ngpus=16, mem=1478383000kb, vmem=6719808240kb, cput=06:41:22, cpupercent=3808
+- Output_Path = .../outputs/2x8-GAAS-phase3c-residency-closure_v1.o
+- Error_Path  = .../outputs/2x8-GAAS-phase3c-residency-closure_v1.e
+- Variable_List includes ATTEMPT_TAG=v1, PBS_O_QUEUE=gpu_as,
+  PBS_O_WORKDIR=<worktree>/experiments/2x8-GAAS/phase3c-residency-closure
+- comment = Job run at Thu Oct 01 at 14:06 on (g12)+(g14) and finished
+- Stageout_status = 1
+
+Monitoring budget used: 6 qstat checks total (5 polls + 1 final-state fetch
+[qstat -f error + qstat -xf success]); no cancellation performed.
+
+Remote evidence inventory at completion (execution worktree outputs/):
+- PBS level: _v1.o (28789 B), _v1.e (1076 B)
+- Stage A arms (f0, a0, a1, a2, a3, a4, f1): .envprobe/.err/.out/.status each
+- Stage B arms (b0, b1, b2): .envprobe/.err/.out/.status each
+- Allocation level: _rankmap_v1.log, _envmap_v1.log, _carryforward_v1.log,
+  _hostfile_v1
+- No stagea-f2 or conf-* artifacts exist (branch took the Stage-B path).
+
+Output retrieval and verification (2026-10-01, approved SCP form)
+- Retrieved via scp -o BatchMode=yes into local
+  experiments/2x8-GAAS/phase3c-residency-closure/outputs/:
+  PBS _v1.o/_v1.e (2), all 7 Stage-A arm sets .out/.err/.status/.envprobe
+  (28), all 3 Stage-B arm sets (12), and the allocation-level
+  rankmap/envmap/carryforward logs + hostfile (4) = 46 new files.
+- File-list check: local outputs/ matches the remote execution-worktree
+  outputs/ exactly for all 47 shared files (remote 47 = 46 new + presubmit
+  pbsnodes log already tracked locally); only local-only extra is this
+  submission log. Attempt-specific names preserved, nothing overwritten.
+- SHA-256 check: all 47 shared files byte-identical remote vs local
+  (47/47 checksums match).
+- PBS stderr (_v1.e) contains only module-load notes and the known benign
+  "WARNING: group: unknown groupid 1304617061" lines; no application errors.
+- Factual per-arm outcome recorded in evidence: 10/10 arms exit 0,
+  verification=PASSED, settings_echo_check=PASS; carry-forward log records
+  stageA stability=STABLE, branch=Stage-B path,
+  stageB outcome=SPREAD_RECORDED_NO_FURTHER_REFINEMENT,
+  branch_outcome=STAGE_B_RUN_THEN_STOP.
