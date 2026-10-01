@@ -13,12 +13,17 @@ pre-authorized mechanical branches with stopping rules
 (tasks/TASK-2X8-011.md Sections 1.6A-1.6C); the final residency conclusion
 is reserved for the Strategic Analyst via `ANALYSE_RESULTS`.
 
-**Status: Prepared (2026-10-01) — reviewed local scripts; presubmit
-`pbsnodes -aSj` snapshot taken and the same-queue `gpu_as` pair g12+g14
-selected (see Submission); nothing submitted yet. Submission is already
+**Status: Executed (2026-10-01) — Stage A + Stage B ran in PBS job
+`76167.gaas` (completed, exit 0, all ten arms PASSED); the mechanical branch
+took the Stage-B path and TASK-2X8-011 stopped after the buffer closure with
+`SPREAD_RECORDED_NO_FURTHER_REFINEMENT` (see Run summary).**
+
+**Prior status (2026-10-01, pre-submission): reviewed local scripts;
+presubmit `pbsnodes -aSj` snapshot taken and the same-queue `gpu_as` pair
+g12+g14 selected (see Submission). Submission was already
 authorized under the unchanged Section 1.12 authorization of
-TASK-2X8-011; no new approval is needed, and submission remains limited
-to the exact approved task scope.**
+TASK-2X8-011; submission remained limited to the exact approved task
+scope.**
 
 ## Structure
 
@@ -285,6 +290,110 @@ Sections 1.6B/1.6C stability rule, bounded branch, and Stage-B rules.
   `ANALYSE_RESULTS` (Sections 1.4, 1.11).
 - One multinode job at a time (GAAS Blocker 7); no concurrent submissions.
 
+## Run summary
+
+One submitted attempt family (tag `v1`, PBS job `76167.gaas`, submitted
+2026-10-01T14:06:57+08:00, queue `gpu_as`, project `hpc_ebslee`, host-pinned
+`select=host=hpc-gaas-g12:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00`;
+PBS `stime` 14:06:58, finished 14:25:03, `job_state=F`, `Exit_status=0`,
+`resources_used.walltime` 00:18:04). All ten arms ran sequentially on the
+same node pair with identical fixed controls; each `.status` records
+`exit_status=0`, `verification=PASSED`, and `settings_echo_check=PASS`.
+Factual per-arm data as emitted by the application output (no
+interpretation):
+
+| arm | residency flags (effective echo) | normalized residual | verdict | overall GFLOP/s (per GPU) | LU s / LU GFLOP/s | IR s / IR/LU / iterations | host mem cons. MAX | device mem cons. MAX / post-matgen headroom |
+|---|---|---|---|---|---|---|---|---|
+| F0 | `fill-device 1`, Anq 0 (overridden), buffer 3048 | 1.416310E-05 | PASSED | 6.5296e+06 (408101.11) | 7.78 / 6.7713e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB |
+| A0 | `fill-device 0`, Anq 0, buffer 3048 (default) | 3.432915E-04 | PASSED | 3.4031e+06 (212694.89) | 7.82 / 6.7360e+06 | 7.66 / 0.980 / 3 | 86.137 GB | 49.121 GB / 88.899 GB |
+| A1 | `fill-device 0`, Anq 24576, buffer 3048 (default) | 2.757121E-04 | PASSED | 4.0811e+06 (255066.06) | 7.76 / 6.7848e+06 | 5.14 / 0.662 / 3 | 66.450 GB | 68.808 GB / 69.212 GB |
+| A2 | `fill-device 0`, Anq 49152, buffer 3048 (default) | 2.468264E-04 | PASSED | 4.6299e+06 (289366.28) | 7.77 / 6.7757e+06 | 3.60 / 0.463 / 3 | 46.762 GB | 88.496 GB / 49.524 GB |
+| A3 | `fill-device 0`, Anq 73728, buffer 3048 (default) | 1.830235E-04 | PASSED | 5.1971e+06 (324817.82) | 7.77 / 6.7778e+06 | 2.36 / 0.304 / 3 | 27.075 GB | 108.183 GB / 29.837 GB |
+| A4 | `fill-device 0`, Anq 98304, buffer 3048 (default) | 8.956988E-05 | PASSED | 5.9457e+06 (371608.70) | 7.76 / 6.7857e+06 | 1.10 / 0.142 / 3 | 7.387 GB | 127.871 GB / 10.149 GB |
+| F1 | `fill-device 1`, Anq 0 (overridden), buffer 3048 | 1.416310E-05 | PASSED | 6.5238e+06 (407738.97) | 7.78 / 6.7652e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB |
+| B0 | `fill-device 1`, Anq 0 (overridden), buffer 2048 | 1.416310E-05 | PASSED | 6.5269e+06 (407932.64) | 7.78 / 6.7690e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB |
+| B1 | `fill-device 1`, Anq 0 (overridden), buffer 4096 | 2.794070E-05 | PASSED | 6.3963e+06 (399769.64) | 7.79 / 6.7605e+06 | 0.44 / 0.056 / 3 | 0.520 GB | 134.739 GB / 3.280 GB |
+| B2 | `fill-device 1`, Anq 0 (overridden), buffer 3048 | 1.416310E-05 | PASSED | 6.5373e+06 (408579.81) | 7.77 / 6.7795e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB |
+
+Attempt IDs are the full
+`2x8-GAAS-phase3c-residency-closure_<arm>_v1` stems. Per-arm `.status`
+start/end (+08:00; runtime = end − start): stagea-f0 14:07:49→14:08:47
+(00:00:58), stagea-a0 14:09:09→14:11:40 (00:02:31), stagea-a1
+14:12:03→14:14:07 (00:02:04), stagea-a2 14:14:31→14:16:16 (00:01:45),
+stagea-a3 14:16:38→14:18:02 (00:01:24), stagea-a4 14:18:26→14:19:30
+(00:01:04), stagea-f1 14:19:53→14:20:52 (00:00:59), stageb-b0
+14:21:16→14:22:13 (00:00:57), stageb-b1 14:22:37→14:23:36 (00:00:59),
+stageb-b2 14:23:59→14:24:59 (00:01:00).
+
+Post-matrix-generation per-process available MIN (from each `.status`
+`matgen_headroom` line), system/device: 238.571/2.767 GB (F0),
+152.286/88.899 GB (A0), 171.875/69.212 GB (A1), 191.590/49.524 GB (A2),
+211.375/29.837 GB (A3), 231.069/10.149 GB (A4), 238.099/2.767 GB (F1),
+238.247/2.767 GB (B0), 238.017/3.280 GB (B1), 238.350/2.767 GB (B2).
+
+Facts not representable in the current `results/metrics.csv` schema,
+recorded here for Codex review (schema/extractor unchanged):
+
+- The residency configuration per arm is identified by the attempt label
+  (`stagea-f0`, `stagea-a0`..`stagea-a4`, `stagea-f1`, `stageb-b0`..
+  `stageb-b2`); the CSV carries the shared fixed controls and per-arm score.
+- OMP contract verified per arm: ten per-arm env probes each confirmed
+  `OMP_NUM_THREADS=4` with `OMP_PLACES`/`OMP_PROC_BIND` unset on all 16
+  ranks (10 x 16 = 160 verification lines in the env-map log;
+  allocation-level rank-map gate PASS on both hosts). The incoming
+  PBS-supplied `OMP_NUM_THREADS=96` was recorded in the rank-map log and
+  neutralized per arm by the explicit job-shell export + `mpirun -x
+  OMP_NUM_THREADS` forwarding; the effective placement policy is the
+  launcher package defaults `OMP_PLACES=sockets` / `OMP_PROC_BIND=TRUE`.
+- The settings block of every `.out` echoed `--u-panel-chunk-nbs = 8`,
+  `--cuda-host-register-step = 2048`,
+  `--call-dgemv-with-multiple-threads = 0`, and
+  `--preset-gemm-kernel = 90` (effective via default; flag omitted).
+  Partial arms echoed `--fill-device = 0` with the requested
+  `--Anq-device` value and the default buffer 3048; fill arms echoed
+  `--fill-device = 1` with the requested buffer and Anq echo 0.
+- Iterative refinement emitted 3 solver iterations for every arm; IR seconds
+  (AVG) are in the table above; L-infinite residuals per iteration are in
+  each `.out`. LU GFLOP/s (excluding IR) and per-GPU values are in the
+  table above.
+- Known non-fatal stderr notes preserved in the evidence: the PBS `.e`
+  contains module-load notes and 22 `unknown groupid 1304617061` warnings;
+  each per-arm `.err` contains the bridge `cmd=[...]` diagnostic and one
+  `unknown groupid` warning. None affected probes or scored runs.
+- Integrity: all 47 shared output files were retrieved from the remote
+  execution worktree
+  `.codex-worktrees/TASK-2X8-011-ad541ac-residency-v1` (commit
+  `ad541ac946ffe69a060ecb7e595607cfe38acc5c`) and verified byte-identical
+  by SHA-256 against the remote copies (47/47; independently rechecked on
+  resume). One local-only operational log (`..._v1_submission.log`) was
+  produced on the submission side and is preserved alongside.
+
+### Stage-A and Stage-B mechanical outcome
+
+The script applied the encoded TASK-2X8-011 Sections 1.6B/1.6C rules and
+recorded in the carry-forward log:
+
+- Stage-A stability: F0/F1 = 6.5296e+06 / 6.5238e+06 (spread 0.09%,
+  <=2.0%) with the same-regime proxy consistent (IR 0.29/0.29 s; host
+  consumption 0.004/0.004 GB); `stageA stability=STABLE`; full-fill
+  reference 6.5267e+06 (two-control median).
+- Stage-A bounded branch: best valid partial-residency arm stagea-a4
+  (Anq=98304, 5.9457e+06) is not >2.0% above the full-fill reference, and
+  the reference lies within the <=2.0% leading region, so the conditional
+  Stage-B full-fill buffer closure ran (B0=2048, B1=4096, B2=3048). No F2
+  control and no confirmation pair was used.
+- Stage-B facts: B0/B1/B2 = 6.5269e+06 / 6.3963e+06 / 6.5373e+06; the
+  three-way spread exceeds 2.0% (B2 vs B1 ~2.2%) while neither 2048 nor
+  4096 is >2.0% above the in-stage 3048 MB control B2; outcome
+  `SPREAD_RECORDED_NO_FURTHER_REFINEMENT` (Sections 1.6C rules 4-5: stop
+  and preserve without further buffer refinement), then
+  `branch_outcome=STAGE_B_RUN_THEN_STOP`.
+- Anti-loop state: every arm ran at most once; no new Anq/buffer values, no
+  intermediate points, no second refinement pass, and no automatic N reopen.
+  These are mechanical carry-forward facts only; the final Phase-3C
+  residency conclusion belongs to the Strategic Analyst via
+  `ANALYSE_RESULTS`.
+
 ## Attempt and output naming
 
 Per-arm attempt ID:
@@ -332,7 +441,8 @@ validated host-pinned pattern as the phase1a/phase3ab/TASK-010
 submissions (only eligible idle `gpu_as`/`gpu_ded` nodes).
 
 Exact approved host-pinned submission command (`ATTEMPT_TAG=v1`, walltime
-`02:00:00`; documented form only — not submitted yet):
+`02:00:00`; submitted exactly once as PBS job `76167.gaas` on 2026-10-01,
+see Run summary):
 
 ```bash
 qsub -q gpu_as \
