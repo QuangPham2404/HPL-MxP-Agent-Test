@@ -13,10 +13,12 @@ pre-authorized mechanical branches with stopping rules
 (tasks/TASK-2X8-011.md Sections 1.6A-1.6C); the final residency conclusion
 is reserved for the Strategic Analyst via `ANALYSE_RESULTS`.
 
-**Status: Prepared (2026-10-01) — reviewed local scripts only; nothing
-submitted yet. Submission is already authorized under the unchanged
-Section 1.12 authorization of TASK-2X8-011; no new approval is needed,
-and submission remains limited to the exact approved task scope.**
+**Status: Prepared (2026-10-01) — reviewed local scripts; presubmit
+`pbsnodes -aSj` snapshot taken and the same-queue `gpu_as` pair g12+g14
+selected (see Submission); nothing submitted yet. Submission is already
+authorized under the unchanged Section 1.12 authorization of
+TASK-2X8-011; no new approval is needed, and submission remains limited
+to the exact approved task scope.**
 
 ## Structure
 
@@ -308,29 +310,33 @@ of `stagea-f0`, `stagea-a0`..`stagea-a4`, `stagea-f1`, `stagea-f2`,
 Retries use a new sweep tag (e.g. `v2`) for both `ATTEMPT_TAG` and the
 `-o`/`-e` names.
 
-## Submission (from this directory; requires TASK-2X8-011 execution authorization)
+## Submission (from this directory; already authorized under Section 1.12)
 
-Before submission, use the approved node-status workflow (`pbsnodes -aSj`
-over the eligible queues) to prefer the cleanest eligible same-queue
-2-node allocation and preserve the contention/provenance snapshot as
-submission-side evidence (TASK-2X8-011 Section 1.6A).
+Submission is already authorized under the unchanged Section 1.12
+authorization of TASK-2X8-011; no new approval is needed, and submission
+remains limited to the exact approved task scope.
+
+Presubmit node-status check (TASK-2X8-011 Section 1.6A), taken
+2026-10-01T13:53:52+08:00: the `pbsnodes -aSj` snapshot over the
+eligible queues is preserved as submission-side contention/provenance
+evidence at
+`outputs/2x8-GAAS-phase3c-residency-closure_v1.presubmit_pbsnodes.log`.
+Selected same-queue `gpu_as` pair: `hpc-gaas-g12` + `hpc-gaas-g14`.
+Factual selection basis, from the snapshot: g12 and g14 were both `free`
+with 8/8 GPUs and 100/100 ncpus available and no assigned jobs; g10 was
+also idle with the same free resources but was the most recently used of
+the idle eligible `gpu_as` nodes (last used 11:33:28 versus 11:26:29 for
+g12/g14); and `gpu_ded` had only one eligible free full-GPU node (g22),
+so no same-queue `gpu_ded` pair was available. This is the same
+validated host-pinned pattern as the phase1a/phase3ab/TASK-010
+submissions (only eligible idle `gpu_as`/`gpu_ded` nodes).
+
+Exact approved host-pinned submission command (`ATTEMPT_TAG=v1`, walltime
+`02:00:00`; documented form only — not submitted yet):
 
 ```bash
-qsub -q <gpu_as|gpu_ded> \
-     -v "ATTEMPT_TAG=v1" \
-     -o outputs/2x8-GAAS-phase3c-residency-closure_v1.o \
-     -e outputs/2x8-GAAS-phase3c-residency-closure_v1.e \
-     scripts/run_phase3c_residency_closure.pbs
-```
-
-A documented host-pinned select may be passed at qsub when live
-`pbsnodes`/`Qlist` checks identify a clean eligible node pair (only
-eligible idle `gpu_as`/`gpu_ded` nodes; same validated pattern as the
-phase1a/phase3ab/TASK-010 submissions):
-
-```bash
-qsub -q <gpu_as|gpu_ded> \
-     -l select=host=hpc-gaas-<n1>:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-<n2>:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g12:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
      -v "ATTEMPT_TAG=v1" \
      -o outputs/2x8-GAAS-phase3c-residency-closure_v1.o \
      -e outputs/2x8-GAAS-phase3c-residency-closure_v1.e \
@@ -402,10 +408,10 @@ status alone.
 - `outputs/` — per-arm `.out`/`.err`/`.status`, per-arm `.envprobe` raw
   env-probe evidence, the attempt-specific deduplicated hostfile, the
   allocation-level rank-map log, the per-arm env-map log, the
-  stability-rule/branch carry-forward log, and PBS `.o`/`.e` (including
-  the environment provenance records: `module list`, Apptainer version,
-  container MPI `mpirun --version`, and the execution-worktree Git
-  revision)
+  stability-rule/branch carry-forward log, the presubmit `pbsnodes -aSj`
+  node-status snapshot, and PBS `.o`/`.e` (including the environment
+  provenance records: `module list`, Apptainer version, container MPI
+  `mpirun --version`, and the execution-worktree Git revision)
 - `scripts/run_phase3c_residency_closure.pbs` — the Phase-3C run script
   (header documents purpose, working directory, inputs, outputs,
   assumptions, and every encoded branch/stopping rule)
