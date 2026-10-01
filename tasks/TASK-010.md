@@ -832,9 +832,10 @@ at commit `d5a789b609a8b0f7742c6e8dc347b3e59b46d900`.
 - `tasks/TASK-010.md` — this Section 2 report + front matter only (Section
   1 unchanged).
 - `progress/2026-10-01-progress.md` — new progress record.
-- Untracked-but-preserved: the 23 Step-A evidence/log files under
-  `experiments/2x8-GAAS/task010-geometry-reclosure/outputs/` (retrieved
-  during execution) and the pre-existing untracked `hpl-mxp-runs-on-gaas/`.
+- The 23 Step-A evidence/log files under
+  `experiments/2x8-GAAS/task010-geometry-reclosure/outputs/` were retrieved,
+  verified, and committed with the completion record. The pre-existing
+  untracked `hpl-mxp-runs-on-gaas/` remains untouched.
 - Commit d5a789b (before execution) contains the experiment family and the
   EXECUTING start; the completion commit contains the evidence, results,
   README, task report, and progress record.
