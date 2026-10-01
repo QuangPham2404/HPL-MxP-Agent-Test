@@ -1,0 +1,83 @@
+submission_timestamp: 2026-10-01T11:13:39+08:00
+worker: OpenCode execution worker for parent task TASK-010 (Step-A coarse N re-sweep, attempt v1)
+remote_execution_tree: /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-010-d5a789b-stepa-v1 (detached at d5a789b609a8b0f7742c6e8dc347b3e59b46d900)
+queue/nodes: gpu_as, host-pinned hpc-gaas-g12 + hpc-gaas-g14 (both fully idle at snapshot: 0 jobs, 8/8 gpus, 2tb/2tb mem, 100/100 ncpus)
+
+=== exact qsub command (run via ssh -o BatchMode=yes gaas) ===
+cd /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-010-d5a789b-stepa-v1/experiments/2x8-GAAS/task010-geometry-reclosure && qsub -q gpu_as -l "select=host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g14:ngpus=8:ncpus=96:mem=2000GB,place=scatter,walltime=01:30:00" -v "ATTEMPT_TAG=v1" -o outputs/2x8-GAAS-task010-geometry-reclosure_v1.o -e outputs/2x8-GAAS-task010-geometry-reclosure_v1.e scripts/run_task010_stepa_n_coarse.pbs
+
+=== qsub output (ssh rc=0) ===
+76094.gaas
+
+=== qstat -f 76094.gaas (immediately after qsub, 2026-10-01T11:13:45+08:00) ===
+Job Id: 76094.gaas
+    Job_Name = 2x8_task010_stepa
+    Job_Owner = pham0094@hpc-gaas-hn2
+    resources_used.cpupercent = 0
+    resources_used.cput = 00:00:00
+    resources_used.mem = 0kb
+    resources_used.ncpus = 192
+    resources_used.ngpus = 16
+    resources_used.vmem = 0kb
+    resources_used.walltime = 00:00:00
+    job_state = R
+    queue = gpu_as
+    server = gaas
+    Checkpoint = u
+    ctime = Thu Oct  1 11:13:39 2026
+    Error_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-010-d5a789b-stepa-
+	v1/experiments/2x8-GAAS/task010-geometry-reclosure/outputs/2x8-GAAS-tas
+	k010-geometry-reclosure_v1.e
+    exec_host = hpc-gaas-g12/0*96+hpc-gaas-g14/0*96
+    exec_vnode = (hpc-gaas-g12:ngpus=8:ncpus=96:mem=2097152000kb)+(hpc-gaas-g14
+	:ngpus=8:ncpus=96:mem=2097152000kb)
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = a
+    mtime = Thu Oct  1 11:13:41 2026
+    Output_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP
+	-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-010-d5a789b-stepa
+	-v1/experiments/2x8-GAAS/task010-geometry-reclosure/outputs/2x8-GAAS-ta
+	sk010-geometry-reclosure_v1.o
+    Priority = 100
+    qtime = Thu Oct  1 11:13:39 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 5400,
+	 "job.queue_charge_rate": 0, "am_cloud_enabled": false}
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=h
+	pc-gaas-g14:ngpus=8:ncpus=96:mem=2000GB
+    Resource_List.walltime = 01:30:00
+    stime = Thu Oct  1 11:13:39 2026
+    session_id = 52861
+    jobdir = /home/pham0094
+    substate = 42
+    Variable_List = PBS_O_HOME=/home/pham0094,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=pham0094,
+	PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/l
+	ocal/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin,
+	PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=hpc-gaas-hn2,
+	PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-
+	Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-010-d5a789b-stepa-v1/expe
+	riments/2x8-GAAS/task010-geometry-reclosure,PBS_O_SYSTEM=Linux,
+	ATTEMPT_TAG=v1,PBS_O_QUEUE=gpu_as
+    comment = Job run at Thu Oct 01 at 11:13 on (hpc-gaas-g12:ngpus=8:ncpus=96:
+	mem=2097152000kb)+(hpc-gaas-g14:ngpus=8:ncpus=96:mem=2097152000kb)
+    etime = Thu Oct  1 11:13:39 2026
+    run_count = 1
+    Submit_arguments = -q gpu_as -l select=host=hpc-gaas-g12:ngpus=8:ncpus=96:m
+	em=2000GB+host=hpc-gaas-g14:ngpus=8:ncpus=96:mem=2000GB,place=scatter,
+	walltime=01:30:00 -v ATTEMPT_TAG=v1 -o outputs/2x8-GAAS-task010-geomet
+	ry-reclosure_v1.o -e outputs/2x8-GAAS-task010-geometry-reclosure_v1.e s
+	cripts/run_task010_stepa_n_coarse.pbs
+    project = hpc_ebslee
+    Submit_Host = hpc-gaas-hn2
+

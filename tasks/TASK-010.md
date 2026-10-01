@@ -1,8 +1,8 @@
 ---
 task_id: TASK-010
 title: Dependency Re-closure — N, NB, and Grid/Order after Host-Runtime Shift
-status: EXECUTING
-current_owner: codex
+status: EXECUTED
+current_owner: strategic-analyst
 parent_task: TASK-009
 analysis_id: 2x8-gaas-task010-geometry-reclosure
 created: 2026-09-28
@@ -724,40 +724,176 @@ approved_by: user
 
 ### 2.1 Execution Status
 
-status: PENDING
+status: COMPLETE
+
+TASK-010 terminated after Step A via the early-completion path (Section
+1.15): the mechanical Section 1.5D rule returned
+`STOP_AFTER_STEP_A_RETAIN_N429056`; Steps B/C/D were correctly skipped.
 
 ### 2.2 Orchestration Summary
 
-Pending execution.
+Codex orchestrated three OpenCode execution workers: (1) the experiment
+family worker that authored the Step-A sweep family (committed in d5a789b);
+(2) the remote sync/submission/monitoring/retrieval worker that created the
+clean detached worktree, submitted PBS job 76094.gaas, monitored it, and
+retrieved the evidence; (3) the extraction/bookkeeping worker that appended
+the metrics rows, regenerated the results report, and completed this report,
+the experiment README, and the progress record. The first execution session
+was interrupted by an OpenCode API connection failure immediately after the
+lifecycle flip to EXECUTING (no files, jobs, or worktrees had been created);
+the resumed session verified the clean state, confirmed the worker runtime,
+and executed Step A. The dirty remote primary clone was untouched; execution
+used the clean detached worktree `.codex-worktrees/TASK-010-d5a789b-stepa-v1`
+at commit `d5a789b609a8b0f7742c6e8dc347b3e59b46d900`.
 
 ### 2.3 Work Executed
 
-Pending execution.
+- Step A (Section 1.5): one submitted attempt family (tag `v1`, five scored
+  arms) in PBS job `76094.gaas` (queue `gpu_as`, project `hpc_ebslee`,
+  host-pinned `hpc-gaas-g12 + hpc-gaas-g14`, `place=scatter`, walltime
+  01:30:00; submitted/started 2026-10-01T11:13:39+08:00, completed with
+  `job_state=F`, `Exit_status=0`, `resources_used.walltime` 00:12:48,
+  completion derived 2026-10-01T11:26:27+08:00). All five approved coarse
+  candidates ran sequentially in the single allocation with only N varying
+  at fixed NB=3072, 4x4 row, under the retained TASK-009 host-runtime
+  contract.
+- All five arms: exit 0, verification PASSED, finite normalized residuals,
+  3 solver iterations each. Scores: N=429056 → 6.4431e+06 GFLOP/s (LU 7.85 s
+  / 6.6784e+06 LU GFLOP/s / IR 0.29 s / residual 1.416310E-05), 454656 →
+  5.9212e+06 (8.98 / 6.9761e+06 / 1.60 / 1.204088E-04), 504832 → 5.2147e+06
+  (11.96 / 7.1739e+06 / 4.49 / 2.067393E-04), 556032 → 5.0581e+06 (15.06 /
+  7.6101e+06 / 7.60 / 2.453680E-04), 606208 → 4.3901e+06 (19.16 / 7.7508e+06
+  / 14.67 / 2.520783E-04); IR/LU ratios 0.037 / 0.178 / 0.375 / 0.505 /
+  0.766.
+- OMP contract verified: five per-arm env probes, each 16/16 ranks with
+  `OMP_NUM_THREADS=4` and `OMP_PLACES`/`OMP_PROC_BIND` unset (effective
+  launcher defaults sockets/TRUE); the incoming PBS-supplied
+  `OMP_NUM_THREADS=96` was recorded in the rank-map log and neutralized per
+  arm by the explicit export + `-x` forwarding. All topology/rank-map/
+  incoming-OMP gates PASS on both hosts.
+- Mechanical branch outcome (Section 1.5D, recorded in the carry-forward
+  log): `STOP_AFTER_STEP_A_RETAIN_N429056`,
+  `reason=control_within_2pct_leading_region_no_material_move`; mechanical
+  retention N=429056, NB=3072, 4x4 row. The orchestrator reviewed the
+  qualitative regime-shift clause and recorded it NOT triggered (IR time and
+  IR/LU ratio rise monotonically with N while end-to-end score falls
+  monotonically; no larger-N regime is materially faster; nothing
+  borderline).
+- Steps B/C/D were skipped per the Section 1.15 early-completion path.
 
 ### 2.4 Operational Validation
 
-Pending execution.
+- PBS job 76094.gaas: `job_state=F`, `Exit_status=0`, walltime 00:12:48,
+  executed on the requested host-pinned pair g12+g14 in `gpu_as` under
+  project `hpc_ebslee`; the job-level `.o` records all arm exits 0 with
+  PASSED verification and the pre/post hardware-health snapshots.
+- Per-arm validation markers present in every `.out`: internal tests
+  completed (`--skip-tests 0`), normal matrix generation / LU / solver
+  output, finite normalized residual with PASSED, `GFLOPS = <value>,
+  per GPU = <value>`, LU GFLOPS, host/device memory lines; every `.status`
+  records `exit_status=0`, `verification=PASSED`, start/end timestamps, and
+  the verified OMP environment.
+- CSV integrity verified after append: 261 data rows, no duplicate
+  (experiment_id, attempt) pairs, every row consistent with the existing
+  schema, previously last row (`3x4-GAAS-baseline_v1`) intact;
+  `results/RESULTS.md` regenerated from the CSV (261 rows, 5 new).
+- Evidence integrity: all 20 evidence files retrieved from the remote
+  worktree and MD5-verified byte-identical 20/20; three additional local
+  logs (presubmit `pbsnodes`, submission, `qstat` monitoring) preserved.
 
 ### 2.5 Evidence and Artifacts
 
-Pending execution.
+- Experiment area: `experiments/2x8-GAAS/task010-geometry-reclosure/`
+  (README.md with run summary and branch outcome; scripts; outputs).
+- Per-arm evidence (5 arms):
+  `experiments/2x8-GAAS/task010-geometry-reclosure/outputs/2x8-GAAS-task010-geometry-reclosure_stepa-n{429056,454656,504832,556032,606208}_v1.{out,err,status}`.
+- Allocation-level logs:
+  `..._rankmap_v1.log` (16 rank lines, incoming OMP environment, per-host
+  topology reports), `..._envmap_v1.log` (per-arm 16-rank effective-OMP
+  verification), `..._carryforward_v1.log` (Step-A scores and the Section
+  1.5D branch outcome).
+- PBS job evidence: `..._v1.o` / `..._v1.e`; local operational logs:
+  `..._v1.presubmit_pbsnodes.log`, `..._v1_submission.log`,
+  `..._v1_job76094_qstat_monitor.log`.
+- Structured results: `results/metrics.csv` (5 new rows, experiment id
+  `2x8-GAAS-task010-geometry-reclosure`), `results/RESULTS.md`.
+- Execution revision: worktree `.codex-worktrees/TASK-010-d5a789b-stepa-v1`
+  at commit `d5a789b609a8b0f7742c6e8dc347b3e59b46d900` (dirty remote
+  primary clone untouched).
 
 ### 2.6 Files Changed
 
-Pending execution.
+- `results/metrics.csv` — 5 rows appended (Step-A arms).
+- `results/RESULTS.md` — regenerated from the CSV.
+- `experiments/2x8-GAAS/task010-geometry-reclosure/README.md` — executed
+  status line + factual Run summary (per-candidate table, per-arm
+  start/end/runtimes, post-matgen headroom, facts-not-in-CSV, integrity
+  note, Step-A branch outcome).
+- `tasks/TASK-010.md` — this Section 2 report + front matter only (Section
+  1 unchanged).
+- `progress/2026-10-01-progress.md` — new progress record.
+- Untracked-but-preserved: the 23 Step-A evidence/log files under
+  `experiments/2x8-GAAS/task010-geometry-reclosure/outputs/` (retrieved
+  during execution) and the pre-existing untracked `hpl-mxp-runs-on-gaas/`.
+- Commit d5a789b (before execution) contains the experiment family and the
+  EXECUTING start; the completion commit contains the evidence, results,
+  README, task report, and progress record.
 
 ### 2.7 Missing / Unavailable Evidence
 
-Pending execution.
+- GPU-monitoring output is unavailable by design: the approved scored-run
+  protocol ran with `--monitor-gpu 0`. Phase-0-style pre/post hardware-
+  health snapshots (topology matrix + GPU query) were captured inside the
+  job and are in the `.o`.
+- Known non-fatal stderr notes preserved (not missing): the PBS `.e`
+  contains 11 `unknown groupid 1304617061` warnings and the `cuda/13.1`
+  compile-hint/module note; each per-arm `.err` contains one
+  `unknown groupid` warning. None affected probes or scored runs.
+- No other expected evidence is missing.
 
 ### 2.8 Execution Errors / Exceptions
 
-Pending execution.
+- The first execution session was interrupted by an OpenCode API connection
+  failure immediately after the lifecycle flip to EXECUTING; zero partial
+  state existed (no files, no jobs, no worktrees created). The resumed
+  session verified the clean state, confirmed the worker runtime, and
+  executed Step A. No Track-1 retry was needed for the scored work; no
+  Track-2 case occurred.
+- No arm, gate, or job failures: all five arms exited 0 with PASSED
+  verification; all topology/rank-map/incoming-OMP/env-probe gates PASS.
 
 ### 2.9 Scope Compliance
 
-Pending execution.
+- Step A ran exactly the approved candidate set {429056, 454656, 504832,
+  556032, 606208} (Section 1.5B), one scored attempt each, only N varying,
+  at fixed NB=3072, 4x4 row, under the retained TASK-009 host-runtime
+  contract (Section 1.3) with `OMP_NUM_THREADS=4` explicitly exported,
+  forwarded, and verified on all 16 ranks.
+- Exactly one multinode job was submitted (76094.gaas); no concurrent
+  submissions; no candidate repeated; no new candidates added; anti-loop
+  rules (Section 1.12) respected.
+- No tuning changes: no OMP/CPU-affinity/memory-affinity/UCX/DGEMV/placement/
+  communication/scheduling/precision/kernel/buffer work; `--u-panel-chunk-nbs`
+  (8), `--call-dgemv-with-multiple-threads` (0), and
+  `--fill-device-buffer-size` (3048) retained package defaults for all arms.
+- No strategic analysis written: nothing under `planning/` was created or
+  modified; no baseline promoted; no final N/NB/grid winner declared.
+- Bookkeeping only: `results/metrics.csv`, `results/RESULTS.md`, the
+  experiment README, this task record, and the progress report.
 
 ### 2.10 Handoff to Strategic Analyst
 
-Pending execution.
+TASK-010 completed via the Section 1.15 early-completion path: the
+mechanical Section 1.5D rule returned
+`STOP_AFTER_STEP_A_RETAIN_N429056`
+(`reason=control_within_2pct_leading_region_no_material_move`) and the
+qualitative regime-shift clause was reviewed and NOT triggered. The
+mechanical carry-forward is N=429056, NB=3072, 4x4 row (mechanical
+retention only, pending strategic confirmation). Steps B/C/D were skipped.
+No strategic decision was made by Codex; ownership returns to the Strategic
+Analyst. Awaits the Human Leader's explicit `ANALYSE_RESULTS` authorization
+for analysis_id `2x8-gaas-task010-geometry-reclosure` (the analysis should
+use the TASK-000 original 2x8 baseline `2x8-GAAS-baseline_n700k_v1`
+(4.8037e+06 GFLOP/s) as the percentage denominator per the root AGENTS.md,
+and account for the g12+g14 allocation versus the prior g13+g15 TASK-009
+evidence when comparing).

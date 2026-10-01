@@ -12,7 +12,9 @@ only when the Step-A evidence triggers them through the mechanical
 Section 1.5D branch rule, and they are not part of this experiment
 directory's submission.
 
-**Status: Prepared (2026-10-01), pending TASK-010-authorized submission.**
+**Status: Executed (2026-10-01) — Step A ran in PBS job `76094.gaas`
+(completed, exit 0, all five candidates PASSED); TASK-010 terminated after
+Step A via the mechanical Section 1.5D STOP branch (see Run summary).**
 
 ## Structure
 
@@ -332,6 +334,95 @@ job exit status is unaffected by the branch outcome (STOP and PROCEED are
 both normal outcomes). Anti-loop rules (TASK-010 Section 1.12) are
 respected: Step A runs once, no candidate is repeated, and no new
 candidates are added.
+
+## Run summary
+
+One submitted attempt family (tag `v1`, PBS job `76094.gaas`, submitted
+2026-10-01, queue `gpu_as`, project `hpc_ebslee`, host-pinned
+`select=host=hpc-gaas-g12:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g14:ngpus=8:ncpus=96:mem=2000GB,place=scatter,walltime=01:30:00`;
+PBS `stime` 2026-10-01 11:13:39, completion 2026-10-01 11:26:27 (derived from
+`stime` + `resources_used.walltime` 00:12:48), `job_state=F`,
+`Exit_status=0`). All five candidates ran sequentially on the same node pair
+with identical fixed controls; each `.status` records `exit_status=0`.
+Factual per-candidate data as emitted by the application output (no
+interpretation):
+
+| N | attempt | normalized residual | verdict | overall GFLOP/s (per GPU) | LU s / LU GFLOP/s | IR s / iterations | host mem cons. MAX / avail. MIN | device mem cons. MAX / avail. MIN |
+|---|---|---|---|---|---|---|---|---|
+| 429056 | `..._stepa-n429056_v1` | 1.416310E-05 | PASSED | 6.4431e+06 (402691.12) | 7.85 / 6.6784e+06 | 0.29 / 3 | 0.004 GB / 239.659 GB | 135.254 GB / 138.739 GB |
+| 454656 | `..._stepa-n454656_v1` | 1.204088E-04 | PASSED | 5.9212e+06 (370077.78) | 8.98 / 6.9761e+06 | 1.60 / 3 | 15.024 GB / 239.594 GB | 135.762 GB / 138.739 GB |
+| 504832 | `..._stepa-n504832_v1` | 2.067393E-04 | PASSED | 5.2147e+06 (325915.77) | 11.96 / 7.1739e+06 | 4.49 / 3 | 51.561 GB / 239.430 GB | 135.763 GB / 138.739 GB |
+| 556032 | `..._stepa-n556032_v1` | 2.453680E-04 | PASSED | 5.0581e+06 (316129.83) | 15.06 / 7.6101e+06 | 7.60 / 3 | 95.340 GB / 239.367 GB | 135.763 GB / 138.739 GB |
+| 606208 | `..._stepa-n606208_v1` | 2.520783E-04 | PASSED | 4.3901e+06 (274382.91) | 19.16 / 7.7508e+06 | 14.67 / 3 | 136.519 GB / 239.359 GB | 135.763 GB / 138.739 GB |
+
+Attempt IDs are the full
+`2x8-GAAS-task010-geometry-reclosure_stepa-n<N>_v1` stems. Per-candidate
+`.status` start/end (+08:00; runtime = end − start): n429056
+11:14:29→11:15:26 (00:00:57), n454656 11:15:49→11:17:03 (00:01:14), n504832
+11:17:25→11:19:20 (00:01:55), n556032 11:19:41→11:22:24 (00:02:43), n606208
+11:22:47→11:26:25 (00:03:38).
+
+Post-matrix-generation per-process available MIN (from each `.status`
+`matgen_headroom` line), system/device: 239.423/2.767 GB (n429056),
+224.264/2.257 GB (n454656), 189.366/2.257 GB (n504832), 149.690/2.257 GB
+(n556032), 107.795/2.257 GB (n606208).
+
+Facts not representable in the current `results/metrics.csv` schema,
+recorded here for Codex review (schema/extractor unchanged):
+
+- OMP contract verified per arm: five per-arm env probes each confirmed
+  `OMP_NUM_THREADS=4` with `OMP_PLACES`/`OMP_PROC_BIND` unset on all 16
+  ranks (5 × 16 = 80 verification lines in the env-map log; allocation-level
+  rank-map gate PASS on both hosts). The incoming PBS-supplied
+  `OMP_NUM_THREADS=96` was recorded in the rank-map log and neutralized per
+  arm by the explicit job-shell export + `mpirun -x OMP_NUM_THREADS`
+  forwarding; the effective placement policy is the launcher package
+  defaults `OMP_PLACES=sockets` / `OMP_PROC_BIND=TRUE`.
+- The settings block of every `.out` echoed `--u-panel-chunk-nbs = 8`,
+  `--call-dgemv-with-multiple-threads = 0`, and
+  `--fill-device-buffer-size = 3048` (package defaults, not tuned).
+- Iterative refinement emitted 3 solver iterations for every candidate; IR
+  seconds (AVG) are in the table above; L-infinite residuals per iteration
+  are in each `.out`. LU GFLOP/s (excluding IR) and per-GPU values are in
+  the table above.
+- Known non-fatal stderr notes preserved in the evidence: the PBS `.e`
+  contains 11 `unknown groupid 1304617061` warnings plus the `cuda/13.1`
+  compile-hint/module note; each per-arm `.err` contains one
+  `unknown groupid` warning. None affected probes or scored runs.
+- Integrity: all 20 evidence files retrieved from the remote execution
+  worktree `.codex-worktrees/TASK-010-d5a789b-stepa-v1` (commit
+  `d5a789b609a8b0f7742c6e8dc347b3e59b46d900`) and verified byte-identical
+  by MD5 against the remote copies (20/20). Three additional local logs
+  (presubmit `pbsnodes` snapshot, submission, `qstat` monitoring) were
+  produced on the submission side and are preserved alongside.
+
+### Step-A branch outcome
+
+The script applied the mechanical TASK-010 Section 1.5D rule after the five
+scored arms (material move = a valid larger-N score strictly
+> control × 1.02; within leading = control score ≥ leader × 0.98) and
+recorded in the carry-forward log:
+
+- `outcome=STOP_AFTER_STEP_A_RETAIN_N429056`,
+  `reason=control_within_2pct_leading_region_no_material_move`: the control
+  N=429056 was valid and was itself the highest valid end-to-end score
+  (6.4431e+06 GFLOP/s); no valid larger N exceeded it by >2.0% — every
+  larger N scored below the control (454656 by 8.1%, 504832 by 19.1%,
+  556032 by 21.5%, 606208 by 31.9%).
+- Mechanical retention (Section 1.5D): `N=429056`, `NB=3072`,
+  `grid/order=4x4 row`. This is a mechanical carry-forward, not a strategic
+  decision.
+- Orchestrator review of the qualitative regime-shift clause (Section 1.5D
+  third proceed clause): NOT triggered. The recorded LU/IR facts show IR
+  time and the IR/LU ratio rising monotonically with N (0.29→14.67 s;
+  0.037→0.766) while the end-to-end score falls monotonically; no larger-N
+  regime is materially faster, and nothing is borderline.
+- Steps B/C/D were correctly skipped under the TASK-010 Section 1.15 early
+  completion path; all Step-A evidence is preserved and ownership returns
+  to the Strategic Analyst.
+
+Extracted rows for all five attempts are in `results/metrics.csv` /
+`results/RESULTS.md` (experiment id `2x8-GAAS-task010-geometry-reclosure`).
 
 ## Evidence paths
 
