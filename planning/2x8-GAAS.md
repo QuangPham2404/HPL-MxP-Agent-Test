@@ -1425,3 +1425,101 @@ they should be introduced explicitly through E40 rather than silently stacked.
 
 **Human decision state:** TASK-2X8-012 analysis complete. Phase 4 communication
 is recommended only; no new execution is authorized.
+
+
+## 11. TASK-2X8-013 — Phase 4A Communication Fast-Path Characterization
+
+TASK-2X8-013 characterized the retained 2x8 communication path without tuning
+it.
+
+Detailed analysis:
+`planning/analysis/2x8-gaas-phase4a-fast-path-characterization.md`.
+
+### 11.1 Clean Phase-4 reference
+
+```text
+A0 overall = 6.5324e+06 GFLOP/s
+LU         = 7.77 s / 6.7741e+06 GFLOP/s
+IR         = 0.29 s
+IR/LU      = 0.037
+PASSED
+```
+
+The A1 diagnostic clone scored 6.5354e+06 (+0.046% versus A0) with identical
+LU and IR, and reproduced the same per-HCA traffic shape. The diagnostic
+instrumentation therefore did not materially perturb the run.
+
+### 11.2 Fast-path result
+
+Automatic MPI/UCX is healthy:
+
+```text
+PML = ucx
+UCX_TLS = unset / automatic
+UCX_NET_DEVICES = unset / automatic
+inter-node transport = rc_mlx5
+large GPU-buffer protocol = rendezvous zero-copy
+TCP inter-node lanes = 0
+frag-host staging rows = 0
+```
+
+Automatic NCCL is also healthy:
+
+```text
+backend = IBext_v11
+inter-node channel lines = 128
+GDRDMA-tagged = 128
+GDRDMA fraction = 1.00
+Socket channels = 0
+```
+
+Thus Phase 4 is not repairing a broken inter-node stack. Both candidate
+communication families have functional GPU-direct paths.
+
+### 11.3 Fabric result
+
+All eight physical 400-Gb HCAs are active with no new
+error/discard/recovery counters.
+
+g14 TX is nearly perfectly balanced across all eight rails (CV 0.58%). g15 TX
+is directionally asymmetric: mlx5_4/5/8/9 carry about 70% of g15's outgoing
+volume while mlx5_0-3 carry about 30%. The opposite-node RX counters mirror the
+same pattern, and A0/A1 reproduce it exactly.
+
+Interpretation: the asymmetry is deterministic application/rank/communicator
+traffic direction, not evidence that four rails are unused or faulty. Keep
+UCX affinity closed/automatic.
+
+`port_xmit_wait` is nonzero on every HCA and is consistently higher on
+mlx5_4/5/8/9. Preserve it as a Phase-4 explanatory metric; do not treat it as
+a fault or tuning target by itself.
+
+### 11.4 Dependency checkpoint
+
+- **E06/E12:** fast paths are characterized, but panel transport remains open
+  for Phase 4B policy optimization.
+- **E13:** automatic placement uses all eight physical rails; no placement
+  reopen is justified by 4A.
+- **E22:** Phase 4B remains fixed at NB=3072.
+- **E23/E24/E25:** U-panel chunk remains downstream for Phase 4C.
+- **E26/E29:** scheduling remains downstream of communication.
+- No new dependency edge is required.
+
+### 11.5 Proposed next action
+
+Proceed to a bounded **Phase 4B panel-policy experiment**.
+
+Because AUTO UCX already selects `rc_mlx5` zero-copy, the primary optimization
+axis should be `--use-mpi-panel-broadcast`. Keep AUTO UCX as the main
+control and include at most one explicitly constrained rc_mlx5-based UCX
+transport family as a small interaction/confirmation check rather than a broad
+`UCX_TLS` sweep.
+
+Continue recording per-HCA TX/RX/`port_xmit_wait` so a LU improvement can be
+connected to a real communication-path change.
+
+Stop before U-panel chunk tuning; Phase 4C should operate only on the retained
+Phase-4B communication policies.
+
+**Human decision state:** TASK-2X8-013 analysis complete. Phase 4A is closed.
+Phase 4B is recommended only; no new execution is authorized.
