@@ -1,8 +1,8 @@
 ---
 task_id: TASK-010
 title: Dependency Re-closure — N, NB, and Grid/Order after Host-Runtime Shift
-status: EXECUTED
-current_owner: strategic-analyst
+status: ANALYZED
+current_owner: user
 parent_task: TASK-009
 analysis_id: 2x8-gaas-task010-geometry-reclosure
 created: 2026-09-28
