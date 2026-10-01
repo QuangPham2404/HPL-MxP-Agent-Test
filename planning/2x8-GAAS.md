@@ -1088,3 +1088,120 @@ this N revalidation closes.
 **Human decision state:** TASK-009 analysis complete. N re-sweep proposed only;
 no execution is authorized.
 
+
+## 8. TASK-010 — Geometry Re-closure after Host-Runtime Shift
+
+TASK-010 re-swept N under the verified TASK-009 host-runtime contract to test
+whether the large IR reduction at `N=429056` created room for a larger N.
+
+Detailed analysis:
+`planning/analysis/2x8-gaas-task010-geometry-reclosure.md`.
+
+### 8.1 Results
+
+| N | Overall GFLOP/s | vs N=429056 | LU GFLOP/s | LU s | IR s | IR/LU | Host memory MAX | Device headroom |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **429056** | **6.4431e+06** | control | 6.6784e+06 | 7.85 | **0.29** | **0.037** | **0.004 GB** | **2.767 GB** |
+| 454656 | 5.9212e+06 | -8.10% | 6.9761e+06 | 8.98 | 1.60 | 0.178 | 15.024 GB | 2.257 GB |
+| 504832 | 5.2147e+06 | -19.07% | 7.1739e+06 | 11.96 | 4.49 | 0.375 | 51.561 GB | 2.257 GB |
+| 556032 | 5.0581e+06 | -21.50% | 7.6101e+06 | 15.06 | 7.60 | 0.505 | 95.340 GB | 2.257 GB |
+| 606208 | 4.3901e+06 | -31.86% | **7.7508e+06** | 19.16 | **14.67** | **0.766** | **136.519 GB** | 2.257 GB |
+
+All five points passed correctness with three refinement iterations.
+
+### 8.2 Main conclusion
+
+The expectation that a larger N might win was reasonable: larger N does
+improve LU throughput. From 429056 to 606208, LU throughput rises about 16%.
+
+However, the TASK-009 host-runtime improvement did **not** remove the
+N/residency penalty. It lowered the IR floor at the retained N. The
+FP64-residency cliff remains between 429056 and 454656:
+
+```text
+N=429056:
+  host consumption = 0.004 GB/process
+  device headroom  = 2.767 GB/process
+  IR               = 0.29 s
+
+N=454656:
+  host consumption = 15.024 GB/process
+  device headroom  = 2.257 GB/process
+  IR               = 1.60 s
+```
+
+Above that point, device use is effectively saturated while host allocation
+continues to rise to 136.519 GB/process at N=606208. IR rises in parallel from
+0.29 to 14.67 s while the iteration count stays fixed at three. Therefore the
+dominant penalty is higher cost per refinement iteration in the
+host-resident/staged FP64 regime, not extra iterations.
+
+The end-to-end tradeoff becomes increasingly unfavorable:
+
+```text
+IR/LU:
+0.037 -> 0.178 -> 0.375 -> 0.505 -> 0.766
+```
+
+The effective IR tax on LU-only throughput rises from about 3.6% at N=429056
+to about 43.4% at N=606208. That overwhelms the 16% LU-throughput gain.
+
+Thus N=429056 remains near the useful knee: large enough for good LU
+efficiency, but just below the costly FP64 host-residency transition.
+
+### 8.3 Dependency checkpoint
+
+- **E39:** resolved for the verified TASK-009 runtime. The host-runtime shift
+  required an N recheck, but the useful N remains 429056.
+- **E14/E15:** strongly reconfirmed; the N/residency cliff remains the main
+  reason larger N loses.
+- **E07:** not triggered because N did not move; NB=3072 remains closed.
+- **E09/E10:** not triggered; 4x4 row remains the retained grid/order.
+- **E18/E19:** no N-driven host-runtime reopening; retain the TASK-009 host
+  policy.
+- **E20/E21:** DGEMV is not worth the next sweep at IR=0.29 s / IR-LU=0.037.
+  Keep the default as a conditional control and reopen only if a later change
+  makes IR material.
+- **E12/E13:** now unblocked. Geometry, placement, host runtime, and N are
+  stable enough to proceed to communication.
+- **E37:** no N-driven reopening; keep scheduling downstream of communication.
+
+### 8.4 Retained operating point
+
+```text
+N = 429056
+NB = 3072
+nprow = 4
+npcol = 4
+nporder = row
+
+gpu-affinity = 0:1:2:3:4:5:6:7
+cpu-affinity = omitted
+mem-affinity = omitted
+ucx-affinity = omitted / automatic
+
+OMP_NUM_THREADS = 4
+OMP_PLACES = omitted
+OMP_PROC_BIND = omitted
+effective launcher policy = sockets / TRUE
+
+fill-device = 1
+sloppy-type = FP16
+```
+
+### 8.5 Proposed next action
+
+**Proceed to Phase 4 communication tuning** under the fixed retained stack.
+
+Do not spend the next task on DGEMV: with IR only 0.29 s, even eliminating the
+entire refinement phase would offer only about 3.6% theoretical end-to-end
+headroom, and DGEMV changes only part of that phase. Communication tuning can
+instead target the dominant LU path and closes the E12/E13 obligations that
+were intentionally deferred until the N re-closure finished.
+
+The first communication task should remain bounded and should not combine
+panel/transport changes with N/NB/grid, OMP/CPU, precision, DGEMV, or LU
+scheduling changes.
+
+**Human decision state:** TASK-010 analysis complete. Phase 4 communication is
+recommended only; no new execution is authorized.
