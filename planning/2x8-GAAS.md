@@ -1205,3 +1205,115 @@ scheduling changes.
 
 **Human decision state:** TASK-010 analysis complete. Phase 4 communication is
 recommended only; no new execution is authorized.
+
+
+## 9. TASK-2X8-011 — Phase 3C Residency Closure
+
+TASK-2X8-011 isolated FP64 residency at the retained `N=429056`,
+`NB=3072`, 4x4-row, OMP=4 operating point.
+
+Detailed analysis:
+`planning/analysis/2x8-gaas-phase3c-residency-closure.md`.
+
+### 9.1 Residency curve
+
+| Residency mode | Host memory MAX | Device memory MAX | LU GFLOP/s | LU s | IR s | IR/LU | Overall GFLOP/s |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Anq=0 | 86.137 GB | 49.121 GB | 6.7360e+06 | 7.82 | 7.66 | 0.980 | 3.4031e+06 |
+| Anq=24576 | 66.450 GB | 68.808 GB | 6.7848e+06 | 7.76 | 5.14 | 0.662 | 4.0811e+06 |
+| Anq=49152 | 46.762 GB | 88.496 GB | 6.7757e+06 | 7.77 | 3.60 | 0.463 | 4.6299e+06 |
+| Anq=73728 | 27.075 GB | 108.183 GB | 6.7778e+06 | 7.77 | 2.36 | 0.304 | 5.1971e+06 |
+| Anq=98304 | 7.387 GB | 127.871 GB | 6.7857e+06 | 7.76 | 1.10 | 0.142 | 5.9457e+06 |
+| **fill-device=1** | **0.004 GB** | **135.254 GB** | **~6.77e+06** | **~7.78** | **0.29** | **0.037** | **~6.53e+06** |
+
+The full-fill bracket F0/F1 differed by only 0.09%. The best partial-residency
+point, `Anq=98304`, remained 8.90% below the full-fill reference.
+
+The key isolation is that LU is essentially unchanged across the entire curve:
+LU time remains ~7.76-7.82 s and LU throughput stays within about 0.75%.
+Final performance therefore follows the IR penalty, which falls from 7.66 s at
+Anq=0 to 0.29 s under full fill.
+
+This directly validates the campaign model:
+
+```text
+R_MxP ~= P_LU / (1 + T_IR / T_LU)
+```
+
+At fixed N/work, increasing FP64 device residency mainly reduces refinement
+time; it does not materially accelerate LU.
+
+### 9.2 Buffer closure
+
+| Buffer | Overall GFLOP/s | LU s | IR s | Host memory MAX | Device headroom |
+|---:|---:|---:|---:|---:|---:|
+| 2048 | 6.5269e+06 | 7.78 | 0.29 | 0.004 GB | 2.767 GB |
+| **3048** | **6.5373e+06** | **7.77** | **0.29** | **0.004 GB** | **2.767 GB** |
+| 4096 | 6.3963e+06 | 7.79 | 0.44 | 0.520 GB | 3.280 GB |
+
+2048 and 3048 are one practical plateau; their score difference is only
+0.16% and their observed memory/IR regimes are identical. At 4096 MB, the
+larger reserve begins to displace useful FP64 residency: host allocation rises,
+IR increases to 0.44 s, and the score falls 2.16% versus the final 3048
+control while LU remains flat.
+
+Retain the established 3048 MB default because 2048 provides no measured
+performance benefit while nominally reserving less workspace.
+
+### 9.3 Phase-3C and dependency closure
+
+Retain:
+
+```text
+--fill-device 1
+--fill-device-buffer-size 3048
+--Anq-device irrelevant/overridden
+```
+
+Dependency checkpoint:
+
+- **E14/E15:** strengthened. TASK-010 showed larger N crossing the residency
+  cliff; TASK-2X8-011 reproduces the same IR penalty by directly reducing
+  residency at fixed N. Because full fill remains retained, no N reopen is
+  triggered.
+- **E16:** resolved at the current N/NB/release. 2048-3048 is the fast safe
+  plateau; 4096 is valid but begins to sacrifice useful residency.
+- **E17:** keep `cuda-host-register-step=2048` closed. Retained host-resident
+  FP64 allocation is essentially zero, so the registration mechanism is
+  currently irrelevant.
+- **E20/E21:** keep `call-dgemv-with-multiple-threads=0` closed for Phase 3.
+  IR is only 0.29 s / IR-LU 0.037, so solver-side tuning has little current
+  leverage. Precision can reopen it later through E35.
+- **E12/E13:** remain unblocked for Phase 4 communication.
+
+### 9.4 Phase-3 closure
+
+The blueprint makes Phase 3D conditional on observed host staging or solver
+cost. The retained Phase-3C state has:
+
+```text
+host consumption ~= 0.004 GB/process
+IR ~= 0.29 s
+IR/LU ~= 0.037
+```
+
+Therefore no additional Phase-3D performance sweep is justified in the current
+regime. Retain:
+
+```text
+--cuda-host-register-step = 2048
+--call-dgemv-with-multiple-threads = 0
+```
+
+Phase 3 is closed conditionally for the retained stack.
+
+### 9.5 Proposed next action
+
+**Proceed to Phase 4 communication tuning.**
+
+The upstream geometry, placement, host runtime, N/residency, buffer, and
+remaining host/refinement controls are now closed. The next task should vary
+communication controls only, preserving the retained Phase-3 stack.
+
+**Human decision state:** TASK-2X8-011 analysis complete. Phase 4 communication
+is recommended only; no new execution is authorized.
