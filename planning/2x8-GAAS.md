@@ -1317,3 +1317,111 @@ communication controls only, preserving the retained Phase-3 stack.
 
 **Human decision state:** TASK-2X8-011 analysis complete. Phase 4 communication
 is recommended only; no new execution is authorized.
+
+
+## 10. TASK-2X8-012 — Phase 3D Host / Memory Closure
+
+TASK-2X8-012 directly swept the two remaining Phase-3D controls on the
+retained 2x8 stack.
+
+Detailed analysis:
+`planning/analysis/2x8-gaas-phase3d-host-memory-closure.md`.
+
+### 10.1 Host-register step
+
+| Step | Overall GFLOP/s | LU s | IR s | Host memory | Device headroom |
+|---:|---:|---:|---:|---:|---:|
+| 512 | 6.5578e+06 | 7.74 | 0.29 | 0.004 GB | 3.997 GB |
+| 1024 | 6.5198e+06 | 7.79 | 0.29 | 0.004 GB | 3.587 GB |
+| **2048** | **~6.535e+06** | **~7.77** | **0.29** | **0.004 GB** | **2.767 GB** |
+| 4096 | 6.3877e+06 | 7.72 | 0.52 | 1.136 GB | 2.257 GB |
+| 8192 | 6.1579e+06 | 7.76 | 0.79 | 4.418 GB | 2.257 GB |
+
+The 2048 bracket spread was only 0.11%. Steps 512-2048 are a performance
+plateau with identical low IR and no reported host allocation. Smaller steps
+also reduce the observed device-memory footprint, so 512/1024 are useful
+headroom fallbacks.
+
+4096/8192 cross a different memory regime: host allocation appears, IR rises,
+and the final score falls while LU remains flat. This creates a new dependency
+(E40): host-register step can alter effective residency/headroom under
+full fill.
+
+Retain `cuda-host-register-step=2048` because it is the established/default
+control and 512 does not provide a material score benefit. The lower values
+remain available if a later phase creates VRAM pressure.
+
+### 10.2 DGEMV
+
+The bracketed 0-30720 sweep is flat:
+
+```text
+IR = 0.29 s for every candidate
+LU ~= 7.73-7.76 s
+host = 0.004 GB/process
+device = 135.254 GB/process
+headroom = 2.767 GB/process
+```
+
+All candidates lie within ±0.20% of the zero-control midpoint; the zero
+bracket itself differs by only 0.19%.
+
+Retain:
+
+```text
+--call-dgemv-with-multiple-threads = 0
+```
+
+### 10.3 Dependency checkpoint
+
+- **E17:** directly revalidated and closed at register-step 2048.
+- **E40 (new):** register-step can alter effective memory residency/headroom.
+  It is inactive at the retained 2048 point; a future material register-step
+  change must recheck memory/IR and only reopen N/buffer if the regime changes.
+- **E16/E15:** not reopened; retained buffer/residency and N are unchanged.
+- **E20/E21:** closed for the current OMP=4 / N=429056 / full-residency
+  regime because DGEMV is flat across 0-30720.
+- **E35/E36:** remain future reopen paths after a material precision change.
+- **E12/E13:** communication is unblocked.
+
+### 10.4 Phase-3 closure
+
+Retain the complete Phase-3 stack:
+
+```text
+N = 429056
+NB = 3072
+nprow = 4
+npcol = 4
+nporder = row
+
+gpu-affinity = 0:1:2:3:4:5:6:7
+cpu-affinity = omitted
+mem-affinity = omitted
+ucx-affinity = omitted / automatic
+
+OMP_NUM_THREADS = 4
+OMP_PLACES = omitted
+OMP_PROC_BIND = omitted
+
+fill-device = 1
+fill-device-buffer-size = 3048
+cuda-host-register-step = 2048
+call-dgemv-with-multiple-threads = 0
+
+sloppy-type = FP16
+```
+
+**Phase 3 is closed. No immediate dependency-driven resweep is required.**
+
+### 10.5 Proposed next action
+
+Proceed to **Phase 4 communication tuning** while keeping the full retained
+Phase-3 stack fixed.
+
+If later communication/precision work creates material VRAM pressure,
+register-step 512/1024 are validated low-IR headroom fallback candidates, but
+they should be introduced explicitly through E40 rather than silently stacked.
+
+**Human decision state:** TASK-2X8-012 analysis complete. Phase 4 communication
+is recommended only; no new execution is authorized.
