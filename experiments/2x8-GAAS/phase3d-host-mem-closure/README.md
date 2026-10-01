@@ -9,10 +9,16 @@ interaction matrix, no adaptive refinement, and no downstream Phase-4 work;
 the final Phase-3D conclusion is reserved for the Strategic Analyst via
 `ANALYSE_RESULTS`.
 
-**Status: Reviewed local scripts (2026-10-01, pre-submission). Submission
-is authorized under the unchanged Section 1.12 authorization of
-TASK-2X8-012 (EXECUTING / codex) and remains limited to the exact approved
-task scope.**
+**Status: Executed (2026-10-01) — Stage A + Stage B ran in PBS job
+`76370.gaas` (completed, exit 0, all 15 arms PASSED with PASS settings
+echo); TASK-2X8-012 stopped after Stage B as approved (no Phase 4). See
+Run summary.**
+
+**Prior status (2026-10-01, pre-submission): reviewed local scripts;
+presubmit `pbsnodes -aSj` snapshot taken and the same-queue `gpu_as` pair
+g14+g15 selected (see Submission). Submission was authorized under the
+unchanged Section 1.12 authorization of TASK-2X8-012; submission remained
+limited to the exact approved task scope.**
 
 ## Structure
 
@@ -278,6 +284,130 @@ branches: all 15 arms run unconditionally in the approved order).
   the Strategic Analyst via `ANALYSE_RESULTS` (Sections 1.4, 1.11).
 - One multinode job at a time (GAAS Blocker 7); no concurrent submissions.
 
+## Run summary
+
+One submitted attempt family (tag `v1`, PBS job `76370.gaas`, submitted
+2026-10-01T18:10:06+08:00, queue `gpu_as`, project `hpc_ebslee`, host-pinned
+`select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00`;
+started 18:10:06, finished 18:30:47, `job_state=F`, `Exit_status=0`,
+`resources_used.walltime` 00:20:40, run_count 1). All 15 arms ran
+sequentially on the same node pair (g14+g15) with identical fixed controls;
+each `.status` records `exit_status=0`, `verification=PASSED`, and
+`settings_echo_check=PASS`, with the requested and echoed Phase-3D controls
+matching on every arm. Factual per-arm data as emitted by the application
+output (no interpretation):
+
+Stage A — `--cuda-host-register-step` (DGEMV fixed 0):
+
+| arm | reg-step | normalized residual | verdict | overall GFLOP/s (per GPU) | LU s / LU GFLOP/s | IR s / IR/LU / iters | host mem cons. MAX | device mem cons. MAX / post-matgen headroom | arm wall-clock |
+|---|---:|---|---|---|---|---|---|---|---|
+| R0a | 2048 | 1.416310E-05 | PASSED | 6.5311e+06 (408193.03) | 7.78 / 6.7723e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:56 |
+| R1 | 512 | 1.416310E-05 | PASSED | 6.5578e+06 (409864.36) | 7.74 / 6.8013e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 134.023 GB / 3.997 GB | 00:00:58 |
+| R2 | 1024 | 1.416310E-05 | PASSED | 6.5198e+06 (407489.98) | 7.79 / 6.7607e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 134.433 GB / 3.587 GB | 00:00:56 |
+| R3 | 4096 | 3.303710E-05 | PASSED | 6.3877e+06 (399230.04) | 7.72 / 6.8163e+06 | 0.52 / 0.067 / 3 | 1.136 GB | 135.762 GB / 2.257 GB | 00:00:57 |
+| R4 | 8192 | 6.675518E-05 | PASSED | 6.1579e+06 (384868.94) | 7.76 / 6.7870e+06 | 0.79 / 0.102 / 3 | 4.418 GB | 135.762 GB / 2.257 GB | 00:01:01 |
+| R0b | 2048 | 1.416310E-05 | PASSED | 6.5384e+06 (408648.31) | 7.77 / 6.7806e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:58 |
+
+Stage B — `--call-dgemv-with-multiple-threads` (register-step fixed 2048):
+
+| arm | DGEMV | normalized residual | verdict | overall GFLOP/s (per GPU) | LU s / LU GFLOP/s | IR s / IR/LU / iters | host mem cons. MAX | device mem cons. MAX / post-matgen headroom | arm wall-clock |
+|---|---:|---|---|---|---|---|---|---|---|
+| D0a | 0 | 1.416310E-05 | PASSED | 6.5455e+06 (409094.25) | 7.76 / 6.7894e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:58 |
+| D1 | 128 | 1.416310E-05 | PASSED | 6.5644e+06 (410272.56) | 7.73 / 6.8086e+06 | 0.29 / 0.038 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:57 |
+| D2 | 512 | 1.416310E-05 | PASSED | 6.5459e+06 (409118.50) | 7.76 / 6.7899e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:01:00 |
+| D3 | 2048 | 1.416310E-05 | PASSED | 6.5456e+06 (409101.26) | 7.76 / 6.7883e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:01:00 |
+| D4 | 4096 | 1.416310E-05 | PASSED | 6.5634e+06 (410214.76) | 7.74 / 6.8072e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:55 |
+| D5 | 8192 | 1.416310E-05 | PASSED | 6.5586e+06 (409911.86) | 7.74 / 6.8017e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:55 |
+| D6 | 15360 | 1.416310E-05 | PASSED | 6.5480e+06 (409251.85) | 7.75 / 6.7913e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:56 |
+| D7 | 30720 | 1.416310E-05 | PASSED | 6.5564e+06 (409773.15) | 7.74 / 6.7999e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:57 |
+| D0b | 0 | 1.416310E-05 | PASSED | 6.5579e+06 (409866.04) | 7.74 / 6.8016e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:55 |
+
+Attempt IDs are the full
+`2x8-GAAS-phase3d-host-mem-closure_<arm>_v1` stems. Per-arm `.status`
+start/end (+08:00; runtime = end − start): stagea-r0a 18:10:57→18:11:53
+(00:00:56), stagea-r1 18:12:16→18:13:14 (00:00:58), stagea-r2
+18:13:38→18:14:34 (00:00:56), stagea-r3 18:14:57→18:15:54 (00:00:57),
+stagea-r4 18:16:17→18:17:18 (00:01:01), stagea-r0b 18:17:41→18:18:39
+(00:00:58), stageb-d0a 18:19:04→18:20:02 (00:00:58), stageb-d1
+18:20:26→18:21:23 (00:00:57), stageb-d2 18:21:46→18:22:46 (00:01:00),
+stageb-d3 18:23:09→18:24:09 (00:01:00), stageb-d4 18:24:32→18:25:27
+(00:00:55), stageb-d5 18:25:51→18:26:46 (00:00:55), stageb-d6
+18:27:09→18:28:05 (00:00:56), stageb-d7 18:28:28→18:29:25 (00:00:57),
+stageb-d0b 18:29:48→18:30:43 (00:00:55). The strictly sequential arm
+timestamps confirm the exact approved arm order.
+
+Post-matrix-generation per-process available MIN (from each `.status`
+`matgen_headroom` line), system/device: 72.772/2.767 GB (R0a),
+72.707/3.997 GB (R1), 72.695/3.587 GB (R2), 72.248/2.257 GB (R3),
+69.107/2.257 GB (R4), 72.339/2.767 GB (R0b), 72.401/2.767 GB (D0a),
+72.432/2.767 GB (D1), 72.518/2.767 GB (D2), 72.480/2.767 GB (D3),
+72.463/2.767 GB (D4), 72.488/2.767 GB (D5), 72.564/2.767 GB (D6),
+72.596/2.767 GB (D7), 72.662/2.767 GB (D0b).
+
+Constructor (setup/registration) seconds AVG per arm: R0a 0.24, R1 0.24,
+R2 0.19, R3 0.16, R4 0.16, R0b 0.21, D0a 0.20, D1 1.11, D2 1.16, D3 0.20,
+D4 0.22, D5 0.34, D6 0.22, D7 0.19, D0b 0.22.
+
+Facts not representable in the current `results/metrics.csv` schema,
+recorded here for Codex review (schema/extractor unchanged; the CSV carries
+the shared fixed controls, the swept DGEMV value, and the per-arm score;
+the swept register-step value is identified by the attempt label and
+recorded in each `.status`):
+
+- OMP contract verified per arm: fifteen per-arm env probes each confirmed
+  `OMP_NUM_THREADS=4` with `OMP_PLACES`/`OMP_PROC_BIND` unset on all 16
+  ranks (15 x 16 = 240 verification lines in the env-map log;
+  allocation-level rank-map gate PASS on both hosts: 16 rank lines, 2
+  hosts, 8 ranks/host, OMP_PLACES/OMP_PROC_BIND unset on all 16). The
+  incoming PBS-supplied `OMP_NUM_THREADS=96` was recorded in the rank-map
+  log and neutralized per arm by the explicit job-shell export + `mpirun
+  -x OMP_NUM_THREADS` forwarding; the effective placement policy is the
+  launcher package defaults `OMP_PLACES=sockets` / `OMP_PROC_BIND=TRUE`.
+- The settings block of every `.out` echoed `--u-panel-chunk-nbs = 8`,
+  `--preset-gemm-kernel = 90` (effective via default; flag omitted),
+  `--fill-device = 1`, `--fill-device-buffer-size = 3048`, and the exact
+  requested `--cuda-host-register-step` and
+  `--call-dgemv-with-multiple-threads` values for that arm
+  (`settings_echo_check=PASS` on all 15).
+- Iterative refinement emitted 3 solver iterations for every arm; IR
+  seconds (AVG) and L-infinite residuals per iteration are in each `.out`.
+- Allocation-level observation (factual, this g14+g15 allocation): the
+  per-process host memory available MIN reported by the application is
+  ~69-73 GB (e.g. 73.006 GB pre-matgen for R0a), lower than the ~238 GB
+  reported on the TASK-2X8-011 g12+g14 allocation; host consumption MAX
+  is 0.004 GB/process and the device full-fill regime (135.254 GB
+  consumption MAX, 2.767 GB post-matgen headroom) is identical to the
+  retained TASK-2X8-011 control for the default arms. Stage-A arms R3/R4
+  (register-step 4096/8192) factually displaced FP64 data to host memory
+  (host consumption MAX 1.136/4.418 GB, IR 0.52/0.79 s, device headroom
+  2.257 GB, differing finite residuals 3.303710E-05/6.675518E-05) — all
+  still PASSED; the interpretation belongs to the Strategic Analyst.
+- Known non-fatal stderr notes preserved in the evidence: the PBS `.e`
+  contains module-load notes and 31 `unknown groupid 1304617061` warnings;
+  each per-arm `.err` contains the bridge `cmd=[...]` diagnostic and one
+  `unknown groupid` warning. Per-arm warning-marker counts are 0
+  (out and err) for all 15 arms. None affected probes or scored runs.
+- Integrity: all 66 remote output files were retrieved from the remote
+  execution worktree `.codex-worktrees/TASK-2X8-012-e766b5f-phase3d-v1`
+  (commit `e766b5ff726bc07cfc0b8274d54bb97f3e13b766`) and verified
+  byte-identical by SHA-256 against the remote copies (66/66). Two
+  local-only operational logs (the presubmit pbsnodes snapshot, taken
+  before submission, and `..._v1_submission.log`) are preserved alongside.
+
+### Mechanical bracket facts (factual, no interpretation)
+
+- Stage-A bracket: R0a/R0b = 6.5311e+06 / 6.5384e+06, symmetric spread
+  0.11%.
+- Stage-B bracket: D0a/D0b = 6.5455e+06 / 6.5579e+06, symmetric spread
+  0.19%.
+- Every Stage-A arm except R3 (6.3877e+06, -2.20% vs R0a) and R4
+  (6.1579e+06, −5.71% vs R0a) lies within 0.41% of the bracket controls
+  (R1 +0.41%/+0.30% and R2 −0.17%/−0.28% vs R0a/R0b); LU seconds span
+  7.72-7.79 across all 15 arms; Stage-B arms all lie within 0.29% of the
+  bracket controls with IR 0.29 s and 3 iterations each.
+- These are mechanical carry-forward facts only; the final Phase-3D
+  conclusion belongs to the Strategic Analyst via `ANALYSE_RESULTS`.
+
 ## Attempt and output naming
 
 Per-arm attempt ID:
@@ -304,34 +434,48 @@ Retries use a new sweep tag (e.g. `v2`) for both `ATTEMPT_TAG` and the
 
 ## Submission (from this directory; already authorized under Section 1.12)
 
-Submission is already authorized under the unchanged Section 1.12
-authorization of TASK-2X8-012; no new approval is needed, and submission
-remains limited to the exact approved task scope.
+Submission was already authorized under the unchanged Section 1.12
+authorization of TASK-2X8-012; no new approval was needed, and submission
+remained limited to the exact approved task scope.
 
-Presubmit node-status check (TASK-2X8-012 Section 1.6A): use the approved
-node-status workflow (`pbsnodes -aSj` over the eligible queues) to prefer
-the cleanest eligible 2-node allocation and preserve the contention
-snapshot as submission-side evidence at
-`outputs/2x8-GAAS-phase3d-host-mem-closure_<tag>.presubmit_pbsnodes.log`.
-Node-selection rule: same-queue `gpu_as` or `gpu_ded` pair per the task
-rule; under the current-session user override a mixed `gpu_as`/`gpu_ded`
-pair is allowed if needed and if PBS can allocate it under a single allowed
-queue (report the precise scheduler constraint otherwise and fall back to a
-same-queue pair if eligible); record which queues/nodes were used. If PBS
-cannot allocate a clean pair at submission time, report the blocking
-condition rather than switching queues outside the approved scope.
+Presubmit node-status check (TASK-2X8-012 Section 1.6A), taken
+2026-10-01T18:09:51+08:00: the `pbsnodes -aSj` snapshot over the eligible
+queues is preserved as submission-side contention/provenance evidence at
+`outputs/2x8-GAAS-phase3d-host-mem-closure_v1.presubmit_pbsnodes.log`.
+Selected same-queue `gpu_as` pair: `hpc-gaas-g14` + `hpc-gaas-g15`.
+Factual selection basis, from the snapshot: g14 and g15 were both `free`
+with 0 jobs, 8/8 GPUs, 100/100 ncpus, and full 2tb/2tb memory, and both
+carry `Qlist = gpu_as,gpu_ppu`; the remaining idle full-GPU nodes were
+off-limits by queue scope (g05/g16/g17 are `gpu_aisg`) or singleton
+(`gpu_ded` had exactly one eligible free full-GPU node, g22, so no
+same-queue `gpu_ded` pair existed). The cleanest eligible same-queue pair
+was therefore g14+g15. The current-session user override permitting a
+mixed `gpu_as`/`gpu_ded` pair was not needed and was not exercised (a
+same-queue pair was available); for the record, a mixed pair under one
+allowed queue is not allocatable in a single job on this scheduler because
+all vnodes of a host-pinned select must be members of the single submitted
+queue's Qlist, and no eligible node is a member of both `gpu_as` and
+`gpu_ded`. This is the same validated host-pinned pattern as the
+phase1a/phase3ab/TASK-010/TASK-2X8-011 submissions (only eligible idle
+`gpu_as`/`gpu_ded` nodes).
 
-Planned host-pinned submission form (`ATTEMPT_TAG=v1`, walltime
-`02:00:00`; nodes filled in from the presubmit snapshot):
+Exact approved host-pinned submission command (`ATTEMPT_TAG=v1`, walltime
+`02:00:00`; submitted exactly once as PBS job `76370.gaas` on 2026-10-01,
+see Run summary):
 
 ```bash
-qsub -q <gpu_as|gpu_ded> \
-     -l select=host=<node1>:ncpus=96:ngpus=8:mem=2000GB+host=<node2>:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
      -v "ATTEMPT_TAG=v1" \
      -o outputs/2x8-GAAS-phase3d-host-mem-closure_v1.o \
      -e outputs/2x8-GAAS-phase3d-host-mem-closure_v1.e \
      scripts/run_phase3d_host_mem_closure.pbs
 ```
+
+The complete submission/monitoring/retrieval record (bounded qstat polling
+5 polls + 1 final-state fetch; final job metadata; SHA-256 verification
+66/66) is preserved as submission-side evidence at
+`outputs/2x8-GAAS-phase3d-host-mem-closure_v1_submission.log`.
 
 ## Available baseline provenance
 

@@ -1,0 +1,117 @@
+TASK-2X8-012 phase3d-host-mem-closure — v1 submission record
+==============================================================
+
+Pre-submission state determination (2026-10-01T18:08-18:09+08:00)
+- Remote primary clone
+  /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/
+  HPL-MxP-Agent-Test: HEAD 87fb61e829832a3bc07c2579d8472aa1be279f13 (stale
+  vs origin), dirty (tracked modifications under
+  scripts/gaas-internode-coms-debug/ plus many untracked artifacts) ->
+  Workflow 01 Mode B: primary left completely untouched; non-destructive
+  'git fetch origin' run from the primary (ad541ac..e766b5f).
+- Execution worktree created at the exact approved origin commit:
+  .codex-worktrees/TASK-2X8-012-e766b5f-phase3d-v1
+  HEAD = e766b5ff726bc07cfc0b8274d54bb97f3e13b766, clean status,
+  verified: tasks/TASK-2X8-012.md (front matter EXECUTING / codex;
+  Section 1.12 Authorization APPROVED / approved_by: user, exact unchanged
+  scope), scripts/run_phase3d_host_mem_closure.pbs present (bash -n PASS),
+  outputs/ empty except .gitkeep.
+- Presubmit node-status snapshot (pbsnodes -aSj + per-node details of the
+  free no-job full-GPU nodes), taken 2026-10-01T18:09:51+08:00, preserved
+  locally as
+  outputs/2x8-GAAS-phase3d-host-mem-closure_v1.presubmit_pbsnodes.log.
+- Node selection (factual basis from the snapshot): eligible clean nodes
+  (free, 0 jobs, 8/8 GPUs, 100/100 ncpus, full memory):
+  g14 (Qlist gpu_as,gpu_ppu), g15 (Qlist gpu_as,gpu_ppu), g22 (gpu_ded);
+  g05/g16/g17 are gpu_aisg (off-limits). gpu_as same-queue pair g14+g15
+  available -> selected (cleanest eligible same-queue pair; both nodes
+  idle with no assigned jobs). gpu_ded had only one eligible node (g22),
+  so no same-queue gpu_ded pair existed; the current-session user override
+  permitting a mixed gpu_as/gpu_ded pair was NOT needed and was not
+  exercised (a same-queue pair was available). Scheduler constraint note
+  for the mixed-pair option (not exercised): all vnodes in a host-pinned
+  select must be members of the single submitted queue's Qlist; no
+  eligible node is a member of both gpu_as and gpu_ded (g14/g15 are
+  gpu_as+gpu_ppu; g22 is gpu_ded only), so a mixed gpu_as/gpu_ded pair
+  cannot be allocated under one allowed -q queue in a single job.
+- qstat -u $USER before submission: no jobs (the qsub below was the only
+  submission; submitted exactly once).
+
+Submission
+- Submission timestamp (cluster): 2026-10-01T18:10:06+08:00
+- Working directory: /home/pham0094/hpl_hpcg_hplmxp_container/
+  HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/
+  TASK-2X8-012-e766b5f-phase3d-v1/experiments/2x8-GAAS/
+  phase3d-host-mem-closure
+- Command (approved README form, host-pinned, same-queue gpu_as pair):
+  qsub -q gpu_as \
+    -l "select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00" \
+    -v "ATTEMPT_TAG=v1" \
+    -o outputs/2x8-GAAS-phase3d-host-mem-closure_v1.o \
+    -e outputs/2x8-GAAS-phase3d-host-mem-closure_v1.e \
+    scripts/run_phase3d_host_mem_closure.pbs
+- qsub exit code: 0
+- PBS job ID: 76370.gaas
+- Submitted exactly once (single qsub; ATTEMPT_TAG=v1; script, controls,
+  resources, nodes, and attempt tag exactly as reviewed/approved).
+
+Bounded monitoring record (qstat -u $USER, >=5 min apart, <=12 checks)
+- [poll 1] 2026-10-01T18:14:53+08:00 :: 76370.gaas pham0094 gpu_as 2x8_phase3d_hm R (elapsed 00:04)
+- [poll 2] 2026-10-01T18:19:39+08:00 :: 76370.gaas pham0094 gpu_as 2x8_phase3d_hm R (elapsed 00:08)
+- [poll 3] 2026-10-01T18:24:25+08:00 :: 76370.gaas pham0094 gpu_as 2x8_phase3d_hm R (elapsed 00:13)
+- [poll 4] 2026-10-01T18:29:11+08:00 :: 76370.gaas pham0094 gpu_as 2x8_phase3d_hm R (elapsed 00:18)
+- [poll 5] 2026-10-01T18:33:58+08:00 :: 76370.gaas not listed in qstat -u $USER (rc=0, empty output) -> job ended
+- [final check] qstat -xf 76370.gaas succeeded (rc=0).
+
+Monitoring budget used: 6 qstat checks total (5 polls + 1 final-state
+fetch); no cancellation performed.
+
+Final job metadata (qstat -xf 76370.gaas, 2026-10-01T18:34+08:00)
+- Job_Name = 2x8_phase3d_hm
+- Job_Owner = pham0094@hpc-gaas-hn2
+- job_state = F (finished), substate = 92, run_count = 1
+- Exit_status = 0
+- queue = gpu_as; project = hpc_ebslee; server = gaas
+- ctime (submitted) = Thu Oct  1 18:10:06 2026
+- qtime = stime (started) = Thu Oct  1 18:10:06 2026
+- mtime = obittime = Thu Oct  1 18:30:47 2026 (finished)
+- resources_used.walltime = 00:20:40
+- exec_host = hpc-gaas-g14/0*96+hpc-gaas-g15/0*96
+- exec_vnode = (hpc-gaas-g14:ncpus=96:ngpus=8:mem=2097152000kb)+(hpc-gaas-g15:ncpus=96:ngpus=8:mem=2097152000kb)
+- Resource_List.select = host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB
+- Resource_List.place = scatter; Resource_List.walltime = 02:00:00
+- Output_Path = .../outputs/2x8-GAAS-phase3d-host-mem-closure_v1.o
+- Error_Path  = .../outputs/2x8-GAAS-phase3d-host-mem-closure_v1.e
+- Variable_List includes ATTEMPT_TAG=v1, PBS_O_QUEUE=gpu_as,
+  PBS_O_WORKDIR=<worktree>/experiments/2x8-GAAS/phase3d-host-mem-closure
+- comment = Job run at Thu Oct 01 at 18:10 on (g14)+(g15) and finished
+- Stageout_status = 1
+
+Remote evidence inventory at completion (execution worktree outputs/):
+- PBS level: _v1.o (32349 B), _v1.e (1506 B)
+- Stage A arms (r0a, r1, r2, r3, r4, r0b): .envprobe/.err/.out/.status each
+- Stage B arms (d0a, d1..d7, d0b): .envprobe/.err/.out/.status each
+- Allocation level: _rankmap_v1.log, _envmap_v1.log,
+  _carryforward_v1.log, _hostfile_v1
+- Total: 66 files.
+
+Output retrieval and verification (2026-10-01, approved SCP form)
+- Retrieved via scp -o BatchMode=yes into local
+  experiments/2x8-GAAS/phase3d-host-mem-closure/outputs/: all 66 remote
+  files (PBS _v1.o/_v1.e, all 15 arm sets .out/.err/.status/.envprobe,
+  and the allocation-level rankmap/envmap/carryforward logs + hostfile).
+- File-list check: local outputs/ matches the remote execution-worktree
+  outputs/ exactly for all 66 shared files; local-only extras are the
+  presubmit pbsnodes snapshot (taken before submission) and this
+  submission log. Attempt-specific names preserved, nothing overwritten.
+- SHA-256 check: all 66 shared files byte-identical remote vs local
+  (66/66 checksums match).
+- PBS stderr (_v1.e) contains only module-load notes and the known benign
+  "WARNING: group: unknown groupid 1304617061" lines (31 occurrences);
+  no application errors. Each per-arm .err contains only the bridge
+  cmd=[...] diagnostic and one unknown-groupid warning.
+- Factual per-arm outcome recorded in evidence: 15/15 arms exit 0,
+  verification=PASSED, settings_echo_check=PASS; carry-forward log records
+  stageA bracket R0a/R0b spread 0.11%, register-step restoration to 2048
+  for Stage B, stageB bracket D0a/D0b spread 0.19%, sweep_end stop after
+  Stage B (no Phase 4).

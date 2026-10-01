@@ -1,0 +1,305 @@
+attempt_tag_validation=PASS (conservative filename-safe pattern: nonempty, ASCII alphanumeric '.' '_' '-' only, not '.' or '..')
+experiment_id=2x8-GAAS-phase3d-host-mem-closure
+attempt_tag=v1
+pbs_job_id=76370.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-10-01T18:10:07+08:00
+fixed scientific controls (identical across all arms; only the Phase-3D controls vary, one at a time per stage; TASK-2X8-012 Section 1.6A):
+--n 429056 --nb 3072 --nprow 4 --npcol 4 --nporder row
+--gpu-affinity 0:1:2:3:4:5:6:7 (fixed identity map; --cpu-affinity omitted, --mem-affinity omitted, --ucx-affinity omitted for every arm)
+OMP_NUM_THREADS=4 (explicit job-shell export after module setup + mpirun -x OMP_NUM_THREADS; verified = 4 on all 16 ranks by the per-arm env probe)
+OMP_PLACES/OMP_PROC_BIND omitted (unset in the job shell; verified UNSET on all 16 ranks; effective launcher package defaults: OMP_PLACES=sockets, OMP_PROC_BIND=TRUE)
+--fill-device 1 --fill-device-buffer-size 3048 (retained TASK-2X8-011 full-fill residency mode; Anq-device omitted/overridden)
+--sloppy-type FP16
+--use-mpi-panel-broadcast 0
+--use-separate-stream-for-gemm 1
+--prioritize-trsm 0
+--prioritize-factorization 0
+--test-loop 1
+--skip-tests 0
+--monitor-gpu 0
+default-equal controls applied via the installed package defaults exactly as in the validated TASK-010/TASK-2X8-011 launch, echoed values verified per arm: --u-panel-chunk-nbs = 8, --preset-gemm-kernel = 90 (EFFECTIVE value; v26.02 CLI accepts only {0,80} so the flag is omitted and the default supplies the SM90 preset; flag-check evidence hplmxp_v2602_flag_check_v1.log)
+Phase-3D controls (the ONLY varying scientific controls, passed explicitly on every arm; Section 1.8 rule 4 requires the effective echo of both on every arm): Stage A sweeps --cuda-host-register-step (R0a 2048, R1 512, R2 1024, R3 4096, R4 8192, R0b 2048) with --call-dgemv-with-multiple-threads fixed at 0; Stage B sweeps --call-dgemv-with-multiple-threads (D0a 0, D1 128, D2 512, D3 2048, D4 4096, D5 8192, D6 15360, D7 30720, D0b 0) with --cuda-host-register-step restored to 2048 (explicit on every Stage-B command line; Section 1.6B rule 7)
+controls NOT reopened by TASK-2X8-012 (Section 1.7): N/NB/grid/order, GPU/CPU/memory/UCX affinity, OMP threads/placement, residency mode/buffer, UCX transport, MPI/NCCL panel policy, U-panel chunking, MPI fallbacks, sloppy precision, GEMM kernel, TRSM/factorization priorities, separate-stream policy
+task: TASK-2X8-012 Phase 3D closure; Stage A order R0a,R1,R2,R3,R4,R0b; then Stage B order D0a,D1,D2,D3,D4,D5,D6,D7,D0b; one scored attempt per arm; stops after Stage B (no Phase 4)
+execution_worktree_root=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-012-e766b5f-phase3d-v1
+execution_worktree_git_revision=e766b5ff726bc07cfc0b8274d54bb97f3e13b766
+layout=2 nodes x 8 GPUs = 16 ranks (one rank per GPU)
+grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)
+nodes=hpc-gaas-g14 hpc-gaas-g15
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-012-e766b5f-phase3d-v1/multi-node-test/rsh_pbsdsh_container.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+=== mother-node GPU topology matrix (gate input + evidence) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC legend matches Phase-0)
+incoming job-shell OpenMP environment (before per-arm control application):
+  OMP_NUM_THREADS=96
+  OMP_PLACES=UNSET
+  OMP_PROC_BIND=UNSET
+=== loaded modules (module list; optional record, non-fatal) ===
+Currently Loaded Modulefiles:
+ 1) apptainer/1.4.1     3) cuda/13.1 <aL>   5) squashfuse/0.5.2  
+ 2) gnu/gcc-12.3 <aL>   4) nvhpc/26.3       6) gocryptfs/2.5.0   
+
+Key:
+<module-tag>  <aL>=auto-loaded  
+=== apptainer version (required runtime; rc=0) ===
+apptainer version 1.4.1
+=== container MPI version (/usr/local/mpi/bin/mpirun --version; required runtime; rc=0) ===
+WARNING: group: unknown groupid 1304617061
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+=== pre-sweep hardware-health snapshot (mother node hpc-gaas-g14) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 30, 116.03 W, 1980 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 30, 76.43 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 29, 76.30 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 31, 76.12 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 30, 79.16 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 29, 74.98 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 28, 74.93 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 29, 78.39 W, 345 MHz, 0 MiB, 143771 MiB
+=== hostfile (/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-012-e766b5f-phase3d-v1/experiments/2x8-GAAS/phase3d-host-mem-closure/outputs/2x8-GAAS-phase3d-host-mem-closure_hostfile_v1) ===
+hpc-gaas-g14 slots=8
+hpc-gaas-g15 slots=8
+=== rank-map probe: rc=0 rank_lines=16 hosts=2 ranks_per_host=8 log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-012-e766b5f-phase3d-v1/experiments/2x8-GAAS/phase3d-host-mem-closure/outputs/2x8-GAAS-phase3d-host-mem-closure_rankmap_v1.log ===
+incoming OMP environment across 16 ranks: ranks_with_OMP_PLACES_set=0 ranks_with_OMP_PROC_BIND_set=0
+incoming OMP_NUM_THREADS values seen (evidence; neutralized per arm by explicit export + -x forwarding):
+  rank=1/16 host=hpc-gaas-g14 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=14/16 host=hpc-gaas-g15 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=11/16 host=hpc-gaas-g15 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=9/16 host=hpc-gaas-g15 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=5/16 host=hpc-gaas-g14 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=7/16 host=hpc-gaas-g14 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=6/16 host=hpc-gaas-g14 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=13/16 host=hpc-gaas-g15 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=4/16 host=hpc-gaas-g14 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=2/16 host=hpc-gaas-g14 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=10/16 host=hpc-gaas-g15 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=12/16 host=hpc-gaas-g15 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=15/16 host=hpc-gaas-g15 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=3/16 host=hpc-gaas-g14 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=8/16 host=hpc-gaas-g15 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=0/16 host=hpc-gaas-g14 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+incoming_openmp_gate=PASS (OMP_PLACES/OMP_PROC_BIND unset on all 16 ranks; launcher package defaults remain the effective placement policy)
+  host=hpc-gaas-g14 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+  host=hpc-gaas-g15 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+rankmap_per_host_topology_gate=PASS (every allocated host matches the accepted Phase-0 topology; per-host reports preserved in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-012-e766b5f-phase3d-v1/experiments/2x8-GAAS/phase3d-host-mem-closure/outputs/2x8-GAAS-phase3d-host-mem-closure_rankmap_v1.log)
+=== Stage A: cuda-host-register-step sweep (TASK-2X8-012 Section 1.6B; order R0a,R1,R2,R3,R4,R0b; one scored attempt each; --call-dgemv-with-multiple-threads fixed at 0; fixed N=429056 NB=3072 4x4 row full-fill 3048, retained host-runtime contract) ===
+=== env probe arm=stagea-r0a: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stagea-r0a (stagea-r0a) step=stagea attempt=2x8-GAAS-phase3d-host-mem-closure_stagea-r0a_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:10:57+08:00 ===
+=== arm stagea-r0a (stagea-r0a) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5311e+06 end=2026-10-01T18:11:53+08:00 ===
+arm stagea-r0a: regstep=2048 dgemv=0 score=6.5311e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.78 lu_gflops=6.7723e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.24 mem_evidence_complete=1
+=== env probe arm=stagea-r1: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stagea-r1 (stagea-r1) step=stagea attempt=2x8-GAAS-phase3d-host-mem-closure_stagea-r1_v1 phase3d="--cuda-host-register-step 512 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:12:16+08:00 ===
+=== arm stagea-r1 (stagea-r1) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5578e+06 end=2026-10-01T18:13:14+08:00 ===
+arm stagea-r1: regstep=512 dgemv=0 score=6.5578e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.74 lu_gflops=6.8013e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=134.023 constructor_seconds=0.24 mem_evidence_complete=1
+=== env probe arm=stagea-r2: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stagea-r2 (stagea-r2) step=stagea attempt=2x8-GAAS-phase3d-host-mem-closure_stagea-r2_v1 phase3d="--cuda-host-register-step 1024 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:13:38+08:00 ===
+=== arm stagea-r2 (stagea-r2) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5198e+06 end=2026-10-01T18:14:34+08:00 ===
+arm stagea-r2: regstep=1024 dgemv=0 score=6.5198e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.79 lu_gflops=6.7607e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=134.433 constructor_seconds=0.19 mem_evidence_complete=1
+=== env probe arm=stagea-r3: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stagea-r3 (stagea-r3) step=stagea attempt=2x8-GAAS-phase3d-host-mem-closure_stagea-r3_v1 phase3d="--cuda-host-register-step 4096 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:14:57+08:00 ===
+=== arm stagea-r3 (stagea-r3) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.3877e+06 end=2026-10-01T18:15:54+08:00 ===
+arm stagea-r3: regstep=4096 dgemv=0 score=6.3877e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.72 lu_gflops=6.8163e+06 ir_seconds=0.52 ir_lu_ratio=0.067 iterations=3 residual=3.303710E-05 host_cons_gb=1.136 device_cons_gb=135.762 constructor_seconds=0.16 mem_evidence_complete=1
+=== env probe arm=stagea-r4: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stagea-r4 (stagea-r4) step=stagea attempt=2x8-GAAS-phase3d-host-mem-closure_stagea-r4_v1 phase3d="--cuda-host-register-step 8192 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:16:17+08:00 ===
+=== arm stagea-r4 (stagea-r4) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.1579e+06 end=2026-10-01T18:17:18+08:00 ===
+arm stagea-r4: regstep=8192 dgemv=0 score=6.1579e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.76 lu_gflops=6.7870e+06 ir_seconds=0.79 ir_lu_ratio=0.102 iterations=3 residual=6.675518E-05 host_cons_gb=4.418 device_cons_gb=135.762 constructor_seconds=0.16 mem_evidence_complete=1
+=== env probe arm=stagea-r0b: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stagea-r0b (stagea-r0b) step=stagea attempt=2x8-GAAS-phase3d-host-mem-closure_stagea-r0b_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:17:41+08:00 ===
+=== arm stagea-r0b (stagea-r0b) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5384e+06 end=2026-10-01T18:18:39+08:00 ===
+arm stagea-r0b: regstep=2048 dgemv=0 score=6.5384e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.77 lu_gflops=6.7806e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.21 mem_evidence_complete=1
+stageA bracket R0a/R0b: score=6.5311e+06/6.5384e+06 symmetric_spread_pct=0.11 (factual local drift reference only; no winner is declared; differences below the bracket spread are factual ties for later analysis)
+stageA complete; restoring --cuda-host-register-step=2048 for Stage B regardless of the numerical Stage-A result (Section 1.6B rule 7): every Stage-B arm passes --cuda-host-register-step 2048 explicitly on its command line
+=== Stage B: call-dgemv-with-multiple-threads sweep (TASK-2X8-012 Section 1.6C; order D0a,D1,D2,D3,D4,D5,D6,D7,D0b; one scored attempt each; --cuda-host-register-step fixed at 2048 (restored per Section 1.6B rule 7); fixed N=429056 NB=3072 4x4 row full-fill 3048, retained host-runtime contract) ===
+=== env probe arm=stageb-d0a: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d0a (stageb-d0a) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d0a_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:19:04+08:00 ===
+=== arm stageb-d0a (stageb-d0a) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5455e+06 end=2026-10-01T18:20:02+08:00 ===
+arm stageb-d0a: regstep=2048 dgemv=0 score=6.5455e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.76 lu_gflops=6.7894e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.20 mem_evidence_complete=1
+=== env probe arm=stageb-d1: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d1 (stageb-d1) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d1_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 128" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:20:26+08:00 ===
+=== arm stageb-d1 (stageb-d1) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5644e+06 end=2026-10-01T18:21:23+08:00 ===
+arm stageb-d1: regstep=2048 dgemv=128 score=6.5644e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.73 lu_gflops=6.8086e+06 ir_seconds=0.29 ir_lu_ratio=0.038 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=1.11 mem_evidence_complete=1
+=== env probe arm=stageb-d2: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d2 (stageb-d2) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d2_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 512" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:21:46+08:00 ===
+=== arm stageb-d2 (stageb-d2) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5459e+06 end=2026-10-01T18:22:46+08:00 ===
+arm stageb-d2: regstep=2048 dgemv=512 score=6.5459e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.76 lu_gflops=6.7899e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=1.16 mem_evidence_complete=1
+=== env probe arm=stageb-d3: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d3 (stageb-d3) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d3_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 2048" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:23:09+08:00 ===
+=== arm stageb-d3 (stageb-d3) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5456e+06 end=2026-10-01T18:24:09+08:00 ===
+arm stageb-d3: regstep=2048 dgemv=2048 score=6.5456e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.76 lu_gflops=6.7883e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.20 mem_evidence_complete=1
+=== env probe arm=stageb-d4: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d4 (stageb-d4) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d4_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 4096" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:24:32+08:00 ===
+=== arm stageb-d4 (stageb-d4) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5634e+06 end=2026-10-01T18:25:27+08:00 ===
+arm stageb-d4: regstep=2048 dgemv=4096 score=6.5634e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.74 lu_gflops=6.8072e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.22 mem_evidence_complete=1
+=== env probe arm=stageb-d5: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d5 (stageb-d5) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d5_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 8192" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:25:51+08:00 ===
+=== arm stageb-d5 (stageb-d5) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5586e+06 end=2026-10-01T18:26:46+08:00 ===
+arm stageb-d5: regstep=2048 dgemv=8192 score=6.5586e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.74 lu_gflops=6.8017e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.34 mem_evidence_complete=1
+=== env probe arm=stageb-d6: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d6 (stageb-d6) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d6_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 15360" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:27:09+08:00 ===
+=== arm stageb-d6 (stageb-d6) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5480e+06 end=2026-10-01T18:28:05+08:00 ===
+arm stageb-d6: regstep=2048 dgemv=15360 score=6.5480e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.75 lu_gflops=6.7913e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.22 mem_evidence_complete=1
+=== env probe arm=stageb-d7: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d7 (stageb-d7) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d7_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 30720" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:28:28+08:00 ===
+=== arm stageb-d7 (stageb-d7) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5564e+06 end=2026-10-01T18:29:25+08:00 ===
+arm stageb-d7: regstep=2048 dgemv=30720 score=6.5564e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.74 lu_gflops=6.7999e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.19 mem_evidence_complete=1
+=== env probe arm=stageb-d0b: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 ===
+=== arm stageb-d0b (stageb-d0b) step=stageb attempt=2x8-GAAS-phase3d-host-mem-closure_stageb-d0b_v1 phase3d="--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0" n=429056 omp_num_threads=4 omp_places_supplied=omitted omp_proc_bind_supplied=omitted cpu_affinity=omitted start=2026-10-01T18:29:48+08:00 ===
+=== arm stageb-d0b (stageb-d0b) exit_status=0 verdict=PASSED settings_echo=PASS gflops=6.5579e+06 end=2026-10-01T18:30:43+08:00 ===
+arm stageb-d0b: regstep=2048 dgemv=0 score=6.5579e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.74 lu_gflops=6.8016e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.22 mem_evidence_complete=1
+stageB bracket D0a/D0b: score=6.5455e+06/6.5579e+06 symmetric_spread_pct=0.19 (factual local drift reference only; no winner is declared; differences below the bracket spread are factual ties for later analysis)
+sweep_end: all 15 authorized arms of the fixed Stage-A/Stage-B path ran at most once each; TASK-2X8-012 stops after Stage B (Section 1.6C rule 8: no Phase 4, no communication work, no dependency reopen); the final Phase-3D conclusion is reserved for the Strategic Analyst via ANALYSE_RESULTS (Sections 1.4, 1.11)
+anti-loop state: no additional register-step or DGEMV values, no intermediate points, no refinement around a numerical leader, no interaction matrix, and no repeats beyond the R0a/R0b and D0a/D0b brackets occurred (TASK-2X8-012 Sections 1.7, 1.10)
+=== post-sweep hardware-health snapshot (mother node hpc-gaas-g14) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 29, 96.36 W, 480 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 31, 107.98 W, 405 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 30, 96.07 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 33, 121.09 W, 1980 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 32, 116.19 W, 405 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 31, 118.14 W, 405 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 30, 117.64 W, 1980 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 30, 88.08 W, 390 MHz, 0 MiB, 143771 MiB
+=== sweep recap (factual scores only; bracket records in the carry-forward log; interpretation reserved for ANALYSE_RESULTS) ===
+arms_run=15 arms_exited_nonzero=0 arms_invalid=0
+arm=stagea-r0a regstep=2048 dgemv=0 gflops=6.5311e+06 valid=yes exit=0
+arm=stagea-r1 regstep=512 dgemv=0 gflops=6.5578e+06 valid=yes exit=0
+arm=stagea-r2 regstep=1024 dgemv=0 gflops=6.5198e+06 valid=yes exit=0
+arm=stagea-r3 regstep=4096 dgemv=0 gflops=6.3877e+06 valid=yes exit=0
+arm=stagea-r4 regstep=8192 dgemv=0 gflops=6.1579e+06 valid=yes exit=0
+arm=stagea-r0b regstep=2048 dgemv=0 gflops=6.5384e+06 valid=yes exit=0
+arm=stageb-d0a regstep=2048 dgemv=0 gflops=6.5455e+06 valid=yes exit=0
+arm=stageb-d1 regstep=2048 dgemv=128 gflops=6.5644e+06 valid=yes exit=0
+arm=stageb-d2 regstep=2048 dgemv=512 gflops=6.5459e+06 valid=yes exit=0
+arm=stageb-d3 regstep=2048 dgemv=2048 gflops=6.5456e+06 valid=yes exit=0
+arm=stageb-d4 regstep=2048 dgemv=4096 gflops=6.5634e+06 valid=yes exit=0
+arm=stageb-d5 regstep=2048 dgemv=8192 gflops=6.5586e+06 valid=yes exit=0
+arm=stageb-d6 regstep=2048 dgemv=15360 gflops=6.5480e+06 valid=yes exit=0
+arm=stageb-d7 regstep=2048 dgemv=30720 gflops=6.5564e+06 valid=yes exit=0
+arm=stageb-d0b regstep=2048 dgemv=0 gflops=6.5579e+06 valid=yes exit=0
+=== HPL-MxP 2x8-GAAS phase3d-host-mem-closure sweep complete: all 15 run arm(s) exited 0 with PASSED verification and PASS settings echo (tag v1) ===
