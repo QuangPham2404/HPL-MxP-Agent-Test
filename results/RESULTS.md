@@ -291,4 +291,7 @@ This report records validated raw result data only. No optimization analysis or 
 | 2x8-GAAS-phase3d-host-mem-closure | 2x8-GAAS-phase3d-host-mem-closure_stageb-d7_v1 | 429056 | 3072 | 4x4 | row | 4 | unset | unset | PASSED | 6.5564e+06 | experiments/2x8-GAAS/phase3d-host-mem-closure/outputs/2x8-GAAS-phase3d-host-mem-closure_stageb-d7_v1.out |
 | 2x8-GAAS-phase3d-host-mem-closure | 2x8-GAAS-phase3d-host-mem-closure_stageb-d0b_v1 | 429056 | 3072 | 4x4 | row | 4 | unset | unset | PASSED | 6.5579e+06 | experiments/2x8-GAAS/phase3d-host-mem-closure/outputs/2x8-GAAS-phase3d-host-mem-closure_stageb-d0b_v1.out |
 
+| 2x8-GAAS-phase4a-fast-path-characterization | 2x8-GAAS-phase4a-fast-path-characterization_a0-clean_v1 | 429056 | 3072 | 4x4 | row | 4 | unset | unset | PASSED | 6.5324e+06 | experiments/2x8-GAAS/phase4a-fast-path-characterization/outputs/2x8-GAAS-phase4a-fast-path-characterization_a0-clean_v1.out |
+| 2x8-GAAS-phase4a-fast-path-characterization | 2x8-GAAS-phase4a-fast-path-characterization_a1-diag_v1 | 429056 | 3072 | 4x4 | row | 4 | unset | unset | PASSED | 6.5354e+06 | experiments/2x8-GAAS/phase4a-fast-path-characterization/outputs/2x8-GAAS-phase4a-fast-path-characterization_a1-diag_v1.out |
+
 Source: `results/metrics.csv`.

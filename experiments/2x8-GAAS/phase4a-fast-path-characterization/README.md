@@ -9,7 +9,132 @@ arms (tasks/TASK-2X8-013.md Sections 1.6A-1.6F). No Phase 4B/4C tuning is
 authorized or performed; the strategic reading belongs to the Strategic
 Analyst via `ANALYSE_RESULTS`.
 
-**Status: Reviewed locally; not yet submitted.**
+**Status: Executed (2026-10-01) — A0 and A1 ran in PBS job `76519.gaas`
+(completed, exit 0, both arms PASSED with PASS settings echo); both
+Section 1.6F gates found A1 transfer-level CONCLUSIVE, so A2-U and A2-N
+were SKIPPED as authorized. See Run summary.**
+
+**Prior status (2026-10-01, pre-submission): reviewed local scripts;
+presubmit `pbsnodes -aSj` snapshot taken and the same-queue `gpu_as` pair
+g14+g15 selected (see Submission). Submission was authorized under the
+unchanged Section 1.11 authorization of TASK-2X8-013; submission remained
+limited to the exact approved task scope.**
+
+## Run summary
+
+One submitted attempt family (tag `v1`, PBS job `76519.gaas`, submitted
+2026-10-01T23:29:48+08:00, queue `gpu_as`, project `hpc_ebslee`, host-pinned
+`select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00`;
+completed 2026-10-01T23:33:43+08:00, `job_state=F`, `Exit_status=0`,
+`resources_used.walltime` 00:03:53, run_count 1). Both arms ran
+sequentially on the same node pair (g14+g15) with identical fixed controls
+(byte-identical HPL-MxP command line); each `.status` records
+`exit_status=0`, `verification=PASSED`, and `settings_echo_check=PASS`.
+The conditional A2 arms did not run: the mechanical Section 1.6F gates
+evaluated A1's preserved raw evidence and found BOTH stacks
+transfer-level conclusive (details below), so A2-U was skipped per rule 1
+and A2-N per rule 2. No stop condition fired; total HPL arms executed: two
+of the four authorized.
+
+| arm | role | normalized residual | verdict | overall GFLOP/s | LU s / LU GFLOP/s | IR s / IR/LU / iters | host mem MAX | device mem MAX / headroom | arm wall-clock |
+|---|---|---|---|---|---|---|---|---|---|
+| a0-clean | A0 clean Phase-4 reference (scored) | 1.416310E-05 | PASSED | 6.5324e+06 | 7.77 / 6.7741e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:01:00 |
+| a1-diag | A1 diagnostic clone (sanity evidence only; not a performance candidate) | 1.416310E-05 | PASSED | 6.5354e+06 | 7.77 / 6.7803e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB / 2.767 GB | 00:00:55 |
+
+Attempt IDs are the full
+`2x8-GAAS-phase4a-fast-path-characterization_<arm>_v1` stems. Per-arm
+`.status` start/end (+08:00): a0-clean 23:30:48→23:31:48 (60 s), a1-diag
+23:32:28→23:33:23 (55 s). OMP contract verified per arm: both per-arm env
+probes confirmed `OMP_NUM_THREADS=4` with `OMP_PLACES`/`OMP_PROC_BIND`
+unset on all 16 ranks (2 × 16 verification lines in the env-map log;
+allocation-level rank-map gate PASS on both hosts: 16 rank lines, 2 hosts,
+8 ranks/host). The A0 (clean) probe additionally verified all diagnostic
+variables UNSET on all 16 ranks; the A1 probe verified the exact diagnostic
+values on all 16 ranks (`diag_ok` 16/16 on every field), and
+`ucx_tls=UNSET ucx_net_devices=UNSET` on all 16 ranks of both arms. The
+clean arm's `.err` contains only the known benign bridge `cmd=[...]`
+diagnostic and one `unknown groupid` warning (the bridge `cmd` line itself
+echoes `-mca pml "ucx"`, additional PML-selection context).
+
+### Section 1.6F gate record (from the carry-forward log)
+
+~~~text
+gate_input arm=a1-diag:
+  ucx_zero_copy_rows=625  ucx_staging_rows=48  ucx_frag_host_rows=0
+  ucx_rc_mlx5_refs=2001   ucx_inter_cfg_lines=388  ucx_inter_cfg_tcp_lines=0
+  nccl_backends=IBext_v11 nccl_ibext_channels=128  nccl_gdrdma_channels=128
+  nccl_socket_channels=0
+gate_ucx: CONCLUSIVE -> SKIPPED A2-U (rule 1)
+gate_nccl: CONCLUSIVE -> SKIPPED A2-N (rule 2)
+~~~
+
+### Communication-path evidence extracted from A1 (factual; raw logs preserved)
+
+- **MPI/UCX** (UCX 1.20.0 from `/opt/hpcx`, loaded by the container MPI;
+  PML=ucx): the effective UCX environment on every rank is exactly
+  `UCX_PROTO_INFO=y UCX_WARN_UNUSED_ENV_VARS=n UCX_LOG_LEVEL=info` — no
+  `UCX_TLS`, no `UCX_NET_DEVICES` (unset/automatic, as expected in 4A);
+  388 inter-node configuration lines select `rc_mlx5` lanes spanning the
+  physical HCAs (per-endpoint examples: 50% `rc_mlx5/mlx5_0:1` + 50%
+  `rc_mlx5/mlx5_1:1`); UCX_PROTO_INFO transfer-level protocol rows show
+  `rendezvous zero-copy read from remote` for large messages (625 rows)
+  plus `short`/`cuda_copy` eager rows from CUDA memory for small messages
+  (48 rows); 0 `UCX WARN`, 0 tcp inter-node lanes, 0 frag-host staging
+  rows.
+- **NCCL** (IBext_v11 plugin): backend `Using network IBext_v11` on every
+  rank; the plugin enumerates `[0]mlx5_0:1/IB/SHARP ... [7]mlx5_9:1/IB/SHARP
+  [8]mlx5_bond_0:1/RoCE [RO]` (the bond is read-only/OOB bootstrap only —
+  not a data path); 128 inter-node `via NET/IBext_v11/<dev>/GDRDMA`
+  channel lines, **all 128 GDRDMA-tagged → GDRDMA fraction = 128/128 =
+  1.00** (16 channel legs per device, devices 0-7 = the eight physical
+  HCAs); 0 Socket channels, 0 `NCCL WARN`, 0 bond/RoCE warnings.
+  Per-HCA "GPU Direct RDMA (nvidia-peermem) enabled" capability lines are
+  present but are not the transfer-level evidence; the per-channel
+  `/GDRDMA` tags are.
+- **Fabric (per-arm pre/post HCA deltas; explanatory, not winner
+  metrics)** — identical traffic shape in both arms; no nonzero
+  error/discard/recovery counter deltas in any arm; `port_xmit_wait`
+  deltas are nonzero on every HCA in both arms (roughly 0.10-0.33 million
+  wait-counter ticks per HCA per arm, with the NUMA1-side HCAs
+  mlx5_4/5/8/9 at ~0.31-0.33M vs ~0.10-0.24M on mlx5_0-3 — full per-HCA
+  values in each `.hcadelta`; raw counter deltas; see the unit note in
+  Per-arm evidence). The sysfs `numa_node` file was not readable on GAAS
+  (recorded as NA in the snapshots; state/rate/expected-flag are all
+  captured normally):
+
+| arm | node | TX delta (raw) | RX delta (raw) | rail TX shares (mlx5_0..5,8,9) | max/mean | CV |
+|---|---|---|---|---|---|---|
+| a0-clean | g14 | 82,795,120,447 | 59,048,964,688 | 12.44/12.54/12.43/12.54/12.44/12.54/12.64/12.42 % | 1.011 | 0.58 % |
+| a0-clean | g15 | 59,035,626,568 | 82,808,394,261 | 7.23/7.53/7.67/7.67/17.44/17.28/17.58/17.58 % | 1.407 | 39.81 % |
+| a1-diag | g14 | 82,795,113,011 | 59,048,947,741 | (identical shares to a0-clean) | 1.011 | 0.58 % |
+| a1-diag | g15 | 59,035,609,612 | 82,808,386,854 | (identical shares to a0-clean) | 1.407 | 39.81 % |
+
+Allocation-level observation (factual, this g14+g15 allocation): g14 TX
+exceeds RX and g15 RX exceeds TX by the same magnitude (~82.8 vs ~59.0
+raw), and g15's rail use is asymmetric (the NUMA1-side HCAs mlx5_4/5/8/9
+each carry ~17.5% vs ~7.5% for mlx5_0-3) while g14's rails are balanced
+(CV 0.58%). The interpretation belongs to the Strategic Analyst.
+
+### Provenance and integrity
+
+- Execution worktree: `.codex-worktrees/TASK-2X8-013-fdfe8d7-phase4a-v1`
+  (commit `fdfe8d7261966e4f059f57f98a4ddad44faa75a3` = approved
+  origin/main at submission; task file at this revision verified
+  `EXECUTING / codex` with unchanged approved Section 1.11).
+- Container image identity recorded in the PBS `.o`: size 5,307,924,480
+  bytes, mtime 2026-05-06, sha256
+  `123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628` —
+  matching the SIF identity recorded in the phase2 preflight evidence.
+- All 26 remote output files were retrieved and verified byte-identical
+  by SHA-256 against the remote copies (26/26). Local-only
+  submission-side evidence: the presubmit `pbsnodes -aSj` snapshot
+  (`..._v1.presubmit_pbsnodes.log`) and the job metadata in this section.
+- Known non-fatal stderr notes preserved: the PBS `.e` contains
+  module-load notes and 5 `unknown groupid 1304617061` warnings; each
+  arm `.err` contains the bridge `cmd=[...]` diagnostic and one
+  `unknown groupid` warning; per-arm warning-marker counts are 0 (out and
+  err) for both arms. None affected probes or scored runs.
+
 
 ## Structure
 
@@ -360,26 +485,45 @@ Per-arm attempt ID:
 Retries use a new tag (e.g. `v2`) for both `ATTEMPT_TAG` and the
 `-o`/`-e` names.
 
-## Submission (from this directory; authorized under TASK-2X8-013 Section 1.11)
+## Submission (from this directory; already authorized under TASK-2X8-013 Section 1.11)
 
-Presubmit node-status check (Section 1.6A): take a `pbsnodes -aSj`
-snapshot over the eligible queues and preserve it as submission-side
-contention/provenance evidence (e.g.
-`outputs/2x8-GAAS-phase4a-fast-path-characterization_<tag>.presubmit_pbsnodes.log`,
-local-side); choose the cleanest eligible **same-queue** pair from
-`gpu_as`/`gpu_ded` only (idle, 0 jobs, full GPUs/CPUs/memory, matching
-`Qlist`), following the validated phase1a/phase3ab/TASK-010/TASK-2X8-011/
-012 host-pinned selection pattern. Record any node substitution. One job
-at a time; bounded `qstat` monitoring; submit:
+Submission was already authorized under the unchanged Section 1.11
+authorization of TASK-2X8-013; no new approval was needed, and submission
+remained limited to the exact approved task scope.
+
+Presubmit node-status check (Section 1.6A), taken 2026-10-01T23:29:03+08:00:
+the `pbsnodes -aSj` snapshot over the eligible queues is preserved as
+submission-side contention/provenance evidence at
+`outputs/2x8-GAAS-phase4a-fast-path-characterization_v1.presubmit_pbsnodes.log`.
+Selected same-queue `gpu_as` pair: `hpc-gaas-g14` + `hpc-gaas-g15`.
+Factual selection basis, from the snapshot: g14 and g15 were both `free`
+with 0 jobs, 8/8 GPUs, 100/100 ncpus, and full 2tb/2tb memory, and both
+carry `Qlist = gpu_as,gpu_ppu`; the remaining idle full-GPU nodes were
+off-limits by queue scope (g16/g17 are `gpu_aisg`) or singleton (`gpu_ded`
+had exactly one eligible free full-GPU node, g22, so no same-queue
+`gpu_ded` pair existed). The cleanest eligible same-queue pair was
+therefore g14+g15 — the same host-pinned pattern as the
+phase1a/phase3ab/TASK-010/TASK-2X8-011/012 submissions (only eligible
+idle `gpu_as`/`gpu_ded` nodes). No user jobs were running at submission
+(one job at a time).
+
+Exact approved host-pinned submission command (`ATTEMPT_TAG=v1`, walltime
+`02:00:00`; submitted exactly once as PBS job `76519.gaas` on 2026-10-01,
+see Run summary):
 
 ```bash
-qsub -q <gpu_as|gpu_ded> \
-     -l "select=host=<h1>:ncpus=96:ngpus=8:mem=2000GB+host=<h2>:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00" \
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
      -v "ATTEMPT_TAG=v1" \
      -o outputs/2x8-GAAS-phase4a-fast-path-characterization_v1.o \
      -e outputs/2x8-GAAS-phase4a-fast-path-characterization_v1.e \
      scripts/run_phase4a_fast_path_characterization.pbs
 ```
+
+Monitoring was bounded (qstat checks at ~90 s and ~5.5 min after
+submission; final-state fetch `qstat -x -f` after completion). No retries;
+the attempt completed with `Exit_status=0`. All 26 output files were
+retrieved via `scp` and verified byte-identical by SHA-256 (26/26).
 
 ## Available baseline provenance
 

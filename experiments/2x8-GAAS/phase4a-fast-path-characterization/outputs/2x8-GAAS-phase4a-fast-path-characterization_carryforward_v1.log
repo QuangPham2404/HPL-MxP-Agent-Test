@@ -1,0 +1,11 @@
+=== Phase 4A arm A0 (a0-clean): clean retained control (Section 1.6B; no diagnostic logging; fixed retained Phase-3 stack) ===
+arm a0-clean: mode=clean score=6.5324e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.77 lu_gflops=6.7741e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=1.18 mem_evidence_complete=1
+=== Phase 4A arm A1 (a1-diag): exact scientific clone with UCX/NCCL path diagnostics (Section 1.6C; UCX_LOG_LEVEL=info UCX_PROTO_INFO=y NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH,P2P,COLL,SHM,TUNING NCCL_DEBUG_FILE=/dev/stderr; same fixed retained stack; score is sanity evidence only) ===
+arm a1-diag: mode=diag score=6.5354e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.77 lu_gflops=6.7803e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.20 mem_evidence_complete=1
+gate_input arm=a1-diag: ucx_zero_copy_rows=625 ucx_staging_rows=48 ucx_frag_host_rows=0 ucx_rc_mlx5_refs=2001 ucx_inter_cfg_lines=388 ucx_inter_cfg_tcp_lines=0 nccl_backends=IBext_v11 nccl_ibext_channels=128 nccl_gdrdma_channels=128 nccl_socket_channels=0
+gate_ucx: A1 MPI/UCX transfer-level evidence CONCLUSIVE (zero_copy_rows=625 staging_rows=48 frag_host_rows=0 rc_mlx5_refs=2001); SKIPPING A2-U per Section 1.6F rule 1
+gate_nccl: A1 NCCL channel-level evidence CONCLUSIVE (ibext_channels=128 gdrdma_channels=128 backends=IBext_v11); SKIPPING A2-N per Section 1.6F rule 2
+arm a2u-ucx-gdroff: SKIPPED (A1 MPI/UCX evidence conclusive; Section 1.6F rule 1)
+arm a2n-nccl-gdroff: SKIPPED (A1 NCCL evidence conclusive; Section 1.6F rule 2)
+sweep_end: all authorized arms of the fixed A0 -> A1 -> conditional A2-U -> conditional A2-N path ran at most once each; TASK-2X8-013 stops after the authorized conditional arms (Section 1.6F rule 7: no further diagnostics, no Phase 4B/4C tuning); the strategic reading belongs to the Strategic Analyst via ANALYSE_RESULTS (Sections 1.4E, 1.10-1.11)
+anti-loop state: no additional diagnostic arms, no alternative GDR-off mechanisms, no UCX/NCCL transport tuning, no rail filters, no UCC changes, no microbenchmarks, and no profiling were added (TASK-2X8-013 Sections 1.6G, 1.7)
