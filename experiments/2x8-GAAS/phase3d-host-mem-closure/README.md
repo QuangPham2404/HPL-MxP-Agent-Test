@@ -477,6 +477,14 @@ The complete submission/monitoring/retrieval record (bounded qstat polling
 66/66) is preserved as submission-side evidence at
 `outputs/2x8-GAAS-phase3d-host-mem-closure_v1_submission.log`.
 
+Retrieval bookkeeping exception: the remote `/tmp/opencode/` destination
+was not writable, so two temporary checksum-manifest files were created in
+the remote user's home directory: `~/phase3d_remote_files_v1.txt` and
+`~/phase3d_remote_sha_v1.txt`. They contain only the output inventory and
+SHA-256 manifest. They were left untouched because remote work is restricted
+to the approved project root and deletion was not authorized. All 66 output
+files were retrieved and independently verified byte-identical.
+
 ## Available baseline provenance
 
 | item | value |
