@@ -35,10 +35,14 @@ limited to the exact approved task scope.**
 
 ## Stage-B/C run (attempt tags v2 failed, v2.1 retry)
 
-**Status: v2 attempt FAILED at startup (2026-10-02, PBS job `76703.gaas`,
-exit 1, 00:00:40 — deterministic workflow defect, no HPL arm ran; see the
-failed-attempt record below). Track 1 patch applied; retry under attempt
-tag `v2.1` planned.**
+**Status: Stage B and Stage C executed (2026-10-02, attempt tag `v2.1`,
+PBS job `76707.gaas`) — all seven Stage-B arms and the one mechanically
+selected Stage-C diagnostic clone (`d1-p10-diag`, policy 10) ran in ONE
+same-allocation job on g14+g15; every arm exit 0 with PASSED verification
+and PASS settings echo; no stop condition fired. The first submission
+(tag `v2`, PBS `76703.gaas`) failed at startup on a deterministic
+workflow defect before any HPL arm ran (Track 1; see the failed-attempt
+record in the Submission section). See Run summary (Stage B/C).**
 
 This is the second execution segment of TASK-2X8-014, under the same
 approved scope as Stage A: ONE same-allocation 2x8 job in which Stage B
@@ -47,6 +51,88 @@ selection runs the Stage-C diagnostic clone(s) in the same allocation.
 Only `--use-mpi-panel-broadcast` varies scientifically; the Stage-B
 arms are clean scored arms, and the Stage-C diagnostic clones are
 sanity/mechanism evidence only, never scored.
+
+## Run summary (Stage B/C, attempt v2.1)
+
+One successful attempt family (tag `v2.1`, PBS job `76707.gaas`,
+submitted 2026-10-02T09:02:16+08:00, queue `gpu_as`, project
+`hpc_ebslee`, host-pinned
+`select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00`;
+completed 2026-10-02T09:18:36+08:00, `job_state=F`, `Exit_status=0`,
+`resources_used.walltime` 00:16:18, run_count 1). All eight executed
+arms (7 scored + 1 diagnostic clone) ran sequentially in the exact
+approved order on the same node pair (g14+g15) with identical fixed
+controls; every `.status` records `exit_status=0`,
+`verification=PASSED`, `settings_echo_check=PASS`, and matching
+requested/effective panel values. No stop condition fired; the job-level
+recap records `arms_run=8 arms_exited_nonzero=0 arms_invalid=0
+stop_conditions=none stage_c_clones=d1-p10-diag`.
+
+| arm | kind | panel % | normalized residual | verdict | overall GFLOP/s | LU s / LU GFLOP/s | IR s / IR/LU / iters | arm wall-clock |
+|---|---|---:|---|---|---|---|---|---|
+| f0a-p0-ctl | scored | 0 | 1.416310E-05 | PASSED | 6.5609e+06 | 7.74 / 6.8049e+06 | 0.29 / 0.037 / 3 | 00:01:00 |
+| f5-p5 | scored | 5 | 1.416310E-05 | PASSED | 6.0111e+06 | 8.47 / 6.2154e+06 | 0.29 / 0.034 / 3 | 00:01:21 |
+| f10-p10 | scored | 10 | 1.416310E-05 | PASSED | 6.0165e+06 | 8.47 / 6.2205e+06 | 0.29 / 0.034 / 3 | 00:01:26 |
+| f15-p15 | scored | 15 | 1.416310E-05 | PASSED | 5.3034e+06 | 9.64 / 5.4620e+06 | 0.29 / 0.030 / 3 | 00:01:25 |
+| f20-p20 | scored | 20 | 1.416310E-05 | PASSED | 5.0197e+06 | 10.20 / 5.1612e+06 | 0.29 / 0.028 / 3 | 00:01:23 |
+| f25-p25 | scored | 25 | 1.416310E-05 | PASSED | 5.2204e+06 | 9.80 / 5.3735e+06 | 0.29 / 0.030 / 3 | 00:01:23 |
+| f0b-p0-ctl | scored | 0 | 1.416310E-05 | PASSED | 6.5320e+06 | 7.77 / 6.7749e+06 | 0.29 / 0.037 / 3 | 00:00:58 |
+| d1-p10-diag | diagnostic (not scored) | 10 | 1.416310E-05 | PASSED | 5.7567e+06 (sanity only) | 8.86 / 5.9458e+06 | 0.29 / 0.033 / 3 | 00:01:23 |
+
+Host memory 0.004 GB / device 135.254 GB in every arm. All seven scored
+env probes verified `OMP_NUM_THREADS=4` with `OMP_PLACES`/`OMP_PROC_BIND`
+unset and every UCX/NCCL diagnostic variable UNSET on all 16 ranks; the
+d1 clone probe verified the exact 4A diagnostic values
+(`UCX_LOG_LEVEL=info UCX_PROTO_INFO=y NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=
+INIT,BOOTSTRAP,ENV,NET,GRAPH,P2P,COLL,SHM,TUNING NCCL_DEBUG_FILE=/dev/stderr`)
+on all 16 ranks (raw `.envprobe` preserved; the job-stdout probe summary
+line retains the Stage-A label `diag_unset_ok`, but the counts it prints
+are the mode-specific verifications). Per-arm warning-marker counts are 0
+for all arms; the scored-arm `.err` files contain only the known benign
+bridge `cmd=[...]` diagnostic and one `unknown groupid` warning.
+
+### Stage-B bracket and mechanical Section 1.6E selection (from the carry-forward log)
+
+~~~text
+F0 bracket F0a/F0b:
+  LU      = 6.8049e+06 / 6.7749e+06  symmetric spread = 0.44 %
+  overall = 6.5609e+06 / 6.5320e+06  symmetric spread = 0.44 %
+  (both below the 0.5% floor)
+tolerances (max(F0 bracket spread, 0.5%)): lu 0.50 %, score 0.50 %
+stop gates: none fired (no invalid arm; no >5% bracket; bracket computable)
+policy estimates: 0 -> 6.7899e+06 LU / 6.54645e+06 overall (midpoint);
+  5 -> 6.2154e+06 / 6.0111e+06; 10 -> 6.2205e+06 / 6.0165e+06;
+  15 -> 5.4620e+06 / 5.3034e+06; 20 -> 5.1612e+06 / 5.0197e+06;
+  25 -> 5.3735e+06 / 5.2204e+06
+LU_competitive_set T  = {0}        (LU_best 6.7899e+06, tol 0.50%)
+score_tiebreak_set  S = {0}        -> representative = 0
+nonzero sets: T_nz = {5, 10}, S_nz = {5, 10} -> median 7.5 -> rounds UP to 10
+selection: primary_diagnostic_policy = 10 (strongest valid nonzero Stage-B
+  policy; representative is 0; Sections 1.6E rule 2, 1.4C)
+selection: secondary_diagnostic_policy = none (>=25-point separation
+  impossible within the fixed 5-25 window; max nonzero separation is 20)
+~~~
+
+### Stage-C diagnostic clone evidence (factual; raw logs authoritative)
+
+`d1-p10-diag` (exact policy 10, all fixed HPL controls identical to the
+scored f10 arm, 4A diagnostic environment verified on all 16 ranks):
+UCX/NCCL marker counts — `ucx_env_proof=16` (all 16 ranks show the UCX
+env line), `ucx_zero_copy_rows=693`, `ucx_staging_rows=48`,
+`ucx_frag_host_rows=0`, `ucx_rc_mlx5_refs=2428`,
+`ucx_inter_cfg_lines=444`, `ucx_inter_cfg_tcp_lines=0`, `ucx_warn=0`;
+NCCL `backend=IBext_v11`, `ibext_channels=128`, `gdrdma_channels=128`
+(GDRDMA fraction 128/128), `socket_channels=0`, `nccl_warn=0`,
+`bond_roce_warn=0`. No unexpected-transport stop condition fired (same
+healthy rc_mlx5 zero-copy + IBext GDRDMA family as the 4A panel=0
+reference; counts differ from 4A's — 693 vs 625 zero-copy rows, 2428 vs
+2001 rc_mlx5 refs — and are mechanism evidence only, not LU traffic
+percentages; the comparison belongs to `ANALYSE_RESULTS`). Per-arm HCA
+pre/post snapshots and deltas are preserved; **no new
+error/discard/recovery counter delta** on either node in any arm. Factual
+node-total pattern: every nonzero-policy arm (5-25 and the d1 clone)
+moves ~105.6e9/~50.9e9 raw TX/RX (g14) — the same shape as Stage A's
+nonzero arms — while the panel-0 controls move ~82.8e9/~59.0e9.
 
 ### Stage-B arm set (Section 1.6D)
 
@@ -210,7 +296,11 @@ overwrite any existing file of the attempt — covering the seven
 Stage-B labels and the ten potential `d1`/`d2` labels; retries use a
 new tag.
 
-### Submission (v2 failed; v2.1 retry)
+### Submission (executed 2026-10-02: v2 failed at startup, v2.1 completed)
+
+Submissions were authorized under the unchanged Section 1.11
+authorization of TASK-2X8-014; both used the same clean same-queue pair
+and identical fixed controls. One job at a time.
 
 **Failed attempt record (Track 1, workflow/05):**
 
@@ -237,30 +327,46 @@ new tag.
   `..._carryforward_v2.log`, `..._envmap_v2.log` (empty — the probe never
   ran), `..._hostfile_v2`, `..._rankmap_v2.log`, and the two
   `..._f0a-p0-ctl_v2_hcapre_hca_hpc-gaas-g{14,15}.log` snapshots.
-- Retry: new attempt tag `v2.1` (fresh evidence names; the v2 files are
-  never overwritten), fresh presubmit `pbsnodes -aSj` snapshot
-  (`..._v2.1.presubmit_pbsnodes.log`), same fixed scientific controls,
-  same submission form with `-v "ATTEMPT_TAG=v2.1"` and `_v2.1` PBS
-  output names.
+- Retry (executed): new attempt tag `v2.1` (fresh evidence names; the v2
+  files were never overwritten), fresh presubmit `pbsnodes -aSj` snapshot
+  (`..._v2.1.presubmit_pbsnodes.log`, 2026-10-02T09:02:01+08:00), same
+  fixed scientific controls, same submission form with
+  `-v "ATTEMPT_TAG=v2.1"` and `_v2.1` PBS output names — PBS job
+  `76707.gaas`, completed `Exit_status=0` (see Run summary).
 
-A fresh presubmit `pbsnodes -aSj` snapshot over the eligible queues
-is preserved as submission-side evidence (the v2 snapshot:
-`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.presubmit_pbsnodes.log`,
-2026-10-02T08:56:05+08:00; the v2.1 retry takes its own fresh snapshot);
-the cleanest eligible same-queue `gpu_as`/`gpu_ded` pair is selected via
-the host-pinned `select` pattern (only eligible idle `gpu_as`/`gpu_ded`
-nodes), one multinode job at a time. Exact submission form (queue and
-node placeholders; ATTEMPT_TAG and output names use the current attempt
-tag):
+Presubmit node-status checks (Section 1.6A), both preserved as
+submission-side contention/provenance evidence:
+`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.presubmit_pbsnodes.log`
+(2026-10-02T08:56:05+08:00) and
+`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.1.presubmit_pbsnodes.log`
+(2026-10-02T09:02:01+08:00). In both snapshots the selected same-queue
+`gpu_as` pair was `hpc-gaas-g14` + `hpc-gaas-g15` (both free, 0 jobs,
+8/8 GPUs, 100/100 ncpus, 2tb/2tb, Qlist gpu_as,gpu_ppu — the same
+host-pinned allocation pair as Stage A and the Phase-4A reference; the
+remaining idle full-GPU nodes were off-limits by queue scope or singleton
+— gpu_ded had exactly one eligible free full-GPU node, g22). No user jobs
+were running at either submission (one job at a time).
+
+Exact executed submission command (v2.1; submitted exactly once as PBS
+job `76707.gaas` on 2026-10-02; the failed v2 submission used the
+identical form with `_v2` names):
 
 ```bash
-qsub -q <gpu_as|gpu_ded> \
-     -l select=host=<n1>:ncpus=96:ngpus=8:mem=2000GB+host=<n2>:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
-     -v "ATTEMPT_TAG=v2" \
-     -o outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.o \
-     -e outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.e \
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
+     -v "ATTEMPT_TAG=v2.1" \
+     -o outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.1.o \
+     -e outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.1.e \
      scripts/run_phase4b_panel_broadcast_stage_bc.pbs
 ```
+
+Monitoring was bounded (qstat checks at ~2, ~5, ~8, ~11, ~14, and ~17
+min after submission; final-state fetch `qstat -x -f` after completion).
+No retries after v2.1; the attempt completed with `Exit_status=0`. All
+86 remote v2.1 evidence files were retrieved (tar over SSH, filenames
+preserved) and verified byte-identical by SHA-256 (86/86). Local-only
+submission-side evidence: the two presubmit snapshots and the job
+metadata recorded above.
 
 Submission occurs only under the approved TASK-2X8-014 Section 1.11
 authorization; the resource/launcher/transport controls are unchanged
