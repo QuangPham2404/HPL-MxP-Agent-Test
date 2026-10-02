@@ -158,13 +158,43 @@ LU:      -0.34%
 
 There is little useful concurrency for F to regulate.
 
-### S=1 without F: concurrency exists, but is not protected
+### S=1 without F: concurrency can backfire
 
-Putting GEMM on another stream creates concurrency opportunities, but large GEMM
-work can now compete with critical dependency-producing work for GPU execution
-resources and launch/scheduling opportunity.
+Putting GEMM on another stream creates a chance to overlap work:
 
-That explains why S alone is not automatically beneficial:
+```text
+panel/factorization stream:  F1 -------- F2 -------- F3
+GEMM stream:                    GGGGGGGGG   GGGGGGGGG
+```
+
+But the next LU step still depends on factorization-side results becoming ready.
+
+If a large GEMM is allowed to run aggressively while that dependency-producing
+work is still pending, the attempted overlap can become self-defeating:
+
+```text
+start GEMM concurrently
+        |
+        v
+GEMM occupies/competes for GPU scheduling resources
+        |
+        v
+factorization-side dependency becomes ready later
+        |
+        v
+next LU step eventually has to wait for that dependency anyway
+        |
+        v
+the pipeline stalls after paying the cost of the poorly scheduled overlap
+```
+
+So the intuition is:
+
+> S tries to "sneak in" GEMM concurrency, but without a priority rule that
+> concurrency can delay the very factorization dependency that later LU work
+> needs.
+
+That is consistent with:
 
 ```text
 000 -> 001
@@ -172,38 +202,81 @@ overall: -0.32%
 LU:      -0.34%
 ```
 
-More concurrency is not automatically better if the wrong work runs first.
+More concurrency is not automatically better if it interferes with the
+critical dependency chain.
 
-### F=1 plus S=1: useful concurrency
+### F=1 plus S=1: keep the overlap, protect the dependency
 
-This pairing gives the scheduler both pieces:
+With both enabled, the intended behavior is conceptually:
 
-1. S creates an independent GEMM work queue and therefore the opportunity for
-   overlap.
-2. F prevents GEMM from getting ahead of the broader factorization dependency
-   that feeds the next LU work.
+```text
+panel/factorization stream:  F1 ---- F2 ---- F3
+                                  \      \
+GEMM stream:                 GGGGG  GGGGG  GGGGG
+                               ^      ^
+                               |      |
+                      GEMM is constrained where
+                      factorization must progress
+```
 
-Once the critical factorization dependency is satisfied, GEMM still retains
-the benefits of its own stream and can overlap with other independent work.
+The important point is that F does **not** mean "finish all factorization before
+allowing GEMM." GEMM can still use its separate stream and overlap whenever the
+dependency structure allows it.
 
-So the combination is conceptually:
+Instead, the interpretation is:
+
+1. S exposes concurrency by giving GEMM an independent work queue.
+2. F protects factorization-side dependency progress at the points where the LU
+   pipeline needs it.
+3. Once those dependencies are satisfied, GEMM can continue to overlap with
+   independent work.
+
+So the combination is:
 
 ```text
 separate stream
-    = expose concurrency
+    = create concurrency
 
 factorization priority
-    = constrain that concurrency around the LU critical path
+    = stop that concurrency from delaying a critical LU dependency
 
 both together
-    = useful overlap rather than uncontrolled overlap
+    = useful overlap instead of overlap that later causes a dependency stall
+```
+
+That explains the large conditional effect:
+
+```text
+F effect with S=0:
+000 -> 100 ~= no change
+
+F effect with S=1:
+001 -> 101 ~= +6%
 ```
 
 This is the strongest mechanism consistent with the factorial.
 
-Exact stream occupancy, GPU-resource contention, and wait locations require
-Nsight Systems to prove directly; the ordinary run evidence cannot identify
-the precise CUDA event/wait sequence.
+### Black-box boundary
+
+The NVIDIA HPL-MxP container does not expose the exact implementation of this
+priority policy. We know the logical scheduling intent and the measured LU-side
+interaction, but we do **not** know exactly whether NVIDIA implements it through:
+
+- CUDA stream priorities;
+- CUDA events/waits;
+- explicit synchronization;
+- altered enqueue order;
+- another internal dependency scheduler;
+- or some combination of these.
+
+Likewise, "factorization priority" should be treated as a logical description of
+the broader factorization-side dependency policy, not as proof that one monolithic
+"factorization kernel" is given hardware priority.
+
+Therefore "GEMM competes for GPU resources and delays factorization" is the
+strongest mechanism-level interpretation of the factorial, not a directly
+observed implementation fact. Nsight Systems would be required to locate the
+exact waits, stream interactions, and resource-contention pattern.
 
 ## 5. TRSM priority behaves differently
 
