@@ -1523,3 +1523,104 @@ Phase-4B communication policies.
 
 **Human decision state:** TASK-2X8-013 analysis complete. Phase 4A is closed.
 Phase 4B is recommended only; no new execution is authorized.
+
+
+## 12. TASK-2X8-014 — Phase 4B MPI/NCCL Panel-Broadcast Sweep
+
+Detailed analysis:
+`planning/analysis/2x8-gaas-phase4b-panel-broadcast-sweep.md`.
+
+### 12.1 Result
+
+Phase 4B decisively retains:
+
+```text
+--use-mpi-panel-broadcast = 0
+```
+
+Using the Stage-B panel-0 midpoint as the local reference:
+
+| panel % | overall GFLOP/s | overall delta | LU GFLOP/s | LU delta |
+|---:|---:|---:|---:|---:|
+| 0 midpoint | 6.54645e+06 | control | 6.7899e+06 | control |
+| 5 | 6.0111e+06 | -8.18% | 6.2154e+06 | -8.46% |
+| 10 | 6.0165e+06 | -8.10% | 6.2205e+06 | -8.39% |
+| 15 | 5.3034e+06 | -18.99% | 5.4620e+06 | -19.56% |
+| 20 | 5.0197e+06 | -23.32% | 5.1612e+06 | -23.99% |
+| 25 | 5.2204e+06 | -20.26% | 5.3735e+06 | -20.86% |
+| 50 | 3.7761e+06 | -42.32% | 3.8558e+06 | -43.21% |
+| 75 | 3.2660e+06 | -50.11% | 3.3256e+06 | -51.02% |
+| 100 | 3.2885e+06 | -49.77% | 3.3487e+06 | -50.68% |
+
+Control drift was only ~0.44% in both the coarse and fine stages, so all
+positive-policy regressions are decisively material.
+
+IR stayed 0.29 s / 3 iterations with the same residual and memory footprint.
+GEMM component timing also stayed ~5.95-5.97 s across the fine sweep. The
+regression is therefore LU communication/readiness-side, not compute,
+refinement, or residency-side.
+
+### 12.2 Mechanism
+
+The useful shorthand is that NCCL is specialized for GPU collectives while
+MPI/UCX is a general-purpose communication stack. MPI is **not** inherently
+small-message-only: Phase 4A and the panel-10 diagnostic both show healthy
+CUDA-aware UCX over rc_mlx5 with large-message rendezvous zero-copy.
+
+The critical HPL-MxP detail is that a positive
+`--use-mpi-panel-broadcast=X` applies MPI to the **first X percent of panel
+steps**. Early HPL iterations operate on the largest trailing matrix, so even a
+small positive X assigns MPI to the bandwidth-heavy early panel traffic.
+
+This matches the measured shape: 5-10% already cost ~8.4% LU, and larger MPI
+prefixes progressively lose much more.
+
+HPL-MxP's pre-matgen component tests also strongly favor NCCL for U-panel
+broadcasts (NCCL ~0.17 s versus MPI multi-second U-panel tests), while the L2
+gap is much smaller. These test timings are supporting mechanism evidence only,
+not an LU-time decomposition.
+
+A second likely contributor is collective scheduling/progress/overlap:
+NCCL's GPU-collective/CUDA-stream path is better matched to the panel critical
+path, while MPI/UCX can remain fully GPU-direct yet impose less favorable
+readiness/completion behavior.
+
+### 12.3 Fabric evidence
+
+Panel-0 g14 traffic is nearly perfectly spread across eight HCAs (CV ~0.58%).
+Positive policies produce a substantially more concentrated rail pattern,
+progressively favoring mlx5_0/1.
+
+However, whole-arm HCA counters include the pre-run communication component
+tests, so the positive-policy jump in total bytes cannot be attributed directly
+to LU.
+
+No new errors/discards/recovery counters appear. Available port_xmit_wait
+counters do not increase with MPI percentage, so the evidence does not support
+a simple fabric-congestion explanation.
+
+### 12.4 Dependency checkpoint
+
+- **E06/E12:** panel transport resolved for the retained 2x8 regime.
+- **E13:** no UCX-affinity reopen is justified.
+- **E22:** NB=3072 remains fixed.
+- **E25:** pass a single retained broadcast policy into Phase 4C.
+- **E23/E24:** U-panel chunking remains the next communication variable.
+- **E26/E29:** scheduling remains downstream.
+
+### 12.5 Proposed next action
+
+Proceed to Phase 4C with:
+
+```text
+--use-mpi-panel-broadcast=0
+```
+
+fixed.
+
+Do not carry positive MPI-panel policies as performance candidates. Tune only
+`--u-panel-chunk-nbs` around the retained value 8, using the previously
+validated legal range (for example 2,4,8,16) and the same LU/fabric evidence.
+
+**Human decision state:** TASK-2X8-014 analysis complete. Phase 4B is closed.
+Phase 4C is recommended only; no new execution is authorized.
