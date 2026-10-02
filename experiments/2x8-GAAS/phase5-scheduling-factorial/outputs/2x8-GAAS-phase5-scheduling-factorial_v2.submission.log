@@ -1,0 +1,132 @@
+# 2x8-GAAS-phase5-scheduling-factorial_v2.submission.log
+# Nine-arm scheduling-factorial v2 submission evidence for TASK-2X8-017
+# (Phase 5: Final Scheduling 2^3 Factorial), PBS job 77076.gaas, queue
+# gpu_as, USER-DIRECTED cross-queue host-pinned per-chunk Qlist request
+# for the exact mixed pair hpc-gaas-g15 (gpu_as) + hpc-gaas-g22 (gpu_ded).
+#
+# Context: OpenCode execution-worker session under parent TASK-2X8-017
+# (EXECUTING / codex, Section 1.11 APPROVED, approved_by: user, unchanged
+# approved scope). v1 (job 77060.gaas, unpinned gpu_ded request) never ran
+# ("Insufficient amount of resource: Qlist") and was user-canceled before
+# start with ZERO scored arms; see outputs/..._v1.submission.log,
+# ..._v1.presubmit_pbsnodes.log, ..._v1.qstat_monitor.log, and
+# ..._v1.qdel_record.log (README "Attempt history - v1"). Per explicit user
+# direction recorded before this submission: cross-queue allocation is
+# allowed; try the fully free pair g15 (gpu_as) + g22 (gpu_ded) via ONE
+# qsub with a host-pinned two-chunk select with per-chunk Qlist values
+# under one eligible queue, if PBS accepts it. Exactly ONE qsub was
+# performed for v2; the job contains exactly the nine scored arms
+# A001a -> A000 -> A010 -> A011 -> A100 -> A101 -> A110 -> A111 -> A001b
+# of the fixed 2^3 factorial. No other submission was made.
+#
+# All remote commands were run via direct noninteractive BatchMode SSH:
+#   ssh -o BatchMode=yes gaas <remote-command>
+
+# Execution tree used (created clean at the exact approved pushed commit;
+# primary clone left untouched per Workflow 01 Mode B - dirty primary):
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2
+#   HEAD = 926b40e0a9717db7ede2b3f859a670e6758c380b
+# Task file verified in this tree: front matter status=EXECUTING,
+# current_owner=codex; Section 1.11 status: APPROVED, approved_by: user,
+# unchanged approved scope (grep-verified in the execution worktree).
+#
+# Script sha256 (identical local, remote v1 worktree, and this v2 worktree):
+#   scripts/run_phase5_scheduling_factorial.pbs
+#     f71f7c30548f54b722e79614d365301300992b90a8eba02c4b27bd783192f1c4
+#   scripts/hca_counter_snapshot.sh
+#     42ec6735bdcb23576ddbc383b43589af7e6fb0b867d7d90f1baabbe9cf1bfd22
+#   multi-node-test/rsh_pbsdsh_container.sh (validated bridge, unchanged)
+#     d0e8c2318f69e0aa5df697a99670c72c688e93872f562d98e1c7aa783a0ed961
+#
+# Pre-submit provenance identity re-check (TASK-2X8-017 Section 1.4A; the
+# v1 gate evidence outputs/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md
+# remains the recorded PASS gate; the same four items were re-verified
+# read-only immediately before the v2 qsub, 2026-10-02T17:03-17:04 +0800):
+#   1. SIF path exists: /home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+#      (5,307,924,480 bytes, mtime 2026-05-06 - unchanged)          PASS
+#   2. SHA-256 freshly recomputed:
+#      123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628
+#      (equals the v1 gate digest and the TASK-2X8-016 record)      PASS
+#   3. /usr/local/cuda inside the image resolves to
+#      /usr/local/cuda-13.1 (readlink -f)                            PASS
+#   4. Image release label:
+#      org.label-schema.usage.singularity.deffile.from:
+#      nvcr.io/nvidia/hpc-benchmarks:26.02 (v26.02)                  PASS
+#   The run script additionally re-records the in-job digest and
+#   hard-stops before any arm on mismatch (image-substitution guard).
+
+===== PAIR SELECTION (user-directed; from the fresh v2 presubmit snapshot) =====
+# Snapshot: outputs/2x8-GAAS-phase5-scheduling-factorial_v2.presubmit_pbsnodes.log
+#   captured=2026-10-02T17:04:59+0800 on hpc-gaas-hn2
+# User direction (2026-10-02): cross-queue allocation allowed; try the
+# fully free pair g15 (gpu_as) + g22 (gpu_ded).
+# Snapshot facts at capture time:
+#   hpc-gaas-g15 free, 0 jobs, 8/8 GPUs, 100/100 ncpus, 2tb/2tb mem,
+#     resources_available.Qlist = gpu_as,gpu_ppu
+#   hpc-gaas-g22 free, 0 jobs, 8/8 GPUs, 100/100 ncpus, 2tb/2tb mem,
+#     resources_available.Qlist = gpu_ded
+#   Queues gpu_as and gpu_ded both Ena=yes Str=yes (qstat -Q).
+#   qstat -u $USER empty (one-multinode-job-at-a-time rule respected).
+# Scheduler facts recorded by the user (read-only): Qlist resource
+# type=string_array flag=h; gpu_as default_chunk.Qlist=gpu_as;
+# gpu_ded default_chunk.Qlist=gpu_ded.
+# Queue choice: -q gpu_as (one eligible queue; the first chunk's
+# Qlist=gpu_as matches both the submitting queue and g15's Qlist
+# membership; only the g22 chunk deviates from the submitting queue).
+
+===== FINAL PRE-SUBMISSION ABSENCE CHECK =====
+# 2026-10-02T17:05:4x+0800, from the experiment directory in the v2
+# worktree: all v2 attempt targets verified absent immediately before
+# qsub - the PBS .o/.e paths, all nine arm labels x the six per-arm file
+# suffixes (.out/.err/.status/.envprobe/.timings/.hcadelta), both
+# per-node hcapre/hcapost snapshot globs per arm, and the
+# rankmap/envmap/carryforward/factorial-summary logs and attempt hostfile.
+# Result: PASS (absence_check=PASS; outputs/ contained only
+# provenance_v1.md, the four preserved v1 evidence files, and the v2
+# presubmit snapshot).
+
+===== EXACT SUBMISSION COMMAND =====
+# Submitted from:
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB:Qlist=gpu_as+host=hpc-gaas-g22:ncpus=96:ngpus=8:mem=2000GB:Qlist=gpu_ded,place=scatter,walltime=03:00:00 \
+     -v ATTEMPT_TAG=v2 \
+     -o outputs/2x8-GAAS-phase5-scheduling-factorial_v2.o \
+     -e outputs/2x8-GAAS-phase5-scheduling-factorial_v2.e \
+     scripts/run_phase5_scheduling_factorial.pbs
+# Accounting group hpc_ebslee via the reviewed script directive (#PBS -P
+# hpc_ebslee). No mpiprocs anywhere; place=scatter; walltime=03:00:00
+# (the validated phase4c multi-arm request). Host-pinned two-chunk select
+# with per-chunk Qlist values exactly as directed by the user.
+
+===== QSUB RESULT =====
+submission_timestamp = 2026-10-02T17:05:50+0800
+qsub_stdout          = 77076.gaas
+qsub_exit_status     = 0
+PBS_job_id           = 77076.gaas
+outcome              = PBS ACCEPTED the per-chunk Qlist syntax under queue
+                       gpu_as (no qsub error, no hold set at submission)
+
+===== IMMEDIATE POST-SUBMIT RECORD (qstat -f 77076.gaas, 2026-10-02T17:06:04+0800 check) =====
+    job_state = R            (RUNNING; substate = 42)
+    queue = gpu_as
+    Hold_Types = n
+    exec_vnode = (hpc-gaas-g15:ncpus=96:ngpus=8:mem=2097152000kb)+(hpc-gaas-g22:ncpus=96:ngpus=8:mem=2097152000kb)
+    comment = Job run at Fri Oct 02 at 17:05 on (hpc-gaas-g15:ncpus=96:ngpus=8:...
+    Resource_List.select = host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB:Qlist=gpu_as+host=hpc-gaas-g22:ncpus=96:ngpus=8:mem=2000GB:Qlist=gpu_ded
+    etime = Fri Oct  2 17:05:50 2026
+# The EXACT user-directed mixed pair g15 (gpu_as) + g22 (gpu_ded) was
+# GRANTED and the job started within ~15 s of submission. Both nodes show
+# job 77076 in pbsnodes -aSj (1 job each, 0/8 GPUs free while running).
+# The user boundary condition "if PBS rejects ... or keeps it held for
+# Qlist incompatibility" therefore did NOT occur: the request was accepted
+# and runnable, and the already-reviewed runner proceeds with the exact
+# nine-arm matrix.
+
+# Monitoring plan (authorized): bounded polling of ONLY job 77076.gaas,
+# qstat at bounded intervals (about once per 60-90 s), at most ~40 checks
+# (about 40-45 minutes, renewable once if the job is still running; the
+# nine-arm matrix is expected to take roughly 15-25 minutes based on the
+# validated phase4c/phase4d per-arm durations). No cancel. Final PBS
+# record captured once with qstat -fx after completion; all v2 evidence
+# retrieved to the matching local outputs/ directory.

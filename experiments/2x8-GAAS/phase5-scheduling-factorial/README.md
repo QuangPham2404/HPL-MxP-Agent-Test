@@ -44,7 +44,8 @@ unavailable sha256 is a non-fatal provenance record (workflow/03).
 
 ## Structure
 
-- `README.md` — this file (pre-run README; execution record appended after execution)
+- `README.md` — this file (pre-run README + Attempt history + the v2
+  execution record: PBS job 77076.gaas, all nine arms valid)
 - `scripts/run_phase5_scheduling_factorial.pbs` — the one same-allocation
   sequential PBS job: observational preflights (topology, rank map,
   incoming-OMP, HCA link gate, in-job image digest check), then the NINE
@@ -298,6 +299,96 @@ if the exact g15+g22 request is accepted and runnable. No further job
 cancellation unless required to remove this user-authorized mixed-pair
 request that provably cannot run (gather state/evidence first, then cancel
 and record).
+
+## Execution record — v2 (PBS job 77076.gaas; COMPLETE; all nine arms valid)
+
+### Scheduler outcome (the user-directed cross-queue test)
+
+- Presubmit (17:04:59 +0800): fresh `pbsnodes -aSj` snapshot confirmed both
+  target nodes fully free (g15 and g22 each 0 jobs, 8/8 GPUs, 100/100 ncpus,
+  2tb/2tb mem); queues gpu_as/gpu_ded enabled+started; `qstat -u $USER`
+  empty. Evidence: `outputs/2x8-GAAS-phase5-scheduling-factorial_v2.presubmit_pbsnodes.log`.
+- Exactly ONE qsub (17:05:50 +0800): `-q gpu_as` with the exact
+  host-pinned two-chunk per-chunk Qlist select above; result `77076.gaas`,
+  qsub exit 0 — **PBS accepted the per-chunk Qlist syntax; no rejection and
+  no hold**.
+- The job started within ~15 s (mtime 17:06:04, substate 42 running) with
+  `exec_vnode = (hpc-gaas-g15)+(hpc-gaas-g22)` — the scheduler GRANTED the
+  exact user-directed mixed gpu_as/gpu_ded pair under queue gpu_as. The
+  user's reject/hold boundary conditions therefore did not occur; no
+  cancellation was needed.
+- Final record: `job_state=F`, `substate=92`, `Exit_status=0`, `run_count=1`,
+  walltime used `00:15:10`, ctime 17:05:50, mtime 17:21:01, queue gpu_as,
+  project hpc_ebslee, 16 GPUs / 192 ncpus used. Full record appended to
+  `outputs/2x8-GAAS-phase5-scheduling-factorial_v2.qstat_monitor.log`.
+- Bounded monitoring: 12 qstat checks (~80 s apart, 17:06:49–17:21:37),
+  within the stated plan; the job left active qstat between checks 11 and
+  12; no cancel.
+- Submission-side evidence:
+  `outputs/2x8-GAAS-phase5-scheduling-factorial_v2.submission.log` (exact
+  command, presubmit identity re-check 4/4 PASS, absence check, post-submit
+  record), `..._v2.presubmit_pbsnodes.log`, `..._v2.qstat_monitor.log`
+  (12 checks + final `qstat -fx` record).
+
+### Execution facts (all evidence under `outputs/`, tag v2)
+
+- Execution tree: `.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2`
+  (HEAD `926b40e0a9717db7ede2b3f859a670e6758c380b`; task verified
+  `EXECUTING / codex` with unchanged approved Section 1.11; runner/HCA
+  helper/bridge SHA-256 identical to the reviewed local copies).
+- In-job image identity: recomputed SIF SHA-256 equals the gate digest
+  (`container_image_sha256_matches_provenance_gate=yes`); pre-submit light
+  identity re-check 4/4 PASS (path/size/mtime, digest, cuda-13.1, v26.02).
+- Preflight: attempt-tag validation PASS; queue gpu_as verified; rank-map
+  probe PASS (16 ranks, 2 hosts, 8 ranks/host, identity local rank r -> GPU
+  r; incoming OMP_PLACES/OMP_PROC_BIND UNSET); per-host topology gate PASS
+  on BOTH g15 and g22; hostfile slots=8 (dedup PBS_NODEFILE).
+- All NINE arms attempted exactly once in the exact approved order
+  (A001a 17:06:51 -> A001b 17:20:43), every arm `exit=0`,
+  `verdict=PASSED`, `settings_echo=PASS` (explicit requested/effective
+  F/T/S verified per arm), residual `1.416310E-05`, 3 refinement
+  iterations, IR 0.29 s, device memory 135.254 GB / host 0.004 GB on every
+  arm. GATE A001a PASS before the factorial continued. No stop condition
+  fired; no 10th arm, no adaptive logic, no leader repeat, no profiling.
+- Factual results (mechanical; no strategic interpretation):
+
+| arm | role | F | T | S | overall GFLOP/s | LU s | LU GFLOP/s | IR s | iters | residual | verdict |
+|---|---|---:|---:|---:|---|---:|---|---:|---:|---|---|
+| a001a | opening-control | 0 | 0 | 1 | 6.8368e+06 | 7.42 | 7.1015e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a000 | factorial-point | 0 | 0 | 0 | 6.8589e+06 | 7.39 | 7.1258e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a010 | factorial-point | 0 | 1 | 0 | 6.7201e+06 | 7.55 | 6.9762e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a011 | factorial-point | 0 | 1 | 1 | 6.8686e+06 | 7.38 | 7.1363e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a100 | factorial-point | 1 | 0 | 0 | 6.8366e+06 | 7.41 | 7.1018e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a101 | factorial-point | 1 | 0 | 1 | 7.2398e+06 | 6.99 | 7.5380e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a110 | factorial-point | 1 | 1 | 0 | 6.7228e+06 | 7.54 | 6.9792e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a111 | factorial-point | 1 | 1 | 1 | 7.1904e+06 | 7.03 | 7.4853e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+| a001b | closing-control | 0 | 0 | 1 | 6.8174e+06 | 7.44 | 7.0827e+06 | 0.29 | 3 | 1.416310E-05 | PASSED |
+
+- A001 control bracket: midpoint overall `6.8271e+06` / LU `7.0921e+06`
+  GFLOP/s; bracket spread 0.2846% (overall) / 0.2654% (LU) — recorded
+  factually, drift assessment belongs to analysis.
+- The complete valid 2^3 matrix permitted the mechanical factorial
+  contrasts (level means, main effects F/T/S, pairwise and three-way
+  interactions) — all recorded in
+  `outputs/2x8-GAAS-phase5-scheduling-factorial_factorial_summary_v2.log`
+  with per-arm deltas versus the A001 midpoint. These are descriptive
+  evidence only.
+- Per-HCA evidence: pre/post snapshots on both nodes around every arm
+  (eight expected physical HCAs each); all 18 per-arm/node `NEW_ERRORS`
+  records report `new_counters=none` — **no new error/discard/recovery
+  counters anywhere in the matrix**. Per-HCA TX/RX deltas, rail shares/CV,
+  and `port_xmit_wait` deltas are in the per-arm `.hcadelta` files
+  (explanatory metrics only; e.g. the g22 rail-share CV of ~25% on a001a is
+  recorded factually and is not a gate).
+- Environment evidence: `OMP_NUM_THREADS=4` verified on all 16 ranks every
+  arm (per-arm `.envprobe` + `..._envmap_v2.log`); UCX_TLS/UCX_NET_DEVICES
+  and all UCX/NCCL diagnostic variables verified UNSET on all 16 ranks.
+- PBS job stderr (`..._v2.e`) contains only known-benign module-load
+  warnings (cuda compile note, nvhpc load chain, `unknown groupid`
+  warnings); no application errors.
+- Retrieval: all 100 v2 evidence files retrieved from the execution
+  worktree to the local `outputs/` directory and every file SHA-256
+  verified identical to its remote copy.
 
 ## Submission (planned; under the approved TASK-2X8-017 Section 1.11 authorization)
 

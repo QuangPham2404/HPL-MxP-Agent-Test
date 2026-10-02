@@ -1,0 +1,478 @@
+attempt_tag_validation=PASS (conservative filename-safe pattern: nonempty, ASCII alphanumeric '.' '_' '-' only, not '.' or '..')
+experiment_id=2x8-GAAS-phase5-scheduling-factorial
+attempt_tag=v2
+pbs_job_id=77076.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-10-02T17:05:51+08:00
+fixed scientific controls (TASK-2X8-017 Sections 1.2, 1.6A; identical to the formally closed Phase-4 stack; ONLY F/T/S varies across arms):
+--n 429056 --nb 3072 --nprow 4 --npcol 4 --nporder row
+--gpu-affinity 0:1:2:3:4:5:6:7 (fixed identity map; --cpu-affinity omitted, --mem-affinity omitted, --ucx-affinity omitted/automatic; UCX_TLS unset/AUTO; UCX_NET_DEVICES unset/automatic)
+OMP_NUM_THREADS=4 (explicit job-shell export after module setup + mpirun -x OMP_NUM_THREADS; verified = 4 on all 16 ranks by the per-arm env probe)
+OMP_PLACES/OMP_PROC_BIND omitted (unset in the job shell; verified UNSET on all 16 ranks; effective launcher package defaults: OMP_PLACES=sockets, OMP_PROC_BIND=TRUE)
+--fill-device 1 --fill-device-buffer-size 3048 (retained full-fill residency mode)
+--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0 (retained Phase-3D closure controls, explicit on every arm)
+--sloppy-type FP16
+--use-mpi-panel-broadcast 0 (retained TASK-2X8-014 outcome; requested value echoed by the application and verified per arm)
+--u-panel-chunk-nbs 4 (retained TASK-2X8-015/016 Phase-4 outcome; passed explicitly on every arm; echo verified)
+--preset-gemm-kernel = 90 (EFFECTIVE value via the installed package default; v26.02 CLI accepts only {0,80} so the flag is omitted and the default supplies the SM90 preset; echoed value verified = 90 per arm; flag-check evidence hplmxp_v2602_flag_check_v1.log)
+--test-loop 1 --skip-tests 0 --monitor-gpu 0
+scientific variables (the ONLY controls that vary; passed EXPLICITLY per arm; tuple order F,T,S): --prioritize-factorization F, --prioritize-trsm T, --use-separate-stream-for-gemm S
+arm set (exact fixed order, one scored attempt each): A001a(a001a, F=0 T=0 S=1, retained opening control) -> A000(a000, 0 0 0) -> A010(a010, 0 1 0) -> A011(a011, 0 1 1) -> A100(a100, 1 0 0) -> A101(a101, 1 0 1) -> A110(a110, 1 1 0) -> A111(a111, 1 1 1) -> A001b(a001b, F=0 T=0 S=1, retained closing control); 8 unique configurations, 9 scored arms total (TASK-2X8-017 Section 1.1)
+prohibited-list summary (TASK-2X8-017 Section 1.6E): no sloppy-type change; no preset-gemm-kernel change; no N/NB/grid/order/rank-count/placement change; no OMP change; no residency/registration/DGEMV change; no UCX/NCCL transport or affinity change; no panel-broadcast or U-panel-chunk change; no F/T/S value outside 0/1; no omitted valid pre-authorized factorial arm; no tenth scientific configuration beyond the closing A001b control; no numerical-leader repeat; no finer sweep; no second factorial; no microbenchmarks; no heavy UCX/NCCL diagnostic logging; no Nsight Systems/Compute; no source or container-image modification; no baseline promotion; no campaign winner selection; no final full-stack confirmation run
+execution_worktree_root=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2
+execution_worktree_git_revision=926b40e0a9717db7ede2b3f859a670e6758c380b
+layout=2 nodes x 8 GPUs = 16 ranks (one rank per GPU)
+grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)
+nodes=hpc-gaas-g15 hpc-gaas-g22
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/multi-node-test/rsh_pbsdsh_container.sh
+hca_helper=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/scripts/hca_counter_snapshot.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+=== mother-node GPU topology matrix (gate input + evidence) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC legend matches Phase-0)
+incoming job-shell OpenMP environment (before control application):
+  OMP_NUM_THREADS=96
+  OMP_PLACES=UNSET
+  OMP_PROC_BIND=UNSET
+=== loaded modules (module list; optional record, non-fatal) ===
+Currently Loaded Modulefiles:
+ 1) apptainer/1.4.1     3) cuda/13.1 <aL>   5) squashfuse/0.5.2  
+ 2) gnu/gcc-12.3 <aL>   4) nvhpc/26.3       6) gocryptfs/2.5.0   
+
+Key:
+<module-tag>  <aL>=auto-loaded  
+=== apptainer version (required runtime; rc=0) ===
+apptainer version 1.4.1
+=== container image identity (provenance; gate comparison) ===
+container_image=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+container_image_size_bytes=5307924480
+container_image_mtime=2026-05-06 06:07:56.408241441 +0800
+container_image_sha256_gate=123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628 (from the PASSED pre-submission provenance gate; evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md)
+container_image_sha256=123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628
+container_image_sha256_matches_provenance_gate=yes
+=== container MPI version (/usr/local/mpi/bin/mpirun --version; required runtime; rc=0) ===
+WARNING: group: unknown groupid 1304617061
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+=== pre-run hardware-health snapshot (mother node hpc-gaas-g15) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 30, 118.24 W, 1980 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 29, 76.25 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 29, 75.20 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 30, 74.75 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 30, 76.86 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 28, 76.42 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 28, 78.43 W, 795 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 29, 79.08 W, 345 MHz, 0 MiB, 143771 MiB
+preflight: queue=gpu_as nodes=hpc-gaas-g15 hpc-gaas-g22 layout=2x8=16 ranks grid=4x4 row
+=== hostfile (/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_hostfile_v2) ===
+hpc-gaas-g15 slots=8
+hpc-gaas-g22 slots=8
+=== rank-map probe: rc=0 rank_lines=16 hosts=2 ranks_per_host=8 log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_rankmap_v2.log ===
+incoming OMP environment across 16 ranks: ranks_with_OMP_PLACES_set=0 ranks_with_OMP_PROC_BIND_set=0
+incoming OMP_NUM_THREADS values seen (evidence; neutralized by explicit export + -x forwarding):
+  rank=13/16 host=hpc-gaas-g22 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=5/16 host=hpc-gaas-g15 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=12/16 host=hpc-gaas-g22 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=2/16 host=hpc-gaas-g15 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=7/16 host=hpc-gaas-g15 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=9/16 host=hpc-gaas-g22 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=3/16 host=hpc-gaas-g15 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=15/16 host=hpc-gaas-g22 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=4/16 host=hpc-gaas-g15 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=14/16 host=hpc-gaas-g22 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=1/16 host=hpc-gaas-g15 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=11/16 host=hpc-gaas-g22 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=6/16 host=hpc-gaas-g15 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=10/16 host=hpc-gaas-g22 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=8/16 host=hpc-gaas-g22 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=0/16 host=hpc-gaas-g15 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+incoming_openmp_gate=PASS (OMP_PLACES/OMP_PROC_BIND unset on all 16 ranks; launcher package defaults remain the effective placement policy)
+preflight: rank-map probe PASS (rank_lines=16 hosts=2 ranks_per_host=8; incoming OMP_PLACES/OMP_PROC_BIND UNSET on all ranks; evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_rankmap_v2.log)
+  host=hpc-gaas-g15 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+  host=hpc-gaas-g22 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+rankmap_per_host_topology_gate=PASS (every allocated host matches the accepted Phase-0 topology; per-host reports preserved in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_rankmap_v2.log)
+preflight: per-host topology gate PASS on both allocated hosts (evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_rankmap_v2.log)
+=== Phase 5 arm A001a (a001a): retained opening control F=0 T=0 S=1 (the current retained Phase-4 stack scheduling state; TASK-2X8-017 Sections 1.1, 1.6B) ===
+=== HCA snapshot (hcapre, arm a001a): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapre_hca_hpc-gaas-g22.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm a001a: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a001a: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a001a PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001a_v2.envprobe)
+=== arm a001a (opening-control; F=0 T=0 S=1) attempt=2x8-GAAS-phase5-scheduling-factorial_a001a_v2 start=2026-10-02T17:06:51+08:00 ===
+arm_mode=scored clean opening-control arm (F=0 T=0 S=1; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a001a): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001a_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a001a: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a001a) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001a_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734549965 rx_delta_raw=47535427013
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522088162 rx_delta_raw=59747824276
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a001a) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001a_v2.timings (15 lines) ===
+=== arm a001a exit_status=0 verdict=PASSED settings_echo=PASS F=0 T=0 S=1 gflops=6.8368e+06 end=2026-10-02T17:07:46+08:00 ===
+arm a001a: role=opening-control F=0 T=0 S=1 attempted=yes score=6.8368e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.42 lu_gflops=7.1015e+06 ir_seconds=0.29 ir_lu_ratio=0.039 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.20 mem_evidence_complete=1
+GATE A001a: PASS (valid PASSED opening control with settings_echo=PASS; factorial continues; TASK-2X8-017 Section 1.7 rule 11)
+=== Phase 5 arm A000 (a000): factorial point F=0 T=0 S=0 (TASK-2X8-017 Section 1.6B) ===
+=== HCA snapshot (hcapre, arm a000): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a000: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a000: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a000 PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a000_v2.envprobe)
+=== arm a000 (factorial-point; F=0 T=0 S=0) attempt=2x8-GAAS-phase5-scheduling-factorial_a000_v2 start=2026-10-02T17:08:27+08:00 ===
+arm_mode=scored clean factorial-point arm (F=0 T=0 S=0; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a000): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a000_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a000: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a000) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a000_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734555403 rx_delta_raw=47535433510
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522094767 rx_delta_raw=59747829106
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a000) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a000_v2.timings (15 lines) ===
+=== arm a000 exit_status=0 verdict=PASSED settings_echo=PASS F=0 T=0 S=0 gflops=6.8589e+06 end=2026-10-02T17:09:24+08:00 ===
+arm a000: role=factorial-point F=0 T=0 S=0 attempted=yes score=6.8589e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.39 lu_gflops=7.1258e+06 ir_seconds=0.29 ir_lu_ratio=0.039 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.21 mem_evidence_complete=1
+=== Phase 5 arm A010 (a010): factorial point F=0 T=1 S=0 (TASK-2X8-017 Section 1.6B) ===
+=== HCA snapshot (hcapre, arm a010): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a010: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a010: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a010 PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a010_v2.envprobe)
+=== arm a010 (factorial-point; F=0 T=1 S=0) attempt=2x8-GAAS-phase5-scheduling-factorial_a010_v2 start=2026-10-02T17:10:05+08:00 ===
+arm_mode=scored clean factorial-point arm (F=0 T=1 S=0; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a010): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a010_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a010: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a010) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a010_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734579109 rx_delta_raw=47535462689
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522123935 rx_delta_raw=59747853059
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a010) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a010_v2.timings (15 lines) ===
+=== arm a010 exit_status=0 verdict=PASSED settings_echo=PASS F=0 T=1 S=0 gflops=6.7201e+06 end=2026-10-02T17:11:03+08:00 ===
+arm a010: role=factorial-point F=0 T=1 S=0 attempted=yes score=6.7201e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.55 lu_gflops=6.9762e+06 ir_seconds=0.29 ir_lu_ratio=0.038 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.22 mem_evidence_complete=1
+=== Phase 5 arm A011 (a011): factorial point F=0 T=1 S=1 (TASK-2X8-017 Section 1.6B) ===
+=== HCA snapshot (hcapre, arm a011): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a011: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a011: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a011 PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a011_v2.envprobe)
+=== arm a011 (factorial-point; F=0 T=1 S=1) attempt=2x8-GAAS-phase5-scheduling-factorial_a011_v2 start=2026-10-02T17:11:43+08:00 ===
+arm_mode=scored clean factorial-point arm (F=0 T=1 S=1; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a011): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a011_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a011: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a011) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a011_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734539712 rx_delta_raw=47535421782
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522082898 rx_delta_raw=59747813083
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a011) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a011_v2.timings (15 lines) ===
+=== arm a011 exit_status=0 verdict=PASSED settings_echo=PASS F=0 T=1 S=1 gflops=6.8686e+06 end=2026-10-02T17:12:38+08:00 ===
+arm a011: role=factorial-point F=0 T=1 S=1 attempted=yes score=6.8686e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.38 lu_gflops=7.1363e+06 ir_seconds=0.29 ir_lu_ratio=0.039 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.22 mem_evidence_complete=1
+=== Phase 5 arm A100 (a100): factorial point F=1 T=0 S=0 (TASK-2X8-017 Section 1.6B) ===
+=== HCA snapshot (hcapre, arm a100): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a100: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a100: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a100 PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a100_v2.envprobe)
+=== arm a100 (factorial-point; F=1 T=0 S=0) attempt=2x8-GAAS-phase5-scheduling-factorial_a100_v2 start=2026-10-02T17:13:19+08:00 ===
+arm_mode=scored clean factorial-point arm (F=1 T=0 S=0; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a100): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a100_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a100: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a100) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a100_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734551596 rx_delta_raw=47535436502
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522097477 rx_delta_raw=59747825795
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a100) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a100_v2.timings (15 lines) ===
+=== arm a100 exit_status=0 verdict=PASSED settings_echo=PASS F=1 T=0 S=0 gflops=6.8366e+06 end=2026-10-02T17:14:15+08:00 ===
+arm a100: role=factorial-point F=1 T=0 S=0 attempted=yes score=6.8366e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.41 lu_gflops=7.1018e+06 ir_seconds=0.29 ir_lu_ratio=0.039 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.18 mem_evidence_complete=1
+=== Phase 5 arm A101 (a101): factorial point F=1 T=0 S=1 (TASK-2X8-017 Section 1.6B) ===
+=== HCA snapshot (hcapre, arm a101): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a101: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a101: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a101 PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a101_v2.envprobe)
+=== arm a101 (factorial-point; F=1 T=0 S=1) attempt=2x8-GAAS-phase5-scheduling-factorial_a101_v2 start=2026-10-02T17:14:55+08:00 ===
+arm_mode=scored clean factorial-point arm (F=1 T=0 S=1; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a101): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a101_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a101: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a101) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a101_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734541271 rx_delta_raw=47535418576
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522080503 rx_delta_raw=59747815156
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a101) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a101_v2.timings (15 lines) ===
+=== arm a101 exit_status=0 verdict=PASSED settings_echo=PASS F=1 T=0 S=1 gflops=7.2398e+06 end=2026-10-02T17:15:50+08:00 ===
+arm a101: role=factorial-point F=1 T=0 S=1 attempted=yes score=7.2398e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=6.99 lu_gflops=7.5380e+06 ir_seconds=0.29 ir_lu_ratio=0.041 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.20 mem_evidence_complete=1
+=== Phase 5 arm A110 (a110): factorial point F=1 T=1 S=0 (TASK-2X8-017 Section 1.6B) ===
+=== HCA snapshot (hcapre, arm a110): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a110: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a110: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a110 PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a110_v2.envprobe)
+=== arm a110 (factorial-point; F=1 T=1 S=0) attempt=2x8-GAAS-phase5-scheduling-factorial_a110_v2 start=2026-10-02T17:16:31+08:00 ===
+arm_mode=scored clean factorial-point arm (F=1 T=1 S=0; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a110): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a110_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a110: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a110) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a110_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734598949 rx_delta_raw=47535472638
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522133740 rx_delta_raw=59747873352
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a110) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a110_v2.timings (15 lines) ===
+=== arm a110 exit_status=0 verdict=PASSED settings_echo=PASS F=1 T=1 S=0 gflops=6.7228e+06 end=2026-10-02T17:17:27+08:00 ===
+arm a110: role=factorial-point F=1 T=1 S=0 attempted=yes score=6.7228e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.54 lu_gflops=6.9792e+06 ir_seconds=0.29 ir_lu_ratio=0.038 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.19 mem_evidence_complete=1
+=== Phase 5 arm A111 (a111): factorial point F=1 T=1 S=1 (TASK-2X8-017 Section 1.6B) ===
+=== HCA snapshot (hcapre, arm a111): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a111: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a111: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a111 PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a111_v2.envprobe)
+=== arm a111 (factorial-point; F=1 T=1 S=1) attempt=2x8-GAAS-phase5-scheduling-factorial_a111_v2 start=2026-10-02T17:18:07+08:00 ===
+arm_mode=scored clean factorial-point arm (F=1 T=1 S=1; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a111): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapost_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a111_v2_hcapost_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapost, arm a111: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a111) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a111_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734545603 rx_delta_raw=47535431486
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522092665 rx_delta_raw=59747819577
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a111) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a111_v2.timings (15 lines) ===
+=== arm a111 exit_status=0 verdict=PASSED settings_echo=PASS F=1 T=1 S=1 gflops=7.1904e+06 end=2026-10-02T17:19:05+08:00 ===
+arm a111: role=factorial-point F=1 T=1 S=1 attempted=yes score=7.1904e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.03 lu_gflops=7.4853e+06 ir_seconds=0.29 ir_lu_ratio=0.041 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=1.16 mem_evidence_complete=1
+=== Phase 5 arm A001b (a001b): retained closing control F=0 T=0 S=1 (completes the A001a/A001b control bracket; the only authorized repeat; TASK-2X8-017 Sections 1.1, 1.7 rule 16) ===
+=== HCA snapshot (hcapre, arm a001b): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapre_hca_hpc-gaas-g22.log ===
+hca_link_gate=PASS (hcapre, arm a001b: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=a001b: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_unset_ok=16 ===
+preflight: env probe arm=a001b PASS (OMP=4 on all 16 ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001b_v2.envprobe)
+=== arm a001b (closing-control; F=0 T=0 S=1) attempt=2x8-GAAS-phase5-scheduling-factorial_a001b_v2 start=2026-10-02T17:19:45+08:00 ===
+arm_mode=scored clean closing-control arm (F=0 T=0 S=1; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)
+=== HCA snapshot (hcapost, arm a001b): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g22 2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapost_hca_hpc-gaas-g22.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001b_v2_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm a001b: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm a001b) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001b_v2.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59734544015 rx_delta_raw=47535417870
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g22 tx_delta_raw=47522079822 rx_delta_raw=59747818278
+NEW_ERRORS node=hpc-gaas-g22 new_counters=none
+RAIL node=hpc-gaas-g22 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm a001b) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_a001b_v2.timings (15 lines) ===
+=== arm a001b exit_status=0 verdict=PASSED settings_echo=PASS F=0 T=0 S=1 gflops=6.8174e+06 end=2026-10-02T17:20:43+08:00 ===
+arm a001b: role=closing-control F=0 T=0 S=1 attempted=yes score=6.8174e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.44 lu_gflops=7.0827e+06 ir_seconds=0.29 ir_lu_ratio=0.039 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.27 mem_evidence_complete=1
+bracket: A001a/A001b lu_gflops=7.1015e+06/7.0827e+06 lu_symmetric_spread_pct=0.2654 overall_gflops=6.8368e+06/6.8174e+06 overall_symmetric_spread_pct=0.2846 (factual control-bracket record; spread=(hi-lo)/lo*100)
+bracket: A001 control midpoint overall_gflops=6.8271e+06 lu_gflops=7.0921e+06 (arithmetic mean of the valid A001a/A001b bracket; Section 1.4D item 1)
+bracket: A001a/A001b lu_seconds=7.42/7.44 ir_seconds=0.29/0.29 residuals=1.416310E-05/1.416310E-05 (raw bracket evidence)
+=== factual factorial summary -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_factorial_summary_v2.log ===
+A001a overall_gflops=6.8368e+06 lu_gflops=7.1015e+06
+A001b overall_gflops=6.8174e+06 lu_gflops=7.0827e+06
+A001 midpoint overall_gflops=6.8271e+06 lu_gflops=7.0921e+06 (arithmetic mean of A001a/A001b)
+A001 bracket spread lu_symmetric_spread_pct=0.2654 overall_symmetric_spread_pct=0.2846 ((hi-lo)/lo*100)
+arm=a001a role=opening-control F=0 T=0 S=1 valid=yes overall_delta_vs_midpoint_pct=0.1421 lu_delta_vs_midpoint_pct=0.1325
+arm=a000 role=factorial-point F=0 T=0 S=0 valid=yes overall_delta_vs_midpoint_pct=0.4658 lu_delta_vs_midpoint_pct=0.4752
+arm=a010 role=factorial-point F=0 T=1 S=0 valid=yes overall_delta_vs_midpoint_pct=-1.5673 lu_delta_vs_midpoint_pct=-1.6342
+arm=a011 role=factorial-point F=0 T=1 S=1 valid=yes overall_delta_vs_midpoint_pct=0.6079 lu_delta_vs_midpoint_pct=0.6232
+arm=a100 role=factorial-point F=1 T=0 S=0 valid=yes overall_delta_vs_midpoint_pct=0.1392 lu_delta_vs_midpoint_pct=0.1368
+arm=a101 role=factorial-point F=1 T=0 S=1 valid=yes overall_delta_vs_midpoint_pct=6.0450 lu_delta_vs_midpoint_pct=6.2873
+arm=a110 role=factorial-point F=1 T=1 S=0 valid=yes overall_delta_vs_midpoint_pct=-1.5277 lu_delta_vs_midpoint_pct=-1.5919
+arm=a111 role=factorial-point F=1 T=1 S=1 valid=yes overall_delta_vs_midpoint_pct=5.3214 lu_delta_vs_midpoint_pct=5.5442
+arm=a001b role=closing-control F=0 T=0 S=1 valid=yes overall_delta_vs_midpoint_pct=-0.1421 lu_delta_vs_midpoint_pct=-0.1325
+level_means overall_gflops: F0=6.8211e+06 F1=6.9974e+06 T0=6.94302e+06 T1=6.87548e+06 S0=6.7846e+06 S1=7.0339e+06
+level_means lu_gflops: F0=7.08495e+06 F1=7.27608e+06 T0=7.21678e+06 T1=7.14425e+06 S0=7.04575e+06 S1=7.31528e+06
+main_effect F overall=176300 lu=191125
+main_effect T overall=-67550 lu=-72525
+main_effect S overall=249300 lu=269525
+interaction FxT overall=-14050 lu=-15125
+interaction FxS overall=186100 lu=201625
+interaction TxS overall=58750 lu=63575
+interaction FxTxS overall=-26550 lu=-28625
+grand_mean overall=6.90925e+06 lu=7.18051e+06
+factorial summary (mechanical, Section 1.4D) written to /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GAAS-phase5-scheduling-factorial_factorial_summary_v2.log; unique_all_valid=yes bracket_computable=yes; no strategic interpretation performed
+factorial_end: every authorized arm ran at most once each in the exact approved order A001a -> A000 -> A010 -> A011 -> A100 -> A101 -> A110 -> A111 -> A001b (8 unique configurations, 9 scored arms); the strategic reading belongs to the Strategic Analyst via ANALYSE_RESULTS (TASK-2X8-017 Sections 1.3, 1.10-1.11)
+anti-loop state: no 10th arm, no adaptive logic, no leader repeat, no profiling, no diagnostics, no strategic winner selection, no follow-up arm, no second factorial, no microbenchmarks, and no final full-stack confirmation run were added (TASK-2X8-017 Sections 1.6D-E, 1.7 rule 18)
+=== post-sweep hardware-health snapshot (mother node hpc-gaas-g15) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 29, 76.13 W, 345 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 31, 76.60 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 30, 75.42 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 31, 75.25 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 32, 77.46 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 29, 76.75 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 29, 75.78 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 30, 79.62 W, 345 MHz, 0 MiB, 143771 MiB
+=== task recap (factual scores only; bracket/delta/contrast records in the factorial summary and carry-forward log; interpretation reserved for ANALYSE_RESULTS) ===
+arms_run=9 arms_invalid=0 bracket_computable=yes unique_all_valid=yes
+arm=a001a role=opening-control F=0 T=0 S=1 gflops=6.8368e+06 lu_gflops=7.1015e+06 lu_seconds=7.42 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a000 role=factorial-point F=0 T=0 S=0 gflops=6.8589e+06 lu_gflops=7.1258e+06 lu_seconds=7.39 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a010 role=factorial-point F=0 T=1 S=0 gflops=6.7201e+06 lu_gflops=6.9762e+06 lu_seconds=7.55 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a011 role=factorial-point F=0 T=1 S=1 gflops=6.8686e+06 lu_gflops=7.1363e+06 lu_seconds=7.38 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a100 role=factorial-point F=1 T=0 S=0 gflops=6.8366e+06 lu_gflops=7.1018e+06 lu_seconds=7.41 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a101 role=factorial-point F=1 T=0 S=1 gflops=7.2398e+06 lu_gflops=7.5380e+06 lu_seconds=6.99 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a110 role=factorial-point F=1 T=1 S=0 gflops=6.7228e+06 lu_gflops=6.9792e+06 lu_seconds=7.54 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a111 role=factorial-point F=1 T=1 S=1 gflops=7.1904e+06 lu_gflops=7.4853e+06 lu_seconds=7.03 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+arm=a001b role=closing-control F=0 T=0 S=1 gflops=6.8174e+06 lu_gflops=7.0827e+06 lu_seconds=7.44 residual=1.416310E-05 verification=PASSED settings_echo=PASS valid=yes exit=0
+=== HPL-MxP 2x8-GAAS phase5-scheduling-factorial complete: all nine authorized arms attempted exactly once in the fixed order (A001a valid=yes, A001b valid=yes, invalid candidate records=0); evidence and the factual factorial summary preserved beneath /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-926b40e-phase5-v2/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs ===

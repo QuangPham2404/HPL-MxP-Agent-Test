@@ -1,0 +1,59 @@
+FACTORIAL_SUMMARY experiment=2x8-GAAS-phase5-scheduling-factorial task=TASK-2X8-017 attempt_tag=v2 derived=2026-10-02T17:20:58+08:00
+note: mechanical factual summary only (Section 1.4D); no strategic interpretation, no winner selection, no baseline-relative percentages; tuple order (F,T,S); F=--prioritize-factorization T=--prioritize-trsm S=--use-separate-stream-for-gemm
+
+== (1) factual per-arm table (all nine scored arms; valid_performance_point per Section 1.4B gates) ==
+arm     role            F  T  S  overall      LU_s       LU_GFLOPS    IR_s       iters  residual       verdict   settings  valid  mem(host/device GB)
+a001a   opening-control 0  0  1  6.8368e+06   7.42       7.1015e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a000    factorial-point 0  0  0  6.8589e+06   7.39       7.1258e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a010    factorial-point 0  1  0  6.7201e+06   7.55       6.9762e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a011    factorial-point 0  1  1  6.8686e+06   7.38       7.1363e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a100    factorial-point 1  0  0  6.8366e+06   7.41       7.1018e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a101    factorial-point 1  0  1  7.2398e+06   6.99       7.5380e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a110    factorial-point 1  1  0  6.7228e+06   7.54       6.9792e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a111    factorial-point 1  1  1  7.1904e+06   7.03       7.4853e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+a001b   closing-control 0  0  1  6.8174e+06   7.44       7.0827e+06   0.29       3      1.416310E-05   PASSED    PASS      yes    0.004/135.254
+
+== (2) A001 control bracket (Section 1.4D items 1-2) ==
+A001a overall_gflops=6.8368e+06 lu_gflops=7.1015e+06
+A001b overall_gflops=6.8174e+06 lu_gflops=7.0827e+06
+A001 midpoint overall_gflops=6.8271e+06 lu_gflops=7.0921e+06 (arithmetic mean of A001a/A001b)
+A001 bracket spread lu_symmetric_spread_pct=0.2654 overall_symmetric_spread_pct=0.2846 ((hi-lo)/lo*100)
+
+== (3) per-arm percentage deltas versus the A001 control midpoint (Section 1.4D item 3) ==
+arm=a001a role=opening-control F=0 T=0 S=1 valid=yes overall_delta_vs_midpoint_pct=0.1421 lu_delta_vs_midpoint_pct=0.1325
+arm=a000 role=factorial-point F=0 T=0 S=0 valid=yes overall_delta_vs_midpoint_pct=0.4658 lu_delta_vs_midpoint_pct=0.4752
+arm=a010 role=factorial-point F=0 T=1 S=0 valid=yes overall_delta_vs_midpoint_pct=-1.5673 lu_delta_vs_midpoint_pct=-1.6342
+arm=a011 role=factorial-point F=0 T=1 S=1 valid=yes overall_delta_vs_midpoint_pct=0.6079 lu_delta_vs_midpoint_pct=0.6232
+arm=a100 role=factorial-point F=1 T=0 S=0 valid=yes overall_delta_vs_midpoint_pct=0.1392 lu_delta_vs_midpoint_pct=0.1368
+arm=a101 role=factorial-point F=1 T=0 S=1 valid=yes overall_delta_vs_midpoint_pct=6.0450 lu_delta_vs_midpoint_pct=6.2873
+arm=a110 role=factorial-point F=1 T=1 S=0 valid=yes overall_delta_vs_midpoint_pct=-1.5277 lu_delta_vs_midpoint_pct=-1.5919
+arm=a111 role=factorial-point F=1 T=1 S=1 valid=yes overall_delta_vs_midpoint_pct=5.3214 lu_delta_vs_midpoint_pct=5.5442
+arm=a001b role=closing-control F=0 T=0 S=1 valid=yes overall_delta_vs_midpoint_pct=-0.1421 lu_delta_vs_midpoint_pct=-0.1325
+
+== (4) factorial main effects and interactions (Section 1.4D items 4-5; computed only from the complete valid 2^3 matrix) ==
+UNIQUE arm=a000 F=0 T=0 S=0 valid=yes overall=6.8589e+06 lu_gflops=7.1258e+06
+UNIQUE arm=a001a F=0 T=0 S=1 valid=yes overall=6.8368e+06 lu_gflops=7.1015e+06
+UNIQUE arm=a010 F=0 T=1 S=0 valid=yes overall=6.7201e+06 lu_gflops=6.9762e+06
+UNIQUE arm=a011 F=0 T=1 S=1 valid=yes overall=6.8686e+06 lu_gflops=7.1363e+06
+UNIQUE arm=a100 F=1 T=0 S=0 valid=yes overall=6.8366e+06 lu_gflops=7.1018e+06
+UNIQUE arm=a101 F=1 T=0 S=1 valid=yes overall=7.2398e+06 lu_gflops=7.5380e+06
+UNIQUE arm=a110 F=1 T=1 S=0 valid=yes overall=6.7228e+06 lu_gflops=6.9792e+06
+UNIQUE arm=a111 F=1 T=1 S=1 valid=yes overall=7.1904e+06 lu_gflops=7.4853e+06
+DATA key=a000 F=0 T=0 S=0 sc=6.8589e+06 lu=7.1258e+06
+DATA key=a001a F=0 T=0 S=1 sc=6.8368e+06 lu=7.1015e+06
+DATA key=a010 F=0 T=1 S=0 sc=6.7201e+06 lu=6.9762e+06
+DATA key=a011 F=0 T=1 S=1 sc=6.8686e+06 lu=7.1363e+06
+DATA key=a100 F=1 T=0 S=0 sc=6.8366e+06 lu=7.1018e+06
+DATA key=a101 F=1 T=0 S=1 sc=7.2398e+06 lu=7.5380e+06
+DATA key=a110 F=1 T=1 S=0 sc=6.7228e+06 lu=6.9792e+06
+DATA key=a111 F=1 T=1 S=1 sc=7.1904e+06 lu=7.4853e+06
+level_means overall_gflops: F0=6.8211e+06 F1=6.9974e+06 T0=6.94302e+06 T1=6.87548e+06 S0=6.7846e+06 S1=7.0339e+06
+level_means lu_gflops: F0=7.08495e+06 F1=7.27608e+06 T0=7.21678e+06 T1=7.14425e+06 S0=7.04575e+06 S1=7.31528e+06
+main_effect F overall=176300 lu=191125
+main_effect T overall=-67550 lu=-72525
+main_effect S overall=249300 lu=269525
+interaction FxT overall=-14050 lu=-15125
+interaction FxS overall=186100 lu=201625
+interaction TxS overall=58750 lu=63575
+interaction FxTxS overall=-26550 lu=-28625
+grand_mean overall=6.90925e+06 lu=7.18051e+06
