@@ -1,0 +1,1861 @@
+#!/bin/bash
+# HPL-MxP 2x8-GAAS TASK-2X8-017 Phase 5: final scheduling 2^3 factorial.
+# ONE same-allocation sequential PBS job on 2 GAAS nodes x 8 H200 GPUs
+# (16 MPI ranks, one rank per GPU) that executes EXACTLY NINE scored arms
+# in the fixed pre-authorized order (TASK-2X8-017 Sections 1.1, 1.6B):
+#   A001a (a001a, F=0 T=0 S=1)  retained opening control
+#   A000  (a000,  F=0 T=0 S=0)  factorial point
+#   A010  (a010,  F=0 T=1 S=0)  factorial point
+#   A011  (a011,  F=0 T=1 S=1)  factorial point
+#   A100  (a100,  F=1 T=0 S=0)  factorial point
+#   A101  (a101,  F=1 T=0 S=1)  factorial point
+#   A110  (a110,  F=1 T=1 S=0)  factorial point
+#   A111  (a111,  F=1 T=1 S=1)  factorial point
+#   A001b (a001b, F=0 T=0 S=1)  retained closing control
+# Tuple order is always (F, T, S) with
+#   F = --prioritize-factorization
+#   T = --prioritize-trsm
+#   S = --use-separate-stream-for-gemm
+# This is a FIXED factorial, not an adaptive sweep: no 10th arm, no leader
+# repeat, no transition logic, no profiling branch, no final winner
+# confirmation (Sections 1.1, 1.6D-E, 1.7 rules 1/16/18). The three
+# scientific variables are passed EXPLICITLY on every arm and their echoed
+# effective values are verified per arm (Section 1.6B); no omitted default
+# is relied on for F/T/S.
+#
+# Fixed HPL-MxP controls for EVERY arm (TASK-2X8-017 Sections 1.2, 1.6A;
+# the formally closed Phase-4 stack; NOTHING except F/T/S varies):
+#   N=429056, NB=3072, nprow=4, npcol=4, nporder=row,
+#   --gpu-affinity 0:1:2:3:4:5:6:7 (identity map),
+#   --cpu-affinity omitted, --mem-affinity omitted, --ucx-affinity
+#   omitted/automatic, UCX_TLS unset/AUTO, UCX_NET_DEVICES
+#   unset/automatic,
+#   OMP_NUM_THREADS=4, OMP_PLACES/OMP_PROC_BIND omitted (effective
+#   launcher package defaults sockets/TRUE),
+#   --fill-device 1 --fill-device-buffer-size 3048,
+#   --cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0,
+#   --sloppy-type FP16, --use-mpi-panel-broadcast 0,
+#   --u-panel-chunk-nbs 4 (retained TASK-2X8-015 outcome confirmed by
+#   TASK-2X8-016, explicit on every arm; echo verified),
+#   --preset-gemm-kernel = 90 (EFFECTIVE value via the installed package
+#   default; the v26.02 CLI accepts only {0,80} - flag-check evidence
+#   experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log
+#   - so the flag is OMITTED and the echoed effective value is verified
+#   = 90 per arm), --test-loop 1, --skip-tests 0, --monitor-gpu 0.
+#
+# Provenance: the TASK-2X8-017 Section 1.4A read-only identity check
+# against TASK-2X8-016 was completed and PASSED before this script was
+# prepared; the gate evidence (exact SIF path, SHA-256 digest, package
+# release, and the launcher-selected CUDA subdirectory) is recorded at
+#   outputs/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md
+# This script additionally re-records the in-job container image identity
+# (size, mtime, one-shot sha256) and HARD-STOPS before any arm if the
+# computed digest differs from the passed gate digest (image-substitution
+# guard enforcing Section 1.7 rule 9; an unavailable sha256 remains a
+# non-fatal provenance record per workflow/03).
+#
+# Per-HCA InfiniBand evidence around EVERY arm (Section 1.4C; the
+# validated TASK-2X8-015/016 low-overhead capture): a pre-arm and
+# post-arm host-side snapshot on BOTH allocated nodes via pbsdsh +
+# scripts/hca_counter_snapshot.sh, covering the eight expected physical
+# IB HCAs (mlx5_0..mlx5_5, mlx5_8, mlx5_9; any other visible device,
+# e.g. the known RoCE bond mlx5_bond_0, is recorded factually with
+# expected=no but never treated as a normal data path): port state/rate/
+# numa plus port_xmit_data, port_rcv_data, port_xmit_packets,
+# port_rcv_packets, port_xmit_discards, port_xmit_wait, port_rcv_errors,
+# port_rcv_constraint_errors, port_xmit_constraint_errors,
+# port_rcv_remote_physical_errors, port_rcv_switch_relay_errors,
+# link_error_recovery, link_downed, excessive_buffer_overrun_errors,
+# symbol_error. Deltas are derived mechanically per arm (TX/RX delta per
+# HCA and per node, per-HCA traffic share, max/mean and coefficient of
+# variation across the eight rails, port_xmit_wait delta, and any
+# nonzero/new error/discard/recovery counter delta) into the per-arm
+# .hcadelta evidence file. Per-HCA bytes and rail balance are explanatory
+# metrics only; scheduling combinations are NOT ranked by rail balance.
+# Link state is gated before and after every arm (all eight expected HCAs
+# ACTIVE at 400 Gb/sec on both nodes; a down/derated link is a Section
+# 1.9 stop).
+#
+# Retained host-runtime contract (verified by TASK-009 phase3ab v2, PBS
+# job 73174.gaas; held fixed for every arm): OMP_NUM_THREADS=4 explicitly
+# exported in the job shell AFTER the module/job environment is
+# established, forwarded to all MPI ranks with mpirun -x OMP_NUM_THREADS,
+# and VERIFIED = 4 on all 16 ranks by a per-arm environment probe run
+# immediately before every launch (a mismatch aborts before that arm's
+# launch). OMP_PLACES/OMP_PROC_BIND omitted: unset in the job shell and
+# verified UNSET on all 16 ranks; effective placement policy = the
+# installed launcher's package defaults OMP_PLACES=sockets /
+# OMP_PROC_BIND=TRUE.
+#
+# Environment-propagation contract (Blocker E, multi-node-test/
+# GAAS_MULTINODE_SETUP.md): remote-node ranks inherit the remote
+# orted/container environment and receive ONLY variables explicitly
+# forwarded through mpirun -x. Every scored arm forwards only the
+# retained host-runtime variables (PATH, LD_LIBRARY_PATH, OMP_NUM_THREADS).
+# UCX_TLS is deliberately NOT forwarded (every arm runs UCX_TLS
+# unset/AUTO, verified UNSET on all 16 ranks). No UCX/NCCL diagnostic
+# variable is ever set or forwarded on any scored arm (the per-arm env
+# probe verifies UCX_LOG_LEVEL, UCX_PROTO_INFO, NCCL_DEBUG,
+# NCCL_DEBUG_SUBSYS, NCCL_DEBUG_FILE, UCX_IB_GPU_DIRECT_RDMA, and
+# NCCL_NET_GDR_LEVEL are all UNSET on all 16 ranks before every launch).
+#
+# Arm-failure behavior (operational contract; TASK-2X8-017 Sections 1.7
+# rules 11-15/20, 1.9):
+#   - A001a MUST be a valid PASSED arm with all fixed controls verified
+#     before the factorial continues; an invalid A001a stops the job
+#     before A000 (rule 11).
+#   - A nonzero exit of ANY arm, or a failed settings-echo check on ANY
+#     arm (a fixed control or a requested F/T/S value not applied
+#     exactly), preserves that arm's evidence FIRST (.out/.err/.status
+#     fully written, post-arm HCA snapshot taken, deltas derived),
+#     records the stop in the carry-forward log, and stops the job
+#     nonzero: continuing a contaminated matrix is not authorized
+#     (rules 14, 20); no in-script retry; a rerun needs a new
+#     ATTEMPT_TAG plus human direction.
+#   - An exit-0 non-control factorial arm (A000..A111) with an invalid
+#     verification (FAILED/non-finite/no score) is preserved as an
+#     invalid candidate record and the fixed matrix CONTINUES with the
+#     next authorized arm while the allocation and fixed controls remain
+#     healthy (rules 12-13; Section 1.9 explicitly does not stop merely
+#     because one candidate fails numerical verification). Such an arm is
+#     not a valid performance point and is excluded from the factorial
+#     contrasts (Section 1.4D).
+#   - A001b is the only authorized repeat (rule 16). If it differs
+#     materially from A001a, the complete matrix is preserved and the
+#     drift reported; no arm is rerun automatically (rule 17).
+#
+# Observational preflight failures abort BEFORE any arm (Track 2 stop
+# rules; workflow/05 and workflow/08 Section 5): (1) an allocated
+# cpuset/topology that differs from the accepted Phase-0 topology on
+# EITHER allocated node; (2) a rank-map probe that fails its mechanical
+# 16-rank/8-per-node/2-host check; (3) any rank reporting an incoming
+# OMP_PLACES or OMP_PROC_BIND value; (4) a pre/post-arm HCA link-state
+# gate failure (HCA absent, not ACTIVE, or not 400 Gb/sec); (5) a
+# container image digest that differs from the passed provenance gate. In
+# all cases evidence is preserved, no arm runs, and any rerun needs a new
+# ATTEMPT_TAG plus human direction.
+#
+# After all nine arms the script derives ONLY the factual factorial
+# summary (Section 1.4D; mechanical arithmetic, no strategic
+# interpretation, no winner selection): the factual per-arm table; the
+# A001a/A001b control midpoint and LU/overall bracket spread; each arm's
+# percentage delta versus the A001 midpoint for overall and LU GFLOP/s;
+# and, when all eight unique factorial points are valid, the arithmetic
+# main-effect level means/differences and the pairwise/three-way
+# interaction contrasts for both metrics. The summary is written to
+# outputs/2x8-GAAS-phase5-scheduling-factorial_factorial_summary_<tag>.log
+# and echoed to the PBS stdout; the strategic reading belongs to the
+# Strategic Analyst via ANALYSE_RESULTS (Sections 1.3, 1.10).
+#
+# Purpose: execute the complete TASK-2X8-017 Phase-5 2^3 scheduling
+# factorial (tasks/TASK-2X8-017.md Sections 1.1, 1.6, 1.11) and record
+# factual correctness/performance/memory/rank/environment/PBS provenance
+# and per-HCA TX/RX/rail/xmit_wait/error evidence for every arm. The
+# script computes ONLY mechanical facts; no winner is declared, no
+# campaign-level conclusion is drawn, and no percentage deltas versus the
+# campaign baseline are computed.
+#
+# Expected working directory: this experiment directory
+# (experiments/2x8-GAAS/phase5-scheduling-factorial/) on GAAS.
+# Submit with (the queue is deliberately NOT selected in this script; pass
+# an approved one at qsub):
+#   qsub -q <gpu_as|gpu_ded> -v "ATTEMPT_TAG=v1" \
+#        -o outputs/2x8-GAAS-phase5-scheduling-factorial_v1.o \
+#        -e outputs/2x8-GAAS-phase5-scheduling-factorial_v1.e \
+#        scripts/run_phase5_scheduling_factorial.pbs
+#
+# Inputs (environment, via qsub -v):
+#   ATTEMPT_TAG  REQUIRED attempt tag (e.g. v1); it names every evidence
+#                file of this attempt. A rerun must use a new tag. Before
+#                any use the tag is validated against a conservative
+#                filename-safe pattern: nonempty, only ASCII alphanumeric
+#                characters, dot, underscore, and hyphen, and not '.' or
+#                '..' (matched under LC_ALL=C inside a subshell, so the
+#                check is locale-independent and leaves the job
+#                environment untouched); anything else aborts before
+#                anything runs.
+# Outputs (all beneath outputs/, all attempt-tagged, nothing left in the
+#   experiment root):
+#   per arm (nine arms: a001a a000 a010 a011 a100 a101 a110 a111 a001b):
+#     application stdout/stderr and status
+#       outputs/2x8-GAAS-phase5-scheduling-factorial_<arm>_${ATTEMPT_TAG}.{out,err,status};
+#     the raw per-arm environment-probe evidence
+#       outputs/..._<arm>_${ATTEMPT_TAG}.envprobe;
+#     the application timing-marker extract
+#       outputs/..._<arm>_${ATTEMPT_TAG}.timings;
+#     the HCA snapshots (both nodes, pre and post)
+#       outputs/..._<arm>_${ATTEMPT_TAG}_hca{pre,post}_hca_<node>.log;
+#     the derived HCA traffic deltas
+#       outputs/..._<arm>_${ATTEMPT_TAG}.hcadelta;
+#   the allocation-level rank-map log
+#     outputs/..._rankmap_${ATTEMPT_TAG}.log;
+#   the per-arm effective-environment probe log
+#     outputs/..._envmap_${ATTEMPT_TAG}.log;
+#   the mechanical factual carry-forward log
+#     outputs/..._carryforward_${ATTEMPT_TAG}.log;
+#   the mechanical factual factorial summary
+#     outputs/..._factorial_summary_${ATTEMPT_TAG}.log;
+#   the deduplicated hostfile outputs/..._hostfile_${ATTEMPT_TAG};
+#   environment provenance records echoed to the PBS .o after the
+#   validated module load (loaded modules, Apptainer version, container
+#   MPI version, and the container-image identity: size, mtime, and a
+#   one-shot sha256 of the SIF with the provenance-gate comparison) plus
+#   the execution-worktree git revision; PBS-level stdout/stderr names are
+#   passed at qsub with -o/-e (this script deliberately has no #PBS -o/-e
+#   directives). Existing attempt files are never overwritten: the script
+#   aborts before running anything if any target file of this attempt
+#   already exists (all nine arm labels x the six per-arm file suffixes,
+#   both per-node hcapre/hcapost snapshot globs per arm, and the
+#   rankmap/envmap/carryforward/factorial-summary logs and attempt
+#   hostfile). An arm killed mid-run (e.g. by walltime) keeps its
+#   .out/.err but has no .status file, and later arms of the authorized
+#   matrix were not run.
+# Assumptions: approved container and modules exist on GAAS; one GPU per
+#   MPI process; validated Approach-1 multinode launch (container mpirun +
+#   rsh_pbsdsh_container.sh bridge; multi-node-test/GAAS_MULTINODE_SETUP.md);
+#   the installed v26.02 launcher implements the captured affinity/OpenMP
+#   semantics and supports the three scheduling flags as binary
+#   INT:NUMBER options (installed help lines "--prioritize-trsm INT:NUMBER
+#   [0]", "--prioritize-factorization INT:NUMBER [0]",
+#   "--use-separate-stream-for-gemm INT:NUMBER [1]"; flag-check evidence
+#   experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log;
+#   wrapper-level flags not listed in the launcher help are passed through
+#   to xhpl_mxp, as validated by the TASK-2X8-014 per-arm
+#   --use-mpi-panel-broadcast echoes); the accepted Phase-0 topology:
+#   PBS-visible cpuset 0-49,56-101 (96 CPUs), Mems_allowed_list 0-1,
+#   GPUs 0-3 -> NUMA0, GPUs 4-7 -> NUMA1, the eight 400G IB HCAs
+#   (scripts/probing_report.md, 2x8 supplement; job 72591.gaas);
+#   /opt/pbs/bin/pbsdsh usable from the job shell (validated host-side
+#   per-node capture pattern from the resource-alloc debug work).
+#
+# Walltime note: TASK-2X8-015 phase4c's eleven-arm sweep used 00:18:21 of
+# 03:00:00 (PBS job 76826.gaas) with each full-fill arm ~00:00:55-00:01:01
+# plus per-arm probes and pre/post HCA snapshots; TASK-2X8-016's single
+# confirmation arm used 00:02:11 of 01:00:00. This job runs NINE arms
+# plus the rank-map probe, per-arm env probes, per-arm pre/post HCA
+# snapshots on both nodes, and the in-job SIF sha256 (~19 s in the
+# provenance gate); 03:00:00 (the validated phase4c request) gives
+# generous margin; may be overridden at qsub.
+#
+# Queue policy: no queue is preselected here. TASK-2X8-017 authorizes the
+#   combined eligible pool gpu_as UNION gpu_ded (Section 1.6C); the two
+#   selected nodes do not need the same nominal queue label, but the
+#   actual PBS allocation must be legal; the submitting qsub must pass -q
+#   explicitly, and this script verifies the actually-assigned queue and
+#   aborts on anything else. select=2:ncpus=96:ngpus=8:mem=2000GB (no
+#   mpiprocs; one rank per GPU; place=scatter) may likewise be overridden
+#   on the qsub command line by a documented host-pinned select (see
+#   README.md). Before submission, run the approved pbsnodes -aSj snapshot
+#   over the eligible queues to select the cleanest schedulable 2-node
+#   pair from the combined pool and record contention/provenance; that
+#   presubmit snapshot is submission-side evidence, not part of this
+#   script. One multinode job at a time (GAAS Blocker 7).
+#PBS -N 2x8_phase5_fac
+#PBS -P hpc_ebslee
+#PBS -l select=2:ncpus=96:ngpus=8:mem=2000GB
+#PBS -l place=scatter
+#PBS -l walltime=03:00:00
+
+set -euo pipefail
+
+# --- Experiment metadata --------------------------------------------------------
+cd "$PBS_O_WORKDIR"
+EXPERIMENT_ID="2x8-GAAS-phase5-scheduling-factorial"
+OUTDIR="$PWD/outputs"
+mkdir -p "$OUTDIR"
+
+ATTEMPT_TAG="${ATTEMPT_TAG:-}"
+if [ -z "$ATTEMPT_TAG" ]; then
+  echo "FATAL: ATTEMPT_TAG is required (e.g. -v \"ATTEMPT_TAG=v1\"); it names this attempt's evidence files" >&2
+  exit 1
+fi
+# ATTEMPT_TAG is embedded in every evidence filename, so before it is used
+# anywhere it must pass a conservative filename-safety gate: nonempty
+# (checked above), only ASCII alphanumeric characters, dot, underscore and
+# hyphen, and not '.' or '..'. The match runs under LC_ALL=C inside a
+# subshell, making the character ranges byte-exact and locale-independent
+# without modifying the job environment; any other value aborts before
+# anything runs.
+if ( LC_ALL=C
+     case "$ATTEMPT_TAG" in
+       '.'|'..'|*[!A-Za-z0-9._-]*) exit 1 ;;
+     esac
+   )
+then
+  echo "attempt_tag_validation=PASS (conservative filename-safe pattern: nonempty, ASCII alphanumeric '.' '_' '-' only, not '.' or '..')"
+else
+  echo "FATAL: ATTEMPT_TAG='${ATTEMPT_TAG}' is not a conservative filename-safe tag (required: nonempty, only ASCII alphanumeric characters, '.', '_', '-'; '.' and '..' are not valid tags); it names this attempt's evidence files" >&2
+  exit 1
+fi
+
+# Only gpu_as and gpu_ded are authorized for TASK-2X8-017 (Section 1.6C).
+# The queue is not preselected in this script; fail fast if PBS assigned
+# any other queue (including an omitted -q falling through to a default
+# queue).
+QUEUE="${PBS_O_QUEUE:-unknown}"
+case "$QUEUE" in
+  gpu_as|gpu_ded) ;;
+  *) echo "FATAL: queue '${QUEUE}' is not authorized for TASK-2X8-017 (only gpu_as or gpu_ded; Section 1.6C); pass -q at qsub" >&2; exit 1 ;;
+esac
+
+# --- Fixed scientific controls (TASK-2X8-017 Sections 1.2, 1.6A) -----------------
+# Identical for every arm EXCEPT the three binary scheduling variables
+# F/T/S, which are passed EXPLICITLY per arm (Section 1.6B) and never
+# left to omitted defaults. Every arm is a clean scored arm: no
+# diagnostic environment differences exist between arms.
+N_FIXED=429056
+NB_FIXED=3072
+NPROW=4
+NPCOL=4
+NPORDER=row
+OMP_T_FIXED=4
+FILL_MODE_FIXED=1
+FILL_BUFFER_FIXED=3048
+REG_CONTROL=2048
+DGEMV_CONTROL=0
+# --use-mpi-panel-broadcast 0 is passed EXPLICITLY on every arm (retained
+# TASK-2X8-014 outcome). --u-panel-chunk-nbs 4 is passed EXPLICITLY on
+# every arm (the retained TASK-2X8-015 Phase-4C outcome confirmed by
+# TASK-2X8-016; echo verified per arm). Both values are fixed for every
+# arm and never vary in this task.
+PANEL_BROADCAST_FIXED=0
+U_PANEL_CHUNK_FIXED=4
+
+# The retained Phase-3D controls are passed EXPLICITLY on every arm so the
+# requested values are unambiguous (installed flag contract
+# --cuda-host-register-step INT:POSITIVE [2048],
+# --call-dgemv-with-multiple-threads INT:NONNEGATIVE [0]; flag-check
+# evidence experiments/2x8-GAAS/baseline/outputs/hplmxp_v2602_flag_check_v1.log;
+# both values have prior CLI acceptance evidence: register-step 2048 and
+# dgemv 0 in TASK-2X8-012 phase3d job 76370.gaas).
+
+# Fixed identity GPU map (TASK-2X8-017 Section 1.2): local rank r -> GPU r.
+# --cpu-affinity, --mem-affinity and --ucx-affinity are omitted for every
+# arm (UCX device policy stays omitted/automatic, the retained TASK-008
+# outcome; closed for this task).
+GPU_AFFINITY_FIXED="0:1:2:3:4:5:6:7"
+
+# Expected physical IB HCAs (Section 1.4C); anything else visible (e.g.
+# the known RoCE bond mlx5_bond_0) is recorded factually but never gated
+# as a normal data path.
+EXPECTED_HCAS="mlx5_0 mlx5_1 mlx5_2 mlx5_3 mlx5_4 mlx5_5 mlx5_8 mlx5_9"
+
+# Provenance-gate digest of the exact recorded SIF (TASK-2X8-017 Section
+# 1.4A gate, PASSED 2026-10-02 against the TASK-2X8-016 record; evidence
+# outputs/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md). The
+# in-job digest computed below must match this value or the job stops
+# before any arm (image-substitution guard; Section 1.7 rule 9).
+SIF_SHA256_GATE="123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628"
+
+# The nine-arm fixed sequence (TASK-2X8-017 Sections 1.1, 1.6B): tuple
+# order is always (F, T, S). One scored attempt per arm, exact order, no
+# transition logic (the matrix is fully pre-authorized).
+ARM_KEYS="a001a a000 a010 a011 a100 a101 a110 a111 a001b"
+
+echo "experiment_id=${EXPERIMENT_ID}"
+echo "attempt_tag=${ATTEMPT_TAG}"
+echo "pbs_job_id=${PBS_JOBID:-unknown}"
+echo "queue=${QUEUE}"
+echo "project=hpc_ebslee"
+date --iso-8601=seconds
+echo "fixed scientific controls (TASK-2X8-017 Sections 1.2, 1.6A; identical to the formally closed Phase-4 stack; ONLY F/T/S varies across arms):"
+echo "--n 429056 --nb 3072 --nprow 4 --npcol 4 --nporder row"
+echo "--gpu-affinity 0:1:2:3:4:5:6:7 (fixed identity map; --cpu-affinity omitted, --mem-affinity omitted, --ucx-affinity omitted/automatic; UCX_TLS unset/AUTO; UCX_NET_DEVICES unset/automatic)"
+echo "OMP_NUM_THREADS=4 (explicit job-shell export after module setup + mpirun -x OMP_NUM_THREADS; verified = 4 on all 16 ranks by the per-arm env probe)"
+echo "OMP_PLACES/OMP_PROC_BIND omitted (unset in the job shell; verified UNSET on all 16 ranks; effective launcher package defaults: OMP_PLACES=sockets, OMP_PROC_BIND=TRUE)"
+echo "--fill-device 1 --fill-device-buffer-size 3048 (retained full-fill residency mode)"
+echo "--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0 (retained Phase-3D closure controls, explicit on every arm)"
+echo "--sloppy-type FP16"
+echo "--use-mpi-panel-broadcast 0 (retained TASK-2X8-014 outcome; requested value echoed by the application and verified per arm)"
+echo "--u-panel-chunk-nbs 4 (retained TASK-2X8-015/016 Phase-4 outcome; passed explicitly on every arm; echo verified)"
+echo "--preset-gemm-kernel = 90 (EFFECTIVE value via the installed package default; v26.02 CLI accepts only {0,80} so the flag is omitted and the default supplies the SM90 preset; echoed value verified = 90 per arm; flag-check evidence hplmxp_v2602_flag_check_v1.log)"
+echo "--test-loop 1 --skip-tests 0 --monitor-gpu 0"
+echo "scientific variables (the ONLY controls that vary; passed EXPLICITLY per arm; tuple order F,T,S): --prioritize-factorization F, --prioritize-trsm T, --use-separate-stream-for-gemm S"
+echo "arm set (exact fixed order, one scored attempt each): A001a(a001a, F=0 T=0 S=1, retained opening control) -> A000(a000, 0 0 0) -> A010(a010, 0 1 0) -> A011(a011, 0 1 1) -> A100(a100, 1 0 0) -> A101(a101, 1 0 1) -> A110(a110, 1 1 0) -> A111(a111, 1 1 1) -> A001b(a001b, F=0 T=0 S=1, retained closing control); 8 unique configurations, 9 scored arms total (TASK-2X8-017 Section 1.1)"
+echo "prohibited-list summary (TASK-2X8-017 Section 1.6E): no sloppy-type change; no preset-gemm-kernel change; no N/NB/grid/order/rank-count/placement change; no OMP change; no residency/registration/DGEMV change; no UCX/NCCL transport or affinity change; no panel-broadcast or U-panel-chunk change; no F/T/S value outside 0/1; no omitted valid pre-authorized factorial arm; no tenth scientific configuration beyond the closing A001b control; no numerical-leader repeat; no finer sweep; no second factorial; no microbenchmarks; no heavy UCX/NCCL diagnostic logging; no Nsight Systems/Compute; no source or container-image modification; no baseline promotion; no campaign winner selection; no final full-stack confirmation run"
+
+# --- Locate repo root and the validated launch bridge ---------------------------
+# Submission dir is experiments/2x8-GAAS/phase5-scheduling-factorial/,
+# so the repo root is three levels up.
+REPO_ROOT="$(cd "${PBS_O_WORKDIR}/../../.." && pwd)"
+BRIDGE="${REPO_ROOT}/multi-node-test/rsh_pbsdsh_container.sh"
+HCA_HELPER="${REPO_ROOT}/experiments/2x8-GAAS/phase5-scheduling-factorial/scripts/hca_counter_snapshot.sh"
+SIF="/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif"
+
+if [ ! -f "$BRIDGE" ]; then
+  echo "FATAL: bridge not found at ${BRIDGE}; submit from the experiment directory (experiments/2x8-GAAS/phase5-scheduling-factorial/)" >&2
+  exit 1
+fi
+if [ ! -f "$HCA_HELPER" ]; then
+  echo "FATAL: HCA snapshot helper not found at ${HCA_HELPER}" >&2
+  exit 1
+fi
+if [ ! -f "$SIF" ]; then
+  echo "FATAL: container image not found: ${SIF}" >&2
+  exit 1
+fi
+[ -x /opt/pbs/bin/pbsdsh ] || { echo "FATAL: /opt/pbs/bin/pbsdsh not executable (required for the per-node HCA snapshots)" >&2; exit 1; }
+
+# --- Execution-worktree revision record (provenance; non-fatal) ------------------
+# Print the Git revision of the tree this script executes from. REPO_ROOT is
+# derived from the submission directory and stays inside the approved remote
+# project root (the primary clone or a detached .codex-worktrees/ execution
+# worktree beneath it), and 'git rev-parse HEAD' prints only a commit SHA, so
+# the record cannot expose secrets. Provenance tool, not a required runtime:
+# warn and record 'unknown' if git or the revision is unavailable
+# (workflow/03: provenance tools must not block an otherwise valid run).
+GIT_RC=0
+GIT_REVISION="$(git -C "$REPO_ROOT" rev-parse HEAD 2>&1)" || GIT_RC=$?
+if [ "$GIT_RC" -ne 0 ]; then
+  echo "warn: 'git -C ${REPO_ROOT} rev-parse HEAD' failed with rc=${GIT_RC}: ${GIT_REVISION}"
+  echo "execution_worktree_git_revision=unknown"
+else
+  echo "execution_worktree_root=${REPO_ROOT}"
+  echo "execution_worktree_git_revision=${GIT_REVISION}"
+fi
+
+# --- Allocation checks (place=scatter, no mpiprocs; fixed 4x4 grid) --------------
+GPUS=8                                   # GPUs (and ranks) per node
+EXPECTED_NODES=2
+NNODES=$(sort -u "$PBS_NODEFILE" | wc -l)
+if [ "$NNODES" -ne "$EXPECTED_NODES" ]; then
+  echo "FATAL: expected ${EXPECTED_NODES} distinct nodes, got ${NNODES}" >&2
+  exit 1
+fi
+NPROCS=$((NNODES * GPUS))
+if [ "$NPROCS" -ne $((NPROW * NPCOL)) ]; then
+  echo "FATAL: fixed grid ${NPROW}x${NPCOL} requires $((NPROW * NPCOL)) ranks, got ${NPROCS}" >&2
+  exit 1
+fi
+ALLOC_HOSTS="$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+
+echo "layout=${NNODES} nodes x ${GPUS} GPUs = ${NPROCS} ranks (one rank per GPU)"
+echo "grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)"
+echo "nodes=${ALLOC_HOSTS}"
+echo "bridge=${BRIDGE}"
+echo "hca_helper=${HCA_HELPER}"
+echo "container=${SIF}"
+
+# --- Phase-0 topology consistency gates (TASK-2X8-017 Sections 1.2, 1.9) ----------
+# The retained platform identity (accepted Phase-0 topology: PBS-visible
+# cpuset 0-49,56-101, Mems_allowed_list 0-1, GPUs 0-3 -> NUMA0 / GPUs 4-7 ->
+# NUMA1, the eight 400G IB HCAs) underpins the retained identity GPU map, the
+# automatic UCX device policy and the launcher package-default placement
+# semantics of the retained host-runtime contract. This block gates the
+# mother node (where this script and rank 0 run) from the job shell; the
+# rank-map probe stage below additionally validates EVERY allocated host per
+# host (two-host gate, retained unchanged from the validated TASK-008/
+# TASK-009/TASK-010/TASK-2X8-011/012/015/016 scripts).
+CPUSET="$(grep -F 'Cpus_allowed_list:' /proc/self/status | awk '{print $2}')"
+if [ "$CPUSET" != "0-49,56-101" ]; then
+  echo "FATAL: allocated cpuset '${CPUSET}' differs from the accepted Phase-0 cpuset '0-49,56-101'; the retained GPU/NUMA map and the retained host-runtime contract assumptions are no longer valid (TASK-2X8-017 Sections 1.2, 1.9; Track 2 stop)" >&2
+  exit 1
+fi
+MEMSET="$(grep -F 'Mems_allowed_list:' /proc/self/status | awk '{print $2}')"
+if [ "$MEMSET" != "0-1" ]; then
+  echo "FATAL: allocated Mems_allowed_list '${MEMSET}' differs from the accepted Phase-0 value '0-1'; the retained GPU/NUMA map is no longer valid (TASK-2X8-017 Sections 1.2, 1.9; Track 2 stop)" >&2
+  exit 1
+fi
+NGPU_VISIBLE="$(nvidia-smi -L 2>/dev/null | wc -l || true)"
+if [ "$NGPU_VISIBLE" -ne "$GPUS" ]; then
+  echo "FATAL: expected ${GPUS} GPUs on the mother node, saw '${NGPU_VISIBLE}'" >&2
+  exit 1
+fi
+for HCA in $EXPECTED_HCAS; do
+  if [ ! -d "/sys/class/infiniband/${HCA}" ]; then
+    echo "FATAL: expected IB HCA ${HCA} is absent; the retained platform identity (automatic UCX device policy) is no longer valid (TASK-2X8-017 Sections 1.2, 1.9; Track 2 stop)" >&2
+    exit 1
+  fi
+done
+TOPO_MATRIX="$(nvidia-smi topo -m 2>/dev/null || true)"
+echo "=== mother-node GPU topology matrix (gate input + evidence) ==="
+echo "$TOPO_MATRIX"
+# Row selection is whitespace-tolerant: in the accepted Phase-0 evidence the
+# GPU data rows start at column 0 and only the header is tab-indented
+# (header bytes: TAB ESC[4m GPU0 TAB GPU1 ...), so the tolerant anchor still
+# excludes the header while also accepting a matrix whose data rows arrive
+# with leading whitespace. The gate assertion itself is the second-stage
+# fixed-string check (CPU-affinity column value), unchanged. The GPU0/GPU4
+# NUMA anchors verify that the GPU enumeration still matches the Phase-0
+# identity map the retained host-runtime contract assumes.
+if ! printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU0' | grep -Fq '0-49'; then
+  echo "FATAL: GPU0 is not on NUMA0 CPUs 0-49 as in the accepted Phase-0 topology; the fixed identity GPU map and the retained host-runtime contract assumptions are no longer valid (TASK-2X8-017 Sections 1.2, 1.9; Track 2 stop)" >&2
+  exit 1
+fi
+if ! printf '%s\n' "$TOPO_MATRIX" | grep '^[[:space:]]*GPU4' | grep -Fq '56-101'; then
+  echo "FATAL: GPU4 is not on NUMA1 CPUs 56-101 as in the accepted Phase-0 topology; the fixed identity GPU map and the retained host-runtime contract assumptions are no longer valid (TASK-2X8-017 Sections 1.2, 1.9; Track 2 stop)" >&2
+  exit 1
+fi
+for PAIR in "NIC0: mlx5_0" "NIC1: mlx5_1" "NIC2: mlx5_2" "NIC3: mlx5_3" "NIC4: mlx5_4" "NIC5: mlx5_5" "NIC6: mlx5_8" "NIC7: mlx5_9"; do
+  if ! printf '%s\n' "$TOPO_MATRIX" | grep -Fq "$PAIR"; then
+    echo "FATAL: topology legend no longer maps '${PAIR}'; the retained platform identity is no longer valid (TASK-2X8-017 Section 1.9; Track 2 stop)" >&2
+    exit 1
+  fi
+done
+echo "topology_gate=PASS (cpuset=${CPUSET} mems=${MEMSET} gpus=${NGPU_VISIBLE} hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC legend matches Phase-0)"
+
+# --- Environment (validated module set) ------------------------------------------
+module purge
+module load apptainer/1.4.1 nvhpc/26.3 squashfuse/0.5.2 gocryptfs/2.5.0
+chmod +x "$BRIDGE"
+chmod +x "$HCA_HELPER"
+# Record the incoming job-shell OpenMP environment BEFORE the retained
+# control application (retained launcher contract: PBS has previously
+# populated/clobbered OMP_NUM_THREADS with the allocation CPU count; every
+# arm re-exports OMP_NUM_THREADS=4 after this environment is in place and
+# -x forwards it to all ranks).
+echo "incoming job-shell OpenMP environment (before control application):"
+echo "  OMP_NUM_THREADS=${OMP_NUM_THREADS:-UNSET}"
+echo "  OMP_PLACES=${OMP_PLACES:-UNSET}"
+echo "  OMP_PROC_BIND=${OMP_PROC_BIND:-UNSET}"
+# The retained host-runtime contract requires OMP_PLACES and OMP_PROC_BIND to
+# be OMITTED from the job environment: guarantee the omission against any
+# PBS/module clobbering. run_env_probe re-applies this before every launch,
+# so a stale value can never leak into a scored launch. The UCX/NCCL
+# diagnostic variables are never exported at job-shell level; run_env_probe
+# guarantees they are UNSET before every launch so no scored arm can inherit
+# any diagnostic logging.
+unset OMP_PLACES OMP_PROC_BIND
+# --- Environment provenance records (PBS stdout) ----------------------------------
+# Read-only records for the PBS .o evidence, taken right after the validated
+# module load. 'module list' is an OPTIONAL record: it must not fail the job
+# (warn and continue). The Apptainer and container-MPI version invocations
+# are REQUIRED runtime checks (the rank-map probe and every arm launch
+# through these exact runtimes): each rc is captured explicitly and a
+# nonzero rc aborts deterministically BEFORE any arm (workflow/03 preflight
+# rule: a tool check is fatal when the next command directly depends on the
+# tool).
+echo "=== loaded modules (module list; optional record, non-fatal) ==="
+module list 2>&1 || echo "warn: 'module list' failed (optional provenance record; continuing)"
+
+APPTAINER_RC=0
+APPTAINER_VERSION_OUTPUT="$(apptainer --version 2>&1)" || APPTAINER_RC=$?
+echo "=== apptainer version (required runtime; rc=${APPTAINER_RC}) ==="
+echo "${APPTAINER_VERSION_OUTPUT:-<no output>}"
+if [ "$APPTAINER_RC" -ne 0 ]; then
+  echo "FATAL: 'apptainer --version' failed with rc=${APPTAINER_RC}; apptainer is the required container runtime for every launch in this task (deterministic abort before any arm)" >&2
+  exit 1
+fi
+
+# Container image identity (TASK-2X8-017 Section 1.4A; the pre-submission
+# provenance gate PASSED and is recorded at
+# outputs/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md): size,
+# mtime, and a one-shot sha256 compared against the gate digest. A computed
+# digest that DIFFERS from the gate digest aborts BEFORE any arm
+# (image-substitution guard; Section 1.7 rule 9); an unavailable sha256 is
+# a non-fatal provenance record (workflow/03).
+SIF_SIZE="$(stat -c %s "$SIF" 2>/dev/null || echo unknown)"
+SIF_MTIME="$(stat -c %y "$SIF" 2>/dev/null || echo unknown)"
+echo "=== container image identity (provenance; gate comparison) ==="
+echo "container_image=${SIF}"
+echo "container_image_size_bytes=${SIF_SIZE}"
+echo "container_image_mtime=${SIF_MTIME}"
+echo "container_image_sha256_gate=${SIF_SHA256_GATE} (from the PASSED pre-submission provenance gate; evidence ${OUTDIR}/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md)"
+SIF_SHA="$(sha256sum "$SIF" 2>/dev/null | awk '{print $1}' || true)"
+if [ -n "${SIF_SHA:-}" ]; then
+  echo "container_image_sha256=${SIF_SHA}"
+  if [ "$SIF_SHA" != "$SIF_SHA256_GATE" ]; then
+    echo "FATAL: the sha256 of the image at the exact recorded path (${SIF_SHA}) differs from the PASSED provenance-gate digest (${SIF_SHA256_GATE}); the image was substituted or changed after the gate, so the TASK-2X8-017 factorial cannot run on it (Sections 1.4A, 1.7 rule 9, 1.9; aborting BEFORE any arm; evidence preserved; rerun needs a new ATTEMPT_TAG plus human direction)" >&2
+    exit 1
+  fi
+  echo "container_image_sha256_matches_provenance_gate=yes"
+else
+  echo "container_image_sha256=unknown (sha256sum unavailable or failed; non-fatal provenance record per workflow/03)"
+fi
+
+# Container MPI version: lightweight read-only query of the exact container
+# mpirun binary used by the rank-map probe and every arm launch, through the
+# same apptainer exec prefix and bind mounts as those launches, run BEFORE
+# the rank-map probe. REQUIRED runtime: a nonzero rc aborts deterministically
+# before any arm (the probe and every arm would fail identically).
+CONTAINER_MPI_RC=0
+CONTAINER_MPI_VERSION_OUTPUT="$(apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun --version 2>&1)" || CONTAINER_MPI_RC=$?
+echo "=== container MPI version (/usr/local/mpi/bin/mpirun --version; required runtime; rc=${CONTAINER_MPI_RC}) ==="
+echo "${CONTAINER_MPI_VERSION_OUTPUT:-<no output>}"
+if [ "$CONTAINER_MPI_RC" -ne 0 ]; then
+  echo "FATAL: container mpirun --version query failed with rc=${CONTAINER_MPI_RC}; the container MPI runtime is required for the rank-map probe and every arm (deterministic abort before any arm)" >&2
+  exit 1
+fi
+
+# --- Pre-run hardware-health snapshot (ordinary evidence; must not block) --------
+echo "=== pre-run hardware-health snapshot (mother node $(hostname)) ==="
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# --- Attempt-evidence guard (never overwrite existing evidence) -------------------
+# This attempt writes, per arm, the six per-arm files (.out/.err/.status/
+# .envprobe/.timings/.hcadelta) and both per-node hcapre/hcapost snapshot
+# logs, plus one rank-map .log, one env-map .log, one carry-forward .log,
+# one factorial-summary .log and one deduplicated hostfile, all beneath
+# outputs/. The guard covers EVERY target name this attempt can possibly
+# emit and runs BEFORE any of those targets is created (including the
+# hostfile below). If any target file already exists, this ATTEMPT_TAG was
+# already (partially) used: abort before running anything; a rerun must
+# take a new ATTEMPT_TAG (anti-loop: every scored arm runs at most once
+# per attempt; TASK-2X8-017 Sections 1.6, 1.7 rule 10).
+GUARD_FAIL=""
+for GUARD_ARM in $ARM_KEYS; do
+  for SUFFIX in out err status envprobe timings hcadelta; do
+    if [ -e "${OUTDIR}/${EXPERIMENT_ID}_${GUARD_ARM}_${ATTEMPT_TAG}.${SUFFIX}" ]; then
+      GUARD_FAIL="${GUARD_FAIL} ${EXPERIMENT_ID}_${GUARD_ARM}_${ATTEMPT_TAG}.${SUFFIX}"
+    fi
+  done
+  for SNAPGLOB in hcapre hcapost; do
+    if ls "${OUTDIR}/${EXPERIMENT_ID}_${GUARD_ARM}_${ATTEMPT_TAG}_${SNAPGLOB}_hca_"*.log >/dev/null 2>&1; then
+      GUARD_FAIL="${GUARD_FAIL} ${EXPERIMENT_ID}_${GUARD_ARM}_${ATTEMPT_TAG}_${SNAPGLOB}_hca_*.log"
+    fi
+  done
+done
+for GUARD_TARGET in \
+  "${EXPERIMENT_ID}_rankmap_${ATTEMPT_TAG}.log" \
+  "${EXPERIMENT_ID}_envmap_${ATTEMPT_TAG}.log" \
+  "${EXPERIMENT_ID}_carryforward_${ATTEMPT_TAG}.log" \
+  "${EXPERIMENT_ID}_factorial_summary_${ATTEMPT_TAG}.log" \
+  "${EXPERIMENT_ID}_hostfile_${ATTEMPT_TAG}"; do
+  if [ -e "${OUTDIR}/${GUARD_TARGET}" ]; then
+    GUARD_FAIL="${GUARD_FAIL} ${GUARD_TARGET}"
+  fi
+done
+if [ -n "$GUARD_FAIL" ]; then
+  echo "FATAL: refusing to overwrite existing evidence:${GUARD_FAIL}; resubmit with a new ATTEMPT_TAG" >&2
+  exit 1
+fi
+
+# --- Carry-forward log and env-map log (attempt evidence) -------------------------
+# The mechanical factual carry-forward log (evidence; also echoed to job
+# stdout) records the preflight determinations, the per-arm facts, and the
+# stop records. The env-map log collects the per-rank environment-probe
+# lines of every arm. Both are attempt-tagged beneath outputs/ and covered
+# by the guard above.
+CFLOG="${OUTDIR}/${EXPERIMENT_ID}_carryforward_${ATTEMPT_TAG}.log"
+cflog() { echo "$*" | tee -a "$CFLOG"; }
+{
+  echo "CARRYFORWARD experiment=${EXPERIMENT_ID} task=TASK-2X8-017 attempt_tag=${ATTEMPT_TAG} begin=$(date --iso-8601=seconds)"
+  echo "task: complete Phase-5 scheduling 2^3 factorial; fixed order A001a -> A000 -> A010 -> A011 -> A100 -> A101 -> A110 -> A111 -> A001b; one scored attempt per arm; tuple order (F,T,S); only F/T/S vary (TASK-2X8-017 Sections 1.1, 1.6B)"
+  echo "provenance: pre-submission identity gate PASSED (SIF sha256 ${SIF_SHA256_GATE}; evidence ${OUTDIR}/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md); in-job digest check recorded above"
+} >> "$CFLOG"
+cflog "preflight: queue=${QUEUE} nodes=${ALLOC_HOSTS} layout=${NNODES}x${GPUS}=${NPROCS} ranks grid=${NPROW}x${NPCOL} ${NPORDER}"
+
+ENVMAP_LOG="${OUTDIR}/${EXPERIMENT_ID}_envmap_${ATTEMPT_TAG}.log"
+: > "$ENVMAP_LOG"
+
+# De-duplicated hostfile with explicit per-node slot count (GAAS Blocker 8),
+# shared by the rank-map probe, the per-arm env probes, the per-node HCA
+# snapshots' node set, and every arm launch in this allocation. Written
+# beneath outputs/ with an attempt-specific name and covered by the guard
+# above, so no runtime artifact is left in the experiment root.
+MPI_HOSTFILE="${OUTDIR}/${EXPERIMENT_ID}_hostfile_${ATTEMPT_TAG}"
+awk -v g="$GPUS" '{ sub(/\r$/,""); if (!seen[$0]++) print $0 " slots=" g }' \
+  "$PBS_NODEFILE" > "$MPI_HOSTFILE"
+echo "=== hostfile (${MPI_HOSTFILE}) ==="
+cat "$MPI_HOSTFILE"
+
+# --- Allocation-level rank-map probe (TASK-2X8-017 Sections 1.4B, 1.9) ------------
+# One lightweight 16-rank MPI mapping probe BEFORE any arm, using the SAME
+# shared hostfile and the SAME container mpirun + bridge + daemon flags as
+# every arm launch. No OMP variable is -x forwarded in this probe (only
+# PATH/LD_LIBRARY_PATH), so the reported values are what each rank's
+# execution environment supplies BEFORE the retained controls are applied.
+# Diagnostic only: it adds no communication tracing and must not alter
+# scientific controls. It preserves global_rank / local_rank / hostname for
+# all 16 ranks (confirming 16 MPI ranks, 8 ranks/node; the rank/node map
+# evidence of Section 1.4B, completed by the fixed identity GPU map local
+# rank r -> GPU r and the application settings echo) AND the INCOMING
+# OMP_NUM_THREADS / OMP_PLACES / OMP_PROC_BIND values seen inside each
+# rank's execution environment.
+#
+# The node-local rank 0 on each host ALSO captures the per-host topology
+# facts into the SAME rank-map log, and the per-host gate below requires
+# BOTH allocated hosts to match the accepted Phase-0 topology before any
+# arm (two-host gate, retained unchanged from the validated TASK-008/
+# TASK-009/TASK-010/TASK-2X8-011/012/015/016 scripts).
+RANKMAP_LOG="${OUTDIR}/${EXPERIMENT_ID}_rankmap_${ATTEMPT_TAG}.log"
+RC=0
+apptainer exec --nv \
+  -B /opt/pbs:/opt/pbs \
+  -B /var/spool/pbs:/var/spool/pbs \
+  -B "$REPO_ROOT":"$REPO_ROOT" \
+  "$SIF" \
+  /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+    --hostfile "$MPI_HOSTFILE" \
+    --mca plm_rsh_agent "$BRIDGE" \
+    --mca plm_rsh_no_tree_spawn 1 \
+    --mca plm_rsh_num_concurrent 1 \
+    --mca routed direct \
+    -x PATH -x LD_LIBRARY_PATH \
+    --bind-to none \
+    bash -c '
+      if [ "${OMPI_COMM_WORLD_LOCAL_RANK:-}" = "0" ]; then
+        # Node-local rank 0 only, once per host: read-only report of the
+        # local node topology facts into the same rank-map log. No
+        # scientific control is touched; a failed query yields a missing or
+        # empty fact, which the per-host gate below fails safely.
+        H="$(hostname)"
+        echo "topo host=${H} begin local_rank0 global_rank=${OMPI_COMM_WORLD_RANK}"
+        L="$(grep -F "Cpus_allowed_list:" /proc/self/status || true)"
+        L="${L#*:}"; L="${L//[[:space:]]/}"
+        echo "topo host=${H} cpuset=${L:-missing}"
+        M="$(grep -F "Mems_allowed_list:" /proc/self/status || true)"
+        M="${M#*:}"; M="${M//[[:space:]]/}"
+        echo "topo host=${H} mems=${M:-missing}"
+        NG="$(nvidia-smi -L 2>/dev/null | wc -l || true)"
+        NG="${NG//[[:space:]]/}"
+        echo "topo host=${H} ngpus=${NG:-missing}"
+        for D in mlx5_0 mlx5_1 mlx5_2 mlx5_3 mlx5_4 mlx5_5 mlx5_8 mlx5_9; do
+          if [ -d "/sys/class/infiniband/${D}" ]; then
+            echo "topo host=${H} hca=${D} present=yes"
+          else
+            echo "topo host=${H} hca=${D} present=no"
+          fi
+        done
+        nvidia-smi topo -m 2>/dev/null | while IFS= read -r LINE; do
+          echo "topo host=${H} topo_m=${LINE}"
+        done
+        echo "topo host=${H} end local_rank0"
+      fi
+      echo "rank=${OMPI_COMM_WORLD_RANK}/${OMPI_COMM_WORLD_SIZE} host=$(hostname) local_rank=${OMPI_COMM_WORLD_LOCAL_RANK}/${OMPI_COMM_WORLD_LOCAL_SIZE} omp_num_threads=${OMP_NUM_THREADS:-UNSET} omp_places=${OMP_PLACES:-UNSET} omp_proc_bind=${OMP_PROC_BIND:-UNSET}"
+    ' \
+  > "$RANKMAP_LOG" 2>&1 || RC=$?
+
+# Mechanical gate: the probe must have exited 0, emitted exactly NPROCS rank
+# lines, exactly EXPECTED_NODES distinct hostnames, and exactly GPUS rank
+# lines per host. Otherwise abort BEFORE any arm (launch/rank-mapping
+# problem; TASK-2X8-017 Section 1.9; Track 2 stop); the probe evidence is
+# preserved in RANKMAP_LOG and a rerun needs a new ATTEMPT_TAG.
+RANK_LINES=$(grep -c "^rank=" "$RANKMAP_LOG" || true)
+HOST_COUNT=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); seen[$2] = 1 } END { n = 0; for (h in seen) n++; print n }' || true)
+MIN_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] < m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+MAX_RANKS_PER_HOST=$(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); cnt[$2]++ } END { n = 0; for (h in cnt) { if (n == 0 || cnt[h] > m) m = cnt[h]; n++ } print (n == 0 ? 0 : m) }' || true)
+if [ "$MIN_RANKS_PER_HOST" = "$MAX_RANKS_PER_HOST" ]; then
+  RANKS_PER_HOST_SUMMARY="$MIN_RANKS_PER_HOST"
+else
+  RANKS_PER_HOST_SUMMARY="${MIN_RANKS_PER_HOST}-${MAX_RANKS_PER_HOST}"
+fi
+echo "=== rank-map probe: rc=${RC} rank_lines=${RANK_LINES} hosts=${HOST_COUNT} ranks_per_host=${RANKS_PER_HOST_SUMMARY} log=${RANKMAP_LOG} ==="
+if [ "$RC" -ne 0 ] || [ "$RANK_LINES" -ne "$NPROCS" ] || [ "$HOST_COUNT" -ne "$EXPECTED_NODES" ] || [ "$MIN_RANKS_PER_HOST" -ne "$GPUS" ] || [ "$MAX_RANKS_PER_HOST" -ne "$GPUS" ]; then
+  echo "FATAL: rank-map probe failed its mechanical check (rc=${RC} rank_lines=${RANK_LINES} hosts=${HOST_COUNT} ranks_per_host=${RANKS_PER_HOST_SUMMARY}; launch/rank-mapping problem; TASK-2X8-017 Section 1.9; Track 2 stop; evidence preserved in ${RANKMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+  exit 1
+fi
+
+# Incoming-OpenMP-environment gate: the retained host-runtime contract
+# requires OMP_PLACES and OMP_PROC_BIND to be omitted from the rank
+# execution environment so the installed launcher's package defaults
+# (OMP_PROC_BIND=TRUE, OMP_PLACES=sockets) remain the effective policy. The
+# job shell unsets them above; this gate verifies the INCOMING values on
+# every rank (no -x override in the probe). Any rank reporting a set
+# OMP_PLACES or OMP_PROC_BIND means the omission cannot be guaranteed on all
+# ranks and the retained host-runtime contract cannot execute as approved
+# (Track 2 stop before any arm; evidence preserved). The incoming
+# OMP_NUM_THREADS values are recorded as evidence only: PBS has previously
+# clobbered it with the allocation CPU count, and every arm re-exports
+# OMP_NUM_THREADS=4 and -x forwards it, which overrides any incoming value
+# on every rank.
+OMP_PLACES_SET_LINES=$(grep "^rank=" "$RANKMAP_LOG" | grep -vcF "omp_places=UNSET" || true)
+OMP_BIND_SET_LINES=$(grep "^rank=" "$RANKMAP_LOG" | grep -vcF "omp_proc_bind=UNSET" || true)
+echo "incoming OMP environment across ${RANK_LINES} ranks: ranks_with_OMP_PLACES_set=${OMP_PLACES_SET_LINES} ranks_with_OMP_PROC_BIND_set=${OMP_BIND_SET_LINES}"
+echo "incoming OMP_NUM_THREADS values seen (evidence; neutralized by explicit export + -x forwarding):"
+grep "^rank=" "$RANKMAP_LOG" | sed 's/^/  /'
+if [ "$OMP_PLACES_SET_LINES" -ne 0 ] || [ "$OMP_BIND_SET_LINES" -ne 0 ]; then
+  echo "FATAL: incoming OMP_PLACES/OMP_PROC_BIND are set on some ranks (OMP_PLACES_set=${OMP_PLACES_SET_LINES}, OMP_PROC_BIND_set=${OMP_BIND_SET_LINES}); the 'omitted' placement controls of the retained host-runtime contract cannot be guaranteed on all ranks, so the TASK-2X8-017 factorial cannot execute as approved (Sections 1.2, 1.9; Track 2 stop; evidence preserved in ${RANKMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+  exit 1
+fi
+echo "incoming_openmp_gate=PASS (OMP_PLACES/OMP_PROC_BIND unset on all ${RANK_LINES} ranks; launcher package defaults remain the effective placement policy)"
+cflog "preflight: rank-map probe PASS (rank_lines=${RANK_LINES} hosts=${HOST_COUNT} ranks_per_host=${RANKS_PER_HOST_SUMMARY}; incoming OMP_PLACES/OMP_PROC_BIND UNSET on all ranks; evidence ${RANKMAP_LOG})"
+
+# Per-host topology gate (two-host gate; TASK-2X8-017 Sections 1.2, 1.9):
+# verify the local-rank-0 topology report collected by the probe above for
+# EVERY distinct host in the rank map (the mechanical gate already fixed the
+# host set at exactly EXPECTED_NODES hosts with GPUS ranks each). Each host
+# must match the accepted Phase-0 topology the retained GPU/NUMA identity
+# map and the retained host-runtime contract assumptions require - the same
+# assertions as the mother-node gate above, now applied to BOTH allocated
+# nodes. Any mismatch means the retained topology assumptions are invalid on
+# that host: the rank-map stage FAILS and aborts BEFORE any arm
+# (observational preflight failure; Track 2 stop, no auto retry), with the
+# per-host reports preserved in RANKMAP_LOG; a rerun needs a new
+# ATTEMPT_TAG.
+TOPO_FAILED_HOSTS=""
+for TOPO_HOST in $(grep "^rank=" "$RANKMAP_LOG" | awk '{ sub(/^host=/, "", $2); print $2 }' | sort -u); do
+  TOPO_OK=1
+  if [ "$(grep -c "^topo host=${TOPO_HOST} begin local_rank0" "$RANKMAP_LOG" || true)" -ne 1 ] \
+     || [ "$(grep -c "^topo host=${TOPO_HOST} end local_rank0$" "$RANKMAP_LOG" || true)" -ne 1 ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: expected exactly one local-rank-0 topology report (begin=$(grep -c "^topo host=${TOPO_HOST} begin local_rank0" "$RANKMAP_LOG" || true) end=$(grep -c "^topo host=${TOPO_HOST} end local_rank0$" "$RANKMAP_LOG" || true))" >&2
+    TOPO_OK=0
+  fi
+  TOPO_VAL="$(grep "^topo host=${TOPO_HOST} cpuset=" "$RANKMAP_LOG" | head -n 1 || true)"
+  if [ "$TOPO_VAL" != "topo host=${TOPO_HOST} cpuset=0-49,56-101" ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: cpuset is not the accepted Phase-0 value 0-49,56-101 (reported: '${TOPO_VAL:-<none>}')" >&2
+    TOPO_OK=0
+  fi
+  TOPO_VAL="$(grep "^topo host=${TOPO_HOST} mems=" "$RANKMAP_LOG" | head -n 1 || true)"
+  if [ "$TOPO_VAL" != "topo host=${TOPO_HOST} mems=0-1" ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: Mems_allowed_list is not the accepted Phase-0 value 0-1 (reported: '${TOPO_VAL:-<none>}')" >&2
+    TOPO_OK=0
+  fi
+  TOPO_VAL="$(grep "^topo host=${TOPO_HOST} ngpus=" "$RANKMAP_LOG" | head -n 1 || true)"
+  if [ "$TOPO_VAL" != "topo host=${TOPO_HOST} ngpus=8" ]; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: expected 8 GPUs on this host (reported: '${TOPO_VAL:-<none>}')" >&2
+    TOPO_OK=0
+  fi
+  for TOPO_HCA in $EXPECTED_HCAS; do
+    if ! grep -q "^topo host=${TOPO_HOST} hca=${TOPO_HCA} present=yes$" "$RANKMAP_LOG"; then
+      echo "  host=${TOPO_HOST} topology_gate=FAIL: expected IB HCA ${TOPO_HCA} not reported present (accepted Phase-0 inventory: mlx5_0..mlx5_5,mlx5_8,mlx5_9)" >&2
+      TOPO_OK=0
+    fi
+  done
+  # Row selection is whitespace-tolerant (same precedent as the mother-node
+  # gate): the GPU0/GPU4 NUMA anchors verify the GPU enumeration still
+  # matches the Phase-0 identity map the retained contract assumes.
+  if ! grep "^topo host=${TOPO_HOST} topo_m=" "$RANKMAP_LOG" | grep "topo_m=[[:space:]]*GPU0[[:space:]]" | grep -Fq "0-49"; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: GPU0 is not on NUMA0 CPUs 0-49 as in the accepted Phase-0 topology (full matrix preserved in the rank-map log)" >&2
+    TOPO_OK=0
+  fi
+  if ! grep "^topo host=${TOPO_HOST} topo_m=" "$RANKMAP_LOG" | grep "topo_m=[[:space:]]*GPU4[[:space:]]" | grep -Fq "56-101"; then
+    echo "  host=${TOPO_HOST} topology_gate=FAIL: GPU4 is not on NUMA1 CPUs 56-101 as in the accepted Phase-0 topology (full matrix preserved in the rank-map log)" >&2
+    TOPO_OK=0
+  fi
+  for TOPO_PAIR in "NIC0: mlx5_0" "NIC1: mlx5_1" "NIC2: mlx5_2" "NIC3: mlx5_3" "NIC4: mlx5_4" "NIC5: mlx5_5" "NIC6: mlx5_8" "NIC7: mlx5_9"; do
+    if ! grep "^topo host=${TOPO_HOST} topo_m=" "$RANKMAP_LOG" | grep -Fq "$TOPO_PAIR"; then
+      echo "  host=${TOPO_HOST} topology_gate=FAIL: topology legend no longer maps '${TOPO_PAIR}' (retained platform identity invalid on this host)" >&2
+      TOPO_OK=0
+    fi
+  done
+  if [ "$TOPO_OK" -eq 1 ]; then
+    echo "  host=${TOPO_HOST} topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)"
+  else
+    TOPO_FAILED_HOSTS="${TOPO_FAILED_HOSTS} ${TOPO_HOST}"
+  fi
+done
+if [ -n "$TOPO_FAILED_HOSTS" ]; then
+  echo "rankmap_per_host_topology_gate=FAIL (failed hosts:${TOPO_FAILED_HOSTS})" >&2
+  echo "FATAL: rank-map probe per-host topology gate failed on${TOPO_FAILED_HOSTS}; a host that does not match the accepted Phase-0 topology invalidates the retained GPU/NUMA identity map and the retained host-runtime contract assumptions (TASK-2X8-017 Sections 1.2, 1.9; aborting BEFORE any arm; Track 2 stop; evidence preserved in ${RANKMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+  exit 1
+fi
+echo "rankmap_per_host_topology_gate=PASS (every allocated host matches the accepted Phase-0 topology; per-host reports preserved in ${RANKMAP_LOG})"
+cflog "preflight: per-host topology gate PASS on both allocated hosts (evidence ${RANKMAP_LOG})"
+# --- Helper functions --------------------------------------------------------------
+# Overall HPL-MxP GFLOP/s from an application .out file (first "GFLOPS = "
+# match is the overall score; "LU GFLOPS" appears later), or empty.
+extract_gflops() {
+  grep -o 'GFLOPS = [0-9.eE+-]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $3 }' || true
+}
+
+# LU factorization time (AVG seconds) from "LU seconds: AVG = <v>, ...".
+extract_lu_seconds() {
+  grep -o 'LU seconds: AVG = [0-9.]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $5 }' || true
+}
+
+# LU GFLOP/s from "LU GFLOPS = <v>, per GPU = ...".
+extract_lu_gflops() {
+  grep -o 'LU GFLOPS = [0-9.eE+-]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $4 }' || true
+}
+
+# Iterative-refinement time (AVG seconds) from
+# "Iterative Solver seconds: AVG = <v>, ...".
+extract_ir_seconds() {
+  grep -o 'Iterative Solver seconds: AVG = [0-9.]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $6 }' || true
+}
+
+# Constructor/setup time (AVG seconds) from "Constructor seconds: AVG = ...".
+extract_constructor_seconds() {
+  grep -o 'Constructor seconds: AVG = [0-9.]*' "$1" 2>/dev/null | head -n 1 | awk '{ print $5 }' || true
+}
+
+# Solver iteration count from the "Solver iteration <k>, ..." lines.
+count_solver_iterations() {
+  grep -c '^Solver iteration' "$1" 2>/dev/null || true
+}
+
+# Last line of the .out containing the fixed string (raw emitted evidence).
+capture_line() {
+  grep -F "$2" "$1" 2>/dev/null | tail -n 1 || true
+}
+
+# Effective settings-echo value for --<name> from the application .out
+# settings block (lines of the form "   --<name>   = <value> "); empty when
+# the block or the entry is absent. The prefix match is exact ("--n" does
+# not match the "--nb" line; a longer flag sharing the prefix is rejected
+# by the '=' anchor) and whitespace between the flag and '=' is tolerated
+# (both "--nprow =  4" and "--fill-device      = 1" forms).
+extract_echo() {
+  awk -v f="$2" '
+    {
+      line = $0
+      sub(/^[[:space:]]+/, "", line)
+      p = "--" f
+      if (index(line, p) == 1) {
+        rest = substr(line, length(p) + 1)
+        if (rest ~ /^[[:space:]]*=/) {
+          sub(/^[[:space:]]*=[[:space:]]*/, "", rest)
+          sub(/[[:space:]]+$/, "", rest)
+          print rest
+          exit
+        }
+      }
+    }' "$1" 2>/dev/null || true
+}
+
+# Numeric GB value from a captured "consumption MAX = <v> GB" memory line,
+# or empty when the line/value is absent.
+gb_value() {
+  printf '%s\n' "$1" | sed -nE 's/.*MAX = ([0-9]+(\.[0-9]+)?) GB.*/\1/p' || true
+}
+
+# Mechanical IR/LU time ratio (TASK-2X8-017 Section 1.4B factual derived
+# value), or empty when either input is missing/non-numeric.
+ir_lu_ratio() {
+  awk -v ir="$1" -v lu="$2" 'BEGIN { if (ir ~ /^[0-9.]+$/ && lu ~ /^[0-9.]+$/ && lu > 0) printf "%.3f", ir / lu }' || true
+}
+
+# Symmetric spread pct (hi-lo)/lo*100 between two numeric values, or
+# 'unknown' (the campaign's factual bracket-spread convention).
+spread_pct() {
+  awk -v a="$1" -v b="$2" 'BEGIN {
+    if (a ~ /^[0-9][0-9.eE+-]*$/ && b ~ /^[0-9][0-9.eE+-]*$/ && a > 0 && b > 0) {
+      hi = (a > b) ? a : b; lo = (a < b) ? a : b
+      printf "%.4f", (hi - lo) / lo * 100
+    } else print "unknown"
+  }'
+}
+
+# Indicative allocation/staging/OOM/fallback warning-marker counter for an
+# evidence file (lines matched, summed over a fixed pattern list). The raw
+# .out/.err files remain the authoritative warning evidence; this counter is
+# only a compact summary for the .status/carry-forward records.
+warn_count() {
+  local f="$1" t=0 c
+  c=$(grep -Fic 'out of memory' "$f" 2>/dev/null || true); t=$(( t + ${c:-0} ))
+  c=$(grep -Fc 'OOM' "$f" 2>/dev/null || true); t=$(( t + ${c:-0} ))
+  c=$(grep -Fic 'CUDA error' "$f" 2>/dev/null || true); t=$(( t + ${c:-0} ))
+  c=$(grep -Fic 'failed to allocate' "$f" 2>/dev/null || true); t=$(( t + ${c:-0} ))
+  c=$(grep -Fic 'allocation failure' "$f" 2>/dev/null || true); t=$(( t + ${c:-0} ))
+  c=$(grep -Fic 'fallback' "$f" 2>/dev/null || true); t=$(( t + ${c:-0} ))
+  echo "$t"
+}
+
+# cmp_echo <expected> <actual> <name>: records a settings-echo mismatch into
+# SETTINGS_MISMATCH (the caller initializes SETTINGS_MISMATCH="").
+cmp_echo() {
+  if [ "$1" != "$2" ]; then
+    SETTINGS_MISMATCH="${SETTINGS_MISMATCH:+$SETTINGS_MISMATCH }$3(expected=$1,echoed=${2:-missing})"
+  fi
+}
+
+# HCA counter value from a snapshot file for a given host/HCA/port-1
+# counter; prints NA when absent.
+hca_counter_value() {
+  # <snapshot-file> <host> <hca> <counter>
+  awk -v dev="$3/port1" -v host="$2" -v key="$4" '
+    $1 == "COUNTERS" && $2 == dev && $3 == ("node=" host) {
+      for (i = 4; i <= NF; i++)
+        if (index($i, key "=") == 1) { print substr($i, length(key) + 2); exit }
+    }
+  ' "$1" 2>/dev/null || true
+}
+
+# take_hca_snapshot <snap-label-suffix> : runs the host-side HCA snapshot
+# helper on every allocated node via pbsdsh, then verifies the per-node
+# snapshot files exist and completed, and gates the link state of all eight
+# expected HCAs (ACTIVE at 400 Gb/sec) on BOTH nodes. Any failure is a
+# Section 1.9 stop (HCA/link down or material unexpected error state):
+# abort with evidence preserved; a rerun needs a new ATTEMPT_TAG. Uses the
+# current ARM_LABEL so every snapshot file is arm- and attempt-specific.
+take_hca_snapshot() {
+  SNAP_SUFFIX="$1"
+  SNAP_LABEL="${EXPERIMENT_ID}_${ARM_LABEL}_${ATTEMPT_TAG}_${SNAP_SUFFIX}"
+  echo "=== HCA snapshot (${SNAP_SUFFIX}, arm ${ARM_LABEL}): pbsdsh per-node capture ==="
+  /opt/pbs/bin/pbsdsh -- /bin/bash "$HCA_HELPER" "$OUTDIR" "$SNAP_LABEL" "${PBS_JOBID:-unknown}" \
+    || { echo "FATAL: pbsdsh HCA snapshot launch failed for ${SNAP_LABEL} (arm ${ARM_LABEL}); TASK-2X8-017 Section 1.9; Track 2 stop" >&2; exit 1; }
+  GATE_FAIL=""
+  for HOST in $ALLOC_HOSTS; do
+    SNAP_FILE="${OUTDIR}/${SNAP_LABEL}_hca_${HOST}.log"
+    if [ ! -s "$SNAP_FILE" ] || ! grep -qF "HCA_SNAPSHOT node=${HOST} label=${SNAP_LABEL}" "$SNAP_FILE" 2>/dev/null; then
+      echo "FATAL: HCA snapshot file missing or incomplete for host ${HOST}: ${SNAP_FILE} (arm ${ARM_LABEL}, ${SNAP_SUFFIX})" >&2
+      GATE_FAIL="${GATE_FAIL} ${HOST}:missing_snapshot"
+      continue
+    fi
+    if ! grep -qF "HCA_SNAPSHOT node=${HOST} label=${SNAP_LABEL} jobid=${PBS_JOBID:-unknown} end=" "$SNAP_FILE" 2>/dev/null; then
+      echo "FATAL: HCA snapshot for host ${HOST} has no end marker (incomplete capture)" >&2
+      GATE_FAIL="${GATE_FAIL} ${HOST}:incomplete_snapshot"
+      continue
+    fi
+    for HCA in $EXPECTED_HCAS; do
+      DEV_LINE="$(grep -F "DEV ${HCA}/port1 node=${HOST} " "$SNAP_FILE" | head -n 1 || true)"
+      if [ -z "$DEV_LINE" ]; then
+        echo "  host=${HOST} hca=${HCA} link_gate=FAIL: no DEV record in snapshot" >&2
+        GATE_FAIL="${GATE_FAIL} ${HOST}:${HCA}:missing"
+      elif ! printf '%s\n' "$DEV_LINE" | grep -q "ACTIVE"; then
+        echo "  host=${HOST} hca=${HCA} link_gate=FAIL: port not ACTIVE (${DEV_LINE})" >&2
+        GATE_FAIL="${GATE_FAIL} ${HOST}:${HCA}:not_active"
+      elif ! printf '%s\n' "$DEV_LINE" | grep -q "rate=400"; then
+        echo "  host=${HOST} hca=${HCA} link_gate=FAIL: rate is not 400 Gb/sec (${DEV_LINE})" >&2
+        GATE_FAIL="${GATE_FAIL} ${HOST}:${HCA}:rate"
+      fi
+    done
+  done
+  if [ -n "$GATE_FAIL" ]; then
+    echo "FATAL: HCA link-state gate failed during ${SNAP_SUFFIX} of arm ${ARM_LABEL} (issues:${GATE_FAIL}); an HCA/link is down or in a material unexpected error state (TASK-2X8-017 Section 1.9; Track 2 stop; snapshot evidence preserved beneath ${OUTDIR}; rerun needs a new ATTEMPT_TAG)" >&2
+    exit 1
+  fi
+  echo "hca_link_gate=PASS (${SNAP_SUFFIX}, arm ${ARM_LABEL}: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)"
+}
+
+# derive_hca_deltas : computes the per-arm per-node/per-HCA traffic deltas
+# from the arm's hcapre/hcapost snapshots (mechanical factual arithmetic
+# only; Section 1.4C). Writes the .hcadelta evidence file and echoes
+# headline facts. Raw counter deltas are recorded as-is; a x4 octet column
+# is also provided because IBTA defines PortXmitData/PortRcvData in 4-octet
+# units while GAAS precedent treats the sysfs values as byte counts (the
+# unit question is flagged for the Strategic Analyst, not resolved here).
+# Non-numeric/NA counters produce 'NA' deltas. port_xmit_wait value
+# 4294967295 is treated as the unavailable-counter sentinel seen in prior
+# GAAS evidence and yields NA rather than a bogus delta.
+HCA_ERROR_COUNTERS="port_xmit_discards port_rcv_errors port_rcv_constraint_errors port_xmit_constraint_errors port_rcv_remote_physical_errors port_rcv_switch_relay_errors link_error_recovery link_downed excessive_buffer_overrun_errors symbol_error"
+derive_hca_deltas() {
+  DELTA_FILE="${OUTDIR}/${ATTEMPT}.hcadelta"
+  {
+    echo "HCA_DELTA arm=${ARM_LABEL} attempt=${ATTEMPT} derived=$(date --iso-8601=seconds)"
+    echo "note: tx/rx deltas are raw port_xmit_data/port_rcv_data counter deltas; GAAS precedent treats the sysfs values as byte counts while IBTA defines PortXmitData/PortRcvData in 4-octet units, so a x4 octet column is also provided (unit question deferred to analysis); shares/imbalance are computed over the eight expected physical IB HCAs; port_xmit_wait=4294967295 is treated as an unavailable-counter sentinel (prior GAAS evidence)"
+    for HOST in $ALLOC_HOSTS; do
+      PRE_FILE="${OUTDIR}/${ATTEMPT}_hcapre_hca_${HOST}.log"
+      POST_FILE="${OUTDIR}/${ATTEMPT}_hcapost_hca_${HOST}.log"
+      NODE_TX=0
+      NODE_RX=0
+      NEWERR=""
+      RAIL_DATA=""
+      for HCA in $EXPECTED_HCAS; do
+        PRE_V="$(hca_counter_value "$PRE_FILE" "$HOST" "$HCA" port_xmit_data)"
+        POST_V="$(hca_counter_value "$POST_FILE" "$HOST" "$HCA" port_xmit_data)"
+        if [ "$PRE_V" = "NA" ] || [ "$POST_V" = "NA" ] || [ -z "$PRE_V" ] || [ -z "$POST_V" ]; then
+          TXD="NA"
+        else
+          TXD=$(( POST_V - PRE_V ))
+        fi
+        PRE_V="$(hca_counter_value "$PRE_FILE" "$HOST" "$HCA" port_rcv_data)"
+        POST_V="$(hca_counter_value "$POST_FILE" "$HOST" "$HCA" port_rcv_data)"
+        if [ "$PRE_V" = "NA" ] || [ "$POST_V" = "NA" ] || [ -z "$PRE_V" ] || [ -z "$POST_V" ]; then
+          RXD="NA"
+        else
+          RXD=$(( POST_V - PRE_V ))
+        fi
+        PRE_V="$(hca_counter_value "$PRE_FILE" "$HOST" "$HCA" port_xmit_wait)"
+        POST_V="$(hca_counter_value "$POST_FILE" "$HOST" "$HCA" port_xmit_wait)"
+        if [ "$PRE_V" = "NA" ] || [ "$POST_V" = "NA" ] || [ -z "$PRE_V" ] || [ -z "$POST_V" ] || [ "$POST_V" = "4294967295" ] || [ "$PRE_V" = "4294967295" ]; then
+          WDX="NA"
+        else
+          WDX=$(( POST_V - PRE_V ))
+        fi
+        for ERR_C in $HCA_ERROR_COUNTERS; do
+          ERR_PRE="$(hca_counter_value "$PRE_FILE" "$HOST" "$HCA" "$ERR_C")"
+          ERR_POST="$(hca_counter_value "$POST_FILE" "$HOST" "$HCA" "$ERR_C")"
+          if [ "$ERR_PRE" != "NA" ] && [ "$ERR_POST" != "NA" ] && [ -n "$ERR_PRE" ] && [ -n "$ERR_POST" ] && [ "$ERR_POST" -gt "$ERR_PRE" ]; then
+            ERRD=$(( ERR_POST - ERR_PRE ))
+            NEWERR="${NEWERR} ${HCA}:${ERR_C}=+${ERRD}"
+          fi
+        done
+        if [ "$TXD" != "NA" ] && [ "$RXD" != "NA" ]; then
+          NODE_TX=$(( NODE_TX + TXD ))
+          NODE_RX=$(( NODE_RX + RXD ))
+          RAIL_DATA="${RAIL_DATA}${HCA} ${TXD} ${RXD}
+"
+          echo "HCA node=${HOST} hca=${HCA} tx_delta_raw=${TXD} rx_delta_raw=${RXD} tx_octets_x4=$(( TXD * 4 )) rx_octets_x4=$(( RXD * 4 )) xmit_wait_delta=${WDX}"
+        else
+          RAIL_DATA="${RAIL_DATA}${HCA} NA NA
+"
+          echo "HCA node=${HOST} hca=${HCA} tx_delta_raw=${TXD} rx_delta_raw=${RXD} xmit_wait_delta=${WDX}"
+        fi
+      done
+      echo "NODE_TOTAL node=${HOST} tx_delta_raw=${NODE_TX} rx_delta_raw=${NODE_RX}"
+      echo "NEW_ERRORS node=${HOST} new_counters=${NEWERR:-none}"
+      # Rail-share / imbalance summary over the eight expected HCAs
+      # (population statistics; NA deltas are skipped; deterministic
+      # device-name ordering).
+      printf '%s' "$RAIL_DATA" | awk -v host="$HOST" '
+        $2 ~ /^[0-9]+$/ { tx[$1] = $2; sum += $2; n++; if ($2 > mx) { mx = $2; mxh = $1 } }
+        END {
+          if (n > 0 && sum > 0) {
+            mean = sum / n
+            for (h in tx) { sq += (tx[h] - mean) * (tx[h] - mean); m++ }
+            cv = sqrt(sq / m) / mean * 100
+            for (h in tx) ord[++c] = h
+            for (i = 1; i <= c; i++) for (j = i + 1; j <= c; j++) if (ord[j] < ord[i]) { t = ord[i]; ord[i] = ord[j]; ord[j] = t }
+            printf "RAIL node=%s tx_share_pct:", host
+            for (i = 1; i <= c; i++) printf " %s=%.2f", ord[i], tx[ord[i]] / sum * 100
+            printf " max_over_mean_tx=%.3f cv_tx_pct=%.2f max_tx_hca=%s\n", mx / mean, cv, mxh
+          } else if (n > 0) {
+            printf "RAIL node=%s tx_share_pct=flat_zero (all %d numeric tx deltas are zero)\n", host, n
+          } else {
+            printf "RAIL node=%s tx_share_pct=NA (no numeric tx deltas)\n", host
+          }
+        }'
+    done
+    echo "HCA_DELTA_END arm=${ARM_LABEL}"
+  } > "$DELTA_FILE" 2>&1
+  echo "=== HCA delta derivation (arm ${ARM_LABEL}) -> ${DELTA_FILE} ==="
+  grep -E "^(NODE_TOTAL|NEW_ERRORS|RAIL)" "$DELTA_FILE" || true
+  if grep -E "^NEW_ERRORS" "$DELTA_FILE" | grep -qvF "new_counters=none"; then
+    cflog "hca_new_error_counters arm=${ARM_LABEL}: $(grep -E '^NEW_ERRORS' "$DELTA_FILE" | grep -v 'new_counters=none' | paste -sd';' -) (factual record; Section 1.4C; a material HCA/link error is a Section 1.9 stop-and-report condition)"
+  fi
+}
+
+# run_env_probe
+# Establishes the retained host-runtime environment (explicit
+# OMP_NUM_THREADS=4 export after the module/job environment, OMP_PLACES and
+# OMP_PROC_BIND guaranteed unset, UCX_TLS guaranteed unset for the AUTO
+# arms, and every UCX/NCCL diagnostic/logging variable guaranteed ABSENT -
+# every scored arm is a clean scored arm), runs one lightweight 16-rank
+# probe with the EXACT -x forwarding set of the arm it precedes (PATH,
+# LD_LIBRARY_PATH, OMP_NUM_THREADS; UCX_TLS deliberately NOT forwarded),
+# verifies every rank reports the expected environment (OMP=4, OMP placement
+# controls UNSET, all UCX/NCCL diagnostic variables UNSET, ucx_tls UNSET),
+# and appends the per-rank lines to ENVMAP_LOG (the raw probe output is
+# preserved as the attempt-specific .envprobe evidence file beneath
+# outputs/). The probe also records the effective UCX_NET_DEVICES state on
+# every rank (expected unset/automatic; recorded, not gated - the effective
+# view lives in the arm logs). On success the shell environment is left in
+# the verified state so the immediately following launch inherits exactly
+# the verified controls. A mismatch means the retained contract or the
+# clean-arm diagnostic prohibition is not effectively applied on all ranks:
+# abort BEFORE the launch (control-application failure; TASK-2X8-017
+# Sections 1.2, 1.9; evidence preserved). No workload runs in the probe.
+run_env_probe() {
+  export OMP_NUM_THREADS="$OMP_T_FIXED"
+  unset OMP_PLACES OMP_PROC_BIND
+  # Clean scored arm: guarantee the ABSENCE of every UCX/NCCL
+  # diagnostic/logging variable, and the AUTO-arm UCX_TLS state (unset).
+  unset UCX_LOG_LEVEL UCX_PROTO_INFO NCCL_DEBUG NCCL_DEBUG_SUBSYS NCCL_DEBUG_FILE UCX_IB_GPU_DIRECT_RDMA NCCL_NET_GDR_LEVEL
+  unset UCX_TLS
+  # -x forwarding set: the retained host-runtime contract only (no
+  # diagnostic variable is ever set or forwarded on a scored arm; UCX_TLS
+  # is deliberately NOT forwarded - every arm runs with UCX_TLS unset/AUTO).
+  XARGS=(-x PATH -x LD_LIBRARY_PATH -x OMP_NUM_THREADS)
+  # Raw probe output beneath outputs/ with an attempt-specific name
+  # (evidence; covered by the pre-run overwrite guard), so no runtime
+  # artifact is left in the experiment root.
+  TMP="${OUTDIR}/${ATTEMPT}.envprobe"
+  PRC=0
+  apptainer exec --nv \
+    -B /opt/pbs:/opt/pbs \
+    -B /var/spool/pbs:/var/spool/pbs \
+    -B "$REPO_ROOT":"$REPO_ROOT" \
+    "$SIF" \
+    /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+      --hostfile "$MPI_HOSTFILE" \
+      --mca plm_rsh_agent "$BRIDGE" \
+      --mca plm_rsh_no_tree_spawn 1 \
+      --mca plm_rsh_num_concurrent 1 \
+      --mca routed direct \
+      "${XARGS[@]}" \
+      --bind-to none \
+      bash -c 'echo "rank=${OMPI_COMM_WORLD_RANK}/${OMPI_COMM_WORLD_SIZE} host=$(hostname) local_rank=${OMPI_COMM_WORLD_LOCAL_RANK}/${OMPI_COMM_WORLD_LOCAL_SIZE} omp_num_threads=${OMP_NUM_THREADS:-UNSET} omp_places=${OMP_PLACES:-UNSET} omp_proc_bind=${OMP_PROC_BIND:-UNSET} ucx_log_level=${UCX_LOG_LEVEL:-UNSET} ucx_proto_info=${UCX_PROTO_INFO:-UNSET} ucx_tls=${UCX_TLS:-UNSET} ucx_net_devices=${UCX_NET_DEVICES:-UNSET} nccl_debug=${NCCL_DEBUG:-UNSET} nccl_debug_subsys=${NCCL_DEBUG_SUBSYS:-UNSET} nccl_debug_file=${NCCL_DEBUG_FILE:-UNSET} ucx_ib_gpu_direct_rdma=${UCX_IB_GPU_DIRECT_RDMA:-UNSET} nccl_net_gdr_level=${NCCL_NET_GDR_LEVEL:-UNSET} endprobe"' \
+    > "$TMP" 2>&1 || PRC=$?
+  LINES=$(grep -c '^rank=' "$TMP" || true)
+  NT_OK=$(grep -cF " omp_num_threads=${OMP_T_FIXED} " "$TMP" || true)
+  PL_OK=$(grep -cF " omp_places=UNSET " "$TMP" || true)
+  PB_OK=$(grep -cF " omp_proc_bind=UNSET " "$TMP" || true)
+  # Clean-arm diagnostic-variable verification: all 16 ranks must report
+  # every UCX/NCCL diagnostic/logging variable UNSET (the scored arm carries
+  # no diagnostic logging).
+  ULL_OK=$(grep -cF " ucx_log_level=UNSET " "$TMP" || true)
+  UPI_OK=$(grep -cF " ucx_proto_info=UNSET " "$TMP" || true)
+  ND_OK=$(grep -cF " nccl_debug=UNSET " "$TMP" || true)
+  NDS_OK=$(grep -cF " nccl_debug_subsys=UNSET " "$TMP" || true)
+  NDF_OK=$(grep -cF " nccl_debug_file=UNSET " "$TMP" || true)
+  UGR_OK=$(grep -cF " ucx_ib_gpu_direct_rdma=UNSET " "$TMP" || true)
+  NGL_OK=$(grep -cF " nccl_net_gdr_level=UNSET " "$TMP" || true)
+  # Requested UCX_TLS state verification: all 16 ranks must report UNSET
+  # (AUTO arm; TASK-2X8-017 Section 1.6A).
+  UCX_TLS_OK=$(grep -cF " ucx_tls=UNSET " "$TMP" || true)
+  UND_SET=$(grep -cF " ucx_net_devices=UNSET " "$TMP" || true)
+  {
+    echo "envprobe arm=${ARM_LABEL} mode=clean ucx_tls_expected=UNSET start=$(date --iso-8601=seconds) rc=${PRC}"
+    sed "s/^/arm=${ARM_LABEL} /" "$TMP"
+  } >> "$ENVMAP_LOG"
+  echo "=== env probe arm=${ARM_LABEL}: rc=${PRC} rank_lines=${LINES} omp_num_threads=${OMP_T_FIXED}_ok=${NT_OK} omp_places=UNSET_ok=${PL_OK} omp_proc_bind=UNSET_ok=${PB_OK} diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=${ULL_OK}/${UPI_OK}/${ND_OK}/${NDS_OK}/${NDF_OK}/${UGR_OK}/${NGL_OK} ucx_net_devices_unset=${UND_SET} ucx_tls_unset_ok=${UCX_TLS_OK} ==="
+  if [ "$PRC" -ne 0 ] || [ "$LINES" -ne "$NPROCS" ] || [ "$NT_OK" -ne "$NPROCS" ] || [ "$PL_OK" -ne "$NPROCS" ] || [ "$PB_OK" -ne "$NPROCS" ] \
+     || [ "$ULL_OK" -ne "$NPROCS" ] || [ "$UPI_OK" -ne "$NPROCS" ] || [ "$ND_OK" -ne "$NPROCS" ] || [ "$NDS_OK" -ne "$NPROCS" ] || [ "$NDF_OK" -ne "$NPROCS" ] || [ "$UGR_OK" -ne "$NPROCS" ] || [ "$NGL_OK" -ne "$NPROCS" ] || [ "$UCX_TLS_OK" -ne "$NPROCS" ]; then
+    echo "FATAL: env probe for arm ${ARM_LABEL} failed its control-application check (rc=${PRC} rank_lines=${LINES}/${NPROCS} omp_num_threads_ok=${NT_OK}/${NPROCS} omp_places_ok=${PL_OK}/${NPROCS} omp_proc_bind_ok=${PB_OK}/${NPROCS} diag_unset_ok ull=${ULL_OK}/${NPROCS} upi=${UPI_OK}/${NPROCS} nd=${ND_OK}/${NPROCS} nds=${NDS_OK}/${NPROCS} ndf=${NDF_OK}/${NPROCS} ugr=${UGR_OK}/${NPROCS} ngl=${NGL_OK}/${NPROCS} ucx_tls_unset_ok=${UCX_TLS_OK}/${NPROCS}); the retained host-runtime contract or the clean-arm diagnostic prohibition (all UCX/NCCL diagnostic variables must be UNSET on all 16 ranks) would not be effectively applied on all ranks, so the launch is aborted (TASK-2X8-017 Sections 1.2, 1.9; evidence preserved in ${ENVMAP_LOG}; rerun needs a new ATTEMPT_TAG)" >&2
+    exit 1
+  fi
+  if [ "$UND_SET" -ne "$NPROCS" ]; then
+    cflog "note: arm=${ARM_LABEL} ucx_net_devices is set on some ranks (ucx_net_devices_unset=${UND_SET}/${NPROCS}); recorded as evidence (expected unset/automatic; Section 1.6A); not a hard gate"
+  fi
+  cflog "preflight: env probe arm=${ARM_LABEL} PASS (OMP=${OMP_T_FIXED} on all ${NPROCS} ranks; OMP_PLACES/OMP_PROC_BIND UNSET; UCX_TLS UNSET (AUTO); all UCX/NCCL diagnostic variables UNSET; raw evidence ${TMP})"
+}
+
+# --- Per-arm bookkeeping (associative state; TASK-2X8-017 Sections 1.4B/1.4D) ------
+declare -A ARM_SCORE ARM_VALID ARM_EXIT ARM_RUN_VERDICT ARM_SETTINGS_OK \
+  ARM_LU_SECONDS ARM_LU_GFLOPS ARM_IR_SECONDS ARM_IR_LU_RATIO \
+  ARM_ITERATIONS ARM_RESIDUAL ARM_HOST_CONS ARM_DEVICE_CONS ARM_MEM_OK \
+  ARM_CONSTRUCTOR_SECONDS ARM_ATTEMPTED ARM_ROLE ARM_F ARM_T ARM_S \
+  ARM_SETTINGS_ECHO
+INVALID_ARMS=0
+ARMS_RUN=0
+
+# log_arm_facts <key>
+# Appends one factual per-arm record line to the carry-forward log (no
+# percentages, no ranking, no interpretation).
+log_arm_facts() {
+  LAF_K="$1"
+  LAF_S_OK="FAIL"
+  if [ "${ARM_SETTINGS_OK[$LAF_K]:-0}" = "1" ]; then LAF_S_OK="PASS"; fi
+  cflog "arm ${LAF_K}: role=${ARM_ROLE[$LAF_K]:-unknown} F=${ARM_F[$LAF_K]:-unknown} T=${ARM_T[$LAF_K]:-unknown} S=${ARM_S[$LAF_K]:-unknown} attempted=${ARM_ATTEMPTED[$LAF_K]:-no} score=${ARM_SCORE[$LAF_K]:-none} run_verdict=${ARM_RUN_VERDICT[$LAF_K]:-unknown} settings_echo=${LAF_S_OK} valid=${ARM_VALID[$LAF_K]:-no} exit=${ARM_EXIT[$LAF_K]:-unknown} lu_seconds=${ARM_LU_SECONDS[$LAF_K]:-unknown} lu_gflops=${ARM_LU_GFLOPS[$LAF_K]:-unknown} ir_seconds=${ARM_IR_SECONDS[$LAF_K]:-unknown} ir_lu_ratio=${ARM_IR_LU_RATIO[$LAF_K]:-unknown} iterations=${ARM_ITERATIONS[$LAF_K]:-unknown} residual=${ARM_RESIDUAL[$LAF_K]:-unknown} host_cons_gb=${ARM_HOST_CONS[$LAF_K]:-unknown} device_cons_gb=${ARM_DEVICE_CONS[$LAF_K]:-unknown} constructor_seconds=${ARM_CONSTRUCTOR_SECONDS[$LAF_K]:-unknown} mem_evidence_complete=${ARM_MEM_OK[$LAF_K]:-0}"
+}
+
+# run_arm <key> <role> <F> <T> <S>
+# Executes ONE scored factorial arm of the fixed matrix (Sections 1.4B,
+# 1.6B). Sequence: pre-arm HCA snapshot + link gate -> env probe (verified
+# controls incl. the clean-arm diagnostic prohibition) -> ONE launch with
+# the arm's explicit F/T/S values -> post-arm HCA snapshot + link gate ->
+# HCA delta derivation -> extraction (score, LU/IR/constructor timing,
+# iterations, memory, verification verdict, settings echo incl. the
+# requested/effective F/T/S values, timing markers) -> .status write ->
+# factual carry-forward record.
+#
+# Failure classification (operational contract; TASK-2X8-017 Sections 1.7
+# rules 11-15/20, 1.9):
+# - A NONZERO exit of the arm command, or a failed settings-echo check
+#   (any fixed control or the arm's requested F/T/S not applied exactly):
+#   evidence is preserved FIRST (.status fully written, post-arm HCA
+#   snapshot taken, deltas derived), the stop is recorded, and the job
+#   exits nonzero BEFORE any later arm. No in-script retry; a scored arm
+#   that began counts as its one attempt (rule 20); a rerun needs a new
+#   ATTEMPT_TAG plus human direction.
+# - An exit-0 arm with an invalid verification (FAILED/non-finite/no
+#   score) is preserved as an invalid candidate record. The A001a caller
+#   gate below stops the matrix if the OPENING control is invalid (rule
+#   11); for the non-control candidates A000..A111 the fixed matrix
+#   CONTINUES with the next authorized arm while the allocation and fixed
+#   controls remain healthy (rules 12-13; Section 1.9 does not stop merely
+#   because one candidate fails numerical verification). The arm is then
+#   not a valid performance point and is excluded from the factorial
+#   contrasts (Section 1.4D). A001b invalidity is preserved and reported
+#   the same way (rule 17: no rerun of any arm).
+run_arm() {
+  KEY="$1"; ROLE="$2"; FVAL="$3"; TVAL="$4"; SVAL="$5"
+  ARM_LABEL="$KEY"
+  ATTEMPT="${EXPERIMENT_ID}_${ARM_LABEL}_${ATTEMPT_TAG}"
+  STDOUT_FILE="${OUTDIR}/${ATTEMPT}.out"
+  STDERR_FILE="${OUTDIR}/${ATTEMPT}.err"
+  STATUS_FILE="${OUTDIR}/${ATTEMPT}.status"
+  TIMINGS_FILE="${OUTDIR}/${ATTEMPT}.timings"
+
+  # Pre-arm per-HCA counters + link state on BOTH nodes (Sections 1.4C,
+  # 1.7 rule 15).
+  take_hca_snapshot hcapre
+
+  # Establish the retained host-runtime environment (verified on all 16
+  # ranks by the probe with the arm's exact -x set).
+  run_env_probe
+
+  # Effective OpenMP policy for the record: placement controls omitted, so
+  # the installed launcher's package defaults are the effective policy
+  # (captured v26.02 launcher: OMP_PROC_BIND=${OMP_PROC_BIND:-TRUE},
+  # OMP_PLACES=${OMP_PLACES:-sockets}).
+  EFF_PL="sockets (launcher package default)"; EFF_PB="TRUE (launcher package default)"
+
+  # -x forwarding set of the arm (identical to the probe's verified set;
+  # clean scored arm: host-runtime contract only; no diagnostic variables;
+  # UCX_TLS deliberately NOT forwarded - the arm runs UCX_TLS unset/AUTO).
+  ENV_XARGS=(-x PATH -x LD_LIBRARY_PATH -x OMP_NUM_THREADS)
+
+  MODE_DESC="scored clean ${ROLE} arm (F=${FVAL} T=${TVAL} S=${SVAL}; ucx_tls=UNSET/AUTO u_panel_chunk_nbs=4; no diagnostic logging; all other controls fixed; TASK-2X8-017 Sections 1.1, 1.6A-1.6B)"
+
+  START_TS="$(date --iso-8601=seconds)"
+  echo "=== arm ${KEY} (${ROLE}; F=${FVAL} T=${TVAL} S=${SVAL}) attempt=${ATTEMPT} start=${START_TS} ==="
+  echo "arm_mode=${MODE_DESC}"
+
+  # Fixed HPL-MxP arguments plus the arm's EXPLICIT binary scheduling
+  # variables (Section 1.6B: requested F/T/S are always explicit; no
+  # omitted default is relied on for the scientific variables).
+  APP_ARGS=(--n "$N_FIXED" --nb "$NB_FIXED" --nprow "$NPROW" --npcol "$NPCOL" --nporder "$NPORDER")
+  APP_ARGS+=(--gpu-affinity "$GPU_AFFINITY_FIXED")
+  APP_ARGS+=(--sloppy-type FP16 --use-mpi-panel-broadcast "$PANEL_BROADCAST_FIXED")
+  APP_ARGS+=(--u-panel-chunk-nbs "$U_PANEL_CHUNK_FIXED")
+  APP_ARGS+=(--prioritize-factorization "$FVAL" --prioritize-trsm "$TVAL" --use-separate-stream-for-gemm "$SVAL")
+  APP_ARGS+=(--fill-device "$FILL_MODE_FIXED" --fill-device-buffer-size "$FILL_BUFFER_FIXED")
+  APP_ARGS+=(--cuda-host-register-step "$REG_CONTROL" --call-dgemv-with-multiple-threads "$DGEMV_CONTROL")
+  APP_ARGS+=(--test-loop 1 --skip-tests 0 --monitor-gpu 0)
+
+  RC=0
+  apptainer exec --nv \
+    -B /opt/pbs:/opt/pbs \
+    -B /var/spool/pbs:/var/spool/pbs \
+    -B "$REPO_ROOT":"$REPO_ROOT" \
+    "$SIF" \
+    /usr/local/mpi/bin/mpirun -np "$NPROCS" \
+      --hostfile "$MPI_HOSTFILE" \
+      --mca plm_rsh_agent "$BRIDGE" \
+      --mca plm_rsh_no_tree_spawn 1 \
+      --mca plm_rsh_num_concurrent 1 \
+      --mca routed direct \
+      "${ENV_XARGS[@]}" \
+      --bind-to none \
+      /workspace/hpl-mxp.sh "${APP_ARGS[@]}" \
+    > "$STDOUT_FILE" 2> "$STDERR_FILE" || RC=$?
+
+  END_TS="$(date --iso-8601=seconds)"
+  # Arm wall-clock runtime in seconds, derived mechanically from the preserved
+  # start/end timestamps (Section 1.4B "arm wall-clock").
+  WALL_SECONDS=$(( $(date -d "$END_TS" +%s) - $(date -d "$START_TS" +%s) ))
+
+  # Post-arm per-HCA counters + link state on BOTH nodes, then the traffic
+  # deltas (Sections 1.4C, 1.7 rule 15). Taken unconditionally (also after a
+  # failed arm) so the fabric state around a failure is evidence.
+  take_hca_snapshot hcapost
+  derive_hca_deltas
+
+  # Application timing-marker extract: every emitted
+  # "<phase> seconds: AVG = ..., MAX = ... (rank->host), MIN = ..."
+  # line, raw (Section 1.4B per-rank/AVG/MAX/MIN timing evidence, including
+  # the owning rank; covers Constructor, GEMM, MPI/NCCL U and L2 broadcast,
+  # pdgemv, LU, Iterative Solver, and the remaining phases).
+  grep -F "seconds: AVG" "$STDOUT_FILE" > "$TIMINGS_FILE" 2>/dev/null || true
+  echo "=== timing markers (arm ${ARM_LABEL}) -> ${TIMINGS_FILE} ($(grep -c '' "$TIMINGS_FILE" 2>/dev/null || true) lines) ==="
+
+  # Extract the score, timing/iteration/memory evidence, and the verification
+  # verdict (mechanical, TASK-2X8-017 Section 1.4B / APPLICATION.md
+  # correctness criteria).
+  SCORE="$(extract_gflops "$STDOUT_FILE")"
+  LU_SECONDS="$(extract_lu_seconds "$STDOUT_FILE")"
+  LU_GFLOPS="$(extract_lu_gflops "$STDOUT_FILE")"
+  IR_SECONDS="$(extract_ir_seconds "$STDOUT_FILE")"
+  CONSTRUCTOR_SECONDS="$(extract_constructor_seconds "$STDOUT_FILE")"
+  SOLVER_ITERATIONS="$(count_solver_iterations "$STDOUT_FILE")"
+  IR_LU_RATIO="$(ir_lu_ratio "${IR_SECONDS}" "${LU_SECONDS}")"
+  HOST_MEM_LINE="$(capture_line "$STDOUT_FILE" 'Per process host memory consumption MAX =')"
+  DEVICE_MEM_LINE="$(capture_line "$STDOUT_FILE" 'Per process device memory consumption MAX =')"
+  MATGEN_HEADROOM_LINE="$(capture_line "$STDOUT_FILE" 'Per process memory available MIN system =')"
+  HOST_CONS_GB="$(gb_value "$HOST_MEM_LINE")"
+  DEVICE_CONS_GB="$(gb_value "$DEVICE_MEM_LINE")"
+  WARN_OUT="$(warn_count "$STDOUT_FILE")"
+  WARN_ERR="$(warn_count "$STDERR_FILE")"
+  VERDICT="INVALID"
+  RES_VAL=""
+  RES_LINE="$(grep -F '||Ax-b||_oo / (EPS' "$STDOUT_FILE" 2>/dev/null | tail -n 1 || true)"
+  if [ -n "$RES_LINE" ]; then
+    case "$RES_LINE" in
+      *PASSED*) VERDICT="PASSED" ;;
+      *FAILED*) VERDICT="FAILED" ;;
+    esac
+    case "$RES_LINE" in
+      *[Nn][Aa][Nn]*|*[Ii][Nn][Ff]*) VERDICT="INVALID_NONFINITE" ;;
+    esac
+    RES_VAL="$(printf '%s\n' "$RES_LINE" | sed -E 's/^.*= +([0-9][0-9.Ee+-]*).*$/\1/' || true)"
+    if [ -z "$RES_VAL" ]; then VERDICT="INVALID"; fi
+  fi
+  if grep -Fq 'FAILED' "$STDOUT_FILE" 2>/dev/null; then VERDICT="FAILED"; fi
+  if [ -z "$SCORE" ]; then VERDICT="INVALID_NO_SCORE"; fi
+  if ! grep -Fq '****** Matrix Generation ******' "$STDOUT_FILE" 2>/dev/null; then VERDICT="INVALID_NO_MATGEN"; fi
+  if ! grep -Fq 'LU seconds: AVG =' "$STDOUT_FILE" 2>/dev/null; then VERDICT="INVALID_NO_LU"; fi
+  if [ "$RC" -ne 0 ]; then VERDICT="INVALID_EXIT_${RC}"; fi
+
+  # Diagnostic marker record: every arm is a clean scored arm, so there are
+  # no diagnostic marker counts.
+  DIAG_LINE="diag_markers: none (scored arm; diagnostic logging prohibited and verified UNSET on all 16 ranks; TASK-2X8-017 Section 1.6E)"
+
+  # Settings-echo verification (TASK-2X8-017 Sections 1.4B, 1.6B): read the
+  # application's echoed settings block and verify every fixed control of
+  # the retained Phase-4 stack AND this arm's explicitly requested binary
+  # scheduling variables F/T/S. A mismatch is control-application failure
+  # evidence (a fixed control wrong on any arm, or a requested F/T/S value
+  # not applied): the arm is recorded but the matrix is contaminated, so
+  # the job stops after preserving evidence (Section 1.7 rule 14).
+  ECHO_N="$(extract_echo "$STDOUT_FILE" n)"
+  ECHO_NB="$(extract_echo "$STDOUT_FILE" nb)"
+  ECHO_NPROW="$(extract_echo "$STDOUT_FILE" nprow)"
+  ECHO_NPCOL="$(extract_echo "$STDOUT_FILE" npcol)"
+  ECHO_ORDER="$(extract_echo "$STDOUT_FILE" order)"
+  ECHO_SLOPPY="$(extract_echo "$STDOUT_FILE" sloppy-type)"
+  ECHO_UPANEL="$(extract_echo "$STDOUT_FILE" u-panel-chunk-nbs)"
+  ECHO_PTRSM="$(extract_echo "$STDOUT_FILE" prioritize-trsm)"
+  ECHO_PFACT="$(extract_echo "$STDOUT_FILE" prioritize-factorization)"
+  ECHO_SEPSTREAM="$(extract_echo "$STDOUT_FILE" use-separate-stream-for-gemm)"
+  ECHO_BCAST="$(extract_echo "$STDOUT_FILE" use-mpi-panel-broadcast)"
+  ECHO_KERNEL="$(extract_echo "$STDOUT_FILE" preset-gemm-kernel)"
+  ECHO_TESTLOOP="$(extract_echo "$STDOUT_FILE" test-loop)"
+  ECHO_SKIPTESTS="$(extract_echo "$STDOUT_FILE" skip-tests)"
+  ECHO_MONITORGPU="$(extract_echo "$STDOUT_FILE" monitor-gpu)"
+  ECHO_FILL="$(extract_echo "$STDOUT_FILE" fill-device)"
+  ECHO_ANQ="$(extract_echo "$STDOUT_FILE" Anq-device)"
+  ECHO_BUFFER="$(extract_echo "$STDOUT_FILE" fill-device-buffer-size)"
+  ECHO_REGSTEP="$(extract_echo "$STDOUT_FILE" cuda-host-register-step)"
+  ECHO_DGEMV="$(extract_echo "$STDOUT_FILE" call-dgemv-with-multiple-threads)"
+  SETTINGS_MISMATCH=""
+  cmp_echo "$N_FIXED" "$ECHO_N" n
+  cmp_echo "$NB_FIXED" "$ECHO_NB" nb
+  cmp_echo "$NPROW" "$ECHO_NPROW" nprow
+  cmp_echo "$NPCOL" "$ECHO_NPCOL" npcol
+  cmp_echo "$NPORDER" "$ECHO_ORDER" order
+  cmp_echo "FP16" "$ECHO_SLOPPY" sloppy-type
+  cmp_echo "$U_PANEL_CHUNK_FIXED" "$ECHO_UPANEL" u-panel-chunk-nbs
+  cmp_echo "$TVAL" "$ECHO_PTRSM" prioritize-trsm
+  cmp_echo "$FVAL" "$ECHO_PFACT" prioritize-factorization
+  cmp_echo "$SVAL" "$ECHO_SEPSTREAM" use-separate-stream-for-gemm
+  cmp_echo "$PANEL_BROADCAST_FIXED" "$ECHO_BCAST" use-mpi-panel-broadcast
+  cmp_echo "90" "$ECHO_KERNEL" preset-gemm-kernel
+  cmp_echo "1" "$ECHO_TESTLOOP" test-loop
+  cmp_echo "0" "$ECHO_SKIPTESTS" skip-tests
+  cmp_echo "0" "$ECHO_MONITORGPU" monitor-gpu
+  cmp_echo "$FILL_MODE_FIXED" "$ECHO_FILL" fill-device
+  cmp_echo "$FILL_BUFFER_FIXED" "$ECHO_BUFFER" fill-device-buffer-size
+  cmp_echo "$REG_CONTROL" "$ECHO_REGSTEP" cuda-host-register-step
+  cmp_echo "$DGEMV_CONTROL" "$ECHO_DGEMV" call-dgemv-with-multiple-threads
+  # Anq-device is overridden by --fill-device 1: the echo is recorded as
+  # evidence only.
+  ANQ_RECORDED="omitted(overridden;echo=${ECHO_ANQ:-missing})"
+  if [ -z "$SETTINGS_MISMATCH" ]; then
+    SETTINGS_ECHO_CHECK="PASS"
+    SETTINGS_OK=1
+  else
+    SETTINGS_ECHO_CHECK="FAIL: ${SETTINGS_MISMATCH}"
+    SETTINGS_OK=0
+  fi
+
+  # Complete host/device memory evidence (Section 1.4B requires the
+  # application-reported host/device consumption/headroom).
+  if [ -n "$HOST_MEM_LINE" ] && [ -n "$DEVICE_MEM_LINE" ]; then
+    MEM_OK=1
+  else
+    MEM_OK=0
+  fi
+
+  if [ "$VERDICT" = "PASSED" ] && [ "$SETTINGS_OK" -eq 1 ]; then
+    ARM_VALID="yes"
+  else
+    ARM_VALID="no"
+  fi
+
+  if [ "$RC" -ne 0 ]; then
+    echo "=== arm ${KEY} FAILED exit_status=${RC} verdict=${VERDICT} settings_echo=${SETTINGS_ECHO_CHECK%%:*} end=${END_TS}; evidence preserved; stopping (no retry; a begun arm counts as its one attempt; rerun needs a new ATTEMPT_TAG plus human direction) ==="
+  else
+    echo "=== arm ${KEY} exit_status=0 verdict=${VERDICT} settings_echo=${SETTINGS_ECHO_CHECK%%:*} F=${FVAL} T=${TVAL} S=${SVAL} gflops=${SCORE:-none} end=${END_TS} ==="
+  fi
+  {
+    echo "attempt=${ATTEMPT}"
+    echo "experiment_id=${EXPERIMENT_ID}"
+    echo "task_id=TASK-2X8-017"
+    echo "task_step=Phase 5 final scheduling 2^3 factorial"
+    echo "arm_label=${ARM_LABEL}"
+    echo "arm_role=${ROLE}"
+    echo "arm_kind=scored ${ROLE} arm of the fixed Phase-5 2^3 scheduling factorial (TASK-2X8-017 Section 1.1)"
+    echo "arm_mode_desc=${MODE_DESC}"
+    echo "requested_factorization_priority=${FVAL} (explicit)"
+    echo "effective_factorization_priority=${ECHO_PFACT:-missing}"
+    echo "requested_trsm_priority=${TVAL} (explicit)"
+    echo "effective_trsm_priority=${ECHO_PTRSM:-missing}"
+    echo "requested_separate_stream_gemm=${SVAL} (explicit)"
+    echo "effective_separate_stream_gemm=${ECHO_SEPSTREAM:-missing}"
+    echo "requested_ucx_tls=UNSET (AUTO)"
+    echo "ucx_tls_verified_by=per-arm env probe (UNSET verified on all 16 ranks; raw evidence ${ENVMAP_LOG})"
+    echo "launcher_ucx_tls_flag=omitted (AUTO)"
+    echo "requested_panel_broadcast=${PANEL_BROADCAST_FIXED}"
+    echo "effective_panel_broadcast=${ECHO_BCAST:-missing}"
+    echo "requested_u_panel_chunk_nbs=${U_PANEL_CHUNK_FIXED} (explicit)"
+    echo "effective_u_panel_chunk_nbs=${ECHO_UPANEL:-missing}"
+    echo "pbs_job_id=${PBS_JOBID:-unknown}"
+    echo "queue=${QUEUE}"
+    echo "nodes=$(sort -u "$PBS_NODEFILE" | paste -sd' ')"
+    echo "run_count_evidence=PBS job records (PBS .o/.e usage record and post-run qstat -fx; submission-side retrieval)"
+    echo "n=${N_FIXED}"
+    echo "nb=${NB_FIXED}"
+    echo "nprow=${NPROW}"
+    echo "npcol=${NPCOL}"
+    echo "nporder=${NPORDER}"
+    echo "omp_num_threads=${OMP_T_FIXED}"
+    echo "omp_num_threads_supplied_by=explicit job-shell export after module setup + mpirun -x OMP_NUM_THREADS (effective on all 16 ranks; verified by the per-arm env probe, see ${ENVMAP_LOG})"
+    echo "omp_places_supplied=omitted"
+    echo "omp_proc_bind_supplied=omitted"
+    echo "omp_places_effective=${EFF_PL}"
+    echo "omp_proc_bind_effective=${EFF_PB}"
+    echo "gpu_affinity=${GPU_AFFINITY_FIXED}"
+    echo "gpu_mapping=identity map, node-local rank r -> local GPU r (via --gpu-affinity; see rank map + settings echo)"
+    echo "mem_affinity=omitted"
+    echo "cpu_affinity=omitted"
+    echo "ucx_affinity=omitted/automatic"
+    echo "ucx_tls_state=UNSET (requested; verified on all 16 ranks by the per-arm env probe; see ${ENVMAP_LOG})"
+    echo "ucx_net_devices_state=unset/automatic (recorded per rank in ${ENVMAP_LOG})"
+    echo "rank_node_mapping=allocation-level rank-map log ${RANKMAP_LOG} (16 rank lines: global rank/node/local rank; per-host local-rank-0 topology reports)"
+    echo "container_image=${SIF}"
+    echo "container_image_sha256_gate=${SIF_SHA256_GATE}"
+    echo "container_image_sha256_injob=${SIF_SHA:-unknown}"
+    echo "provenance_gate_evidence=${OUTDIR}/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md (PASSED before submission)"
+    echo "cuda_host_register_step_requested=${REG_CONTROL}"
+    echo "cuda_host_register_step_echo=${ECHO_REGSTEP:-missing}"
+    echo "call_dgemv_with_multiple_threads_requested=${DGEMV_CONTROL}"
+    echo "call_dgemv_with_multiple_threads_echo=${ECHO_DGEMV:-missing}"
+    echo "fill_device_requested=${FILL_MODE_FIXED}"
+    echo "fill_device_echo=${ECHO_FILL:-missing}"
+    echo "anq_device_requested=${ANQ_RECORDED}"
+    echo "anq_device_echo=${ECHO_ANQ:-missing}"
+    echo "fill_device_buffer_size_requested=${FILL_BUFFER_FIXED}"
+    echo "fill_device_buffer_size_echo=${ECHO_BUFFER:-missing}"
+    echo "settings_echo_n=${ECHO_N:-missing}"
+    echo "settings_echo_nb=${ECHO_NB:-missing}"
+    echo "settings_echo_nprow=${ECHO_NPROW:-missing}"
+    echo "settings_echo_npcol=${ECHO_NPCOL:-missing}"
+    echo "settings_echo_order=${ECHO_ORDER:-missing}"
+    echo "settings_echo_sloppy_type=${ECHO_SLOPPY:-missing}"
+    echo "settings_echo_u_panel_chunk_nbs=${ECHO_UPANEL:-missing}"
+    echo "settings_echo_prioritize_trsm=${ECHO_PTRSM:-missing}"
+    echo "settings_echo_prioritize_factorization=${ECHO_PFACT:-missing}"
+    echo "settings_echo_use_separate_stream_for_gemm=${ECHO_SEPSTREAM:-missing}"
+    echo "settings_echo_use_mpi_panel_broadcast=${ECHO_BCAST:-missing}"
+    echo "settings_echo_preset_gemm_kernel=${ECHO_KERNEL:-missing} (effective value; flag omitted, CLI accepts only {0,80})"
+    echo "settings_echo_test_loop=${ECHO_TESTLOOP:-missing}"
+    echo "settings_echo_skip_tests=${ECHO_SKIPTESTS:-missing}"
+    echo "settings_echo_monitor_gpu=${ECHO_MONITORGPU:-missing}"
+    echo "settings_echo_check=${SETTINGS_ECHO_CHECK}"
+    echo "fixed_controls=--n ${N_FIXED} --nb ${NB_FIXED} --nprow ${NPROW} --npcol ${NPCOL} --nporder ${NPORDER} --gpu-affinity ${GPU_AFFINITY_FIXED} --cpu-affinity omitted --mem-affinity omitted --ucx-affinity omitted/automatic --sloppy-type FP16 --use-mpi-panel-broadcast ${PANEL_BROADCAST_FIXED} --u-panel-chunk-nbs ${U_PANEL_CHUNK_FIXED}(explicit; echoed) --fill-device 1 --fill-device-buffer-size 3048 --cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0 --preset-gemm-kernel 90(effective via package default; CLI {0,80} only; echoed) --test-loop 1 --skip-tests 0 --monitor-gpu 0 --ucx-tls UNSET(omitted AUTO) OMP_NUM_THREADS=${OMP_T_FIXED} OMP_PLACES=omitted OMP_PROC_BIND=omitted"
+    echo "scientific_variables=--prioritize-factorization ${FVAL} --prioritize-trsm ${TVAL} --use-separate-stream-for-gemm ${SVAL} (explicit; echoed; only these vary across arms)"
+    echo "${DIAG_LINE}"
+    echo "hca_evidence=pre/post snapshots ${OUTDIR}/${ATTEMPT}_hcapre_hca_<node>.log and ${OUTDIR}/${ATTEMPT}_hcapost_hca_<node>.log (both nodes); derived deltas ${OUTDIR}/${ATTEMPT}.hcadelta"
+    echo "allocated_cpuset=${CPUSET}"
+    echo "start=${START_TS}"
+    echo "end=${END_TS}"
+    echo "arm_wallclock_seconds=${WALL_SECONDS}"
+    echo "exit_status=${RC}"
+    echo "gflops=${SCORE:-unknown}"
+    echo "lu_seconds=${LU_SECONDS:-unknown}"
+    echo "lu_gflops=${LU_GFLOPS:-unknown}"
+    echo "ir_seconds=${IR_SECONDS:-unknown}"
+    echo "solver_iterations=${SOLVER_ITERATIONS:-unknown}"
+    echo "ir_lu_ratio=${IR_LU_RATIO:-unknown}"
+    echo "constructor_seconds=${CONSTRUCTOR_SECONDS:-unknown}"
+    echo "timing_markers=${TIMINGS_FILE}"
+    echo "host_memory=${HOST_MEM_LINE:-unknown}"
+    echo "host_memory_consumption_max_gb=${HOST_CONS_GB:-unknown}"
+    echo "device_memory=${DEVICE_MEM_LINE:-unknown}"
+    echo "device_memory_consumption_max_gb=${DEVICE_CONS_GB:-unknown}"
+    echo "matgen_headroom=${MATGEN_HEADROOM_LINE:-unknown}"
+    echo "warning_marker_lines_out=${WARN_OUT}"
+    echo "warning_marker_lines_err=${WARN_ERR}"
+    echo "verification=${VERDICT}"
+    echo "normalized_residual=${RES_VAL:-unknown}"
+    echo "valid_performance_point=${ARM_VALID}"
+    echo "performance_role=scored ${ROLE} arm of the fixed Phase-5 2^3 factorial (TASK-2X8-017)"
+    echo "stdout=${STDOUT_FILE}"
+    echo "stderr=${STDERR_FILE}"
+  } > "$STATUS_FILE"
+
+  # Record the arm's factual state (bookkeeping for the gates/summary).
+  ARM_SCORE["$KEY"]="$SCORE"
+  ARM_EXIT["$KEY"]="$RC"
+  ARM_RUN_VERDICT["$KEY"]="$VERDICT"
+  ARM_SETTINGS_OK["$KEY"]="$SETTINGS_OK"
+  ARM_LU_SECONDS["$KEY"]="$LU_SECONDS"
+  ARM_LU_GFLOPS["$KEY"]="$LU_GFLOPS"
+  ARM_IR_SECONDS["$KEY"]="$IR_SECONDS"
+  ARM_IR_LU_RATIO["$KEY"]="$IR_LU_RATIO"
+  ARM_CONSTRUCTOR_SECONDS["$KEY"]="$CONSTRUCTOR_SECONDS"
+  ARM_ITERATIONS["$KEY"]="$SOLVER_ITERATIONS"
+  ARM_RESIDUAL["$KEY"]="$RES_VAL"
+  ARM_HOST_CONS["$KEY"]="$HOST_CONS_GB"
+  ARM_DEVICE_CONS["$KEY"]="$DEVICE_CONS_GB"
+  ARM_MEM_OK["$KEY"]="$MEM_OK"
+  ARM_ROLE["$KEY"]="$ROLE"
+  ARM_F["$KEY"]="$FVAL"
+  ARM_T["$KEY"]="$TVAL"
+  ARM_S["$KEY"]="$SVAL"
+  ARM_SETTINGS_ECHO["$KEY"]="${SETTINGS_ECHO_CHECK%%:*}"
+  ARM_ATTEMPTED["$KEY"]="yes"
+  if [ "$ARM_VALID" = "yes" ]; then
+    ARM_VALID["$KEY"]="yes"
+  else
+    ARM_VALID["$KEY"]="no"
+    INVALID_ARMS=$((INVALID_ARMS + 1))
+  fi
+  ARMS_RUN=$((ARMS_RUN + 1))
+  log_arm_facts "$KEY"
+
+  # Hard-stop conditions (evidence preserved above; Sections 1.7 rules
+  # 14/20, 1.9): a nonzero arm exit, or a settings-echo mismatch (a fixed
+  # control wrong or a requested F/T/S value not applied exactly)
+  # contaminates the matrix and stops the job before any later arm.
+  if [ "$RC" -ne 0 ]; then
+    cflog "ARM_HARD_STOP: arm ${KEY} (${ROLE}) exit_status=${RC} run_verdict=${VERDICT}; status/evidence preserved (${STATUS_FILE}); stopping the fixed matrix before any later arm (a begun scored arm counts as its one attempt; TASK-2X8-017 Sections 1.7 rules 14/20, 1.9); no retry; rerun needs a new ATTEMPT_TAG plus human direction"
+    echo "=== HPL-MxP 2x8-GAAS phase5-scheduling-factorial stopped: arm ${KEY} exited nonzero (rc=${RC}); evidence preserved; no retry ===" >&2
+    exit 1
+  fi
+  if [ "$SETTINGS_OK" -ne 1 ]; then
+    cflog "ARM_HARD_STOP: arm ${KEY} (${ROLE}) settings-echo mismatch (${SETTINGS_ECHO_CHECK}); a fixed scientific control or the requested F/T/S value was not applied exactly, so the matrix is contaminated; status/evidence preserved (${STATUS_FILE}); stopping before any later arm (TASK-2X8-017 Sections 1.7 rule 14, 1.9); no retry; rerun needs a new ATTEMPT_TAG plus human direction"
+    echo "=== HPL-MxP 2x8-GAAS phase5-scheduling-factorial stopped: arm ${KEY} settings-echo mismatch (${SETTINGS_ECHO_CHECK}); evidence preserved; no retry ===" >&2
+    exit 1
+  fi
+  # Exit-0 scientific invalidity: preserved invalid candidate record; the
+  # caller-level gates decide whether the matrix continues (A001a gate /
+  # non-control continue / A001b record).
+  if [ "$ARM_VALID" != "yes" ]; then
+    cflog "arm ${KEY} (${ROLE}): INVALID scientific record preserved (verdict=${VERDICT}; finite residual + PASSED are validity gates; Section 1.7 rule 12); no rerun of any scored arm (rules 16/20)"
+  fi
+}
+
+# --- The fixed nine-arm sequence (TASK-2X8-017 Sections 1.1, 1.6B) -----------------
+# Exact order, one scored attempt each, no transition logic (the matrix is
+# fully pre-authorized; Section 1.6B). Tuple order is always (F, T, S).
+
+# --- Arm A001a: retained opening control (F=0 T=0 S=1) -----------------------------
+cflog "=== Phase 5 arm A001a (a001a): retained opening control F=0 T=0 S=1 (the current retained Phase-4 stack scheduling state; TASK-2X8-017 Sections 1.1, 1.6B) ==="
+run_arm a001a opening-control 0 0 1
+
+# A001a validity gate (TASK-2X8-017 Section 1.7 rule 11): the opening
+# control MUST be a valid PASSED arm with all fixed controls verified
+# before the factorial continues. An invalid A001a stops the job before
+# A000; evidence is preserved and no rerun is authorized here.
+if [ "${ARM_VALID[a001a]:-no}" != "yes" ]; then
+  cflog "GATE A001a: INVALID opening control (verdict=${ARM_RUN_VERDICT[a001a]:-unknown} settings_echo=${ARM_SETTINGS_ECHO[a001a]:-unknown}); the retained control must be valid before the factorial continues (TASK-2X8-017 Sections 1.7 rule 11, 1.9); stopping before A000; no rerun; rerun needs a new ATTEMPT_TAG plus human direction"
+  echo "=== HPL-MxP 2x8-GAAS phase5-scheduling-factorial stopped: A001a invalid (verdict=${ARM_RUN_VERDICT[a001a]:-unknown}); evidence preserved; no retry ===" >&2
+  exit 1
+fi
+cflog "GATE A001a: PASS (valid PASSED opening control with settings_echo=PASS; factorial continues; TASK-2X8-017 Section 1.7 rule 11)"
+
+# --- Arms A000..A111: the eight unique factorial points ----------------------------
+cflog "=== Phase 5 arm A000 (a000): factorial point F=0 T=0 S=0 (TASK-2X8-017 Section 1.6B) ==="
+run_arm a000 factorial-point 0 0 0
+cflog "=== Phase 5 arm A010 (a010): factorial point F=0 T=1 S=0 (TASK-2X8-017 Section 1.6B) ==="
+run_arm a010 factorial-point 0 1 0
+cflog "=== Phase 5 arm A011 (a011): factorial point F=0 T=1 S=1 (TASK-2X8-017 Section 1.6B) ==="
+run_arm a011 factorial-point 0 1 1
+cflog "=== Phase 5 arm A100 (a100): factorial point F=1 T=0 S=0 (TASK-2X8-017 Section 1.6B) ==="
+run_arm a100 factorial-point 1 0 0
+cflog "=== Phase 5 arm A101 (a101): factorial point F=1 T=0 S=1 (TASK-2X8-017 Section 1.6B) ==="
+run_arm a101 factorial-point 1 0 1
+cflog "=== Phase 5 arm A110 (a110): factorial point F=1 T=1 S=0 (TASK-2X8-017 Section 1.6B) ==="
+run_arm a110 factorial-point 1 1 0
+cflog "=== Phase 5 arm A111 (a111): factorial point F=1 T=1 S=1 (TASK-2X8-017 Section 1.6B) ==="
+run_arm a111 factorial-point 1 1 1
+
+# --- Arm A001b: retained closing control (F=0 T=0 S=1; the only authorized repeat) --
+cflog "=== Phase 5 arm A001b (a001b): retained closing control F=0 T=0 S=1 (completes the A001a/A001b control bracket; the only authorized repeat; TASK-2X8-017 Sections 1.1, 1.7 rule 16) ==="
+run_arm a001b closing-control 0 0 1
+
+# --- A001a/A001b control bracket record (mechanical; facts only) --------------------
+# Section 1.4D items 1-2: the A001 control midpoint and the LU/overall
+# bracket spread. A materially different A001b is preserved and reported as
+# drift; no arm is rerun automatically (Section 1.7 rule 17).
+A001A_VALID="${ARM_VALID[a001a]:-no}"
+A001B_VALID="${ARM_VALID[a001b]:-no}"
+MID_SCORE="unknown"; MID_LU="unknown"
+BRACKET_COMPUTABLE=no
+if [ "$A001A_VALID" = "yes" ] && [ "$A001B_VALID" = "yes" ]; then
+  BRACKET_COMPUTABLE=yes
+  LU_SPREAD="$(spread_pct "${ARM_LU_GFLOPS[a001a]}" "${ARM_LU_GFLOPS[a001b]}")"
+  SCORE_SPREAD="$(spread_pct "${ARM_SCORE[a001a]}" "${ARM_SCORE[a001b]}")"
+  MID_SCORE="$(awk -v a="${ARM_SCORE[a001a]}" -v b="${ARM_SCORE[a001b]}" 'BEGIN { printf "%.6g", (a + b) / 2 }')"
+  MID_LU="$(awk -v a="${ARM_LU_GFLOPS[a001a]}" -v b="${ARM_LU_GFLOPS[a001b]}" 'BEGIN { printf "%.6g", (a + b) / 2 }')"
+  cflog "bracket: A001a/A001b lu_gflops=${ARM_LU_GFLOPS[a001a]}/${ARM_LU_GFLOPS[a001b]} lu_symmetric_spread_pct=${LU_SPREAD} overall_gflops=${ARM_SCORE[a001a]}/${ARM_SCORE[a001b]} overall_symmetric_spread_pct=${SCORE_SPREAD} (factual control-bracket record; spread=(hi-lo)/lo*100)"
+  cflog "bracket: A001 control midpoint overall_gflops=${MID_SCORE} lu_gflops=${MID_LU} (arithmetic mean of the valid A001a/A001b bracket; Section 1.4D item 1)"
+  cflog "bracket: A001a/A001b lu_seconds=${ARM_LU_SECONDS[a001a]}/${ARM_LU_SECONDS[a001b]} ir_seconds=${ARM_IR_SECONDS[a001a]}/${ARM_IR_SECONDS[a001b]} residuals=${ARM_RESIDUAL[a001a]}/${ARM_RESIDUAL[a001b]} (raw bracket evidence)"
+else
+  LU_SPREAD="unknown"; SCORE_SPREAD="unknown"
+  cflog "bracket: NOT_COMPUTABLE - the A001a/A001b control bracket is not fully valid (a001a_valid=${A001A_VALID} a001b_valid=${A001B_VALID}); the midpoint and per-arm deltas versus the midpoint cannot be established (Section 1.4D); preserved factual records only; no rerun (Section 1.7 rule 17)"
+fi
+
+# --- Factual factorial summary (mechanical; facts only; Section 1.4D) ---------------
+# Writes outputs/..._factorial_summary_<tag>.log containing, without any
+# strategic interpretation:
+#   (1) the factual per-arm table (arm, F, T, S, overall GFLOP/s, LU
+#       seconds, LU GFLOP/s, IR seconds, iterations, residual,
+#       verification, memory);
+#   (2) the A001 control midpoint and LU/overall bracket spread (computed
+#       above);
+#   (3) each arm's percentage delta versus the A001 control midpoint for
+#       overall and LU GFLOP/s (when the midpoint is computable);
+#   (4) the arithmetic main-effect level means and differences for F, T,
+#       and S, and the pairwise (FxT, FxS, TxS) and three-way (FxTxS)
+#       interaction contrasts, for both metrics, computed ONLY when all
+#       eight unique factorial points are valid (the 001 unique point is
+#       the A001a measurement; A001b is the control repeat).
+# The 2^3 contrasts are the standard ones: a main effect is the mean of
+# the four high-level points minus the mean of the four low-level points;
+# a two-factor interaction is half the difference of that factor's simple
+# effects across the other factor's levels; the three-way interaction is
+# half the difference of the two-factor interaction across the third
+# factor's levels. No winner is declared; the strategic reading belongs to
+# the Strategic Analyst via ANALYSE_RESULTS (Sections 1.3, 1.10).
+FACTORIAL_SUMMARY="${OUTDIR}/${EXPERIMENT_ID}_factorial_summary_${ATTEMPT_TAG}.log"
+{
+  echo "FACTORIAL_SUMMARY experiment=${EXPERIMENT_ID} task=TASK-2X8-017 attempt_tag=${ATTEMPT_TAG} derived=$(date --iso-8601=seconds)"
+  echo "note: mechanical factual summary only (Section 1.4D); no strategic interpretation, no winner selection, no baseline-relative percentages; tuple order (F,T,S); F=--prioritize-factorization T=--prioritize-trsm S=--use-separate-stream-for-gemm"
+  echo ""
+  echo "== (1) factual per-arm table (all nine scored arms; valid_performance_point per Section 1.4B gates) =="
+  printf '%-7s %-15s %-2s %-2s %-2s %-12s %-10s %-12s %-10s %-6s %-14s %-9s %-9s %-6s %s\n' "arm" "role" "F" "T" "S" "overall" "LU_s" "LU_GFLOPS" "IR_s" "iters" "residual" "verdict" "settings" "valid" "mem(host/device GB)"
+  for FSUM_KEY in $ARM_KEYS; do
+    printf '%-7s %-15s %-2s %-2s %-2s %-12s %-10s %-12s %-10s %-6s %-14s %-9s %-9s %-6s %s/%s\n' \
+      "$FSUM_KEY" \
+      "${ARM_ROLE[$FSUM_KEY]:-not-run}" \
+      "${ARM_F[$FSUM_KEY]:--}" "${ARM_T[$FSUM_KEY]:--}" "${ARM_S[$FSUM_KEY]:--}" \
+      "${ARM_SCORE[$FSUM_KEY]:-NA}" \
+      "${ARM_LU_SECONDS[$FSUM_KEY]:-NA}" \
+      "${ARM_LU_GFLOPS[$FSUM_KEY]:-NA}" \
+      "${ARM_IR_SECONDS[$FSUM_KEY]:-NA}" \
+      "${ARM_ITERATIONS[$FSUM_KEY]:-NA}" \
+      "${ARM_RESIDUAL[$FSUM_KEY]:-NA}" \
+      "${ARM_RUN_VERDICT[$FSUM_KEY]:-NA}" \
+      "${ARM_SETTINGS_ECHO[$FSUM_KEY]:-NA}" \
+      "${ARM_VALID[$FSUM_KEY]:-no}" \
+      "${ARM_HOST_CONS[$FSUM_KEY]:-NA}" "${ARM_DEVICE_CONS[$FSUM_KEY]:-NA}"
+  done
+  echo ""
+  echo "== (2) A001 control bracket (Section 1.4D items 1-2) =="
+  if [ "$BRACKET_COMPUTABLE" = "yes" ]; then
+    echo "A001a overall_gflops=${ARM_SCORE[a001a]} lu_gflops=${ARM_LU_GFLOPS[a001a]}"
+    echo "A001b overall_gflops=${ARM_SCORE[a001b]} lu_gflops=${ARM_LU_GFLOPS[a001b]}"
+    echo "A001 midpoint overall_gflops=${MID_SCORE} lu_gflops=${MID_LU} (arithmetic mean of A001a/A001b)"
+    echo "A001 bracket spread lu_symmetric_spread_pct=${LU_SPREAD} overall_symmetric_spread_pct=${SCORE_SPREAD} ((hi-lo)/lo*100)"
+  else
+    echo "A001 bracket NOT_COMPUTABLE (a001a_valid=${A001A_VALID} a001b_valid=${A001B_VALID})"
+  fi
+  echo ""
+  echo "== (3) per-arm percentage deltas versus the A001 control midpoint (Section 1.4D item 3) =="
+  if [ "$BRACKET_COMPUTABLE" = "yes" ]; then
+    for FSUM_KEY in $ARM_KEYS; do
+      awk -v k="$FSUM_KEY" -v role="${ARM_ROLE[$FSUM_KEY]:-unknown}" -v f="${ARM_F[$FSUM_KEY]:--}" -v t="${ARM_T[$FSUM_KEY]:--}" -v s="${ARM_S[$FSUM_KEY]:--}" \
+          -v sc="${ARM_SCORE[$FSUM_KEY]:-}" -v lu="${ARM_LU_GFLOPS[$FSUM_KEY]:-}" -v valid="${ARM_VALID[$FSUM_KEY]:-no}" \
+          -v msc="$MID_SCORE" -v mlu="$MID_LU" 'BEGIN {
+        printf "arm=%s role=%s F=%s T=%s S=%s valid=%s", k, role, f, t, s, valid
+        if (valid == "yes" && sc ~ /^[0-9][0-9.eE+-]*$/ && msc ~ /^[0-9][0-9.eE+-]*$/ && msc > 0)
+          printf " overall_delta_vs_midpoint_pct=%.4f", (sc - msc) / msc * 100
+        else printf " overall_delta_vs_midpoint_pct=NA"
+        if (valid == "yes" && lu ~ /^[0-9][0-9.eE+-]*$/ && mlu ~ /^[0-9][0-9.eE+-]*$/ && mlu > 0)
+          printf " lu_delta_vs_midpoint_pct=%.4f\n", (lu - mlu) / mlu * 100
+        else printf " lu_delta_vs_midpoint_pct=NA\n"
+      }'
+    done
+  else
+    echo "per-arm deltas NOT_COMPUTABLE (no valid A001 midpoint; see (2))"
+  fi
+  echo ""
+  echo "== (4) factorial main effects and interactions (Section 1.4D items 4-5; computed only from the complete valid 2^3 matrix) =="
+  # The 001 unique point is the A001a measurement; A001b is the control
+  # repeat and is not a second 001 point for the factorial arithmetic.
+  for UKEY in a000 a001a a010 a011 a100 a101 a110 a111; do
+    echo "UNIQUE arm=${UKEY} F=${ARM_F[$UKEY]:--} T=${ARM_T[$UKEY]:--} S=${ARM_S[$UKEY]:--} valid=${ARM_VALID[$UKEY]:-not-run} overall=${ARM_SCORE[$UKEY]:-NA} lu_gflops=${ARM_LU_GFLOPS[$UKEY]:-NA}"
+  done
+  UNIQUE_ALL_VALID=yes
+  for UKEY in a000 a001a a010 a011 a100 a101 a110 a111; do
+    if [ "${ARM_VALID[$UKEY]:-no}" != "yes" ] \
+       || ! printf '%s' "${ARM_SCORE[$UKEY]:-}" | grep -qE '^[0-9][0-9.eE+-]*$' \
+       || ! printf '%s' "${ARM_LU_GFLOPS[$UKEY]:-}" | grep -qE '^[0-9][0-9.eE+-]*$'; then
+      UNIQUE_ALL_VALID=no
+    fi
+  done
+  if [ "$UNIQUE_ALL_VALID" = "yes" ]; then
+    # Emit the eight unique points as DATA lines (into this summary file)
+    # and pipe the same lines into one awk pass that computes the standard
+    # 2^3 level means, main effects, and interaction contrasts for both
+    # metrics (mechanical arithmetic only; output also lands in this file).
+    DATA_LINES=""
+    for UKEY in a000 a001a a010 a011 a100 a101 a110 a111; do
+      DATA_LINES="${DATA_LINES}DATA key=${UKEY} F=${ARM_F[$UKEY]} T=${ARM_T[$UKEY]} S=${ARM_S[$UKEY]} sc=${ARM_SCORE[$UKEY]} lu=${ARM_LU_GFLOPS[$UKEY]}
+"
+    done
+    printf '%s' "$DATA_LINES"
+    printf '%s' "$DATA_LINES" | awk '
+      /^DATA/ {
+        f = ""; t = ""; s = ""; scv = ""; luv = ""
+        for (i = 2; i <= NF; i++) {
+          if (index($i, "F=") == 1) f = substr($i, 3)
+          else if (index($i, "T=") == 1) t = substr($i, 3)
+          else if (index($i, "S=") == 1) s = substr($i, 3)
+          else if (index($i, "sc=") == 1) scv = substr($i, 4)
+          else if (index($i, "lu=") == 1) luv = substr($i, 4)
+        }
+        # group by the F/T/S bit pattern, e.g. y101 (both metrics)
+        ysc[f t s] = scv
+        ylu[f t s] = luv
+      }
+      function mean4(a, b, c, e, arr) { return (arr[a] + arr[b] + arr[c] + arr[e]) / 4 }
+      END {
+        # level means
+        printf "level_means overall_gflops: F0=%.6g F1=%.6g T0=%.6g T1=%.6g S0=%.6g S1=%.6g\n", \
+          mean4("000","001","010","011",ysc), mean4("100","101","110","111",ysc), \
+          mean4("000","001","100","101",ysc), mean4("010","011","110","111",ysc), \
+          mean4("000","010","100","110",ysc), mean4("001","011","101","111",ysc)
+        printf "level_means lu_gflops: F0=%.6g F1=%.6g T0=%.6g T1=%.6g S0=%.6g S1=%.6g\n", \
+          mean4("000","001","010","011",ylu), mean4("100","101","110","111",ylu), \
+          mean4("000","001","100","101",ylu), mean4("010","011","110","111",ylu), \
+          mean4("000","010","100","110",ylu), mean4("001","011","101","111",ylu)
+        # main effects (high level mean minus low level mean)
+        printf "main_effect F overall=%.6g lu=%.6g\n", mean4("100","101","110","111",ysc) - mean4("000","001","010","011",ysc), mean4("100","101","110","111",ylu) - mean4("000","001","010","011",ylu)
+        printf "main_effect T overall=%.6g lu=%.6g\n", mean4("010","011","110","111",ysc) - mean4("000","001","100","101",ysc), mean4("010","011","110","111",ylu) - mean4("000","001","100","101",ylu)
+        printf "main_effect S overall=%.6g lu=%.6g\n", mean4("001","011","101","111",ysc) - mean4("000","010","100","110",ysc), mean4("001","011","101","111",ylu) - mean4("000","010","100","110",ylu)
+        # pairwise interactions (half the difference of simple effects)
+        printf "interaction FxT overall=%.6g lu=%.6g\n", \
+          ( (ysc["110"] + ysc["111"]) - (ysc["100"] + ysc["101"]) - (ysc["010"] + ysc["011"]) + (ysc["000"] + ysc["001"]) ) / 4, \
+          ( (ylu["110"] + ylu["111"]) - (ylu["100"] + ylu["101"]) - (ylu["010"] + ylu["011"]) + (ylu["000"] + ylu["001"]) ) / 4
+        printf "interaction FxS overall=%.6g lu=%.6g\n", \
+          ( (ysc["101"] + ysc["111"]) + (ysc["000"] + ysc["010"]) - (ysc["001"] + ysc["011"]) - (ysc["100"] + ysc["110"]) ) / 4, \
+          ( (ylu["101"] + ylu["111"]) + (ylu["000"] + ylu["010"]) - (ylu["001"] + ylu["011"]) - (ylu["100"] + ylu["110"]) ) / 4
+        printf "interaction TxS overall=%.6g lu=%.6g\n", \
+          ( (ysc["011"] + ysc["111"]) + (ysc["000"] + ysc["100"]) - (ysc["001"] + ysc["101"]) - (ysc["010"] + ysc["110"]) ) / 4, \
+          ( (ylu["011"] + ylu["111"]) + (ylu["000"] + ylu["100"]) - (ylu["001"] + ylu["101"]) - (ylu["010"] + ylu["110"]) ) / 4
+        # three-way interaction
+        printf "interaction FxTxS overall=%.6g lu=%.6g\n", \
+          ( ysc["111"] + ysc["100"] + ysc["010"] + ysc["001"] - ysc["110"] - ysc["101"] - ysc["011"] - ysc["000"] ) / 4, \
+          ( ylu["111"] + ylu["100"] + ylu["010"] + ylu["001"] - ylu["110"] - ylu["101"] - ylu["011"] - ylu["000"] ) / 4
+        # grand means for context (mechanical)
+        printf "grand_mean overall=%.6g lu=%.6g\n", \
+          ( ysc["000"] + ysc["001"] + ysc["010"] + ysc["011"] + ysc["100"] + ysc["101"] + ysc["110"] + ysc["111"] ) / 8, \
+          ( ylu["000"] + ylu["001"] + ylu["010"] + ylu["011"] + ylu["100"] + ylu["101"] + ylu["110"] + ylu["111"] ) / 8
+      }'
+  else
+    echo "main effects/interactions NOT_COMPUTABLE - the complete valid 2^3 matrix is not available (at least one unique point is invalid or non-numeric; see the UNIQUE lines above and the factual per-arm table)"
+    for UKEY in a000 a001a a010 a011 a100 a101 a110 a111; do
+      if [ "${ARM_VALID[$UKEY]:-no}" != "yes" ]; then
+        echo "invalid_unique_point arm=${UKEY} verdict=${ARM_RUN_VERDICT[$UKEY]:-not-run}"
+      fi
+    done
+  fi
+} > "$FACTORIAL_SUMMARY" 2>&1
+echo "=== factual factorial summary -> ${FACTORIAL_SUMMARY} ==="
+grep -E "^(level_means|main_effect|interaction|grand_mean|A001 |A001a |A001b |arm=)" "$FACTORIAL_SUMMARY" || true
+cflog "factorial summary (mechanical, Section 1.4D) written to ${FACTORIAL_SUMMARY}; unique_all_valid=${UNIQUE_ALL_VALID} bracket_computable=${BRACKET_COMPUTABLE}; no strategic interpretation performed"
+
+# --- Sweep end ----------------------------------------------------------------------
+cflog "factorial_end: every authorized arm ran at most once each in the exact approved order A001a -> A000 -> A010 -> A011 -> A100 -> A101 -> A110 -> A111 -> A001b (8 unique configurations, 9 scored arms); the strategic reading belongs to the Strategic Analyst via ANALYSE_RESULTS (TASK-2X8-017 Sections 1.3, 1.10-1.11)"
+cflog "anti-loop state: no 10th arm, no adaptive logic, no leader repeat, no profiling, no diagnostics, no strategic winner selection, no follow-up arm, no second factorial, no microbenchmarks, and no final full-stack confirmation run were added (TASK-2X8-017 Sections 1.6D-E, 1.7 rule 18)"
+
+# --- Post-sweep hardware-health snapshot (ordinary evidence; must not block) -------
+echo "=== post-sweep hardware-health snapshot (mother node $(hostname)) ==="
+nvidia-smi topo -m || echo "warn: nvidia-smi topo failed"
+nvidia-smi --query-gpu=index,name,driver_version,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total --format=csv || echo "warn: nvidia-smi query failed"
+
+# --- Overall task result ------------------------------------------------------------
+# Factual per-arm recap only (no percentages versus the campaign baseline,
+# no strategic conclusion; the bracket record, the per-arm deltas versus
+# the A001 midpoint, and the factorial contrasts are in the factorial
+# summary and the carry-forward log; the final reading belongs to the
+# Strategic Analyst via ANALYSE_RESULTS, TASK-2X8-017 Sections 1.3, 1.10).
+#
+# Exit convention (documented in the script header):
+# - exit 0: operational completion of the authorized matrix - all nine
+#   arms were attempted exactly once in the fixed order and A001a was
+#   valid. Scientifically invalid non-control candidates (and an invalid
+#   A001b) are preserved factual outcomes and do not alone change the
+#   exit status (Sections 1.7 rules 12-13/16-17, 1.8, 1.9); they are
+#   counted in arms_invalid and flagged in every record. The factorial
+#   contrasts are computed only when the matrix permits (Section 1.4D).
+# - exit 1: any preflight abort (those exit earlier), an invalid A001a
+#   (the A001a gate exits earlier), a nonzero arm exit, or a settings-echo
+#   mismatch on any arm (the run_arm hard stops exit earlier). In every
+#   such case evidence was preserved first and NO second scored attempt
+#   of any arm is authorized under this task; a rerun needs a new
+#   ATTEMPT_TAG plus human direction.
+echo "=== task recap (factual scores only; bracket/delta/contrast records in the factorial summary and carry-forward log; interpretation reserved for ANALYSE_RESULTS) ==="
+echo "arms_run=${ARMS_RUN} arms_invalid=${INVALID_ARMS} bracket_computable=${BRACKET_COMPUTABLE} unique_all_valid=${UNIQUE_ALL_VALID}"
+for KEY in $ARM_KEYS; do
+  echo "arm=${KEY} role=${ARM_ROLE[$KEY]:-unknown} F=${ARM_F[$KEY]:-unknown} T=${ARM_T[$KEY]:-unknown} S=${ARM_S[$KEY]:-unknown} gflops=${ARM_SCORE[$KEY]:-none} lu_gflops=${ARM_LU_GFLOPS[$KEY]:-unknown} lu_seconds=${ARM_LU_SECONDS[$KEY]:-unknown} residual=${ARM_RESIDUAL[$KEY]:-unknown} verification=${ARM_RUN_VERDICT[$KEY]:-unknown} settings_echo=${ARM_SETTINGS_ECHO[$KEY]:-unknown} valid=${ARM_VALID[$KEY]:-no} exit=${ARM_EXIT[$KEY]:-unknown}"
+done
+if [ "$ARMS_RUN" -ne 9 ]; then
+  echo "=== HPL-MxP 2x8-GAAS phase5-scheduling-factorial INCOMPLETE: ${ARMS_RUN}/9 arms ran before a hard stop (tag ${ATTEMPT_TAG}); evidence preserved; no retry ===" >&2
+  exit 1
+fi
+echo "=== HPL-MxP 2x8-GAAS phase5-scheduling-factorial complete: all nine authorized arms attempted exactly once in the fixed order (A001a valid=${A001A_VALID}, A001b valid=${A001B_VALID}, invalid candidate records=${INVALID_ARMS}); evidence and the factual factorial summary preserved beneath ${OUTDIR} ==="
+exit 0
+
