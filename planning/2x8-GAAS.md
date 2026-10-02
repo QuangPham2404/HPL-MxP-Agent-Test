@@ -1697,3 +1697,38 @@ prioritize-factorization, and use-separate-stream-for-gemm before any Nsight
 profiling.
 
 Human decision state: TASK-2X8-015 analysis complete. Phase 4C is closed.
+
+
+## 14. TASK-2X8-016 — Chunk-4 Confirmation and Phase-4 Closure
+
+TASK-2X8-016 repeated the retained chunk-4 configuration once under a fresh
+scored run.
+
+| Metric | TASK-2X8-015 K4 | TASK-2X8-016 confirmation | Relative difference |
+|---|---:|---:|---:|
+| Overall GFLOP/s | 6.8223e+06 | 6.8196e+06 | -0.04% |
+| LU GFLOP/s | 7.0862e+06 | 7.0833e+06 | -0.04% |
+| LU time | 7.43 s | 7.43 s | effectively identical |
+| IR | 0.29 s | 0.29 s | identical |
+| Residual | 1.416310E-05 | 1.416310E-05 | identical |
+| Verification | PASSED | PASSED | identical |
+
+The HCA traffic signature also reproduced effectively exactly, with the same
+rail CVs and no new errors/discards/recovery events.
+
+**Phase 4 — Communication is CLOSED.**
+
+Retained communication configuration:
+
+~~~text
+UCX_TLS = unset / AUTO
+UCX_NET_DEVICES = unset / AUTO
+ucx-affinity = omitted / AUTO
+use-mpi-panel-broadcast = 0
+u-panel-chunk-nbs = 4
+~~~
+
+The blueprint repeatability/closure condition is satisfied. Chunk 2 remains a
+strong neighboring point, but no further Phase-4 refinement is justified.
+
+Next direction: Phase 5 LU scheduling revalidation under chunk 4.
