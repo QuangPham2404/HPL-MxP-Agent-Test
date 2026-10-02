@@ -1,0 +1,26 @@
+=== Phase 4B Stage-A arm C0a (c0a-p0-ctl): opening panel=0 retained control (TASK-2X8-014 Section 1.6B; fixed retained stack; scored clean arm; establishes the opening half of the local drift bracket) ===
+arm c0a-p0-ctl: mode=0 panel_pct=0 score=6.5249e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.78 lu_gflops=6.7666e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.21 mem_evidence_complete=1
+=== Phase 4B Stage-A arm C1 (c1-p25): coarse panel policy 25 (mostly NCCL / lower mixed policy; Section 1.6B) ===
+arm c1-p25: mode=25 panel_pct=25 score=5.2281e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=9.78 lu_gflops=5.3823e+06 ir_seconds=0.29 ir_lu_ratio=0.030 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.24 mem_evidence_complete=1
+=== Phase 4B Stage-A arm C2 (c2-p50): coarse panel policy 50 (mixed policy; Section 1.6B) ===
+arm c2-p50: mode=50 panel_pct=50 score=3.7761e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=13.66 lu_gflops=3.8558e+06 ir_seconds=0.29 ir_lu_ratio=0.021 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.26 mem_evidence_complete=1
+=== Phase 4B Stage-A arm C3 (c3-p75): coarse panel policy 75 (upper mixed / mostly MPI; Section 1.6B) ===
+arm c3-p75: mode=75 panel_pct=75 score=3.2660e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=15.83 lu_gflops=3.3256e+06 ir_seconds=0.29 ir_lu_ratio=0.018 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.21 mem_evidence_complete=1
+=== Phase 4B Stage-A arm C4 (c4-p100): coarse panel policy 100 (MPI endpoint; Section 1.6B) ===
+arm c4-p100: mode=100 panel_pct=100 score=3.2885e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=15.72 lu_gflops=3.3487e+06 ir_seconds=0.29 ir_lu_ratio=0.018 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.24 mem_evidence_complete=1
+=== Phase 4B Stage-A arm C0b (c0b-p0-ctl): closing panel=0 retained control (Section 1.6B; completes the local drift bracket C0a/C0b) ===
+arm c0b-p0-ctl: mode=0 panel_pct=0 score=6.5527e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.75 lu_gflops=6.7963e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.24 mem_evidence_complete=1
+transition: stageA_bracket C0a/C0b: lu_gflops=6.7666e+06/6.7963e+06 lu_symmetric_spread_pct=0.44 overall_gflops=6.5249e+06/6.5527e+06 overall_symmetric_spread_pct=0.43 (factual local drift reference; spread=(hi-lo)/lo*100; Section 1.6C steps 1-2; no winner declared)
+transition: tolerances: lu_transition_tolerance_pct=0.50 score_transition_tolerance_pct=0.50 (max(bracket spread, 0.5%); window-selection tolerances only, not statistical confidence intervals; Section 1.6C step 2)
+transition: policy_estimate policy=0 lu_gflops=6.78145e+06 overall_gflops=6.5388e+06 source=C0a/C0b midpoint
+transition: policy_estimate policy=25 lu_gflops=5.3823e+06 overall_gflops=5.2281e+06 source=arm c1-p25
+transition: policy_estimate policy=50 lu_gflops=3.8558e+06 overall_gflops=3.7761e+06 source=arm c2-p50
+transition: policy_estimate policy=75 lu_gflops=3.3256e+06 overall_gflops=3.2660e+06 source=arm c3-p75
+transition: policy_estimate policy=100 lu_gflops=3.3487e+06 overall_gflops=3.2885e+06 source=arm c4-p100
+transition: LU_competitive_set T=0 (LU_best=6.78145e+06, lu_tolerance=0.50%)
+transition: score_tiebreak_set S=0 (score_best_within_T=6.5388e+06, score_tolerance=0.50%)
+transition: anchor=0 (S members=0; median=0; rounded to nearest 5, halfway up; Section 1.6C step 4)
+transition: fine_window_candidates=5 10 15 20 25 (Section 1.6C step 5; policy 0 is supplied separately by the Stage-B F0a/F0b controls and is not a candidate)
+transition: record complete - mechanical Section 1.6C transition record only; Stage B is NOT executed by this job (Stage-A-only script; Stage B/C are later execution segments under TASK-2X8-014)
+sweep_end: all six authorized Stage-A arms (C0a -> C1 -> C2 -> C3 -> C4 -> C0b) ran at most once each in the exact approved order; TASK-2X8-014 Stage A is complete; Stage B/C are NOT executed by this job; the strategic reading belongs to the Strategic Analyst via ANALYSE_RESULTS (Sections 1.4D, 1.10-1.11)
+anti-loop state: no additional panel values, no second fine sweep, no recentering, no numerical-leader repeats, no diagnostic logging on scored arms, no UCX/NCCL transport tuning, no chunk tuning, no microbenchmarks, and no profiling were added (Sections 1.6G, 1.7)

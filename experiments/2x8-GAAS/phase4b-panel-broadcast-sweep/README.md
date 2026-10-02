@@ -15,8 +15,94 @@ diagnostics) are later execution segments under the same approved task,
 NOT part of this script; the strategic reading belongs to the Strategic
 Analyst via `ANALYSE_RESULTS`.
 
-**Status: Prepared (pre-submission; 2026-10-02) - scripts reviewed
-locally; no job submitted yet.**
+**Status: Stage A executed (2026-10-02) — all six arms ran in PBS job
+`76682.gaas` (completed, exit 0; every arm exit 0 with PASSED verification
+and PASS settings echo; no stop condition fired). The mechanical
+Section 1.6C transition record selected fine-window candidates
+`5 10 15 20 25` (anchor 0). Stage B and Stage C have NOT been executed;
+they remain later execution segments under the same approved task. See Run
+summary.**
+
+**Prior status (2026-10-02, pre-submission): reviewed local scripts;
+presubmit `pbsnodes -aSj` snapshot taken and the same-queue `gpu_as` pair
+g14+g15 selected (see Submission). Submission was authorized under the
+unchanged Section 1.11 authorization of TASK-2X8-014; submission remained
+limited to the exact approved task scope.**
+
+## Run summary (Stage A only)
+
+One submitted attempt family (tag `v1`, PBS job `76682.gaas`, submitted
+2026-10-02T07:42:35+08:00, queue `gpu_as`, project `hpc_ebslee`, host-pinned
+`select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00`;
+completed 2026-10-02T07:55:00+08:00, `job_state=F`, `Exit_status=0`,
+`resources_used.walltime` 00:12:24, run_count 1). All six arms ran
+sequentially in the exact approved order on the same node pair (g14+g15)
+with identical fixed controls; only `--use-mpi-panel-broadcast` differed
+per arm. Every `.status` records `exit_status=0`, `verification=PASSED`,
+`settings_echo_check=PASS`, and matching requested/effective panel values.
+No stop condition fired; the job-level recap records
+`arms_run=6 arms_exited_nonzero=0 arms_invalid=0 stop_conditions=none`.
+Stage B/C were not executed (Stage-A-only script and session segment).
+
+| arm | panel % | normalized residual | verdict | overall GFLOP/s | LU s / LU GFLOP/s | IR s / IR/LU / iters | host mem MAX | device mem MAX | arm wall-clock |
+|---|---:|---|---|---|---|---|---|---|---|
+| c0a-p0-ctl | 0 | 1.416310E-05 | PASSED | 6.5249e+06 | 7.78 / 6.7666e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB | 00:00:59 |
+| c1-p25 | 25 | 1.416310E-05 | PASSED | 5.2281e+06 | 9.78 / 5.3823e+06 | 0.29 / 0.030 / 3 | 0.004 GB | 135.254 GB | 00:01:23 |
+| c2-p50 | 50 | 1.416310E-05 | PASSED | 3.7761e+06 | 13.66 / 3.8558e+06 | 0.29 / 0.021 / 3 | 0.004 GB | 135.254 GB | 00:01:30 |
+| c3-p75 | 75 | 1.416310E-05 | PASSED | 3.2660e+06 | 15.83 / 3.3256e+06 | 0.29 / 0.018 / 3 | 0.004 GB | 135.254 GB | 00:01:31 |
+| c4-p100 | 100 | 1.416310E-05 | PASSED | 3.2885e+06 | 15.72 / 3.3487e+06 | 0.29 / 0.018 / 3 | 0.004 GB | 135.254 GB | 00:01:28 |
+| c0b-p0-ctl | 0 | 1.416310E-05 | PASSED | 6.5527e+06 | 7.75 / 6.7963e+06 | 0.29 / 0.037 / 3 | 0.004 GB | 135.254 GB | 00:00:57 |
+
+Per-arm start times (+08:00): c0a 07:43:35, c1 07:45:14, c2 07:47:17,
+c3 07:49:27, c4 07:51:38, c0b 07:53:46 (ends in each `.status`). All six
+per-arm env probes verified `OMP_NUM_THREADS=4` with
+`OMP_PLACES`/`OMP_PROC_BIND` unset and every UCX/NCCL diagnostic variable
+UNSET on all 16 ranks (`diag_ok` 16/16 on every field, both arms' pattern
+x6), plus `ucx_tls=UNSET ucx_net_devices=UNSET` on all 16 ranks of every
+arm. Each arm `.err` contains only the known benign bridge `cmd=[...]`
+diagnostic and one `unknown groupid` warning; per-arm warning-marker
+counts are 0 (out and err) for all six arms.
+
+### Stage-A control bracket and mechanical transition record (Section 1.6C; from the carry-forward log)
+
+~~~text
+stageA_bracket C0a/C0b:
+  LU      = 6.7666e+06 / 6.7963e+06  symmetric spread = 0.44 %
+  overall = 6.5249e+06 / 6.5527e+06  symmetric spread = 0.43 %
+  (spread = (hi-lo)/lo*100; both below the 0.5% floor)
+tolerances (max(bracket spread, 0.5%)):
+  lu_transition_tolerance_pct    = 0.50
+  score_transition_tolerance_pct = 0.50
+5% stop gate: NOT FIRED (0.44% / 0.43%)
+policy estimates (policy 0 = C0a/C0b midpoint):
+  0   -> LU 6.78145e+06 / overall 6.5388e+06  (midpoint)
+  25  -> LU 5.3823e+06  / overall 5.2281e+06
+  50  -> LU 3.8558e+06  / overall 3.7761e+06
+  75  -> LU 3.3256e+06  / overall 3.2660e+06
+  100 -> LU 3.3487e+06  / overall 3.2885e+06
+LU_competitive_set T = 0   (LU_best = 6.78145e+06, lu_tolerance 0.50%)
+score_tiebreak_set  S = 0   (score_best_within_T = 6.5388e+06, 0.50%)
+anchor = 0  ->  fine_window_candidates = 5 10 15 20 25
+~~~
+
+Stage B (F0a control, candidates 5/10/15/20/25 ascending, F0b control)
+and Stage C were NOT executed; they are later execution segments under
+TASK-2X8-014. The strategic reading of the coarse shape belongs to the
+Strategic Analyst via `ANALYSE_RESULTS`.
+
+### Fabric summary (factual; per-arm `.hcadelta` files are authoritative)
+
+Per-arm pre/post HCA snapshots were captured on both nodes around every
+arm (24 snapshot logs + 6 delta files). No nonzero
+error/discard/recovery counter delta appeared in any arm on either node.
+Factual node-total pattern: the two panel-0 control arms move
+~82.80e9/~59.05e9 raw TX/RX (g14) and ~59.04e9/~82.81e9 (g15), while all
+four nonzero-policy arms move ~105.3-105.5e9/~50.7-50.9e9 (g14) and
+~50.7e9/~105.3-105.5e9 (g15) — i.e., every nonzero policy shifts the
+inter-node traffic shape toward more g14 TX / less g14 RX relative to the
+panel-0 controls. Full per-HCA TX/RX shares, `port_xmit_wait` deltas,
+max/mean, and CV values are preserved in each `.hcadelta`; interpretation
+belongs to the Strategic Analyst.
 
 ## Structure
 
@@ -389,31 +475,49 @@ of `c0a-p0-ctl`, `c1-p25`, `c2-p50`, `c3-p75`, `c4-p100`, `c0b-p0-ctl`.
 Retries use a new tag (e.g. `v2`) for both `ATTEMPT_TAG` and the
 `-o`/`-e` names.
 
-## Submission (planned)
+## Submission (executed 2026-10-02, under the approved TASK-2X8-014 Section 1.11 authorization)
 
-Submission will occur only under the approved TASK-2X8-014 Section 1.11
-authorization, limited to the exact approved task scope.
+Submission was authorized under the unchanged Section 1.11 authorization of
+TASK-2X8-014; no new approval was needed, and submission remained limited
+to the exact approved task scope (Stage A only in this segment).
 
-Presubmit node-status check (Section 1.6A): take a `pbsnodes -aSj`
-snapshot over the eligible queues and preserve it as submission-side
-contention/provenance evidence (e.g.
-`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v1.presubmit_pbsnodes.log`);
-select the cleanest eligible same-queue `gpu_as`/`gpu_ded` pair via the
-established host-pinned select pattern (only eligible idle gpu_as/gpu_ded
-nodes; same-queue pair required). One multinode job at a time (GAAS
-Blocker 7).
+Presubmit node-status check (Section 1.6A), taken 2026-10-02T07:42:08+08:00:
+the `pbsnodes -aSj` snapshot over the eligible queues is preserved as
+submission-side contention/provenance evidence at
+`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v1.presubmit_pbsnodes.log`.
+Selected same-queue `gpu_as` pair: `hpc-gaas-g14` + `hpc-gaas-g15`.
+Factual selection basis, from the snapshot: g14 and g15 were both `free`
+with 0 jobs, 8/8 GPUs, 100/100 ncpus, and full 2tb/2tb memory, and both
+carry `Qlist = gpu_as,gpu_ppu`; this is the same host-pinned allocation
+pair as the validated Phase-4A clean reference (PBS job 76519.gaas),
+preserving same-pair fabric context with the 4A reference evidence; the
+remaining idle full-GPU nodes were off-limits by queue scope (g16/g17 are
+`gpu_aisg`) or singleton (`gpu_ded` had exactly one eligible free
+full-GPU node, g22, so no same-queue `gpu_ded` pair existed; g12, the
+third clean `gpu_as` node, was not needed for a pair). No user jobs were
+running at submission (one job at a time).
 
-Exact planned submission form (queue and host-pinned node names to be
-filled from the presubmit snapshot):
+Exact approved host-pinned submission command (`ATTEMPT_TAG=v1`, walltime
+`02:00:00`; submitted exactly once as PBS job `76682.gaas` on 2026-10-02,
+see Run summary):
 
 ```bash
-qsub -q <gpu_as|gpu_ded> \
-     -l select=host=<n1>:ncpus=96:ngpus=8:mem=2000GB+host=<n2>:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g14:ncpus=96:ngpus=8:mem=2000GB+host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
      -v "ATTEMPT_TAG=v1" \
      -o outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v1.o \
      -e outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v1.e \
      scripts/run_phase4b_panel_broadcast_stage_a.pbs
 ```
+
+Monitoring was bounded (qstat checks at ~2, ~5, ~8, ~11, and ~14 min after
+submission; final-state fetch `qstat -x -f` after completion). No retries;
+the attempt completed with `Exit_status=0`. All 66 remote output files
+were retrieved via `scp` and verified byte-identical by SHA-256 (66/66;
+the only manifest difference during verification was a locale sort-order
+artifact with zero hash mismatches). Local-only submission-side evidence:
+the presubmit `pbsnodes -aSj` snapshot and the job metadata recorded
+above.
 
 ## Available baseline provenance
 
