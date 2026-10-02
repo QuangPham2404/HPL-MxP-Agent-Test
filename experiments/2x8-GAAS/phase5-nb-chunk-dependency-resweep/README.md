@@ -330,35 +330,36 @@ existing evidence is never overwritten and reruns need a new tag.
 
 ## Attempt history
 
-### v1 — planned (first attempt; scripts and provenance gate ready)
+### v1 — submitted (first attempt; intentionally unmonitored in the submitting session)
 
-- Attempt tag `v1`; no prior evidence
-  exists under this experiment directory at drafting time (the pre-run
-  overwrite guard enforces this mechanically).
-- Planned submission: exactly ONE unpinned `qsub -q gpu_as` (see below)
-  after a fresh `pbsnodes -aSj` snapshot and target-absence check. The
-  provenance identity and support gate has passed (see above).
+- Attempt tag `v1`; no prior v1 run evidence existed before submission. The
+  provenance identity/support gate passed, the target-absence check passed,
+  and the required pre-submit `pbsnodes -aSj` snapshot was captured at
+  `outputs/2x8-GAAS-phase5-nb-chunk-dependency-resweep_v1.presubmit_pbsnodes.log`.
+- Submitted exactly one unpinned `qsub -q gpu_as` on 2026-10-03 at
+  approximately `04:55:51 +08:00`; PBS returned job `77344.gaas`.
+- User-directed stop point: immediately after qsub returned. The scheduler
+  state, assigned nodes, PBS stdout/stderr, and benchmark outputs were not
+  queried or retrieved in this session.
 - User direction for this attempt (authorized in the current conversation;
   Codex records it in the task report): submit unpinned to queue `gpu_as`;
   do NOT host-pin a node pair in the runner or the planned qsub; pause
   immediately after the qsub returns — no qstat, no monitoring, no cancel,
   and no retrieval in the submitting session. The script itself still runs
   its exact preauthorized 22 arms after PBS starts.
-- The execution record (PBS job ID, nodes, per-arm facts, matrix summary
-  facts, retrieval state) is appended here after the run completes and the
-  evidence is retrieved in a later session.
+- The execution record (nodes, per-arm facts, matrix summary facts, and
+  retrieval state) will be completed after the run is monitored and evidence
+  is retrieved in a later session.
 
-## Submission (planned; under the approved TASK-2X8-018 Section 1.11 authorization plus the current-conversation queue/pause direction)
+## Submission (completed; under the approved TASK-2X8-018 Section 1.11 authorization plus the current-conversation queue/pause direction)
 
-Submission is authorized under the unchanged approved Section 1.11
-authorization of TASK-2X8-018 plus the user's queue/pause instruction.
-The Section 1.4A provenance identity and support gate passed and is recorded
-above. Immediately before qsub, Codex will take a fresh `pbsnodes -aSj`
-snapshot as submission-side evidence and verify the target absence of all
-`v1` evidence names. One same-allocation
-sequential PBS job (Section 1.6D); one multinode job at a time.
+The exact approved Section 1.11 scope was retained, with the user's separate
+queue/pause instruction recorded in the task file. The Section 1.4A gate and
+the fresh pre-submit `pbsnodes -aSj` snapshot passed and are recorded above.
+PBS accepted one same-allocation sequential job, `77344.gaas`, on queue
+`gpu_as`; the select was unpinned.
 
-Planned submission form (user-directed unpinned gpu_as; no `-l` override —
+Submission form (user-directed unpinned gpu_as; no `-l` override —
 the script's `#PBS` select/place/walltime apply):
 
 ```bash
@@ -369,10 +370,9 @@ qsub -q gpu_as \
      scripts/run_phase5_nb_chunk_dependency_resweep.pbs
 ```
 
-After the qsub returns: PAUSE immediately (user direction). No qstat, no
-monitoring, no cancel, and no retrieval in the submitting session; bounded
-monitoring and retrieval happen only in a later session under the same
-approved scope.
+After qsub returned, Codex paused as directed. No qstat, monitoring, cancel,
+or retrieval occurred in the submitting session. Bounded monitoring and
+retrieval happen only in a later session under the same approved scope.
 
 ## Expected output markers and validation criteria
 
