@@ -327,3 +327,50 @@ alone.
   script (header documents purpose, working directory, inputs, outputs, assumptions, and the
   encoded stopping/gate rules)
 - `scripts/hca_counter_snapshot.sh` — the per-node HCA snapshot helper
+
+## Execution record — attempt v1 (2026-10-02)
+
+PBS job `76826.gaas` ran once in queue `gpu_as`, accounting group `hpc_ebslee`, on
+`hpc-gaas-g14` and `hpc-gaas-g15` (2 nodes, 8 GPUs/node, 16 ranks). PBS finished with
+`Exit_status=0`, `run_count=1`, and walltime `00:18:21`. The clean remote execution
+worktree was at revision `9e2453e3fd27f37510fa2bed014e3a9986c505f1`; the dirty primary
+clone and prior placeholder worktree were preserved untouched.
+
+UCX 1.20.0 preflight recorded `rc_verbs`, `rc_mlx5`, `dc_mlx5`, `ud_verbs`, and
+`ud_mlx5` on both hosts. The launcher maps `--ucx-tls` to `UCX_TLS`. All four approved
+families were supported and the exact allow-lists in the Stage-A table above were
+attempted; no optional family was skipped.
+
+| Stage A arm | Overall GFLOP/s | LU seconds | LU GFLOP/s | Residual | Result |
+|---|---:|---:|---:|---:|---|
+| T0a AUTO | 6.5433e+06 | 7.76 | 6.7895e+06 | 1.416310E-05 | PASSED |
+| T1 RC | 6.5357e+06 | 7.77 | 6.7780e+06 | 1.416310E-05 | PASSED |
+| T2 RC-X | 6.5088e+06 | 7.80 | 6.7485e+06 | 1.416310E-05 | PASSED |
+| T3 DC | 6.5586e+06 | 7.74 | 6.8025e+06 | 1.416310E-05 | PASSED |
+| T4 UD | 6.5474e+06 | 7.75 | 6.7902e+06 | 1.416310E-05 | PASSED |
+| T0b AUTO | 6.5382e+06 | 7.77 | 6.7803e+06 | 1.416310E-05 | PASSED |
+
+The mechanical gate recorded AUTO bracket spreads of 0.14% LU and 0.08% overall,
+`local_noise_pct=0.50`, and `positive_surprise_threshold_pct=2.00`. No explicit arm
+met both gate conditions. The script recorded `stage_b_authorized=yes` and ran the
+approved Stage-B sequence:
+
+| Stage B arm | Chunk | Overall GFLOP/s | LU seconds | LU GFLOP/s | Residual | Result |
+|---|---:|---:|---:|---:|---:|---|
+| K8a | 8 | 6.5478e+06 | 7.75 | 6.7912e+06 | 1.416310E-05 | PASSED |
+| K2 | 2 | 6.7662e+06 | 7.49 | 7.0260e+06 | 1.416310E-05 | PASSED |
+| K4 | 4 | 6.8223e+06 | 7.43 | 7.0862e+06 | 1.416310E-05 | PASSED |
+| K16 | 16 | 6.3538e+06 | 8.00 | 6.5819e+06 | 1.587984E-05 | PASSED |
+| K8b | 8 | 6.5595e+06 | 7.74 | 6.8024e+06 | 1.416310E-05 | PASSED |
+
+The K8a/K8b bracket spread was 0.16% LU and 0.18% overall. All 11 arms have exit 0,
+`verification=PASSED`, `settings_echo_check=PASS`, and a finite residual. The rank map
+contains 16 ranks (8 per host). Per-arm probes verify OMP=4 and the expected UCX_TLS
+state on all ranks. HCA pre/post snapshots and deltas were captured for every arm on
+both nodes; the deltas report no new HCA errors. Memory evidence is complete.
+
+All 118 runtime evidence files were retrieved under `outputs/` and matched the remote
+SHA-256 manifest byte-for-byte. This includes PBS `.o`/`.e`; the stderr file contains
+Apptainer unknown-groupid warnings. No retry or additional submission occurred. This
+section records execution facts only; strategic interpretation is reserved for the
+Strategic Analyst's `ANALYSE_RESULTS` step.

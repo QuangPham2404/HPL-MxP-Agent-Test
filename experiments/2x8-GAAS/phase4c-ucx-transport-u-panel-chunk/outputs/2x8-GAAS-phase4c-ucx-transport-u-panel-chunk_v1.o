@@ -1,0 +1,507 @@
+attempt_tag_validation=PASS (conservative filename-safe pattern: nonempty, ASCII alphanumeric '.' '_' '-' only, not '.' or '..')
+experiment_id=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk
+attempt_tag=v1
+pbs_job_id=76826.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-10-02T12:37:48+08:00
+fixed scientific controls (identical across all arms; the ONLY scientific control that varies across Stage-A arms is UCX_TLS (unset for the AUTO controls / the arm allow-list for explicit arms); the ONLY scientific control that varies across Stage-B arms is --u-panel-chunk-nbs; TASK-2X8-015 Sections 1.2, 1.6A-1.6D):
+--n 429056 --nb 3072 --nprow 4 --npcol 4 --nporder row
+--gpu-affinity 0:1:2:3:4:5:6:7 (fixed identity map; --cpu-affinity omitted, --mem-affinity omitted, --ucx-affinity omitted/automatic, UCX_NET_DEVICES unset/automatic for every arm; UCX_TLS unset/AUTO for T0a/T0b and all Stage-B arms, the arm allow-list for explicit Stage-A arms)
+OMP_NUM_THREADS=4 (explicit job-shell export after module setup + mpirun -x OMP_NUM_THREADS; verified = 4 on all 16 ranks by the per-arm env probe)
+OMP_PLACES/OMP_PROC_BIND omitted (unset in the job shell; verified UNSET on all 16 ranks; effective launcher package defaults: OMP_PLACES=sockets, OMP_PROC_BIND=TRUE)
+--fill-device 1 --fill-device-buffer-size 3048 (retained full-fill residency mode)
+--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0 (retained Phase-3D closure controls, explicit on every arm)
+--sloppy-type FP16
+--use-mpi-panel-broadcast 0 (explicit on EVERY arm; retained TASK-2X8-014 outcome; requested value echoed by the application and verified per arm)
+--u-panel-chunk-nbs = 8 via installed package default in Stage A (retained control; NOT the Stage-A variable; echo verified per arm); Stage B passes --u-panel-chunk-nbs <2|4|8|16> explicitly per arm (echo verified per arm)
+--use-separate-stream-for-gemm 1 --prioritize-trsm 0 --prioritize-factorization 0
+--test-loop 1 --skip-tests 0 --monitor-gpu 0
+default-equal controls applied via the installed package defaults exactly as in the validated TASK-010/TASK-2X8-011/012 launch, echoed values verified per arm: --u-panel-chunk-nbs = 8, --preset-gemm-kernel = 90 (EFFECTIVE value; v26.02 CLI accepts only {0,80} so the flag is omitted and the default supplies the SM90 preset; flag-check evidence hplmxp_v2602_flag_check_v1.log)
+arm set: T0a (t0a-auto-ctl, AUTO opening control, UCX_TLS unset) -> T1 (t1-rc, sm,self,rc,cuda) -> T2 (t2-rcx, sm,self,rc_x,cuda; if supported) -> T3 (t3-dc, sm,self,dc,cuda; if supported) -> T4 (t4-ud, sm,self,ud,cuda; if supported) -> T0b (t0b-auto-ctl, AUTO closing control) -> mechanical Section 1.6C gate -> conditional Stage B K8a (k8a-chunk8-ctl, chunk 8 opening retained control) -> K2 (k2-chunk2) -> K4 (k4-chunk4) -> K16 (k16-chunk16) -> K8b (k8b-chunk8-ctl, chunk 8 closing retained control); one scored attempt per supported arm; exact order; unsupported optional T2/T3/T4 mechanically skipped once and recorded; no diagnostic logging on any scored arm (Section 1.6B rule 9)
+prohibited-list summary (TASK-2X8-015 Section 1.6F): no RC/DC/UD network-family combinations in one explicit UCX_TLS arm; no TCP/Socket optimization arm; no arbitrary raw mlx5 transport lists; no UCX_NET_DEVICES/--ucx-affinity/rendezvous-threshold/DCI/rail/protocol tuning; no microbenchmarks; no profiler; no diagnostic logging on scored arms; --use-mpi-panel-broadcast stays 0; no N/NB/grid/order/affinity/OpenMP/residency/precision/kernel/scheduling changes; no chunk values outside 2/4/8/16; no second U-panel sweep; no transport x chunk Cartesian product; no continued U-panel tuning after a material positive UCX transport surprise
+controls NOT reopened by TASK-2X8-015 (Section 1.6F prohibited list; only UCX_TLS varies across Stage-A arms and only --u-panel-chunk-nbs varies across Stage-B arms): panel-broadcast stays 0; ucx-affinity/UCX_NET_DEVICES stay automatic; MPI/NCCL fallbacks (no --mpi-use-mpi/--use-host-mpi); N/NB/grid/order; GPU/CPU/memory affinity; OpenMP policy; residency/buffer/register-step/DGEMV; precision; GEMM kernel; scheduling controls; no historical HCA/bond/UCC/rendezvous mitigations; no microbenchmark ladder; no profiler
+task: TASK-2X8-015 Phase 4C; order T0a -> T1 -> T2(if supported) -> T3(if supported) -> T4(if supported) -> T0b -> mechanical Section 1.6C gate -> conditional K8a -> K2 -> K4 -> K16 -> K8b; one scored attempt per supported arm; after T0b the script records the factual AUTO bracket, the 5% stop gate, and the deterministic positive-surprise gate, and proceeds to Stage B only if Section 1.6C authorizes it (facts only; no winner declared)
+execution_worktree_root=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1
+execution_worktree_git_revision=9e2453e3fd27f37510fa2bed014e3a9986c505f1
+layout=2 nodes x 8 GPUs = 16 ranks (one rank per GPU)
+grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)
+nodes=hpc-gaas-g14 hpc-gaas-g15
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/multi-node-test/rsh_pbsdsh_container.sh
+hca_helper=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/scripts/hca_counter_snapshot.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+=== mother-node GPU topology matrix (gate input + evidence) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC legend matches Phase-0)
+incoming job-shell OpenMP environment (before per-arm control application):
+  OMP_NUM_THREADS=96
+  OMP_PLACES=UNSET
+  OMP_PROC_BIND=UNSET
+=== loaded modules (module list; optional record, non-fatal) ===
+Currently Loaded Modulefiles:
+ 1) apptainer/1.4.1     3) cuda/13.1 <aL>   5) squashfuse/0.5.2  
+ 2) gnu/gcc-12.3 <aL>   4) nvhpc/26.3       6) gocryptfs/2.5.0   
+
+Key:
+<module-tag>  <aL>=auto-loaded  
+=== apptainer version (required runtime; rc=0) ===
+apptainer version 1.4.1
+=== container image identity (provenance; non-fatal) ===
+container_image=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+container_image_size_bytes=5307924480
+container_image_mtime=2026-05-06 06:07:56.408241441 +0800
+container_image_sha256=123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628
+=== container MPI version (/usr/local/mpi/bin/mpirun --version; required runtime; rc=0) ===
+WARNING: group: unknown groupid 1304617061
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+=== pre-sweep hardware-health snapshot (mother node hpc-gaas-g14) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 30, 117.21 W, 1980 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 29, 76.35 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 29, 76.05 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 31, 76.50 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 30, 77.11 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 29, 74.99 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 28, 75.00 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 29, 78.36 W, 345 MHz, 0 MiB, 143771 MiB
+=== hostfile (/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_hostfile_v1) ===
+hpc-gaas-g14 slots=8
+hpc-gaas-g15 slots=8
+=== rank-map probe: rc=0 rank_lines=16 hosts=2 ranks_per_host=8 log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_rankmap_v1.log ===
+incoming OMP environment across 16 ranks: ranks_with_OMP_PLACES_set=0 ranks_with_OMP_PROC_BIND_set=0
+incoming OMP_NUM_THREADS values seen (evidence; neutralized per arm by explicit export + -x forwarding):
+  rank=14/16 host=hpc-gaas-g15 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=9/16 host=hpc-gaas-g15 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=7/16 host=hpc-gaas-g14 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=1/16 host=hpc-gaas-g14 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=10/16 host=hpc-gaas-g15 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=5/16 host=hpc-gaas-g14 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=13/16 host=hpc-gaas-g15 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=12/16 host=hpc-gaas-g15 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=2/16 host=hpc-gaas-g14 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=15/16 host=hpc-gaas-g15 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=4/16 host=hpc-gaas-g14 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=3/16 host=hpc-gaas-g14 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=11/16 host=hpc-gaas-g15 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=6/16 host=hpc-gaas-g14 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=8/16 host=hpc-gaas-g15 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=0/16 host=hpc-gaas-g14 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+incoming_openmp_gate=PASS (OMP_PLACES/OMP_PROC_BIND unset on all 16 ranks; launcher package defaults remain the effective placement policy)
+  host=hpc-gaas-g14 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+  host=hpc-gaas-g15 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+rankmap_per_host_topology_gate=PASS (every allocated host matches the accepted Phase-0 topology; per-host reports preserved in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_rankmap_v1.log)
+  host=hpc-gaas-g14 ucx_inventory_gate=PASS (transport_lines=55; inventory preserved in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_rankmap_v1.log)
+  host=hpc-gaas-g15 ucx_inventory_gate=PASS (transport_lines=55; inventory preserved in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_rankmap_v1.log)
+rankmap_ucx_inventory_gate=PASS (every allocated host has a non-empty in-container UCX transport inventory; determination follows in the UCX preflight)
+=== UCX capability preflight capture (rc=0) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_ucxpreflight_v1.log ===
+ucx_preflight_capture=PASS (launcher README record + launcher --ucx-tls handling + ucx_info -v/-d captured; evidence: /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_ucxpreflight_v1.log)
+=== mechanical Stage-A allow-list determination (TASK-2X8-015 Section 1.6B) ===
+preflight: T1 RC family supported=yes allow_list=sm,self,rc,cuda
+preflight: T2 accelerated RC (rc_x) supported=yes allow_list=sm,self,rc_x,cuda
+preflight: T3 DC family supported=yes allow_list=sm,self,dc,cuda (dc alias preferred; dc_x fallback not applicable on this UCX 1.20 runtime)
+preflight: T4 UD family supported=yes allow_list=sm,self,ud,cuda
+allowlist_determination=PASS (T1=yes T2=yes T3=yes T4=yes; strings recorded in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_ucxpreflight_v1.log and the carry-forward log)
+=== Phase 4C Stage-A arm T0a (t0a-auto-ctl): AUTO opening control (UCX_TLS unset; TASK-2X8-015 Section 1.6B; fixed retained stack; scored clean arm; establishes the opening half of the AUTO bracket) ===
+=== HCA snapshot (hcapre, arm t0a-auto-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm t0a-auto-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=t0a-auto-ctl: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm t0a-auto-ctl (t0a-auto-ctl) step=T0a stage=A ucx_mode=auto ucx_tls=UNSET chunk_mode=default8 chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1 start=2026-10-02T12:39:03+08:00 ===
+arm_mode=scored clean A-stage arm (stage=A ucx_mode=auto ucx_tls=UNSET chunk_mode=default8 chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm t0a-auto-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm t0a-auto-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm t0a-auto-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795112639 rx_delta_raw=59048952000
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035614787 rx_delta_raw=82808386893
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm t0a-auto-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0a-auto-ctl_v1.timings (15 lines) ===
+=== arm t0a-auto-ctl (t0a-auto-ctl) exit_status=0 verdict=PASSED settings_echo=PASS stage=A ucx_tls=UNSET chunk=8 gflops=6.5433e+06 end=2026-10-02T12:39:59+08:00 ===
+arm t0a-auto-ctl: stage=A ucx_mode=auto ucx_tls=UNSET chunk=8 attempted=yes score=6.5433e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.76 lu_gflops=6.7895e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.23 mem_evidence_complete=1
+=== Phase 4C Stage-A arm T1 (t1-rc): explicit RC family (sm,self,rc,cuda; isolates the RC inter-node family with the common sm,self,cuda support set; Section 1.6B) ===
+=== HCA snapshot (hcapre, arm t1-rc): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm t1-rc: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=t1-rc: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm t1-rc (t1-rc) step=T1 stage=A ucx_mode=explicit ucx_tls=sm,self,rc,cuda chunk_mode=default8 chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1 start=2026-10-02T12:40:40+08:00 ===
+arm_mode=scored clean A-stage arm (stage=A ucx_mode=explicit ucx_tls=sm,self,rc,cuda chunk_mode=default8 chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm t1-rc): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm t1-rc: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm t1-rc) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795119142 rx_delta_raw=59048958146
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035619619 rx_delta_raw=82808393141
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm t1-rc) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t1-rc_v1.timings (15 lines) ===
+=== arm t1-rc (t1-rc) exit_status=0 verdict=PASSED settings_echo=PASS stage=A ucx_tls=sm,self,rc,cuda chunk=8 gflops=6.5357e+06 end=2026-10-02T12:41:33+08:00 ===
+arm t1-rc: stage=A ucx_mode=explicit ucx_tls=sm,self,rc,cuda chunk=8 attempted=yes score=6.5357e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.77 lu_gflops=6.7780e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.19 mem_evidence_complete=1
+=== Phase 4C Stage-A arm T2 (t2-rcx): accelerated RC only (sm,self,rc_x,cuda; Section 1.6B) ===
+=== HCA snapshot (hcapre, arm t2-rcx): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm t2-rcx: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=t2-rcx: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm t2-rcx (t2-rcx) step=T2 stage=A ucx_mode=explicit ucx_tls=sm,self,rc_x,cuda chunk_mode=default8 chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1 start=2026-10-02T12:42:14+08:00 ===
+arm_mode=scored clean A-stage arm (stage=A ucx_mode=explicit ucx_tls=sm,self,rc_x,cuda chunk_mode=default8 chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm t2-rcx): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm t2-rcx: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm t2-rcx) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795117094 rx_delta_raw=59048956555
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035618713 rx_delta_raw=82808390882
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm t2-rcx) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t2-rcx_v1.timings (15 lines) ===
+=== arm t2-rcx (t2-rcx) exit_status=0 verdict=PASSED settings_echo=PASS stage=A ucx_tls=sm,self,rc_x,cuda chunk=8 gflops=6.5088e+06 end=2026-10-02T12:43:07+08:00 ===
+arm t2-rcx: stage=A ucx_mode=explicit ucx_tls=sm,self,rc_x,cuda chunk=8 attempted=yes score=6.5088e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.80 lu_gflops=6.7485e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.19 mem_evidence_complete=1
+=== Phase 4C Stage-A arm T3 (t3-dc): DC family (sm,self,dc,cuda; documented dc family alias; Section 1.6B rule 3) ===
+=== HCA snapshot (hcapre, arm t3-dc): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm t3-dc: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=t3-dc: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm t3-dc (t3-dc) step=T3 stage=A ucx_mode=explicit ucx_tls=sm,self,dc,cuda chunk_mode=default8 chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1 start=2026-10-02T12:43:47+08:00 ===
+arm_mode=scored clean A-stage arm (stage=A ucx_mode=explicit ucx_tls=sm,self,dc,cuda chunk_mode=default8 chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm t3-dc): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm t3-dc: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm t3-dc) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795141830 rx_delta_raw=59049148677
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035630761 rx_delta_raw=82808589456
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm t3-dc) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t3-dc_v1.timings (15 lines) ===
+=== arm t3-dc (t3-dc) exit_status=0 verdict=PASSED settings_echo=PASS stage=A ucx_tls=sm,self,dc,cuda chunk=8 gflops=6.5586e+06 end=2026-10-02T12:44:41+08:00 ===
+arm t3-dc: stage=A ucx_mode=explicit ucx_tls=sm,self,dc,cuda chunk=8 attempted=yes score=6.5586e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.74 lu_gflops=6.8025e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.22 mem_evidence_complete=1
+=== Phase 4C Stage-A arm T4 (t4-ud): UD family (sm,self,ud,cuda; Section 1.6B rule 4) ===
+=== HCA snapshot (hcapre, arm t4-ud): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm t4-ud: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=t4-ud: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm t4-ud (t4-ud) step=T4 stage=A ucx_mode=explicit ucx_tls=sm,self,ud,cuda chunk_mode=default8 chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1 start=2026-10-02T12:45:21+08:00 ===
+arm_mode=scored clean A-stage arm (stage=A ucx_mode=explicit ucx_tls=sm,self,ud,cuda chunk_mode=default8 chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm t4-ud): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm t4-ud: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm t4-ud) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795120659 rx_delta_raw=59035612291
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035612291 rx_delta_raw=82795120659
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm t4-ud) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t4-ud_v1.timings (15 lines) ===
+=== arm t4-ud (t4-ud) exit_status=0 verdict=PASSED settings_echo=PASS stage=A ucx_tls=sm,self,ud,cuda chunk=8 gflops=6.5474e+06 end=2026-10-02T12:46:14+08:00 ===
+arm t4-ud: stage=A ucx_mode=explicit ucx_tls=sm,self,ud,cuda chunk=8 attempted=yes score=6.5474e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.75 lu_gflops=6.7902e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.18 mem_evidence_complete=1
+=== Phase 4C Stage-A arm T0b (t0b-auto-ctl): AUTO closing control (UCX_TLS unset; completes the AUTO bracket T0a/T0b; Section 1.6B) ===
+=== HCA snapshot (hcapre, arm t0b-auto-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm t0b-auto-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=t0b-auto-ctl: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm t0b-auto-ctl (t0b-auto-ctl) step=T0b stage=A ucx_mode=auto ucx_tls=UNSET chunk_mode=default8 chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1 start=2026-10-02T12:46:54+08:00 ===
+arm_mode=scored clean A-stage arm (stage=A ucx_mode=auto ucx_tls=UNSET chunk_mode=default8 chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm t0b-auto-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm t0b-auto-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm t0b-auto-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795109415 rx_delta_raw=59048946729
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035609007 rx_delta_raw=82808383117
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm t0b-auto-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_t0b-auto-ctl_v1.timings (15 lines) ===
+=== arm t0b-auto-ctl (t0b-auto-ctl) exit_status=0 verdict=PASSED settings_echo=PASS stage=A ucx_tls=UNSET chunk=8 gflops=6.5382e+06 end=2026-10-02T12:47:49+08:00 ===
+arm t0b-auto-ctl: stage=A ucx_mode=auto ucx_tls=UNSET chunk=8 attempted=yes score=6.5382e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.77 lu_gflops=6.7803e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.20 mem_evidence_complete=1
+gate: stageA_auto_bracket T0a/T0b: lu_gflops=6.7895e+06/6.7803e+06 lu_symmetric_spread_pct=0.14 overall_gflops=6.5433e+06/6.5382e+06 overall_symmetric_spread_pct=0.08 (factual local drift reference; spread=(hi-lo)/lo*100; Section 1.6C step 1; no winner declared)
+gate: auto_midpoint lu_gflops=6.7849e+06 overall_gflops=6.54075e+06 (midpoint of the valid T0a/T0b bracket; Section 1.6C step 1)
+gate: local_noise_pct=0.50 (max of 0.5%, LU bracket spread 0.14%, overall bracket spread 0.08%)
+gate: positive_surprise_threshold_pct=2.00 (max of 2% and 2*local_noise_pct=0.50%; Section 1.6C step 2)
+gate: rc_family_point=t1-rc (valid explicit RC-family characterization point present; Section 1.6C step 3 precondition)
+gate: explicit_arm t1-rc: lu_improve_pct=-0.1017 overall_improve_pct=-0.0772 material_positive_surprise=no (rule: lu_improve >= 2.00% AND overall_improve > 0.50%; vs AUTO midpoint; Section 1.6C step 2)
+gate: explicit_arm t2-rcx: lu_improve_pct=-0.5365 overall_improve_pct=-0.4885 material_positive_surprise=no (rule: lu_improve >= 2.00% AND overall_improve > 0.50%; vs AUTO midpoint; Section 1.6C step 2)
+gate: explicit_arm t3-dc: lu_improve_pct=0.2594 overall_improve_pct=0.2729 material_positive_surprise=no (rule: lu_improve >= 2.00% AND overall_improve > 0.50%; vs AUTO midpoint; Section 1.6C step 2)
+gate: explicit_arm t4-ud: lu_improve_pct=0.0781 overall_improve_pct=0.1017 material_positive_surprise=no (rule: lu_improve >= 2.00% AND overall_improve > 0.50%; vs AUTO midpoint; Section 1.6C step 2)
+gate: stage_b_authorized=yes - no valid explicit family is a material positive surprise; AUTO retained for execution purposes; proceeding automatically to the fixed Stage-B U-panel chunk sweep K8a -> K2 -> K4 -> K16 -> K8b (Section 1.6C step 3; this is a transition record, not a campaign winner declaration)
+=== Phase 4C Stage B: fixed U-panel chunk sweep K8a -> K2 -> K4 -> K16 -> K8b (UCX_TLS unset/AUTO; panel broadcast 0; TASK-2X8-015 Section 1.6D) ===
+=== Phase 4C Stage-B arm K8a (k8a-chunk8-ctl): chunk 8 opening retained control (Section 1.6D) ===
+=== HCA snapshot (hcapre, arm k8a-chunk8-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm k8a-chunk8-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=k8a-chunk8-ctl: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm k8a-chunk8-ctl (k8a-chunk8-ctl) step=K8a stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1 start=2026-10-02T12:48:31+08:00 ===
+arm_mode=scored clean B-stage arm (stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm k8a-chunk8-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm k8a-chunk8-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm k8a-chunk8-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795111336 rx_delta_raw=59048949741
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035611038 rx_delta_raw=82808384947
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm k8a-chunk8-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8a-chunk8-ctl_v1.timings (15 lines) ===
+=== arm k8a-chunk8-ctl (k8a-chunk8-ctl) exit_status=0 verdict=PASSED settings_echo=PASS stage=B ucx_tls=UNSET chunk=8 gflops=6.5478e+06 end=2026-10-02T12:49:27+08:00 ===
+arm k8a-chunk8-ctl: stage=B ucx_mode=auto ucx_tls=UNSET chunk=8 attempted=yes score=6.5478e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.75 lu_gflops=6.7912e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.21 mem_evidence_complete=1
+=== Phase 4C Stage-B arm K2 (k2-chunk2): U-panel chunk 2 (fine-grained readiness; Section 1.6D) ===
+=== HCA snapshot (hcapre, arm k2-chunk2): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm k2-chunk2: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=k2-chunk2: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm k2-chunk2 (k2-chunk2) step=K2 stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=2 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1 start=2026-10-02T12:50:08+08:00 ===
+arm_mode=scored clean B-stage arm (stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=2; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm k2-chunk2): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm k2-chunk2: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm k2-chunk2) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=51221536051 rx_delta_raw=44365779624
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.40 mlx5_1=12.57 mlx5_2=12.40 mlx5_3=12.57 mlx5_4=12.38 mlx5_5=12.56 mlx5_8=12.73 mlx5_9=12.38 max_over_mean_tx=1.019 cv_tx_pct=0.96 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=44352441377 rx_delta_raw=51234810565
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=10.24 mlx5_1=10.65 mlx5_2=10.85 mlx5_3=10.85 mlx5_4=14.30 mlx5_5=14.10 mlx5_8=14.50 mlx5_9=14.50 max_over_mean_tx=1.160 cv_tx_pct=14.92 max_tx_hca=mlx5_8
+=== timing markers (arm k2-chunk2) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k2-chunk2_v1.timings (15 lines) ===
+=== arm k2-chunk2 (k2-chunk2) exit_status=0 verdict=PASSED settings_echo=PASS stage=B ucx_tls=UNSET chunk=2 gflops=6.7662e+06 end=2026-10-02T12:51:03+08:00 ===
+arm k2-chunk2: stage=B ucx_mode=auto ucx_tls=UNSET chunk=2 attempted=yes score=6.7662e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.49 lu_gflops=7.0260e+06 ir_seconds=0.29 ir_lu_ratio=0.039 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.23 mem_evidence_complete=1
+=== Phase 4C Stage-B arm K4 (k4-chunk4): U-panel chunk 4 (intermediate fine granularity; Section 1.6D) ===
+=== HCA snapshot (hcapre, arm k4-chunk4): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm k4-chunk4: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=k4-chunk4: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm k4-chunk4 (k4-chunk4) step=K4 stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=4 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1 start=2026-10-02T12:51:44+08:00 ===
+arm_mode=scored clean B-stage arm (stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=4; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm k4-chunk4): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm k4-chunk4: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm k4-chunk4) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=59734562922 rx_delta_raw=47535429515
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.42 mlx5_1=12.56 mlx5_2=12.40 mlx5_3=12.56 mlx5_4=12.41 mlx5_5=12.55 mlx5_8=12.69 mlx5_9=12.39 max_over_mean_tx=1.015 cv_tx_pct=0.81 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=47522091290 rx_delta_raw=59747836704
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=8.99 mlx5_1=9.37 mlx5_2=9.54 mlx5_3=9.54 mlx5_4=15.60 mlx5_5=15.40 mlx5_8=15.78 mlx5_9=15.78 max_over_mean_tx=1.262 cv_tx_pct=25.17 max_tx_hca=mlx5_8
+=== timing markers (arm k4-chunk4) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k4-chunk4_v1.timings (15 lines) ===
+=== arm k4-chunk4 (k4-chunk4) exit_status=0 verdict=PASSED settings_echo=PASS stage=B ucx_tls=UNSET chunk=4 gflops=6.8223e+06 end=2026-10-02T12:52:39+08:00 ===
+arm k4-chunk4: stage=B ucx_mode=auto ucx_tls=UNSET chunk=4 attempted=yes score=6.8223e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.43 lu_gflops=7.0862e+06 ir_seconds=0.29 ir_lu_ratio=0.039 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.23 mem_evidence_complete=1
+=== Phase 4C Stage-B arm K16 (k16-chunk16): U-panel chunk 16 (coarse granularity; Section 1.6D) ===
+=== HCA snapshot (hcapre, arm k16-chunk16): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm k16-chunk16: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=k16-chunk16: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm k16-chunk16 (k16-chunk16) step=K16 stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=16 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1 start=2026-10-02T12:53:19+08:00 ===
+arm_mode=scored clean B-stage arm (stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=16; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm k16-chunk16): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm k16-chunk16: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm k16-chunk16) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=128984956849 rx_delta_raw=82144719966
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.46 mlx5_1=12.53 mlx5_2=12.45 mlx5_3=12.53 mlx5_4=12.46 mlx5_5=12.53 mlx5_8=12.59 mlx5_9=12.45 max_over_mean_tx=1.007 cv_tx_pct=0.38 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=82131381287 rx_delta_raw=128998231127
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=5.19 mlx5_1=5.41 mlx5_2=5.51 mlx5_3=5.51 mlx5_4=19.57 mlx5_5=19.45 mlx5_8=19.67 mlx5_9=19.67 max_over_mean_tx=1.574 cv_tx_pct=56.73 max_tx_hca=mlx5_8
+=== timing markers (arm k16-chunk16) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k16-chunk16_v1.timings (15 lines) ===
+=== arm k16-chunk16 (k16-chunk16) exit_status=0 verdict=PASSED settings_echo=PASS stage=B ucx_tls=UNSET chunk=16 gflops=6.3538e+06 end=2026-10-02T12:54:17+08:00 ===
+arm k16-chunk16: stage=B ucx_mode=auto ucx_tls=UNSET chunk=16 attempted=yes score=6.3538e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=8.00 lu_gflops=6.5819e+06 ir_seconds=0.29 ir_lu_ratio=0.036 iterations=3 residual=1.587984E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.22 mem_evidence_complete=1
+=== Phase 4C Stage-B arm K8b (k8b-chunk8-ctl): chunk 8 closing retained control (completes the K8a/K8b control bracket; Section 1.6D) ===
+=== HCA snapshot (hcapre, arm k8b-chunk8-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapre_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapre_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapre, arm k8b-chunk8-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== env probe arm=k8b-chunk8-ctl: rc=0 rank_lines=16 omp_num_threads=4_ok=16 omp_places=UNSET_ok=16 omp_proc_bind=UNSET_ok=16 diag_unset_ok(ull/upi/nd/nds/ndf/ugr/ngl)=16/16/16/16/16/16/16 ucx_net_devices_unset=16 ucx_tls_ok=16 ===
+=== arm k8b-chunk8-ctl (k8b-chunk8-ctl) step=K8b stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=8 attempt=2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1 start=2026-10-02T12:54:57+08:00 ===
+arm_mode=scored clean B-stage arm (stage=B ucx_mode=auto ucx_tls=UNSET chunk_mode=explicit chunk=8; no diagnostic logging; all other controls fixed)
+=== HCA snapshot (hcapost, arm k8b-chunk8-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapost_hca_hpc-gaas-g14.log ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapost wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1_hcapost_hca_hpc-gaas-g15.log ===
+hca_link_gate=PASS (hcapost, arm k8b-chunk8-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)
+=== HCA delta derivation (arm k8b-chunk8-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1.hcadelta ===
+NODE_TOTAL node=hpc-gaas-g14 tx_delta_raw=82795113115 rx_delta_raw=59048960334
+NEW_ERRORS node=hpc-gaas-g14 new_counters=none
+RAIL node=hpc-gaas-g14 tx_share_pct: mlx5_0=12.44 mlx5_1=12.54 mlx5_2=12.43 mlx5_3=12.54 mlx5_4=12.44 mlx5_5=12.54 mlx5_8=12.64 mlx5_9=12.42 max_over_mean_tx=1.011 cv_tx_pct=0.58 max_tx_hca=mlx5_8
+NODE_TOTAL node=hpc-gaas-g15 tx_delta_raw=59035621980 rx_delta_raw=82808387321
+NEW_ERRORS node=hpc-gaas-g15 new_counters=none
+RAIL node=hpc-gaas-g15 tx_share_pct: mlx5_0=7.23 mlx5_1=7.53 mlx5_2=7.67 mlx5_3=7.67 mlx5_4=17.44 mlx5_5=17.28 mlx5_8=17.58 mlx5_9=17.58 max_over_mean_tx=1.407 cv_tx_pct=39.81 max_tx_hca=mlx5_8
+=== timing markers (arm k8b-chunk8-ctl) -> /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-015-9e2453e-phase4c-v1/experiments/2x8-GAAS/phase4c-ucx-transport-u-panel-chunk/outputs/2x8-GAAS-phase4c-ucx-transport-u-panel-chunk_k8b-chunk8-ctl_v1.timings (15 lines) ===
+=== arm k8b-chunk8-ctl (k8b-chunk8-ctl) exit_status=0 verdict=PASSED settings_echo=PASS stage=B ucx_tls=UNSET chunk=8 gflops=6.5595e+06 end=2026-10-02T12:55:53+08:00 ===
+arm k8b-chunk8-ctl: stage=B ucx_mode=auto ucx_tls=UNSET chunk=8 attempted=yes score=6.5595e+06 run_verdict=PASSED settings_echo=PASS valid=yes exit=0 lu_seconds=7.74 lu_gflops=6.8024e+06 ir_seconds=0.29 ir_lu_ratio=0.037 iterations=3 residual=1.416310E-05 host_cons_gb=0.004 device_cons_gb=135.254 constructor_seconds=0.20 mem_evidence_complete=1
+gate: stageB_k8_bracket K8a/K8b: lu_gflops=6.7912e+06/6.8024e+06 lu_symmetric_spread_pct=0.16 overall_gflops=6.5478e+06/6.5595e+06 overall_symmetric_spread_pct=0.18 (factual control-bracket record; Section 1.6D rule 8)
+gate: stageB_k8_bracket within the 2% drift record threshold (Section 1.6D rule 8)
+sweep_end: every authorized arm ran at most once each in the exact approved order (Stage A: T0a -> T1 -> T2 -> T3 -> T4 -> T0b with unsupported optional families mechanically skipped once; mechanical Section 1.6C gate; Stage B only if authorized: K8a -> K2 -> K4 -> K16 -> K8b); the strategic reading belongs to the Strategic Analyst via ANALYSE_RESULTS (TASK-2X8-015 Sections 1.4D, 1.10-1.11)
+anti-loop state: no additional transport families, no combined RC/DC/UD lists, no TCP, no raw mlx5 combinations, no UCX device/affinity/protocol/threshold/DCI/rail tuning, no microbenchmarks, no profiling, no diagnostic logging on scored arms, no panel-broadcast changes, no chunk values outside 2/4/8/16, no second U-panel sweep, no numerical-leader repeats, and no transport x chunk Cartesian product were added (Sections 1.6F, 1.7)
+=== post-sweep hardware-health snapshot (mother node hpc-gaas-g14) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 28, 76.09 W, 345 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 29, 76.09 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 29, 76.41 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 30, 76.32 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 29, 76.98 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 28, 74.92 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 27, 74.80 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 28, 77.44 W, 345 MHz, 0 MiB, 143771 MiB
+=== task recap (factual scores only; bracket/gate/drift records in the carry-forward log; interpretation reserved for ANALYSE_RESULTS) ===
+arms_run=11 arms_exited_nonzero=0 arms_invalid=0 arms_rejected=0 stage_b_authorized=yes stop_conditions=none
+arm=t0a-auto-ctl stage=A ucx_tls=UNSET chunk=8 gflops=6.5433e+06 valid=yes exit=0
+arm=t1-rc stage=A ucx_tls=sm,self,rc,cuda chunk=8 gflops=6.5357e+06 valid=yes exit=0
+arm=t2-rcx stage=A ucx_tls=sm,self,rc_x,cuda chunk=8 gflops=6.5088e+06 valid=yes exit=0
+arm=t3-dc stage=A ucx_tls=sm,self,dc,cuda chunk=8 gflops=6.5586e+06 valid=yes exit=0
+arm=t4-ud stage=A ucx_tls=sm,self,ud,cuda chunk=8 gflops=6.5474e+06 valid=yes exit=0
+arm=t0b-auto-ctl stage=A ucx_tls=UNSET chunk=8 gflops=6.5382e+06 valid=yes exit=0
+arm=k8a-chunk8-ctl stage=B ucx_tls=UNSET chunk=8 gflops=6.5478e+06 valid=yes exit=0
+arm=k2-chunk2 stage=B ucx_tls=UNSET chunk=2 gflops=6.7662e+06 valid=yes exit=0
+arm=k4-chunk4 stage=B ucx_tls=UNSET chunk=4 gflops=6.8223e+06 valid=yes exit=0
+arm=k16-chunk16 stage=B ucx_tls=UNSET chunk=16 gflops=6.3538e+06 valid=yes exit=0
+arm=k8b-chunk8-ctl stage=B ucx_tls=UNSET chunk=8 gflops=6.5595e+06 valid=yes exit=0
+=== HPL-MxP 2x8-GAAS phase4c-ucx-transport-u-panel-chunk complete (Outcome A path): Stage A characterized, the Section 1.6C gate authorized progression, and the fixed Stage-B U-panel chunk sweep ran; all run arms exited 0 with valid records or are preserved invalid/rejected characterization points (tag v1) ===
