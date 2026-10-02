@@ -248,3 +248,53 @@ percentage deltas; baseline-relative percentages and the Phase-4 closure
 comparison belong to the post-task analysis under `ANALYSE_RESULTS`. No exact
 score reproduction is required — the Strategic Analyst determines whether the
 fresh run remains clearly in the improved chunk-4 regime.
+
+## Execution record — attempt v1 (2026-10-02)
+
+The provenance gate passed before submission. Its exact SIF path, SHA-256,
+NVIDIA HPC Benchmarks v26.02 label, and launcher-selected CUDA 13.1 path are
+recorded in
+`outputs/2x8-GAAS-phase4d-chunk4-confirmation_provenance_v1.md`. The in-job
+image digest matched the gate digest.
+
+PBS job `76998.gaas` was submitted at `2026-10-02T15:12:39+0800` to `gpu_as`,
+project `hpc_ebslee`, pinned to `hpc-gaas-g14` + `hpc-gaas-g15` with
+`place=scatter`, 8 GPUs and 96 CPUs per node, 16 ranks total, and a 1-hour
+walltime. The presubmit snapshot showed both nodes fully free and eligible for
+`gpu_as`; the other fully free node in the eligible pool was `g22` in
+`gpu_ded`, with no fully free `gpu_ded` partner. The snapshot and pair
+selection are recorded in
+`outputs/2x8-GAAS-phase4d-chunk4-confirmation_v1.presubmit_pbsnodes.log` and
+`outputs/2x8-GAAS-phase4d-chunk4-confirmation_v1.submission.log`.
+
+PBS finished with `job_state=F`, `Exit_status=0`, `run_count=1`, and walltime
+`00:02:11` (start `15:12:40`, end `15:14:52`, +0800). The only scored arm was
+`k4-confirm_v1`; its status records exit 0, `verification=PASSED`, and
+`settings_echo_check=PASS`.
+
+| Metric | v1 result |
+|---|---:|
+| Overall GFLOP/s | `6.8196e+06` |
+| LU time | `7.43 s` |
+| LU GFLOP/s | `7.0833e+06` |
+| Iterative refinement | `0.29 s`; IR/LU `0.039` |
+| Solver iterations | 3 |
+| Normalized residual | `1.416310E-05`, finite, `PASSED` |
+| Host memory maximum | `0.004 GB`; available minimum `72.863 GB` |
+| Device memory maximum | `135.254 GB`; available minimum `138.739 GB`; matrix-generation headroom `2.767 GB` |
+
+OMP_NUM_THREADS=4 was verified on all 16 ranks; OMP_PLACES and OMP_PROC_BIND
+were unset on all ranks (effective package defaults `sockets` / `TRUE`). UCX_TLS
+was unset/AUTO and UCX_NET_DEVICES plus the UCX/NCCL diagnostic variables were
+unset. Rank mapping and the per-host topology gate passed. Pre/post HCA
+snapshots passed the link gates; the HCA delta reports no new error, discard,
+or recovery counters. TX/RX, rail shares/CV, and usable `port_xmit_wait`
+deltas are preserved in the HCA evidence.
+
+All 20 new v1 files were retrieved from the execution worktree and SHA-256
+verified against the remote copies. The task report-writing session corrected
+one logging-mechanics error: the first submission-log write was cut off by a
+nested-shell quoting error after the successful qsub. The complete log was
+transferred from a local reconstruction and its SHA-256 was verified; this
+replacement is recorded in the task Execution Report. No scheduler action or
+scientific run was repeated.

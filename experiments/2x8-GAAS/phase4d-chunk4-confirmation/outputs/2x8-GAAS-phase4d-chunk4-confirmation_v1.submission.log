@@ -1,0 +1,101 @@
+# 2x8-GAAS-phase4d-chunk4-confirmation_v1.submission.log
+# Single-scored-arm submission evidence for TASK-2X8-016 (Phase 4 Closure:
+# Chunk-4 Confirmation Run), PBS job 76998.gaas on hpc-gaas-g14 +
+# hpc-gaas-g15, queue gpu_as.
+#
+# Context: OpenCode execution-worker session under parent TASK-2X8-016
+# (EXECUTING / codex, Section 1.11 APPROVED, approved_by: user, unchanged
+# approved scope). Task/readiness and qsub/job submission explicitly
+# authorized by the user request and unchanged task 1.11. Exactly ONE qsub
+# was performed; exactly one scored HPL-MxP arm (k4-confirm, chunk 4) is
+# contained in the job. No other submission was made.
+#
+# All remote commands were run via direct noninteractive BatchMode SSH:
+#   ssh -o BatchMode=yes gaas <remote-command>
+#
+# Execution tree used (verified clean at the exact approved HEAD before
+# submission; task file verified EXECUTING/codex with unchanged approved
+# Section 1.11; scripts byte-identical to local by SHA-256):
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-016-25ae29e-phase4d-v1
+#   HEAD = 25ae29efb00c6b48ca18b7cefef4dc3da8749451
+#
+# Script sha256 (identical local and remote worktree):
+#   scripts/run_phase4d_chunk4_confirm.pbs
+#     818ab591aae6d63863b5548c45deee3c3957b388b141bebb8033a2e04390aab7
+#   scripts/hca_counter_snapshot.sh
+#     8e44f4da26490c5467547cb8fcb2943c81a04f40df3ccc23d52dda790672643a
+# Provenance gate (PASSED before submission; SIF SHA-256):
+#   123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628
+#   (outputs/2x8-GAAS-phase4d-chunk4-confirmation_provenance_v1.md)
+
+===== PAIR SELECTION (from the single presubmit pbsnodes -aSj snapshot) =====
+# Snapshot: outputs/2x8-GAAS-phase4d-chunk4-confirmation_v1.presubmit_pbsnodes.log
+#   captured=2026-10-02T15:12:10+0800 on hpc-gaas-hn2
+# Eligible pool (TASK-2X8-016 Section 1.6): gpu_as UNION gpu_ded only.
+# Live resources_available.Qlist mapping (read-only pbsnodes -a query,
+# 2026-10-02T15:12:24+0800):
+#   gpu_ded:            g01(1/8 GPU free,6 jobs) g02(1/8,7) g03(1/8,5)
+#                       g20(5/8,2) g21(0/8,1) g22(8/8,0 jobs)
+#   gpu_as,gpu_ppu:     g06-g13 (all busy, 0-1/8 GPUs free),
+#                       g14(8/8,0) g15(8/8,0)
+#   NOT eligible:       g04,g05,g16,g17,g18,g19,g23,g24 (gpu_aisg),
+#                       g25 (gpu_free), dm1/dm2 (gpu_datamover)
+# Fully-free (0 jobs, 8/8 GPUs, 100/100 ncpus, 2tb/2tb mem) nodes in the
+# eligible pool: hpc-gaas-g14, hpc-gaas-g15 (gpu_as), hpc-gaas-g22 (gpu_ded).
+# Selected pair: hpc-gaas-g14 + hpc-gaas-g15, queue gpu_as.
+# Facts: (1) both fully free with zero jobs in the presubmit snapshot; (2)
+# both carry gpu_as in Qlist, so the pair is pinnable together under ONE
+# eligible queue (gpu_as) - the preferred form per the session instruction;
+# (3) the only other fully-free eligible node, g22 (gpu_ded), has no
+# fully-free gpu_ded partner (best gpu_ded alternatives: g20 5/8 GPUs with 2
+# jobs, g21 0/8 with 1 job), and mixed pairs (g14/g15 with g22) cannot be
+# co-allocated under a single -q because neither carries the other queue in
+# its Qlist; (4) both queues verified enabled+started (qstat -Q gpu_as
+# gpu_ded: Ena yes, Str yes) and no other user job was queued/running
+# (one-multinode-job-at-a-time rule). g14+g15 is also the validated
+# Phase-4A/4B/4C reference pair.
+
+===== FINAL PRE-SUBMISSION ABSENCE CHECK =====
+# 2026-10-02T15:12:39+0800, from the experiment directory in the worktree:
+# all v1 attempt targets verified absent immediately before qsub - the PBS
+# .o/.e paths (created by qsub before the script guard runs), the six
+# per-arm file suffixes (.out/.err/.status/.envprobe/.timings/.hcadelta),
+# both per-node hcapre/hcapost snapshot globs, the rankmap/envmap/
+# carryforward logs, and the attempt hostfile. Result: PASS.
+# Worktree outputs/ contained only the pre-existing provenance gate record
+# (provenance_v1.md) and this attempt's presubmit snapshot.
+
+===== EXACT SUBMISSION COMMAND =====
+# Submitted from:
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-016-25ae29e-phase4d-v1/experiments/2x8-GAAS/phase4d-chunk4-confirmation
+qsub -q gpu_as \
+     -l select=host=hpc-gaas-g14:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB,place=scatter,walltime=01:00:00 \
+     -v ATTEMPT_TAG=v1 \
+     -o outputs/2x8-GAAS-phase4d-chunk4-confirmation_v1.o \
+     -e outputs/2x8-GAAS-phase4d-chunk4-confirmation_v1.e \
+     scripts/run_phase4d_chunk4_confirm.pbs
+# Accounting group hpc_ebslee via the reviewed script directive (#PBS -P
+# hpc_ebslee). No mpiprocs anywhere; place=scatter; walltime=01:00:00;
+# host-pinned per-chunk select for the chosen pair.
+
+===== QSUB RESULT =====
+submission_timestamp = 2026-10-02T15:12:39+0800
+qsub_stdout          = 76998.gaas
+qsub_exit_status     = 0
+PBS_job_id           = 76998.gaas
+
+===== IMMEDIATE POST-SUBMIT RECORD (single qstat -f 76998.gaas) =====
+# 2026-10-02T15:12:44+0800 (approx): job already RUNNING on the pinned pair.
+Job_Name             = 2x8_phase4d_c4
+job_state            = R
+queue                = gpu_as
+Resource_List.select = host=hpc-gaas-g14:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB
+Resource_List.place  = scatter
+Resource_List.walltime = 01:00:00
+exec_vnode           = (hpc-gaas-g14:ngpus=8:ncpus=96:mem=2097152000kb)+(hpc-gaas-g15:ngpus=8:ncpus=96:mem=2097152000kb)
+Submit_arguments     = -q gpu_as -l select=host=hpc-gaas-g14:ngpus=8:ncpus=96:mem=2000GB+host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB,place=scatter,walltime=01:00:00 -v ATTEMPT_TAG=v1 -o outputs/2x8-GAAS-phase4d-chunk4-confirmation_v1.o -e outputs/2x8-GAAS-phase4d-chunk4-confirmation_v1.e scripts/run_phase4d_chunk4_confirm.pbs
+
+# Monitoring plan (authorized): bounded polling of ONLY job 76998.gaas,
+# qstat once every 30 seconds, at most 20 checks (10 minutes); no cancel.
+# Final PBS record captured once with qstat -fx after completion; all v1
+# evidence retrieved to the matching local outputs/ directory.
