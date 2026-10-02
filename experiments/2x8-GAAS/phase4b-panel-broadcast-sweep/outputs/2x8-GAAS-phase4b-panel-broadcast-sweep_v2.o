@@ -1,0 +1,179 @@
+attempt_tag_validation=PASS (conservative filename-safe pattern: nonempty, ASCII alphanumeric '.' '_' '-' only, not '.' or '..')
+experiment_id=2x8-GAAS-phase4b-panel-broadcast-sweep
+attempt_tag=v2
+pbs_job_id=76703.gaas
+queue=gpu_as
+project=hpc_ebslee
+2026-10-02T08:56:19+08:00
+fixed scientific controls (identical across all arms; the ONLY scientific control that varies across Stage-B arms and Stage-C clones is --use-mpi-panel-broadcast; TASK-2X8-014 Sections 1.2, 1.6A, 1.6B, 1.6D-1.6F):
+--n 429056 --nb 3072 --nprow 4 --npcol 4 --nporder row
+--gpu-affinity 0:1:2:3:4:5:6:7 (fixed identity map; --cpu-affinity omitted, --mem-affinity omitted, --ucx-affinity omitted/automatic for every arm; UCX_TLS/UCX_NET_DEVICES not set)
+OMP_NUM_THREADS=4 (explicit job-shell export after module setup + mpirun -x OMP_NUM_THREADS; verified = 4 on all 16 ranks by the per-arm env probe)
+OMP_PLACES/OMP_PROC_BIND omitted (unset in the job shell; verified UNSET on all 16 ranks; effective launcher package defaults: OMP_PLACES=sockets, OMP_PROC_BIND=TRUE)
+--fill-device 1 --fill-device-buffer-size 3048 (retained full-fill residency mode)
+--cuda-host-register-step 2048 --call-dgemv-with-multiple-threads 0 (retained Phase-3D closure controls, explicit on every arm)
+--sloppy-type FP16
+--use-mpi-panel-broadcast <per-arm value: 0 / 5 / 10 / 15 / 20 / 25 (Stage-B fine window, fixed) | mechanically selected policy (Stage-C clones)> (the ONLY scientific control that varies; TASK-2X8-014 Sections 1.6A, 1.6B, 1.6D-1.6F; requested value echoed by the application and verified per arm)
+--u-panel-chunk-nbs = 8 via installed package default (retained; NOT changed by 4B)
+--use-separate-stream-for-gemm 1 --prioritize-trsm 0 --prioritize-factorization 0
+--test-loop 1 --skip-tests 0 --monitor-gpu 0
+default-equal controls applied via the installed package defaults exactly as in the validated TASK-010/TASK-2X8-011/012 launch, echoed values verified per arm: --u-panel-chunk-nbs = 8, --preset-gemm-kernel = 90 (EFFECTIVE value; v26.02 CLI accepts only {0,80} so the flag is omitted and the default supplies the SM90 preset; flag-check evidence hplmxp_v2602_flag_check_v1.log)
+Stage-B arm set (fixed fine window from the Stage-A mechanical transition; Section 1.6D): F0a (f0a-p0-ctl, panel 0 opening control) -> f5-p5 (5) -> f10-p10 (10) -> f15-p15 (15) -> f20-p20 (20) -> f25-p25 (25) -> F0b (f0b-p0-ctl, panel 0 closing control); one scored attempt per arm; exact ascending order; no diagnostic logging on any scored arm (Sections 1.6B rule 4, 1.6D); after F0b the mechanical Section 1.6E selection picks exactly one primary nonzero diagnostic clone (d1-p<pol>-diag) and at most one qualifying secondary (d2-p<pol>-diag), both with the 4A diagnostic environment only and never scored
+prohibited-list summary (TASK-2X8-014 Section 1.6G): UCX_TLS/UCX_NET_DEVICES/--ucx-affinity never set; --u-panel-chunk-nbs stays 8; no --mpi-use-mpi/--use-host-mpi; no N/NB/grid/order/affinity/OpenMP/residency/precision/kernel/scheduling changes; no historical HCA/bond/UCC/rendezvous mitigations; no microbenchmarks; no profiler; no Phase 4C chunk tuning; no second fine sweep; no panel values beyond the fixed Stage-B fine window and the mechanically selected Stage-C policies; no heavy communication INFO logging on scored arms (Sections 1.6B rule 4, 1.6D)
+controls NOT reopened by TASK-2X8-014 (Section 1.6G prohibited list; only --use-mpi-panel-broadcast varies, per arm): ucx-affinity/ucx-tls/UCX_TLS/UCX_NET_DEVICES, U-panel chunk, MPI/NCCL fallbacks (no --mpi-use-mpi/--use-host-mpi), N/NB/grid/order, GPU/CPU/memory affinity, OpenMP policy, residency/buffer/register-step/DGEMV, precision, GEMM kernel, scheduling controls; no historical HCA/bond/UCC/rendezvous mitigations; no microbenchmark ladder; no profiler
+task: TASK-2X8-014 Phase 4B Stage B + Stage C (one job); Stage-B order F0a -> 5 -> 10 -> 15 -> 20 -> 25 -> F0b; then the factual F0 bracket, tolerances max(spread,0.5%), the stop gates (invalid arm / bracket unavailable / >5% -> stop before C), the mechanical Section 1.6E selection, and the Stage-C diagnostic clone(s) in the same allocation; TASK-2X8-014 stops after the authorized clones - no Phase 4C
+execution_worktree_root=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2
+execution_worktree_git_revision=df72ea445ff1cf8ac41c199d4b479ee4f7587913
+layout=2 nodes x 8 GPUs = 16 ranks (one rank per GPU)
+grid=nprow=4 x npcol=4, nporder=row (fixed for every arm)
+nodes=hpc-gaas-g14 hpc-gaas-g15
+bridge=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2/multi-node-test/rsh_pbsdsh_container.sh
+hca_helper=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2/experiments/2x8-GAAS/phase4b-panel-broadcast-sweep/scripts/hca_counter_snapshot.sh
+container=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+=== mother-node GPU topology matrix (gate input + evidence) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC legend matches Phase-0)
+incoming job-shell OpenMP environment (before per-arm control application):
+  OMP_NUM_THREADS=96
+  OMP_PLACES=UNSET
+  OMP_PROC_BIND=UNSET
+=== loaded modules (module list; optional record, non-fatal) ===
+Currently Loaded Modulefiles:
+ 1) apptainer/1.4.1     3) cuda/13.1 <aL>   5) squashfuse/0.5.2  
+ 2) gnu/gcc-12.3 <aL>   4) nvhpc/26.3       6) gocryptfs/2.5.0   
+
+Key:
+<module-tag>  <aL>=auto-loaded  
+=== apptainer version (required runtime; rc=0) ===
+apptainer version 1.4.1
+=== container image identity (provenance; non-fatal) ===
+container_image=/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif
+container_image_size_bytes=5307924480
+container_image_mtime=2026-05-06 06:07:56.408241441 +0800
+container_image_sha256=123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628
+=== container MPI version (/usr/local/mpi/bin/mpirun --version; required runtime; rc=0) ===
+WARNING: group: unknown groupid 1304617061
+mpirun (Open MPI) 4.1.9a1
+
+Report bugs to http://www.open-mpi.org/community/help/
+=== pre-sweep hardware-health snapshot (mother node hpc-gaas-g14) ===
+	[4mGPU0	GPU1	GPU2	GPU3	GPU4	GPU5	GPU6	GPU7	NIC0	NIC1	NIC2	NIC3	NIC4	NIC5	NIC6	NIC7	NIC8	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NV18	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU1	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NV18	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU2	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NV18	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU3	NV18	NV18	NV18	 X 	NV18	NV18	NV18	NV18	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	SYS	0-49	0		N/A
+GPU4	NV18	NV18	NV18	NV18	 X 	NV18	NV18	NV18	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	NODE	56-101	1		N/A
+GPU5	NV18	NV18	NV18	NV18	NV18	 X 	NV18	NV18	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	PIX	56-101	1		N/A
+GPU6	NV18	NV18	NV18	NV18	NV18	NV18	 X 	NV18	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	NODE	56-101	1		N/A
+GPU7	NV18	NV18	NV18	NV18	NV18	NV18	NV18	 X 	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	NODE	56-101	1		N/A
+NIC0	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC1	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC2	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	SYS	SYS	SYS	SYS	SYS				
+NIC3	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	SYS	SYS	SYS	SYS	SYS				
+NIC4	SYS	SYS	SYS	SYS	PIX	NODE	NODE	NODE	SYS	SYS	SYS	SYS	 X 	NODE	NODE	NODE	NODE				
+NIC5	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	 X 	NODE	NODE	PIX				
+NIC6	SYS	SYS	SYS	SYS	NODE	NODE	PIX	NODE	SYS	SYS	SYS	SYS	NODE	NODE	 X 	NODE	NODE				
+NIC7	SYS	SYS	SYS	SYS	NODE	NODE	NODE	PIX	SYS	SYS	SYS	SYS	NODE	NODE	NODE	 X 	NODE				
+NIC8	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	SYS	SYS	SYS	SYS	NODE	PIX	NODE	NODE	 X 				
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
+
+NIC Legend:
+
+  NIC0: mlx5_0
+  NIC1: mlx5_1
+  NIC2: mlx5_2
+  NIC3: mlx5_3
+  NIC4: mlx5_4
+  NIC5: mlx5_5
+  NIC6: mlx5_8
+  NIC7: mlx5_9
+  NIC8: mlx5_bond_0
+
+index, name, driver_version, temperature.gpu, power.draw [W], clocks.current.sm [MHz], memory.used [MiB], memory.total [MiB]
+0, NVIDIA H200, 580.126.20, 33, 118.66 W, 1980 MHz, 0 MiB, 143771 MiB
+1, NVIDIA H200, 580.126.20, 32, 77.05 W, 345 MHz, 0 MiB, 143771 MiB
+2, NVIDIA H200, 580.126.20, 32, 77.41 W, 345 MHz, 0 MiB, 143771 MiB
+3, NVIDIA H200, 580.126.20, 33, 76.61 W, 345 MHz, 0 MiB, 143771 MiB
+4, NVIDIA H200, 580.126.20, 32, 78.02 W, 345 MHz, 0 MiB, 143771 MiB
+5, NVIDIA H200, 580.126.20, 32, 75.63 W, 345 MHz, 0 MiB, 143771 MiB
+6, NVIDIA H200, 580.126.20, 31, 75.54 W, 345 MHz, 0 MiB, 143771 MiB
+7, NVIDIA H200, 580.126.20, 31, 79.11 W, 345 MHz, 0 MiB, 143771 MiB
+=== hostfile (/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2/experiments/2x8-GAAS/phase4b-panel-broadcast-sweep/outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_hostfile_v2) ===
+hpc-gaas-g14 slots=8
+hpc-gaas-g15 slots=8
+=== rank-map probe: rc=0 rank_lines=16 hosts=2 ranks_per_host=8 log=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2/experiments/2x8-GAAS/phase4b-panel-broadcast-sweep/outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_rankmap_v2.log ===
+incoming OMP environment across 16 ranks: ranks_with_OMP_PLACES_set=0 ranks_with_OMP_PROC_BIND_set=0
+incoming OMP_NUM_THREADS values seen (evidence; neutralized per arm by explicit export + -x forwarding):
+  rank=7/16 host=hpc-gaas-g14 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=11/16 host=hpc-gaas-g15 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=12/16 host=hpc-gaas-g15 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=9/16 host=hpc-gaas-g15 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=13/16 host=hpc-gaas-g15 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=15/16 host=hpc-gaas-g15 local_rank=7/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=2/16 host=hpc-gaas-g14 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=14/16 host=hpc-gaas-g15 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=6/16 host=hpc-gaas-g14 local_rank=6/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=1/16 host=hpc-gaas-g14 local_rank=1/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=5/16 host=hpc-gaas-g14 local_rank=5/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=10/16 host=hpc-gaas-g15 local_rank=2/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=4/16 host=hpc-gaas-g14 local_rank=4/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=8/16 host=hpc-gaas-g15 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=3/16 host=hpc-gaas-g14 local_rank=3/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+  rank=0/16 host=hpc-gaas-g14 local_rank=0/8 omp_num_threads=96 omp_places=UNSET omp_proc_bind=UNSET
+incoming_openmp_gate=PASS (OMP_PLACES/OMP_PROC_BIND unset on all 16 ranks; launcher package defaults remain the effective placement policy)
+  host=hpc-gaas-g14 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+  host=hpc-gaas-g15 topology_gate=PASS (cpuset=0-49,56-101 mems=0-1 gpus=8 hcas=mlx5_0..mlx5_5,mlx5_8,mlx5_9 GPU0->NUMA0(0-49) GPU4->NUMA1(56-101) NIC0..NIC7->mlx5_0..mlx5_9)
+rankmap_per_host_topology_gate=PASS (every allocated host matches the accepted Phase-0 topology; per-host reports preserved in /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2/experiments/2x8-GAAS/phase4b-panel-broadcast-sweep/outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_rankmap_v2.log)
+=== Phase 4B Stage-B arm F0a (f0a-p0-ctl): opening panel=0 control (Section 1.6D; fixed retained stack; scored clean arm; opening half of the fine-stage drift bracket F0a/F0b) ===
+=== HCA snapshot (hcapre, arm f0a-p0-ctl): pbsdsh per-node capture ===
+=== HCASNAPSHOT hpc-gaas-g15 2x8-GAAS-phase4b-panel-broadcast-sweep_f0a-p0-ctl_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2/experiments/2x8-GAAS/phase4b-panel-broadcast-sweep/outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_f0a-p0-ctl_v2_hcapre_hca_hpc-gaas-g15.log ===
+=== HCASNAPSHOT hpc-gaas-g14 2x8-GAAS-phase4b-panel-broadcast-sweep_f0a-p0-ctl_v2_hcapre wrote /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-014-df72ea4-phase4b-v2/experiments/2x8-GAAS/phase4b-panel-broadcast-sweep/outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_f0a-p0-ctl_v2_hcapre_hca_hpc-gaas-g14.log ===
+hca_link_gate=PASS (hcapre, arm f0a-p0-ctl: all eight expected HCAs ACTIVE at 400 Gb/sec on both nodes)

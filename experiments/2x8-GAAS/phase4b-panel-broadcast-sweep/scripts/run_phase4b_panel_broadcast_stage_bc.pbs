@@ -3,7 +3,9 @@
 # panel-broadcast sweep: 2 GAAS nodes x 8 H200 GPUs (16 ranks). The
 # TASK-2X8-014-approved Stage-B fine sweep plus the mechanically selected
 # Stage-C diagnostic clone(s) - the second Phase-4B execution segment,
-# attempt tag v2 - run sequentially within this single PBS allocation at
+# attempt tag v2.1 (v2 = the failed startup attempt, evidence preserved;
+# the Track 1 mode-dispatch patch below defines the v2.1 retry) - run
+# sequentially within this single PBS allocation at
 # the fixed retained Phase-3/4A stack (tasks/TASK-2X8-014.md Sections
 # 1.6D-1.6F); ONLY --use-mpi-panel-broadcast varies scientifically (one
 # fixed fine value per Stage-B arm; each Stage-C clone repeats the
@@ -205,9 +207,9 @@
 # (experiments/2x8-GAAS/phase4b-panel-broadcast-sweep/) on GAAS.
 # Submit with (the queue is deliberately NOT selected in this script; pass
 # an approved one at qsub):
-#   qsub -q <gpu_as|gpu_ded> -v "ATTEMPT_TAG=v2" \
-#        -o outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.o \
-#        -e outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.e \
+#   qsub -q <gpu_as|gpu_ded> -v "ATTEMPT_TAG=v2.1" \
+#        -o outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.1.o \
+#        -e outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.1.e \
 #        scripts/run_phase4b_panel_broadcast_stage_bc.pbs
 #
 # Inputs (environment, via qsub -v):
@@ -1177,7 +1179,8 @@ count_diag_markers() {
   NCCL_ENV_KNOB_ECHO=$(cat "$CDM_OF" "$CDM_EF" 2>/dev/null | grep -cF 'NCCL_NET_GDR_LEVEL' || true)
 }
 
-# run_env_probe <key> <mode>   (mode: clean | diag)
+# run_env_probe <key> <mode>   (mode: clean | scored | diag; run_arm passes
+# its arm-role mode scored|diag - a scored arm uses the CLEAN environment)
 # Establishes the retained host-runtime environment (explicit
 # OMP_NUM_THREADS=4 export after the module/job environment, OMP_PLACES and
 # OMP_PROC_BIND guaranteed unset, and every UCX/NCCL diagnostic/logging
@@ -1205,8 +1208,10 @@ run_env_probe() {
   # diagnostic clones (diag): apply exactly the proven 4A diagnostic set
   # (Section 1.4C); the GDR-off knobs stay unset in both modes.
   unset UCX_LOG_LEVEL UCX_PROTO_INFO NCCL_DEBUG NCCL_DEBUG_SUBSYS NCCL_DEBUG_FILE UCX_IB_GPU_DIRECT_RDMA NCCL_NET_GDR_LEVEL
+  # run_arm passes its arm-role mode (scored|diag); scored arms use the
+  # CLEAN environment, so both case labels below map to the clean branch.
   case "$PROBE_MODE" in
-    clean) ;;
+    clean|scored) ;;
     diag)
       export UCX_LOG_LEVEL="$UCX_LOG_LEVEL_SET"
       export UCX_PROTO_INFO="$UCX_PROTO_INFO_SET"
@@ -1214,7 +1219,7 @@ run_env_probe() {
       export NCCL_DEBUG_SUBSYS="$NCCL_DEBUG_SUBSYS_SET"
       export NCCL_DEBUG_FILE="$NCCL_DEBUG_FILE_SET"
       ;;
-    *) echo "FATAL: unknown env-probe mode '${PROBE_MODE}' (expected clean or diag)" >&2; exit 1 ;;
+    *) echo "FATAL: unknown env-probe mode '${PROBE_MODE}' (expected clean/scored or diag)" >&2; exit 1 ;;
   esac
   # -x forwarding set: the retained host-runtime contract always; the five
   # diagnostic variables additionally, only when set (diag mode). mpirun -x
@@ -1255,7 +1260,7 @@ run_env_probe() {
   # variable on clean scored arms; the exact 4A diagnostic set values on
   # Stage-C clones; the GDR-off knobs UNSET in both modes).
   case "$PROBE_MODE" in
-    clean)
+    clean|scored)
       ULL_OK=$(grep -cF " ucx_log_level=UNSET " "$TMP" || true)
       UPI_OK=$(grep -cF " ucx_proto_info=UNSET " "$TMP" || true)
       ND_OK=$(grep -cF " nccl_debug=UNSET " "$TMP" || true)

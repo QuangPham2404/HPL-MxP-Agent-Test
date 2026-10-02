@@ -33,10 +33,12 @@ g14+g15 selected (see Submission). Submission was authorized under the
 unchanged Section 1.11 authorization of TASK-2X8-014; submission remained
 limited to the exact approved task scope.**
 
-## Stage-B/C run (attempt tag v2)
+## Stage-B/C run (attempt tags v2 failed, v2.1 retry)
 
-**Status: Prepared (pre-submission; 2026-10-02) — Stage-B/C script
-reviewed locally; no v2 job submitted yet.**
+**Status: v2 attempt FAILED at startup (2026-10-02, PBS job `76703.gaas`,
+exit 1, 00:00:40 — deterministic workflow defect, no HPL arm ran; see the
+failed-attempt record below). Track 1 patch applied; retry under attempt
+tag `v2.1` planned.**
 
 This is the second execution segment of TASK-2X8-014, under the same
 approved scope as Stage A: ONE same-allocation 2x8 job in which Stage B
@@ -191,30 +193,65 @@ Unit note: identical to Stage A — the same `port_xmit_data` unit
 question and the same `4294967295` unavailable-counter sentinel (see
 the Stage-A per-arm evidence unit note).
 
-### Attempt and output naming (tag v2)
+### Attempt and output naming (tags v2 / v2.1)
 
 Per-arm attempt ID:
-`2x8-GAAS-phase4b-panel-broadcast-sweep_<label>_v2`, with `<label>` one
+`2x8-GAAS-phase4b-panel-broadcast-sweep_<label>_<tag>`, with `<label>` one
 of `f0a-p0-ctl`, `f5-p5`, `f10-p10`, `f15-p15`, `f20-p20`, `f25-p25`,
-`f0b-p0-ctl`, `d1-p<pol>-diag`, `d2-p<pol>-diag`. The artifact names
+`f0b-p0-ctl`, `d1-p<pol>-diag`, `d2-p<pol>-diag` and `<tag>` the current
+attempt tag (`v2` = the failed startup attempt, evidence preserved;
+`v2.1` = the Track 1 retry). The artifact names
 follow the same pattern as the v1 table: per-arm
 `.out`/`.err`/`.status`/`.envprobe`/`.timings`/`.hcadelta`, the
 per-node `hcapre`/`hcapost` snapshot logs, the
-rankmap/envmap/carryforward logs and the hostfile with `_v2`, and the
-PBS `-o`/`-e` names with `_v2` at qsub. The pre-run guard refuses to
+rankmap/envmap/carryforward logs and the hostfile with `_<tag>`, and the
+PBS `-o`/`-e` names with `_<tag>` at qsub. The pre-run guard refuses to
 overwrite any existing file of the attempt — covering the seven
 Stage-B labels and the ten potential `d1`/`d2` labels; retries use a
 new tag.
 
-### Submission (planned)
+### Submission (v2 failed; v2.1 retry)
+
+**Failed attempt record (Track 1, workflow/05):**
+
+- Attempt tag `v2`, PBS job `76703.gaas` (queue gpu_as, project
+  hpc_ebslee, host-pinned g14+g15, submitted 2026-10-02T08:56:19+08:00,
+  `job_state=F`, `Exit_status=1`, walltime 00:00:40, run_count 1).
+- Observed error (PBS `.e`, final line):
+  `FATAL: unknown env-probe mode 'scored' (expected clean or diag)`.
+- Suspected cause (confirmed by inspection): a deterministic
+  workflow-machinery control-flow defect — `run_arm` passes its arm-role
+  mode (`scored`) to `run_env_probe`, whose dispatch accepted only
+  `clean|diag`. The job aborted at the F0a per-arm env probe, BEFORE any
+  HPL arm launched (all preflight gates PASS: topology, rank map 16/2x8,
+  incoming-OMP gate, HCA link gate; the F0a pre-arm HCA snapshots were
+  captured). No scientific control was applied or varied; no HPL-MxP
+  binary ran; same-allocation scientific comparability is unaffected.
+- Planned patch (applied): accept `clean|scored` as the clean scored-arm
+  environment in both `run_env_probe` dispatch cases (a scored arm uses
+  the clean environment; `diag` unchanged); function comment updated.
+  `bash -n` PASS. No scientific control, resource, launcher, or transport
+  setting changed.
+- Preserved evidence (retrieved, SHA-256 verified 8/8):
+  `outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.{o,e}`,
+  `..._carryforward_v2.log`, `..._envmap_v2.log` (empty — the probe never
+  ran), `..._hostfile_v2`, `..._rankmap_v2.log`, and the two
+  `..._f0a-p0-ctl_v2_hcapre_hca_hpc-gaas-g{14,15}.log` snapshots.
+- Retry: new attempt tag `v2.1` (fresh evidence names; the v2 files are
+  never overwritten), fresh presubmit `pbsnodes -aSj` snapshot
+  (`..._v2.1.presubmit_pbsnodes.log`), same fixed scientific controls,
+  same submission form with `-v "ATTEMPT_TAG=v2.1"` and `_v2.1` PBS
+  output names.
 
 A fresh presubmit `pbsnodes -aSj` snapshot over the eligible queues
-will be preserved as submission-side evidence (e.g.
-`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.presubmit_pbsnodes.log`);
-the cleanest eligible same-queue `gpu_as`/`gpu_ded` pair is then
-selected via the host-pinned `select` pattern (only eligible idle
-`gpu_as`/`gpu_ded` nodes), one multinode job at a time. Exact planned
-submission form (queue and node placeholders):
+is preserved as submission-side evidence (the v2 snapshot:
+`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.presubmit_pbsnodes.log`,
+2026-10-02T08:56:05+08:00; the v2.1 retry takes its own fresh snapshot);
+the cleanest eligible same-queue `gpu_as`/`gpu_ded` pair is selected via
+the host-pinned `select` pattern (only eligible idle `gpu_as`/`gpu_ded`
+nodes), one multinode job at a time. Exact submission form (queue and
+node placeholders; ATTEMPT_TAG and output names use the current attempt
+tag):
 
 ```bash
 qsub -q <gpu_as|gpu_ded> \
@@ -316,7 +353,7 @@ belongs to the Strategic Analyst.
   `ATTEMPT_TAG` environment at submission
 - `scripts/run_phase4b_panel_broadcast_stage_bc.pbs` — single
   same-allocation Stage-B/C run script (second execution segment,
-  attempt tag v2): the seven Stage-B arms in the exact approved order,
+  attempt tags v2/v2.1): the seven Stage-B arms in the exact approved order,
   the factual F0 bracket + tolerances + stop gates, the mechanical
   Section 1.6E selection, and the Stage-C diagnostic clone(s); per-arm
   evidence files, per-arm pre/post per-node HCA snapshots, and the
