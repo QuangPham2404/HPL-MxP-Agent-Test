@@ -237,33 +237,94 @@ existing evidence is never overwritten and reruns need a new tag.
 | factual factorial summary | `outputs/2x8-GAAS-phase5-scheduling-factorial_factorial_summary_<tag>.log` |
 | attempt hostfile | `outputs/2x8-GAAS-phase5-scheduling-factorial_hostfile_<tag>` |
 | provenance gate record | `outputs/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md` (pre-existing) |
+| v1 submission-side evidence (job 77060.gaas, never ran, user-canceled; preserved) | `outputs/2x8-GAAS-phase5-scheduling-factorial_v1.submission.log`, `..._v1.presubmit_pbsnodes.log`, `..._v1.qstat_monitor.log`, `..._v1.qdel_record.log` |
+| v2 submission-side evidence | `outputs/2x8-GAAS-phase5-scheduling-factorial_v2.submission.log`, `..._v2.presubmit_pbsnodes.log`, `..._v2.qstat_monitor.log` |
 | PBS job stdout | passed at qsub: `-o outputs/2x8-GAAS-phase5-scheduling-factorial_<tag>.o` |
 | PBS job stderr | passed at qsub: `-e outputs/2x8-GAAS-phase5-scheduling-factorial_<tag>.e` |
 
+## Attempt history
+
+### v1 — submitted 2026-10-02 16:49:41 +0800, user-canceled before start; ZERO scored arms
+
+- Exactly one qsub: PBS job `77060.gaas`, queue `gpu_ded`, unpinned
+  `select=2:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=03:00:00`,
+  `-v ATTEMPT_TAG=v1`, submitted from the clean execution worktree
+  `.codex-worktrees/TASK-2X8-017-b89376b-phase5-v1`
+  (HEAD `b89376b1475b2a712a89ebc6e012b6fc2a709e26`; scripts hash-verified
+  against local). See
+  `outputs/2x8-GAAS-phase5-scheduling-factorial_v1.submission.log`.
+- The job NEVER RAN: from the first post-submit `qstat -f` (16:49:53) PBS
+  reported `Not Running: Insufficient amount of resource: Qlist` — the
+  unpinned gpu_ded request needed two fully-free `Qlist=gpu_ded` nodes but
+  only `g22` was fully free (the other fully-free eligible node, `g15`,
+  carries `Qlist=gpu_as,gpu_ppu`; v1 presubmit snapshot
+  `outputs/2x8-GAAS-phase5-scheduling-factorial_v1.presubmit_pbsnodes.log`).
+- The user explicitly canceled the queued job before it started (user
+  statement: qdel returned 0; qstat says finished). Final PBS record:
+  `job_state=F`, `substate=91`, comment
+  `Not Running: Insufficient amount of resource: Qlist and terminated`,
+  no start time / exec_host / resources_used, mtime = history_timestamp
+  2026-10-02 16:56:40 +0800. Full evidence:
+  `outputs/2x8-GAAS-phase5-scheduling-factorial_v1.qdel_record.log`
+  (also records that `tracejob` is not available to this account).
+- Consequence: ZERO of the nine scored arms were attempted; the v1 PBS
+  `.o`/`.e` paths were never created (the job never executed). The fixed
+  nine-arm matrix is entirely unattempted after v1. All v1 evidence is
+  preserved under `outputs/` with v1 names and will never be reused or
+  overwritten; later attempts use new tags.
+
+### v2 — user-directed cross-queue attempt (planned)
+
+User direction (2026-10-02, recorded before the v2 submission): cross-queue
+allocation is now allowed; try the fully free pair `hpc-gaas-g15` (gpu_as) +
+`hpc-gaas-g22` (gpu_ded) via ONE qsub using a host-pinned two-chunk select
+with per-chunk `Qlist` values under one eligible queue, if PBS accepts it:
+
+```text
+select=host=hpc-gaas-g15:ngpus=8:ncpus=96:mem=2000GB:Qlist=gpu_as+host=hpc-gaas-g22:ngpus=8:ncpus=96:mem=2000GB:Qlist=gpu_ded
+place=scatter, group hpc_ebslee (#PBS -P), no mpiprocs, walltime=03:00:00
+```
+
+Scheduler facts recorded by the user (read-only): `Qlist` resource is
+type=string_array flag=h; `gpu_as` default_chunk.Qlist=gpu_as;
+`gpu_ded` default_chunk.Qlist=gpu_ded; g15 Qlist=gpu_as,gpu_ppu; g22
+Qlist=gpu_ded. Boundary conditions directed by the user: if PBS rejects the
+per-chunk Qlist syntax or keeps the job held for Qlist incompatibility, do
+not alter scheduler configuration, do not submit additional jobs, preserve
+the outcome, and report the exact additional cluster-side action needed; do
+not attempt a same-queue fallback without reporting back. The already-reviewed
+runner, exact nine-arm matrix, bounded monitoring, and retrieval proceed only
+if the exact g15+g22 request is accepted and runnable. No further job
+cancellation unless required to remove this user-authorized mixed-pair
+request that provably cannot run (gather state/evidence first, then cancel
+and record).
+
 ## Submission (planned; under the approved TASK-2X8-017 Section 1.11 authorization)
 
-Submission is planned under the unchanged approved Section 1.11 authorization
-of TASK-2X8-017 and the exact approved task scope. Before submitting: the
-provenance identity gate PASSED (see above); run `pbsnodes -aSj` over the
-eligible queues to select the cleanest schedulable 2-node x 8-GPU pair from
-the combined `gpu_as` UNION `gpu_ded` pool (the pair need not share a queue
-label; if a specific pair cannot legally co-allocate, automatically choose
-the next-cleanest schedulable pair); record the snapshot as submission-side
-evidence. One same-allocation sequential PBS job (preferred per Section
-1.6C); one multinode job at a time; monitoring is bounded.
+Submission is authorized under the unchanged approved Section 1.11 authorization
+of TASK-2X8-017 and the exact approved task scope. The provenance identity gate
+PASSED before the v1 submission (see above); a fresh light identity re-check of
+the same four items is recorded in the v2 submission log before the v2 qsub, and
+the run script re-records and hard-gates the in-job image digest. A fresh
+`pbsnodes -aSj` snapshot over the eligible queues is taken immediately before
+the v2 submission as submission-side evidence (see Attempt history — v2). One
+same-allocation sequential PBS job (Section 1.6C); one multinode job at a time;
+monitoring is bounded.
 
-Planned submission form (`ATTEMPT_TAG=v1` shown; `-q` takes one of the
-eligible queues; the optional host-pinned select names the cleanest
-schedulable pair from the combined pool):
+v2 submission form (user-directed cross-queue host-pinned select; see Attempt
+history — v2; `-q` takes one eligible queue):
 
 ```bash
 qsub -q <gpu_as|gpu_ded> \
-     [-l select=host=<n1>:ncpus=96:ngpus=8:mem=2000GB+host=<n2>:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=...] \
-     -v "ATTEMPT_TAG=v1" \
-     -o outputs/2x8-GAAS-phase5-scheduling-factorial_v1.o \
-     -e outputs/2x8-GAAS-phase5-scheduling-factorial_v1.e \
+     -l select=host=hpc-gaas-g15:ncpus=96:ngpus=8:mem=2000GB:Qlist=gpu_as+host=hpc-gaas-g22:ncpus=96:ngpus=8:mem=2000GB:Qlist=gpu_ded,place=scatter,walltime=03:00:00 \
+     -v "ATTEMPT_TAG=v2" \
+     -o outputs/2x8-GAAS-phase5-scheduling-factorial_v2.o \
+     -e outputs/2x8-GAAS-phase5-scheduling-factorial_v2.e \
      scripts/run_phase5_scheduling_factorial.pbs
 ```
+
+The v1 form (unpinned select) and its outcome are preserved in Attempt
+history — v1; v1 output names are never reused.
 
 ## Expected output markers and validation criteria
 

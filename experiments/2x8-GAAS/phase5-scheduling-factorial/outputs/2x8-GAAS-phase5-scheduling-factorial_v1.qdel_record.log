@@ -1,0 +1,119 @@
+# 2x8-GAAS-phase5-scheduling-factorial_v1.qdel_record.log
+# TASK-2X8-017 v1 attempt cancellation + final historical-state evidence.
+# Recorded 2026-10-02T17:03:18+08:00 (before the v2 attempt) per explicit
+# user direction: "first record/copy v1 qdel + historical state evidence
+# into the experiment record."
+#
+# FACTS (user-stated + PBS-recorded):
+#   - PBS job 77060.gaas (TASK-2X8-017 v1, queue gpu_ded, submitted
+#     2026-10-02T16:49:41+0800 from worktree
+#     .codex-worktrees/TASK-2X8-017-b89376b-phase5-v1, see
+#     outputs/2x8-GAAS-phase5-scheduling-factorial_v1.submission.log)
+#     was explicitly canceled BY THE USER before it started.
+#   - The user reported: qdel returned 0 and qstat says finished.
+#   - The job NEVER RAN: no start time, no exec_host, and no
+#     resources_used appear in the final record; substate = 91
+#     (job deleted while queued); job_state = F (finished).
+#   - It therefore scored ZERO arms: the fixed nine-arm matrix
+#     (A001a..A001b) is entirely unattempted as of this record. No v1
+#     per-arm output files exist; the only v1 evidence is the three
+#     submission-side logs (submission, presubmit pbsnodes snapshot,
+#     qstat monitor) plus this record. The v1 PBS .o/.e paths passed at
+#     qsub were never created because the job never executed.
+#   - Why it never started (PBS comment, present from the first
+#     post-submit qstat -f at 16:49:53):
+#       "Not Running: Insufficient amount of resource: Qlist"
+#     i.e. the unpinned gpu_ded request (default chunk Qlist=gpu_ded)
+#     could not be granted: only one fully-free Qlist=gpu_ded node
+#     (g22) existed; the second fully-free eligible node (g15) carries
+#     Qlist=gpu_as,gpu_ppu only (see the v1 presubmit snapshot).
+#   - Bounded monitor evidence (outputs/..._v1.qstat_monitor.log): the
+#     job was already absent from active qstat at the first check
+#     (16:49:59, seconds after the 16:49:53 Q-state post-submit record)
+#     and remained absent through check 12 (17:01:08), consistent with
+#     the user's qdel occurring between 16:49:53 and 16:49:59, before
+#     any scheduler run of the job.
+#   - Final history record: mtime = history_timestamp =
+#     2026-10-02T16:56:40+0800 (epoch 1790931400), job_state = F,
+#     substate = 91, comment = "Not Running: Insufficient amount of
+#     resource: Qlist and terminated".
+#   - tracejob 77060 is not available to this account ("Couldn't find
+#     Job Id 77060.gaas in logs of past 1 day"), so no server-log-level
+#     qdel timestamp can be recorded by the worker.
+#
+# v1 evidence files (all preserved, never to be reused for later attempts):
+#   outputs/2x8-GAAS-phase5-scheduling-factorial_v1.submission.log
+#   outputs/2x8-GAAS-phase5-scheduling-factorial_v1.presubmit_pbsnodes.log
+#   outputs/2x8-GAAS-phase5-scheduling-factorial_v1.qstat_monitor.log
+#   outputs/2x8-GAAS-phase5-scheduling-factorial_v1.qdel_record.log  (this file)
+
+===== FULL FINAL PBS RECORD (qstat -fx 77060, captured 2026-10-02T17:03:18+0800) =====
+
+Job Id: 77060.gaas
+    Job_Name = 2x8_phase5_fac
+    Job_Owner = pham0094@hpc-gaas-hn2
+    job_state = F
+    queue = gpu_ded
+    server = gaas
+    Checkpoint = u
+    ctime = Fri Oct  2 16:49:41 2026
+    Error_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-ph
+	ase5-v1/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GA
+	AS-phase5-scheduling-factorial_v1.e
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = a
+    mtime = Fri Oct  2 16:56:40 2026
+    Output_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP
+	-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-p
+	hase5-v1/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-G
+	AAS-phase5-scheduling-factorial_v1.o
+    Priority = 100
+    qtime = Fri Oct  2 16:49:41 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 10800,
+	 "job.queue_charge_rate": 0, "formula_constants": "",
+	 "am_cloud_enabled": false}
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = 2:ncpus=96:ngpus=8:mem=2000GB
+    Resource_List.walltime = 03:00:00
+    substate = 91
+    Variable_List = PBS_O_HOME=/home/pham0094,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=pham0094,
+	PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/l
+	ocal/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin,
+	PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=hpc-gaas-hn2,
+	PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-
+	Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-phase5-v1
+	/experiments/2x8-GAAS/phase5-scheduling-factorial,PBS_O_SYSTEM=Linux,
+	ATTEMPT_TAG=v1,PBS_O_QUEUE=gpu_ded
+    comment = Not Running: Insufficient amount of resource: Qlist  and terminat
+	ed
+    etime = Fri Oct  2 16:49:41 2026
+    Submit_arguments = -q gpu_ded -l select=2:ncpus=96:ngpus=8:mem=2000GB,
+	place=scatter,
+	walltime=03:00:00 -v ATTEMPT_TAG=v1 -o outputs/2x8-GAAS-phase5-schedul
+	ing-factorial_v1.o -e outputs/2x8-GAAS-phase5-scheduling-factorial_v1.e
+	 scripts/run_phase5_scheduling_factorial.pbs
+    estimated.exec_vnode = (hpc-gaas-g05:ncpus=96:ngpus=8:mem=2097152000kb)+(hp
+	c-gaas-g15:ncpus=96:ngpus=8:mem=2097152000kb)
+    estimated.start_time = Fri Oct  2 16:55:40 2026
+    history_timestamp = 1790931400
+    project = hpc_ebslee
+    Submit_Host = hpc-gaas-hn2
+
+===QSTAT_U_BEGIN===
+===QSTAT_U_END(rc=0)===
+2026-10-02T17:03:18+08:00
+2026-10-02T09:03:18Z
+
+===== USER JOB LIST AT RECORD TIME (qstat -u $USER, empty = no jobs) =====
+(empty; rc=0)

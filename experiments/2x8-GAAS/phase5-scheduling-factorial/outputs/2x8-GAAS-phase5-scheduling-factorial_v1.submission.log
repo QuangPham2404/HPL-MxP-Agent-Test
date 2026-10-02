@@ -1,0 +1,172 @@
+# 2x8-GAAS-phase5-scheduling-factorial_v1.submission.log
+# Nine-arm scheduling-factorial submission evidence for TASK-2X8-017 (Phase 5:
+# Final Scheduling 2^3 Factorial), PBS job 77060.gaas, queue gpu_ded,
+# unpinned select (nodes granted by PBS; verified below).
+#
+# Context: OpenCode execution-worker session under parent TASK-2X8-017
+# (EXECUTING / codex, Section 1.11 APPROVED, approved_by: user, unchanged
+# approved scope). Submission explicitly authorized by the approved task
+# (Sections 1.6C/1.11: one same-allocation sequential PBS job preferred).
+# Exactly ONE qsub was performed; the job contains exactly the nine scored
+# arms A001a -> A000 -> A010 -> A011 -> A100 -> A101 -> A110 -> A111 -> A001b
+# of the fixed 2^3 factorial. No other submission was made.
+#
+# All remote commands were run via direct noninteractive BatchMode SSH:
+#   ssh -o BatchMode=yes gaas <remote-command>
+
+# Execution tree used (verified clean at the exact approved HEAD before
+# submission; task file verified EXECUTING/codex with unchanged approved
+# Section 1.11; scripts byte-identical to local by SHA-256):
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-phase5-v1
+#   HEAD = b89376b1475b2a712a89ebc6e012b6fc2a709e26
+#
+# Script sha256 (identical local and remote worktree):
+#   scripts/run_phase5_scheduling_factorial.pbs
+#     f71f7c30548f54b722e79614d365301300992b90a8eba02c4b27bd783192f1c4
+#   scripts/hca_counter_snapshot.sh
+#     42ec6735bdcb23576ddbc383b43589af7e6fb0b867d7d90f1baabbe9cf1bfd22
+#   multi-node-test/rsh_pbsdsh_container.sh (validated bridge, unchanged)
+#     d0e8c2318f69e0aa5df697a99670c72c688e93872f562d98e1c7aa783a0ed961
+#
+# Provenance identity gate (PASSED before submission; Section 1.4A; SIF
+# SHA-256 freshly verified 2026-10-02T16:26+0800):
+#   123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628
+#   (outputs/2x8-GAAS-phase5-scheduling-factorial_provenance_v1.md)
+# Launcher support for the three explicit binary scheduling flags verified
+# at the same gate (installed v26.02 binary strings + TUNING help:
+# --prioritize-trsm INT:NUMBER [0], --prioritize-factorization INT:NUMBER
+# [0], --use-separate-stream-for-gemm INT:NUMBER [1]).
+
+===== PAIR SELECTION (from the single presubmit pbsnodes -aSj snapshot) =====
+# Snapshot: outputs/2x8-GAAS-phase5-scheduling-factorial_v1.presubmit_pbsnodes.log
+#   captured=2026-10-02T16:49:20+0800 on hpc-gaas-hn2
+# Eligible pool (TASK-2X8-017 Section 1.6C): gpu_as UNION gpu_ded only.
+# Live resources_available.Qlist mapping (read-only pbsnodes -a query):
+#   gpu_ded: g01(1/8 GPU free,6 jobs) g02(0/8,7) g03(3/8,2)
+#            g20(5/8,2) g21(0/8,1) g22(8/8,0 jobs)
+#   gpu_as,gpu_ppu: g06-g12 (busy, 0-1/8 GPUs free), g13(4/8,1),
+#            g14(0/8,1 - job 77034 holds all 8 GPUs), g15(8/8,0 jobs)
+#   NOT eligible: g04,g05,g16,g17,g18,g19,g23,g24 (gpu_aisg),
+#            g25 (gpu_free), dm1/dm2 (gpu_datamover)
+# Fully-free (0 jobs, 8/8 GPUs, 100/100 ncpus, 2tb/2tb mem) eligible nodes:
+#   hpc-gaas-g15 (gpu_as) and hpc-gaas-g22 (gpu_ded).
+#
+# Selection facts and fall-through (TASK-2X8-017 Section 1.6C):
+#   (1) The cleanest overall pair would be the fully-free mixed pair
+#       g15 + g22, but a mixed pair cannot be co-allocated under a single
+#       eligible -q (neither node carries the other queue in its Qlist;
+#       documented GAAS precedent from the TASK-2X8-016 submission record).
+#   (2) No single eligible queue currently has two fully-free nodes:
+#       gpu_as has only g15 (g14 holds job 77034 with 0/8 GPUs free);
+#       gpu_ded has only g22 (best alternatives g20 5/8 with 2 jobs,
+#       g03 3/8 with 2 jobs).
+#   (3) Per Section 1.6C the selection automatically falls through to the
+#       next-cleanest schedulable pair from the combined pool: an UNPINNED
+#       two-chunk request (the task's stated select form) in gpu_ded, the
+#       eligible queue whose grant path is cleanest (gpu_ded queue depth 0
+#       versus gpu_as 18 queued; g22 already fully free; several gpu_ded
+#       nodes partially occupied with draining jobs). PBS grants the first
+#       legal fully-available gpu_ded pair; the run script's topology,
+#       rank-map, and HCA gates verify both granted nodes against the
+#       accepted Phase-0 identity before any arm runs.
+#   (4) Both queues verified enabled+started (qstat -Q gpu_as gpu_ded:
+#       Ena yes, Str yes) and no user multinode job was queued/running
+#       (qstat -u $USER empty; one-multinode-job-at-a-time rule).
+
+===== FINAL PRE-SUBMISSION ABSENCE CHECK =====
+# 2026-10-02T16:49:41+0800, from the experiment directory in the worktree:
+# all v1 attempt targets verified absent immediately before qsub - the PBS
+# .o/.e paths, all nine arm labels x the six per-arm file suffixes
+# (.out/.err/.status/.envprobe/.timings/.hcadelta), both per-node
+# hcapre/hcapost snapshot globs per arm, and the rankmap/envmap/
+# carryforward/factorial-summary logs and attempt hostfile.
+# Result: PASS (absence_check=PASS; only provenance_v1.md and the presubmit
+# snapshot pre-existed in outputs/).
+
+===== EXACT SUBMISSION COMMAND =====
+# Submitted from:
+#   /home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-phase5-v1/experiments/2x8-GAAS/phase5-scheduling-factorial
+qsub -q gpu_ded \
+     -l select=2:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=03:00:00 \
+     -v ATTEMPT_TAG=v1 \
+     -o outputs/2x8-GAAS-phase5-scheduling-factorial_v1.o \
+     -e outputs/2x8-GAAS-phase5-scheduling-factorial_v1.e \
+     scripts/run_phase5_scheduling_factorial.pbs
+# Accounting group hpc_ebslee via the reviewed script directive (#PBS -P
+# hpc_ebslee). No mpiprocs anywhere; place=scatter; walltime=03:00:00 (the
+# validated phase4c multi-arm request); unpinned per-chunk select (see the
+# pair-selection facts above).
+
+===== QSUB RESULT =====
+submission_timestamp = 2026-10-02T16:49:41+0800
+qsub_stdout          = 77060.gaas
+qsub_exit_status     = 0
+PBS_job_id           = 77060.gaas
+
+# Monitoring plan (authorized): bounded polling of ONLY job 77060.gaas,
+# qstat at bounded intervals (about once per minute), at most 30 checks
+# (about 30 minutes, renewable once if the job is still queued); no cancel.
+# Final PBS record captured once with qstat -fx after completion; all v1
+# evidence retrieved to the matching local outputs/ directory.
+
+===== IMMEDIATE POST-SUBMIT RECORD (single qstat -f 77060.gaas) =====
+# captured=2026-10-02T16:49:53+0800
+Job Id: 77060.gaas
+    Job_Name = 2x8_phase5_fac
+    Job_Owner = pham0094@hpc-gaas-hn2
+    job_state = Q
+    queue = gpu_ded
+    server = gaas
+    Checkpoint = u
+    ctime = Fri Oct  2 16:49:41 2026
+    Error_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-
+	Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-ph
+	ase5-v1/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-GA
+	AS-phase5-scheduling-factorial_v1.e
+    Hold_Types = n
+    Join_Path = n
+    Keep_Files = n
+    Mail_Points = a
+    mtime = Fri Oct  2 16:49:49 2026
+    Output_Path = hpc-gaas-hn2:/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP
+	-Manual-Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-p
+	hase5-v1/experiments/2x8-GAAS/phase5-scheduling-factorial/outputs/2x8-G
+	AAS-phase5-scheduling-factorial_v1.o
+    Priority = 100
+    qtime = Fri Oct  2 16:49:41 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.ngpus": 16.0, "job.walltime": 10800,
+	 "job.queue_charge_rate": 0, "formula_constants": "",
+	 "am_cloud_enabled": false}
+    Resource_List.mem = 4000gb
+    Resource_List.ncpus = 192
+    Resource_List.ngpus = 16
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = 2:ncpus=96:ngpus=8:mem=2000GB
+    Resource_List.walltime = 03:00:00
+    substate = 10
+    Variable_List = PBS_O_HOME=/home/pham0094,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=pham0094,
+	PBS_O_PATH=/usr/local/modules-5.6.1/bin:/usr/local/bin:/usr/bin:/usr/l
+	ocal/sbin:/usr/sbin:/opt/am/python/bin:/opt/pbs/bin,
+	PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=hpc-gaas-hn2,
+	PBS_O_WORKDIR=/home/pham0094/hpl_hpcg_hplmxp_container/HPL-MxP-Manual-
+	Test/HPL-MxP-Agent-Test/.codex-worktrees/TASK-2X8-017-b89376b-phase5-v1
+	/experiments/2x8-GAAS/phase5-scheduling-factorial,PBS_O_SYSTEM=Linux,
+	ATTEMPT_TAG=v1,PBS_O_QUEUE=gpu_ded
+    comment = Not Running: Insufficient amount of resource: Qlist 
+    etime = Fri Oct  2 16:49:41 2026
+    Submit_arguments = -q gpu_ded -l select=2:ncpus=96:ngpus=8:mem=2000GB,
+	place=scatter,
+	walltime=03:00:00 -v ATTEMPT_TAG=v1 -o outputs/2x8-GAAS-phase5-schedul
+	ing-factorial_v1.o -e outputs/2x8-GAAS-phase5-scheduling-factorial_v1.e
+	 scripts/run_phase5_scheduling_factorial.pbs
+    estimated.exec_vnode = (hpc-gaas-g05:ncpus=96:ngpus=8:mem=2097152000kb)+(hp
+	c-gaas-g15:ncpus=96:ngpus=8:mem=2097152000kb)
+    estimated.start_time = Fri Oct  2 16:49:39 2026
+    project = hpc_ebslee
+    Submit_Host = hpc-gaas-hn2
+
