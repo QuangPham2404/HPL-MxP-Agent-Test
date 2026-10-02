@@ -12,8 +12,12 @@ the factual C0a/C0b bracket, the 5% stop gate, and the mechanical
 Section 1.6C transition record (anchor + fine-window candidates) as facts
 only. Stage B (the one fine sweep) and Stage C (finalist communication
 diagnostics) are later execution segments under the same approved task,
-NOT part of this script; the strategic reading belongs to the Strategic
-Analyst via `ANALYSE_RESULTS`.
+NOT part of this Stage-A script: the experiment's second execution
+segment (attempt tag `v2`, `scripts/run_phase4b_panel_broadcast_stage_bc.pbs`)
+executes the Stage-B fine sweep (fixed window 5, 10, 15, 20, 25 from the
+Stage-A mechanical transition) plus the mechanically selected Stage-C
+diagnostic clone(s) in one same-allocation job; the strategic reading
+belongs to the Strategic Analyst via `ANALYSE_RESULTS`.
 
 **Status: Stage A executed (2026-10-02) — all six arms ran in PBS job
 `76682.gaas` (completed, exit 0; every arm exit 0 with PASSED verification
@@ -28,6 +32,204 @@ presubmit `pbsnodes -aSj` snapshot taken and the same-queue `gpu_as` pair
 g14+g15 selected (see Submission). Submission was authorized under the
 unchanged Section 1.11 authorization of TASK-2X8-014; submission remained
 limited to the exact approved task scope.**
+
+## Stage-B/C run (attempt tag v2)
+
+**Status: Prepared (pre-submission; 2026-10-02) — Stage-B/C script
+reviewed locally; no v2 job submitted yet.**
+
+This is the second execution segment of TASK-2X8-014, under the same
+approved scope as Stage A: ONE same-allocation 2x8 job in which Stage B
+runs the fixed fine window and then the mechanical Section 1.6E
+selection runs the Stage-C diagnostic clone(s) in the same allocation.
+Only `--use-mpi-panel-broadcast` varies scientifically; the Stage-B
+arms are clean scored arms, and the Stage-C diagnostic clones are
+sanity/mechanism evidence only, never scored.
+
+### Stage-B arm set (Section 1.6D)
+
+| arm | label | `--use-mpi-panel-broadcast` | role |
+|---|---|---:|---|
+| F0a | `f0a-p0-ctl` | **0** | opening panel=0 control |
+| (fine) | `f5-p5` | 5 | fine panel policy 5 |
+| (fine) | `f10-p10` | 10 | fine panel policy 10 |
+| (fine) | `f15-p15` | 15 | fine panel policy 15 |
+| (fine) | `f20-p20` | 20 | fine panel policy 20 |
+| (fine) | `f25-p25` | 25 | fine panel policy 25 |
+| F0b | `f0b-p0-ctl` | **0** | closing panel=0 control |
+
+Rules encoded in the script (Section 1.6D):
+
+- the fine window `5 10 15 20 25` is FIXED input from the Stage-A v1
+  mechanical transition record (Stage-A carry-forward: C0a/C0b spreads
+  LU 0.44% / overall 0.43%; tolerances 0.50%; the 5% gate not fired;
+  T={0}, S={0}, anchor=0 -> `5 10 15 20 25`); it is not recomputed,
+  not reconsidered, and no values are added (Sections 1.6C step 5,
+  1.6D);
+- the arms run in exactly this order, one scored attempt each;
+- no diagnostic logging on any scored arm (verified UNSET on all 16
+  ranks);
+- F0a/F0b define the fine-stage drift reference;
+- a valid but surprising result is preserved and the fixed sequence
+  continues;
+- a correctness-failing arm is preserved as invalid evidence — the
+  fixed sequence is finished if operationally safe, then the script
+  stops before Stage C.
+
+### Encoded Stage-B stop gates (before Stage C)
+
+- (a) F0a/F0b bracket unavailable (either control invalid or a
+  non-numeric spread) -> stop before Stage C;
+- (b) any correctness-failing Stage-B arm (`arms_invalid > 0`) -> the
+  fixed sequence completes, then stop before Stage C (invalid arms are
+  excluded from candidate selection);
+- (c) F0a/F0b bracket exceeds 5% in LU or overall GFLOP/s -> stop
+  before Stage C (Sections 1.6D rule 9, 1.7 rule 13);
+- (d) no valid nonzero Stage-B policy -> skip Stage C and record that
+  fact (Section 1.6E rule 7);
+- a nonzero exit of ANY arm stops the sweep immediately with evidence
+  preserved (operational hard stop; a rerun needs a new `ATTEMPT_TAG`
+  plus human direction).
+
+### Mechanical Section 1.6E selection (in-script facts only)
+
+After F0b, the script records — via the carry-forward log, all numeric
+work in awk, no winner declared, and no arms launched beyond the
+mechanically selected clone(s):
+
+- the **F0 bracket spreads**: `spread = (hi-lo)/lo*100` for LU GFLOP/s
+  and overall GFLOP/s, and the **tolerances**: `max(bracket spread,
+  0.5%)` per metric (window-selection tolerances only, not statistical
+  confidence intervals);
+- the **policy estimates**: policy 0 = the F0a/F0b midpoint (LU and
+  overall); the fine policies take their valid arms' values (invalid
+  arms excluded with the reason);
+- the **LU-competitive set T_B** (LU within the LU tolerance of the
+  best) and the **score tie-break set S_B** (within T_B, overall score
+  within the score tolerance of the best in T_B);
+- the **representative**: the single S_B member, or the median of S_B
+  rounded to the nearest 5 percentage points with exact halfway cases
+  rounded UP; when the rounded median is not itself an S_B member, the
+  S_B member closest to it, tie-broken by higher overall score then
+  higher policy — hierarchy: LU primary -> overall score tie-break ->
+  median/tie-tolerant representative;
+- the **primary diagnostic policy**: the representative when nonzero,
+  otherwise the strongest valid nonzero Stage-B policy by the same
+  hierarchy (T_nz/S_nz over the nonzero candidates; Section 1.6E rule
+  2);
+- the **optional secondary diagnostic**: another valid nonzero policy
+  at least 25 percentage points from the primary AND within the
+  Stage-B LU tolerance of the best LU or within the Stage-B score
+  tolerance of the best overall score — the farthest qualifying policy
+  wins (overall score as the final tie-break); maximum two clones
+  (Section 1.6E rules 3-6).
+
+Factual note: within the fixed fine window 5-25 the maximum separation
+between two nonzero policies is 20 percentage points, so a secondary
+clone is mechanically impossible for this window — the check is still
+encoded and will record `none` with that factual note. TASK-2X8-013
+already provides the full panel=0 diagnostic reference; no panel=0
+diagnostic clone is rerun (Section 1.6E rule 1). All records are
+carry-forward facts prefixed `stageB:` / `selection:`; no winner is
+declared.
+
+### Stage-C diagnostic clone contract (Section 1.6F)
+
+Each Stage-C diagnostic clone is one additional arm in the same
+allocation:
+
+- the proven 4A diagnostic environment ONLY — `UCX_LOG_LEVEL=info`,
+  `UCX_PROTO_INFO=y`, `NCCL_DEBUG=INFO`,
+  `NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,ENV,NET,GRAPH,P2P,COLL,SHM,TUNING`,
+  `NCCL_DEBUG_FILE=/dev/stderr` — forwarded via `mpirun -x` and
+  verified to those exact values on all 16 ranks by the per-arm env
+  probe (which also verifies `OMP_NUM_THREADS=4`,
+  `OMP_PLACES`/`OMP_PROC_BIND` unset,
+  `UCX_IB_GPU_DIRECT_RDMA`/`NCCL_NET_GDR_LEVEL` unset, and records the
+  effective `UCX_TLS`/`UCX_NET_DEVICES` state);
+- the exact same HPL scientific configuration as the selected policy
+  (same panel percentage and all fixed controls; settings echo
+  verified per arm);
+- per-arm pre/post HCA snapshots + deltas on both nodes;
+- factual UCX/NCCL marker counts recorded in the clone `.status` and
+  the carry-forward log (the raw `.out`/`.err` are authoritative; the
+  counts are not LU traffic percentages);
+- clones are never scored or ranked (`performance_role` records
+  `diagnostic clone`);
+- unexpected transport revealed by a clone (inter-node UCX tcp-only
+  lanes, NCCL Socket data path, unexpected NCCL backend,
+  bond/RoCE/mixed-link warnings) is a recorded Section 1.9 stop
+  condition and never triggers additional arms;
+- an incomplete diagnostic log is a preserved gap, not a stop (Section
+  1.7 rule 15);
+- an invalid (exit-0, non-PASSED) primary clone is preserved and the
+  secondary is not run;
+- after the authorized clone(s), TASK-2X8-014 stops — no Phase 4C
+  chunk tuning, no further diagnostics.
+
+### Per-arm evidence (Stage B/C)
+
+Around EVERY executed arm — scored Stage-B arms and diagnostic clones
+alike — in the same six-step order as Stage A:
+
+1. **pre-arm HCA snapshot** on both nodes + link gate (same pattern
+   and gate as Stage A);
+2. **per-arm env probe** with the mode-specific diagnostic
+   verification (clean scored arms: all UCX/NCCL diagnostic variables
+   UNSET on all 16 ranks; diagnostic clones: the exact 4A diagnostic
+   values of the clone contract above);
+3. **the HPL-MxP arm** (only `--use-mpi-panel-broadcast` differs
+   between arms);
+4. **post-arm HCA snapshot** (both nodes) + `.hcadelta` derivation;
+5. **`.status` extraction** including the requested/effective panel
+   pair and, for clones, the diag marker counts and the `diag_env`
+   record;
+6. **`.timings`** with every raw `<phase> seconds: AVG/MAX/MIN
+   (rank->host)` line, including owning ranks.
+
+Unit note: identical to Stage A — the same `port_xmit_data` unit
+question and the same `4294967295` unavailable-counter sentinel (see
+the Stage-A per-arm evidence unit note).
+
+### Attempt and output naming (tag v2)
+
+Per-arm attempt ID:
+`2x8-GAAS-phase4b-panel-broadcast-sweep_<label>_v2`, with `<label>` one
+of `f0a-p0-ctl`, `f5-p5`, `f10-p10`, `f15-p15`, `f20-p20`, `f25-p25`,
+`f0b-p0-ctl`, `d1-p<pol>-diag`, `d2-p<pol>-diag`. The artifact names
+follow the same pattern as the v1 table: per-arm
+`.out`/`.err`/`.status`/`.envprobe`/`.timings`/`.hcadelta`, the
+per-node `hcapre`/`hcapost` snapshot logs, the
+rankmap/envmap/carryforward logs and the hostfile with `_v2`, and the
+PBS `-o`/`-e` names with `_v2` at qsub. The pre-run guard refuses to
+overwrite any existing file of the attempt — covering the seven
+Stage-B labels and the ten potential `d1`/`d2` labels; retries use a
+new tag.
+
+### Submission (planned)
+
+A fresh presubmit `pbsnodes -aSj` snapshot over the eligible queues
+will be preserved as submission-side evidence (e.g.
+`outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.presubmit_pbsnodes.log`);
+the cleanest eligible same-queue `gpu_as`/`gpu_ded` pair is then
+selected via the host-pinned `select` pattern (only eligible idle
+`gpu_as`/`gpu_ded` nodes), one multinode job at a time. Exact planned
+submission form (queue and node placeholders):
+
+```bash
+qsub -q <gpu_as|gpu_ded> \
+     -l select=host=<n1>:ncpus=96:ngpus=8:mem=2000GB+host=<n2>:ncpus=96:ngpus=8:mem=2000GB,place=scatter,walltime=02:00:00 \
+     -v "ATTEMPT_TAG=v2" \
+     -o outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.o \
+     -e outputs/2x8-GAAS-phase4b-panel-broadcast-sweep_v2.e \
+     scripts/run_phase4b_panel_broadcast_stage_bc.pbs
+```
+
+Submission occurs only under the approved TASK-2X8-014 Section 1.11
+authorization; the resource/launcher/transport controls are unchanged
+from Stage A (container MPI/orted + the tested bridge, `place=scatter`,
+no `mpiprocs`, project `hpc_ebslee`); the job is submitted exactly
+once, with bounded monitoring.
 
 ## Run summary (Stage A only)
 
@@ -111,6 +313,14 @@ belongs to the Strategic Analyst.
   approved order, per-arm evidence files, per-arm pre/post per-node HCA
   snapshots, the factual Stage-A bracket + 5% stop gate + mechanical
   Section 1.6C transition record; attempt tag comes from the
+  `ATTEMPT_TAG` environment at submission
+- `scripts/run_phase4b_panel_broadcast_stage_bc.pbs` — single
+  same-allocation Stage-B/C run script (second execution segment,
+  attempt tag v2): the seven Stage-B arms in the exact approved order,
+  the factual F0 bracket + tolerances + stop gates, the mechanical
+  Section 1.6E selection, and the Stage-C diagnostic clone(s); per-arm
+  evidence files, per-arm pre/post per-node HCA snapshots, and the
+  factual carry-forward records; attempt tag comes from the
   `ATTEMPT_TAG` environment at submission
 - `scripts/hca_counter_snapshot.sh` — host-side per-node HCA
   counter/link-state snapshot helper invoked on every allocated node via
