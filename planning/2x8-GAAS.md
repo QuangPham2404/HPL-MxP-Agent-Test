@@ -1624,3 +1624,76 @@ validated legal range (for example 2,4,8,16) and the same LU/fabric evidence.
 
 **Human decision state:** TASK-2X8-014 analysis complete. Phase 4B is closed.
 Phase 4C is recommended only; no new execution is authorized.
+
+
+## 13. TASK-2X8-015 — Phase 4C UCX Transport and U-Panel Chunk
+
+Detailed analysis:
+planning/analysis/2x8-gaas-phase4c-ucx-transport-and-u-panel-chunk.md
+
+### 13.1 UCX transport result
+
+Retain UCX_TLS unset / AUTO.
+
+AUTO, RC, RC-X, DC, and UD all remained within about 0.6% LU of the AUTO
+midpoint. AUTO bracket drift was 0.14% LU / 0.08% overall.
+
+The flat result does not mean the transports are intrinsically equal. With
+use-mpi-panel-broadcast=0, the dominant U-panel path is NCCL, so UCX_TLS only
+changes the remaining MPI/UCX traffic. Aggregate HCA totals, rail shares, and
+usable port_xmit_wait counters were essentially identical across the Stage-A
+families, confirming that UCX family choice is low-leverage in this regime.
+
+### 13.2 U-panel chunk result
+
+Chunk tuning is material:
+
+| chunk | overall GFLOP/s | delta vs chunk-8 midpoint | LU GFLOP/s | LU delta |
+|---:|---:|---:|---:|---:|
+| 2 | 6.7662e+06 | +3.24% | 7.0260e+06 | +3.37% |
+| 4 | 6.8223e+06 | +4.10% | 7.0862e+06 | +4.26% |
+| 8 midpoint | 6.55365e+06 | control | 6.7968e+06 | control |
+| 16 | 6.3538e+06 | -3.05% | 6.5819e+06 | -3.16% |
+
+The 8a/8b bracket was only 0.16% LU / 0.18% overall.
+
+Interpretation: chunk controls U-panel readiness granularity, not NCCL transport.
+Smaller chunks make useful U data available sooner and improve overlap. Chunk 16
+is too coarse; chunk 2 begins paying extra fine-grained launch/synchronization
+overhead; chunk 4 is the strongest tested balance.
+
+Retain u-panel-chunk-nbs=4. Chunk 2 remains a strong nearby alternative; the
+2-vs-4 difference is below the 2% campaign materiality convention.
+
+### 13.3 Numerical note
+
+Chunk 16 residual was 1.587984E-05 versus 1.416310E-05 for chunks 2/4/8,
+about 12.1% higher, but PASSED with the same 0.29 s IR and 3 iterations.
+
+This suggests coarse chunking may alter mixed-precision operation ordering
+enough to perturb the final residual slightly, but there is no convergence or
+performance issue. No dedicated accuracy study is required now.
+
+### 13.4 Dependency checkpoint
+
+- UCX transport-family forcing is closed under panel=0.
+- E23/E24 chunk validity/usefulness is resolved for the current geometry.
+- E25 is updated by new evidence: at panel=0, chunk is not flat; 2/4 beat 8/16.
+- E27 is active: chunk 8 -> 4 materially changes readiness, so downstream
+  stream/priority controls deserve light revalidation.
+- E26 remains relevant.
+- Geometry, UCX affinity, panel policy, residency, and IR remain closed.
+
+### 13.5 Proposed next action
+
+Proceed through the remaining LU scheduling flags with:
+
+UCX_TLS = AUTO
+use-mpi-panel-broadcast = 0
+u-panel-chunk-nbs = 4
+
+Prioritize lightweight revalidation of prioritize-trsm,
+prioritize-factorization, and use-separate-stream-for-gemm before any Nsight
+profiling.
+
+Human decision state: TASK-2X8-015 analysis complete. Phase 4C is closed.
