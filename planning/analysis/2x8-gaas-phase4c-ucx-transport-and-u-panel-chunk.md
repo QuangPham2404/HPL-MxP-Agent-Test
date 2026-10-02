@@ -250,3 +250,83 @@ use-separate-stream-for-gemm under the new chunk-4 readiness regime.
 
 Nsight Systems remains the later mechanism tool after the exposed flags are
 closed.
+
+
+## 6. TASK-2X8-016 confirmation and formal Phase-4 closure
+
+TASK-2X8-016 repeated the retained chunk-4 configuration exactly once under a
+fresh scored run.
+
+Comparison:
+
+| Metric | TASK-2X8-015 K4 | TASK-2X8-016 confirmation | Relative difference |
+|---|---:|---:|---:|
+| Overall GFLOP/s | 6.8223e+06 | 6.8196e+06 | -0.04% |
+| LU GFLOP/s | 7.0862e+06 | 7.0833e+06 | -0.04% |
+| LU time | 7.43 s | 7.43 s | effectively identical |
+| IR | 0.29 s | 0.29 s | identical |
+| Iterations | 3 | 3 | identical |
+| Normalized residual | 1.416310E-05 | 1.416310E-05 | identical |
+| Verification | PASSED | PASSED | identical |
+
+The confirmation reproduced not only performance but also the communication
+shape:
+
+- g14 total TX: 59,734,562,922 raw units in TASK-2X8-015 K4 versus
+  59,734,554,418 in the confirmation;
+- g15 total TX: 47,522,091,290 versus 47,522,083,006;
+- g14 rail CV: 0.81% in both;
+- g15 rail CV: 25.17% in both;
+- no new HCA error/discard/recovery counters in either run.
+
+This is substantially tighter than the ordinary local control variation seen in
+earlier tasks. The retained chunk-4 behavior is therefore repeatable in both
+score and fabric signature.
+
+The required provenance gate also passed before execution:
+
+- image:
+  `/home/pham0094/hpl_hpcg_hplmxp_container/hpc-benchmarks_26.02.sif`;
+- SHA-256:
+  `123f2a3c2dc9450d2e8bdd748134be7dc5359637fbfe69ff83677b42f4df0628`;
+- NVIDIA HPC Benchmarks v26.02;
+- launcher CUDA path `/usr/local/cuda/lib64`, resolving to
+  `/usr/local/cuda-13.1` (CUDA 13.1).
+
+### Phase-4 closure decision
+
+Phase 4 — Communication is now **CLOSED** for the current 2x8 GAAS operating
+regime.
+
+The blueprint closing condition is satisfied:
+
+- the intended GPU-direct communication path is validated;
+- mapping/rail behavior is understood and stable;
+- panel-broadcast policy is bounded and resolved at NCCL-only
+  (`use-mpi-panel-broadcast=0`);
+- UCX transport forcing has no material benefit and AUTO remains retained;
+- U-panel granularity has a clear useful fine-grained region;
+- chunk 4 materially beats chunk 8 and reproduces almost exactly in an
+  independent confirmation run;
+- correctness, refinement, memory, rank mapping, and fabric health are stable;
+- further communication-mechanism refinement is lower ROI than moving to the
+  downstream scheduling phase.
+
+Retained Phase-4 communication configuration:
+
+~~~text
+UCX_TLS = unset / AUTO
+UCX_NET_DEVICES = unset / AUTO
+ucx-affinity = omitted / AUTO
+use-mpi-panel-broadcast = 0
+u-panel-chunk-nbs = 4
+~~~
+
+Chunk 2 remains a strong neighboring point, but the 2-vs-4 gap is below the
+campaign materiality convention and does not justify additional Phase-4
+refinement.
+
+Per the blueprint, the material change in chunk/readiness reopens downstream LU
+scheduling dependencies. The next phase should therefore be Phase 5, beginning
+with lightweight revalidation of the scheduling controls under the retained
+chunk-4 readiness regime.
