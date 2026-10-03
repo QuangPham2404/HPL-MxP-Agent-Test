@@ -1732,3 +1732,65 @@ The blueprint repeatability/closure condition is satisfied. Chunk 2 remains a
 strong neighboring point, but no further Phase-4 refinement is justified.
 
 Next direction: Phase 5 LU scheduling revalidation under chunk 4.
+
+
+## Final Phase-5 / First-Pass Campaign Closure
+
+Phase 5 is formally **CLOSED**. The full closure record is:
+`planning/analysis/2x8-gaas-phase5-closure.md`.
+
+Final retained 2x8 stack:
+
+```text
+N = 429056
+NB = 3072
+nprow = 4
+npcol = 4
+nporder = row
+
+gpu-affinity = 0:1:2:3:4:5:6:7
+cpu-affinity = omitted
+mem-affinity = omitted
+ucx-affinity = omitted / AUTO
+UCX_TLS = unset / AUTO
+UCX_NET_DEVICES = unset / AUTO
+
+OMP_NUM_THREADS = 4
+OMP_PLACES = omitted
+OMP_PROC_BIND = omitted
+
+fill-device = 1
+fill-device-buffer-size = 3048
+cuda-host-register-step = 2048
+call-dgemv-with-multiple-threads = 0
+
+sloppy-type = FP16
+preset-gemm-kernel = effective package default / SM90
+
+use-mpi-panel-broadcast = 0
+u-panel-chunk-nbs = 4
+
+prioritize-factorization = 1
+prioritize-trsm = 0
+use-separate-stream-for-gemm = 1
+
+skip-tests = 0
+monitor-gpu = 0
+```
+
+TASK-2X8-018 retained-control midpoint: **7.23545e+06 GFLOP/s**, approximately
+**+50.62%** over the immutable original baseline **4.8037e+06 GFLOP/s**.
+
+The exact final stack reproduced across TASK-2X8-017 and TASK-2X8-018, and the
+mandatory Phase-5 dependency checkpoint reclosed E27/E28 without reopening an
+earlier phase. No additional final confirmation run is required.
+
+Because Phase 5 is the terminal phase of the adopted blueprint, this also
+formally marks the **first structured 2x8 GAAS HPL-MxP optimization pass as
+COMPLETE**.
+
+Scope note: this is completion of the executed first-pass campaign, not a
+claim of global optimum over every possible HPL-MxP control. FP16 and the
+effective package-default/SM90 GEMM kernel remained fixed rather than being
+exhaustively swept. Any future precision/kernel or newly discovered-control
+work is a second-pass reopening, not unfinished first-pass work.
