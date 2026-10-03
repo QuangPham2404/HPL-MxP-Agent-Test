@@ -805,6 +805,11 @@ phase attribution.
 Close 3B when an explicit coordinated policy repeatably wins, or no-affinity
 is shown to be a safe plateau under the retained launcher/OpenMP control.
 
+After 3A/3B closes, invoke E39 before continuing if the retained host-runtime
+change materially shifts `T_IR/T_LU`: boundedly reclose the useful
+N/residency operating point rather than assuming the earlier N conclusion is
+still valid.
+
 Investigate launch errors, out-of-range cpusets, severe loss under binding,
 uneven CPU load, remote-memory behavior, or disagreement between affinity and
 OpenMP results. These are mapping questions first; trace only if a verified
@@ -887,6 +892,10 @@ controls supported by an observed bottleneck.
 Host registration batches pinning of host-resident FP64 columns, trading
 registration/setup overhead against transfer efficiency and pinned-memory
 pressure. It matters mainly when a meaningful FP64 fraction is host-resident.
+The 2×8 campaign also showed that a large register-step can change the
+effective host/device residency and headroom regime itself, so a material
+register-step change must be treated as a memory-state event through E40, not
+only as registration timing.
 The DGEMV control partitions rows per host thread in refinement; nonzero values
 can add synchronization, cache/NUMA traffic, and contention with MPI progress.
 
@@ -898,7 +907,8 @@ it neither proves a DGEMV benefit nor preserves `0` as a universal optimum.
 These results are conditional priors because ranks/node, N/residency, and the
 host/refinement balance can change.
 
-Relevant dependencies include E17 and E20–E21; precision later invokes E35.
+Relevant dependencies include E17, E20–E21, and E40; precision later invokes
+E35.
 
 > These observations are prior knowledge and hypotheses only. The target topology must be evaluated independently.
 
@@ -909,7 +919,9 @@ Relevant dependencies include E17 and E20–E21; precision later invokes E35.
    sweep on host registration. If solver time is small and stable, do not tune
    DGEMV partitioning.
 2. For a relevant control, compare the installed default with a few
-   mechanism-distinct values. Change one host/memory mechanism at a time.
+   mechanism-distinct values. Change one host/memory mechanism at a time. For
+   host-register-step, record host/device memory and IR for every candidate and
+   invoke E40 if the memory regime changes materially.
 3. Retain several values only when a clear region appears; then refine and
    repeat with the current OpenMP/affinity/residency control.
 4. Reopen DGEMV after Phase 5 precision, or after any later material
@@ -1006,6 +1018,9 @@ Use this as a logical initial strategy, then restructure the phase from data:
    a healthy CUDA-aware path.
 6. **Refine and verify.** Repeat winning candidates and a stable control. If a
    transport or chunk change is material, expect Phase 5 scheduling to reopen.
+   Conversely, if Phase 5 later makes a material scheduling change, E41
+   requires revalidation of chunk usefulness rather than treating the Phase-4
+   chunk winner as permanent.
 
 Possible later splits include transport/NIC, broadcast policy, chunk/readiness,
 or progress/fallback subgroups. Choose the split only after the first sweep and
@@ -1120,7 +1135,10 @@ result:
 6. **Refine and verify the final stack.** Repeat the leading full-stack
    candidate against the original retained control, then lightly revalidate
    the most dependency-sensitive earlier choices rather than reopening every
-   phase.
+   phase. After a material scheduling change, explicitly review the retained
+   NB and U-panel chunk conclusions; if both require revalidation and their
+   interaction is plausible, use a bounded valid NB×chunk matrix rather than
+   blindly running two independent sequential resweeps.
 
 Possible later splits include precision/correctness, kernel/geometry, or
 dependency scheduling/overlap. Decide them from the data; do not encode them
@@ -1148,10 +1166,14 @@ Use the common scorecard, emphasizing:
 
 ### D. Closing Condition vs Investigation
 
-Close Phase 5 when all supported high-value controls have either a verified
-winner/plateau or a documented reason they are inapplicable; the final-stack
-candidate repeats above noise; residual/correctness is valid; and targeted
-revalidation finds no material regression in reopened upstream decisions.
+Close Phase 5 when all supported high-value controls in the approved campaign
+scope have either a verified winner/plateau or a documented reason they are
+inapplicable or intentionally fixed; the final-stack candidate repeats above
+noise; residual/correctness is valid; and targeted revalidation finds no
+material regression in reopened upstream decisions. For an explicitly scoped
+first pass, precision and/or kernel controls may remain fixed if that choice is
+recorded and any future precision/kernel study is treated as a second-pass
+reopening rather than unfinished first-pass work.
 
 Investigate when lower precision accelerates LU but slows or breaks
 refinement, a kernel changes internal behavior without end-to-end benefit,
