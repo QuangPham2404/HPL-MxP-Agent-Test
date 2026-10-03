@@ -1,7 +1,9 @@
-# HPL-MxP Parameter Dependency Graph from the 8×H200 Work
+# HPL-MxP Parameter Dependency Graph — Accumulated GAAS Evidence
 
-Scope: NVIDIA HPL-MxP v26.02 on one GAAS node with eight H200 GPUs. This is
-an optimization-dependency model, not a new optimization blueprint. An arrow
+Scope: NVIDIA HPL-MxP v26.02 evidence accumulated from the single-node
+8×H200 and 2-node × 8-H200/node GAAS campaigns. This is an
+optimization-dependency model, not a new optimization blueprint. Numerical
+winners remain topology- and operating-regime-specific. An arrow
 `X → Y` means that X should normally be established before Y and that a
 material change to X can invalidate Y's tuning conclusion. It does not assert
 strict mathematical causality.
@@ -46,10 +48,10 @@ necessarily a faster valid HPL-MxP result.
 ## 1. Parameter/Subsystem Inventory
 
 The inventory separates parameters actually varied from important controls
-that were held fixed. Numerical winners are statements about this 8×H200
-single-node workload only.
+that were held fixed. Numerical winners remain statements about the specific
+tested topology and operating regime.
 
-| Subsystem | Parameter or group | What it controls / main mechanism | Strongest 8×H200 insight |
+| Subsystem | Parameter or group | What it controls / main mechanism | Strongest accumulated GAAS insight |
 |---|---|---|---|
 | Problem geometry | `--n` (`N`) | Global matrix dimension; cubic credited work, quadratic FP64 storage, GEMM/panel geometry, overhead amortization, and refinement volume/staging. | Raising N from 370000 to 490000 at `NB=1024` improved the score, while the fill-device N resweep showed that lowering N cut IR but lost LU efficiency under its fixed 2×4-row stack. `SingleNode-resweep_v1.1` later found a much faster smaller-N bundle with a lower `T_IR/T_LU`; this proves the old N closure was regime-conditional, but does not isolate which changed downstream flag recovered LU efficiency. [N sweep](../analysis/n-sweep-370k-510k.md), [residency/N study](../analysis/matrix-placement-N-resweep.md), [bundled record](../../experiments/SingleNode-resweep/README.md) |
 | Problem geometry | `--nb` (`NB`) | Block/panel width; changes panel count and size, trailing-GEMM shapes, synchronization frequency, workspace, and communication granularity. | At N=490000, 1024→3072 cut LU time by about 6.4 s and raised performance 18.77% over the fixed-N control. 3072–6144 was a broad plateau; 7168/8192 regressed and headroom fell sharply. The absolute value 3072 is not universal. [NB sweep](../analysis/nb-sweep.md), [M1 interpretation](../consolidate_m1.md) |
@@ -139,6 +141,7 @@ flowchart TD
   BC -->|"W/O+Mech"| CH
   BC -->|"S/Mech"| SCHED
   CH -->|"M/O+Mech"| SCHED
+  SCHED -->|"S/O+Mech"| CH
   NB -->|"S/Mech"| SCHED
   GRID -->|"M/Mech"| SCHED
 
@@ -163,7 +166,9 @@ Textual reading order:
 4. Establish FP64 residency and safe headroom before fine staging controls;
    judge the useful N regime by both LU efficiency and IR cost.
 5. With geometry and placement stable, interpret panel transport and U-panel
-   chunking; only then interpret LU stream/priority behavior.
+   chunking; only then interpret LU stream/priority behavior. After a material
+   scheduling change, revalidate chunk usefulness because the 2×8 campaign
+   showed that readiness and scheduling can interact in both directions.
 6. Precision and GEMM-kernel changes can reopen both scheduling and refinement
    conclusions because they change the relative lengths of those paths.
 7. A material N or local-row-ownership change can also reopen scheduling or
@@ -204,12 +209,12 @@ inside the tested regime.
 | E22 | `NB` | Panel transport | Strong | MECHANISTIC | NB changes panel message size/frequency and the latency-versus-bandwidth balance. The communication sweep used only NB=3072. | Fully re-sweep MPI/NCCL policy after a large NB change. |
 | E23 | `NB` | U-panel chunk size | Strong | MECHANISTIC | Chunk units are NB blocks; changing NB changes bytes/chunk, number of chunks, kernel shapes, and readiness cadence. | Fully re-sweep chunk candidates after a large NB change. |
 | E24 | `N`, `NB`, `npcol` | U-panel chunk validity/usefulness | Strong | MECHANISTIC | NVIDIA's documented constraint contains `(N/NB)/npcol/chunk`; the work per process column changes with all three. | Recalculate validity and fully re-evaluate chunk after geometry/grid changes. |
-| E25 | Panel transport | U-panel chunk interpretation | Weak / conditional | OBSERVED + MECHANISTIC | Chunks 4/8/16 were compared at broadcasts 50 and 75 with no resolved performance interaction, although traces showed changed collective launch structure. [Communication matrix](../analysis/mpi-nccl-coms-sweep.md) | Normally keep 8 closed at the current control; lightweight joint revalidation after topology/grid changes. |
+| E25 | Panel transport | U-panel chunk interpretation | Weak / conditional | OBSERVED + MECHANISTIC | Panel transport changes the readiness/progress environment in which chunk granularity operates. Earlier single-node comparisons found no resolved interaction, while the 2×8 campaign showed that chunk conclusions are operating-regime-specific. [Communication matrix](../analysis/mpi-nccl-coms-sweep.md), [2×8 Phase-4C analysis](../analysis/2x8-gaas-phase4c-ucx-transport-and-u-panel-chunk.md) | After a material panel-transport or topology change, lightly revalidate chunk usefulness; do not transfer a chunk winner between transport regimes. |
 | E26 | Panel transport/readiness | LU stream and priority policy | Strong | MECHANISTIC | Priority and stream choices operate on readiness stalls created partly by communication; another transport/topology changes which dependency is critical. | Fully re-sweep priority/stream controls after moving multinode or materially changing transport. |
-| E27 | U-panel chunk | LU stream and priority policy | Moderate | OBSERVED + MECHANISTIC | Chunk 4 changed kernel/collective launch counts and moved synchronization without shortening the clean path. This can change what stream/priority policy has to hide. [Trace evidence](../panel_u_chunk_effect.md) | Lightly revalidate scheduling after a major chunk change; keep closed for 4/8/16 at the present control. |
+| E27 | U-panel chunk | LU stream and priority policy | Moderate | OBSERVED + MECHANISTIC | In the 2×8 campaign, changing the retained chunk from 8 to 4 improved LU materially under scheduler 001 and therefore reopened downstream scheduling; the later Phase-5 revalidation confirmed that readiness granularity and scheduling interact. [2×8 Phase-4C analysis](../analysis/2x8-gaas-phase4c-ucx-transport-and-u-panel-chunk.md), [Phase-5 dependency revalidation](../analysis/2x8-gaas-phase5-nb-chunk-dependency-revalidation.md) | Lightly revalidate scheduling after a material chunk change. |
 | E28 | `NB` | LU stream and priority policy | Strong | MECHANISTIC | Panel duration/frequency and GEMM duration determine whether factorization or TRSM is starved by updates. Priority was tested only at NB=3072 and one large-N/grid regime. | Fully re-sweep scheduling after a large NB change; keep the old priority result only inside its tested geometry. |
 | E29 | Process grid/order | LU stream and priority policy | Moderate | MECHANISTIC | Panel ownership, rank arrival skew, local update geometry, and concurrency change with P×Q. | Lightly revalidate after a small grid change; fully re-sweep when ownership, arrival behavior, or node-boundary crossings change materially. |
-| E30 | Separate GEMM stream policy | Factorization/TRSM priority policy | Strong | MECHANISTIC + UNCERTAIN | Separate streams create concurrency; priority constrains it to protect the critical panel. The stream toggle was tested only with factorization priority on, so the interaction magnitude is unknown. | Treat them as a coupled scheduling group; use a factorial or targeted interaction check after either changes. |
+| E30 | Separate GEMM stream policy | Factorization/TRSM priority policy | Strong | OBSERVED + MECHANISTIC | TASK-2X8-017 crossed stream, factorization priority, and TRSM priority in a full 2^3 factorial. Separate-stream or factorization-priority changes alone were near-flat, while factorization priority plus a separate GEMM stream improved overall performance by about 6%, directly demonstrating a scheduling interaction. [2×8 Phase-5 factorial](../analysis/2x8-gaas-phase5-final-scheduling-factorial.md) | Treat stream and priority as a coupled scheduling group; cross them whenever scheduling is reopened rather than stacking independently selected winners. |
 | E31 | Factorization priority | TRSM priority interpretation | Moderate | OBSERVED + MECHANISTIC | The large-N 2×2 experiment showed factorization priority's benefit in both TRSM states and no additive TRSM benefit. The bundled smaller-N record used both priorities off, but does not isolate either effect. [2×2 evidence](../analysis/factorization-priority.md), [bundled record](../../experiments/SingleNode-resweep/README.md) | Keep TRSM=0 closed only at the tested scheduling control; reopen after material geometry, transport, precision, or factorization-policy changes. |
 | E32 | Sloppy precision | LU scheduling and panel communication | Strong | MECHANISTIC | Precision changes GEMM/data-movement duration and preconditioner quality, shifting the balance between update work and panel readiness. No alternate precision was tested. | Fully re-sweep the highest-impact scheduling/communication controls after changing precision. |
 | E33 | GEMM-kernel selection | LU scheduling | Moderate | MECHANISTIC | A faster/differently tiled GEMM changes how long updates occupy resources and whether they starve factorization. Only effective preset 90 was observed. | Lightly revalidate factorization priority and stream policy after a kernel change. |
@@ -220,6 +225,7 @@ inside the tested regime.
 | E38 | Process grid / `nprow` | DGEMV partition | Moderate | MECHANISTIC | `nprow` changes local matrix-row ownership and solver communication, which changes the DGEMV work per rank and the granularity at which rows/thread can amortize overhead. No controlled grid×DGEMV comparison exists. | Revalidate DGEMV after a grid change when IR is material; fully reopen only when local-row ownership or solver behavior changes materially. |
 | E39 | Host runtime/locality | Useful `N` / LU-IR operating point | Strong / conditional | OBSERVED + MECHANISTIC | TASK-009 showed that host runtime can sharply move the IR floor at fixed N without moving LU, so the useful N cannot be assumed invariant after a major runtime change. TASK-010 then reclosed the edge: under the verified runtime, N=429056 remained the clear leader because the runtime improvement did not remove the FP64-residency cliff; at N=454656 host allocation appeared and IR jumped 0.29→1.60 s while LU throughput improved only ~4.5%, and larger N increased the IR penalty further. Thus host runtime can shift the IR intercept strongly without flattening the N/residency slope. [TASK-009 analysis](../analysis/2x8-gaas-phase3ab-host-runtime.md), [TASK-010 analysis](../analysis/2x8-gaas-task010-geometry-reclosure.md) | Reopen a bounded N/residency sweep after a host-runtime change materially shifts IR/LU. If N remains in the same residency/geometry regime, keep N-dependent downstream conclusions closed; if N moves materially, apply the normal N downstream dependencies. |
 | E40 | `--cuda-host-register-step` | Effective FP64 residency / device-memory headroom | Strong | OBSERVED + MECHANISTIC | TASK-2X8-012 isolates a same-allocation threshold at fixed N/NB/grid/full-fill: 512→1024→2048 progressively increases observed device consumption while keeping host allocation ~0 and IR=0.29 s; 4096/8192 push device use to the ceiling, introduce 1.136/4.418 GB/process host allocation, and raise IR to 0.52/0.79 s with LU flat. The exact allocator byte mapping is not traced, but register-step clearly changes the effective memory state. [TASK-2X8-012 analysis](../analysis/2x8-gaas-phase3d-host-memory-closure.md) | After a material register-step change, recheck host/device memory and IR. Reopen fill-buffer/residency or N only if the retained memory regime materially changes. |
+| E41 | LU stream / factorization-priority scheduling policy | U-panel chunk usefulness | Strong | OBSERVED + MECHANISTIC | The 2×8 campaign found chunk 4 about 4.1% above chunk 8 under scheduler 001, but under scheduler 101 the same chunk-4 and chunk-8 settings were equal within about 0.01% and chunks 2/4/8/16 formed a sub-2% plateau. The scheduling regime therefore materially changed the value of readiness granularity. [2×8 Phase-4C analysis](../analysis/2x8-gaas-phase4c-ucx-transport-and-u-panel-chunk.md), [Phase-5 dependency revalidation](../analysis/2x8-gaas-phase5-nb-chunk-dependency-revalidation.md) | Revalidate chunk after a material scheduling-regime change; a prior chunk winner may become a plateau or vice versa. |
 
 A machine-readable copy of this table is provided in
 [`edges.csv`](edges.csv). The CSV keeps the same evidence and revisit semantics
@@ -264,10 +270,16 @@ the sign of an individual flag effect.
 - **Residency mode → buffer safety.** The low-buffer failures are a strong
   correctness dependency, not ordinary slow points. The exact 1024-versus-2048
   ranking remains unresolved.
-- **Panel transport ↔ U-panel chunk was tested and weak here.** The partial
-  joint matrix at broadcasts 50/75 and chunks 4/8/16 showed no clean
-  end-to-end interaction. Nsight proved that both knobs changed execution
-  structure even when score stayed flat.
+- **Panel transport ↔ U-panel chunk was tested and weak in the earlier
+  single-node regime.** The partial joint matrix at broadcasts 50/75 and
+  chunks 4/8/16 showed no clean end-to-end interaction, so chunk conclusions
+  should remain conditional on the active transport/topology regime.
+- **U-panel chunk ↔ LU scheduling is directly observed on 2×8.** Chunk 4
+  materially beat chunk 8 under scheduler 001, but the difference disappeared
+  under scheduler 101, where chunks 2/4/8/16 formed a sub-2% plateau.
+- **Separate GEMM stream ↔ factorization priority is directly observed on
+  2×8.** TASK-2X8-017's full factorial found the main effects near-flat but
+  the combined F=1/S=1 state about 6% faster, demonstrating genuine synergy.
 - **Factorization priority ↔ TRSM priority was tested factorially.** The
   whole-factorization effect repeated across both TRSM states; TRSM added
   nothing. This is stronger than selecting a single maximum.
@@ -277,8 +289,6 @@ the sign of an individual flag effect.
 - OpenMP socket placement was beneficial and narrow CPU binding was harmful,
   but explicit affinity and OpenMP were not jointly swept. Their edge remains
   uncertain rather than observed.
-- The separate GEMM stream was useful with factorization priority enabled, but
-  there is no stream×priority factorial evidence.
 - DGEMV partitioning was harmful at one OMP/FP16/residency control. This does
   not prove it remains harmful under another host budget, local-row ownership,
   or refinement regime. The bundled 15360 setting is not isolated counterevidence.
