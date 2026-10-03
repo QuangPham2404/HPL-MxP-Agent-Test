@@ -2,7 +2,7 @@
 task_id: TASK-2X8-017
 title: 2x8 GAAS Phase 5 Final Scheduling Factorial Analysis
 analysis_id: 2x8-gaas-phase5-final-scheduling-factorial
-status: ANALYSIS_COMPLETE_DEPENDENCY_REVIEW_PENDING
+status: COMPLETE
 created: 2026-10-02
 last_updated: 2026-10-02
 ---
@@ -428,3 +428,8 @@ TRSM priority has no demonstrated benefit.
 This analysis does not yet close Phase 5. The blueprint's mandatory Phase-5
 dependency-review checkpoint remains pending human direction before the final
 confirmation task is created.
+
+
+## 10. Dependency-review resolution
+
+TASK-2X8-018 resolved the pending Phase-5 dependency review through a full valid NB × U-panel-chunk revalidation under scheduler 101. The retained NB remains 3072; chunk 2/4/8/16 is a sub-2% plateau at NB=3072, with chunk 4 retained as the representative; no earlier phase is reopened. Detailed record: `planning/analysis/2x8-gaas-phase5-nb-chunk-dependency-revalidation.md`.
