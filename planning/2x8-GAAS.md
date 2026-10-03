@@ -1734,14 +1734,11 @@ strong neighboring point, but no further Phase-4 refinement is justified.
 Next direction: Phase 5 LU scheduling revalidation under chunk 4.
 
 
-## Final Phase-5 / First-Pass Campaign Closure
+## 15. Phase 5 — Final Scheduling and Dependency Revalidation
 
-Phase 5 is formally **CLOSED**. The full closure record is:
-`planning/analysis/2x8-gaas-phase5-closure.md`.
+Phase 5 started from the formally closed Phase-4 stack:
 
-Final retained 2x8 stack:
-
-```text
+~~~text
 N = 429056
 NB = 3072
 nprow = 4
@@ -1758,6 +1755,425 @@ UCX_NET_DEVICES = unset / AUTO
 OMP_NUM_THREADS = 4
 OMP_PLACES = omitted
 OMP_PROC_BIND = omitted
+effective launcher policy = sockets / TRUE
+
+fill-device = 1
+fill-device-buffer-size = 3048
+cuda-host-register-step = 2048
+call-dgemv-with-multiple-threads = 0
+
+sloppy-type = FP16
+preset-gemm-kernel = effective package default / SM90
+
+use-mpi-panel-broadcast = 0
+u-panel-chunk-nbs = 4
+
+test-loop = 1
+skip-tests = 0
+monitor-gpu = 0
+~~~
+
+Phase 5 focused on the remaining exposed LU scheduling controls:
+
+~~~text
+F = --prioritize-factorization
+T = --prioritize-trsm
+S = --use-separate-stream-for-gemm
+~~~
+
+FP16 and the effective package-default / SM90 GEMM preset remained fixed
+controls in this first pass rather than independent sweep variables.
+
+Detailed analyses:
+
+- `planning/analysis/2x8-gaas-phase5-final-scheduling-factorial.md`
+- `planning/analysis/2x8-gaas-phase5-nb-chunk-dependency-revalidation.md`
+- `planning/analysis/2x8-gaas-phase5-closure.md`
+
+### 15.1 TASK-2X8-017 — Final scheduling 2^3 factorial
+
+TASK-2X8-017 ran the complete factorial over F/T/S, with the retained
+`001` state bracketed at the beginning and end.
+
+The retained `001` control midpoint was:
+
+~~~text
+overall = 6.8271e+06 GFLOP/s
+LU      = 7.0921e+06 GFLOP/s
+LU time ~= 7.43 s
+IR      = 0.29 s
+~~~
+
+The bracket spread was only about 0.285% overall and 0.265% LU, so the
+factorial had a tight local noise reference.
+
+| F | T | S | Overall GFLOP/s | Delta vs 001 midpoint | LU GFLOP/s | LU delta | LU s | IR s |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 0 | 0 | 6.8589e+06 | +0.47% | 7.1258e+06 | +0.48% | 7.39 | 0.29 |
+| 0 | 1 | 0 | 6.7201e+06 | -1.57% | 6.9762e+06 | -1.63% | 7.55 | 0.29 |
+| 0 | 1 | 1 | 6.8686e+06 | +0.61% | 7.1363e+06 | +0.62% | 7.38 | 0.29 |
+| 1 | 0 | 0 | 6.8366e+06 | +0.14% | 7.1018e+06 | +0.14% | 7.41 | 0.29 |
+| **1** | **0** | **1** | **7.2398e+06** | **+6.05%** | **7.5380e+06** | **+6.29%** | **6.99** | **0.29** |
+| 1 | 1 | 0 | 6.7228e+06 | -1.53% | 6.9792e+06 | -1.59% | 7.54 | 0.29 |
+| 1 | 1 | 1 | 7.1904e+06 | +5.32% | 7.4853e+06 | +5.54% | 7.03 | 0.29 |
+
+All arms PASSED with three refinement iterations and the expected residual.
+IR and memory state remained unchanged, so the gain is on the LU scheduling /
+overlap path rather than refinement or residency.
+
+### 15.2 Scheduling interpretation
+
+The dominant result is the interaction between factorization priority and the
+separate GEMM stream.
+
+Individually:
+
+~~~text
+S=1 with F=0:
+  no meaningful gain
+
+F=1 with S=0:
+  no meaningful gain
+~~~
+
+Together:
+
+~~~text
+F=1, S=1:
+  about +6% overall
+  about +6.3% LU
+~~~
+
+The useful mechanism-level interpretation is:
+
+~~~text
+separate GEMM stream
+    -> exposes more update concurrency
+
+factorization priority
+    -> prevents that concurrency from delaying dependency-producing
+       factorization work
+
+F=1 + S=1
+    -> overlap is available, but the critical panel/factorization path
+       remains protected
+~~~
+
+Without factorization priority, GEMM work can compete for resources while the
+next dependency-producing work is still pending. The apparent extra
+concurrency can therefore backfire by delaying the work that later GEMMs are
+waiting on anyway.
+
+With factorization priority enabled, the critical dependency path advances
+first and the separate GEMM stream can exploit otherwise-idle overlap more
+usefully.
+
+This is a mechanism-level interpretation of the black-box application, not a
+claim about the exact internal CUDA-event or stream implementation.
+
+TRSM priority adds no benefit in the retained regime:
+
+~~~text
+101 = 7.2398e+06 GFLOP/s
+111 = 7.1904e+06 GFLOP/s
+~~~
+
+The ~0.7% gap is small but consistently favors leaving TRSM priority off.
+The likely interpretation is that factorization priority is already the
+important broader dependency protection, while separately prioritizing TRSM is
+redundant or slightly over-constraining.
+
+Retain:
+
+~~~text
+prioritize-factorization = 1
+prioritize-trsm = 0
+use-separate-stream-for-gemm = 1
+~~~
+
+### 15.3 Phase-5 dependency review
+
+The scheduler change was large enough that the most dependency-sensitive
+earlier controls had to be checked before Phase 5 could close.
+
+The dependency review kept the following closed:
+
+- N / FP64-residency operating point;
+- process grid/order;
+- GPU/CPU/NUMA placement;
+- OpenMP and CPU-affinity policy;
+- fill-device / buffer / host-register policy;
+- DGEMV;
+- panel-broadcast policy;
+- UCX transport and affinity.
+
+The two settings worth reopening were:
+
+- **NB**, because panel width/frequency and GEMM geometry directly affect the
+  factorization-vs-update scheduling balance;
+- **U-panel chunk**, because readiness granularity determines when update work
+  becomes schedulable.
+
+TASK-2X8-018 therefore ran a joint valid NB × chunk matrix under fixed
+scheduler `101`, rather than a sequential NB-then-chunk sweep.
+
+### 15.4 TASK-2X8-018 — NB × U-panel chunk revalidation
+
+The control `NB=3072, chunk=4, scheduler=101` was bracketed at the beginning
+and end:
+
+| Metric | Opening | Closing | Midpoint | Spread |
+|---|---:|---:|---:|---:|
+| Overall GFLOP/s | 7.2303e+06 | 7.2406e+06 | **7.23545e+06** | **0.1425%** |
+| LU GFLOP/s | 7.5266e+06 | 7.5382e+06 | **7.5324e+06** | **0.1541%** |
+| LU time | 7.00 s | 6.99 s | ~7.00 s | negligible |
+| IR | 0.29 s | 0.29 s | 0.29 s | none |
+
+This control midpoint is only about 0.06% below TASK-2X8-017 A101, showing
+excellent cross-task reproducibility of the final stack.
+
+#### NB result
+
+Best valid point at each NB:
+
+| NB | Best tested chunk | Best overall GFLOP/s | Delta vs 3072/4 midpoint |
+|---:|---:|---:|---:|
+| 1024 | 16 | 5.7008e+06 | -21.21% |
+| 2048 | 8 | 6.9567e+06 | -3.85% |
+| **3072** | **4** | **7.2303e+06** | **-0.07% vs midpoint** |
+| 4096 | 8 | 6.5382e+06 | -9.64% |
+| 5120 | 4 | 6.4324e+06 | -11.10% |
+| 6144 | 4 | 6.0386e+06 | -16.54% |
+
+NB=3072 wins every shared-chunk comparison:
+
+~~~text
+chunk 2:  3072 > 4096 > 5120 > 6144
+chunk 4:  3072 > 2048 > 4096 > 5120 > 6144
+chunk 8:  3072 > 2048 > 4096 > 5120 > 6144 > 1024
+chunk 16: 3072 > 2048 > 4096 > 5120 > 6144 > 1024
+~~~
+
+The earlier Phase-1B 2048-3072 near-tie is therefore no longer the final-stack
+result. Under the final stack, the best NB=2048 point is already about 3.85%
+behind overall and about 2.97% behind in LU.
+
+Retain:
+
+~~~text
+NB = 3072
+~~~
+
+#### U-panel chunk result at retained NB=3072
+
+| Chunk | Overall GFLOP/s | Delta vs 3072/4 midpoint | LU GFLOP/s | IR |
+|---:|---:|---:|---:|---:|
+| 2 | 7.1815e+06 | -0.75% | 7.4754e+06 | 0.29 s |
+| **4** | **7.2303e+06** | **-0.07%** | 7.5266e+06 | 0.29 s |
+| **8** | **7.2296e+06** | **-0.08%** | **7.5274e+06** | 0.29 s |
+| 16 | 7.1564e+06 | -1.09% | 7.4472e+06 | 0.29 s |
+
+At scheduler 101, chunk 2/4/8/16 is a sub-2% plateau and chunk 4 versus 8 is
+effectively identical.
+
+This is a major change in interpretation from Phase 4C, where chunk 4 was
+about 4.1% above the chunk-8 midpoint under the older scheduling state.
+
+The result confirms that chunk usefulness is conditional on the scheduling
+regime:
+
+~~~text
+chunk granularity
+    -> readiness cadence
+
+scheduler 101
+    -> protects dependency-producing factorization work
+    -> changes how strongly readiness cadence limits the critical path
+~~~
+
+The matrix also shows genuine NB × chunk interaction globally: different NBs
+prefer different chunks. That validates using the paired matrix instead of
+sequential sweeps.
+
+However, the interaction does not create a new retained branch because
+NB=3072 wins regardless of chunk and all chunks are close inside the retained
+NB.
+
+Retain:
+
+~~~text
+u-panel-chunk-nbs = 4
+~~~
+
+as the established representative of the plateau, not as a uniquely proven
+numerical optimum.
+
+### 15.5 Memory / refinement behavior across the NB matrix
+
+TASK-2X8-018 also reconfirmed that NB can change the memory/refinement regime:
+
+~~~text
+NB=1024:
+  host = 0.004 GB/process
+  device = 132.289 GB/process
+  IR = 0.37 s
+
+NB=2048:
+  host = 0.517 GB/process
+  device = 135.763 GB/process
+  IR = 0.36 s
+
+NB=3072:
+  host = 0.004 GB/process
+  device = 135.254 GB/process
+  IR = 0.29 s
+
+NB=4096:
+  host = 6.123 GB/process
+  device = 135.762 GB/process
+  IR = 0.69-0.77 s
+
+NB=5120:
+  host = 2.554 GB/process
+  device = 135.762 GB/process
+  IR = 0.59-0.67 s
+
+NB=6144:
+  host = 11.900 GB/process
+  device = 135.763 GB/process
+  IR = 0.99-1.13 s
+~~~
+
+The host-allocation pattern is not monotonic because NB changes block-cyclic
+geometry, padding, and workspace requirements; it should not be interpreted as
+a direct spill-volume counter.
+
+For the dependency decision, the important point is that the retained
+NB=3072 state exactly reproduces the favorable low-IR/full-residency regime:
+
+~~~text
+host = 0.004 GB/process
+IR = 0.29 s
+device = 135.254 GB/process
+~~~
+
+Rejected NBs that enter a worse memory/IR state do not reopen N or residency
+because they are not retained.
+
+### 15.6 Final dependency checkpoint
+
+- **E27 — chunk -> scheduling:** reclosed. Chunk was directly revalidated under
+  scheduler 101.
+- **E28 — NB -> scheduling:** reclosed. NB=3072 remains the retained geometry,
+  so the scheduling factorial remains inside its valid regime.
+- **E08 / E14 / E15 — NB/N/residency:** not reopened. Retained NB and memory
+  state remain unchanged.
+- **E10 — NB -> grid/order:** not reopened because NB stays 3072.
+- **E22 / E26 — NB/transport -> scheduling:** not reopened because retained
+  NB, topology, and panel policy remain unchanged.
+- **E18 / E19 — host runtime:** not reopened; OMP=4/free host policy is
+  unchanged and retained IR remains 0.29 s.
+- **E16 / E17 / E40 — buffer/register/residency:** not reopened at retained
+  NB=3072.
+- **E20 / E21 — DGEMV:** not reopened; retained IR remains too small for a new
+  solver-side sweep.
+- **E34 — NB <-> GEMM kernel:** not triggered because retained NB remains
+  3072.
+- **E37 — N -> scheduling:** not triggered because N remains 429056.
+- No trace/profiling branch is required; the scored evidence already resolves
+  the retention decision.
+
+No earlier phase requires a full re-sweep or light revalidation.
+
+### 15.7 Phase-5 closure
+
+**Phase 5 is CLOSED.**
+
+Retained Phase-5 scheduling/readiness state:
+
+~~~text
+NB = 3072
+u-panel-chunk-nbs = 4
+
+prioritize-factorization = 1
+prioritize-trsm = 0
+use-separate-stream-for-gemm = 1
+~~~
+
+The exact final candidate now has three scored observations across two jobs:
+
+~~~text
+TASK-2X8-017 A101:
+  7.2398e+06 GFLOP/s
+
+TASK-2X8-018 opening control:
+  7.2303e+06 GFLOP/s
+
+TASK-2X8-018 closing control:
+  7.2406e+06 GFLOP/s
+~~~
+
+The TASK-2X8-018 midpoint is `7.23545e+06` GFLOP/s, only about 0.06% below
+TASK-2X8-017 A101. The opening/closing spread is only 0.1425% overall and
+0.1541% LU.
+
+Therefore the final stack is already repeat-confirmed. A separate additional
+confirmation run would duplicate evidence and is not required.
+
+Phase-5 scope note: FP16 and the effective package-default / SM90 GEMM preset
+were retained as fixed controls rather than exhaustively swept. That does not
+leave Phase 5 open for this first-pass campaign; any deliberate
+precision/kernel study belongs to a later second-pass reopening.
+
+## 16. 2x8 GAAS First-Pass Campaign Closure
+
+With Phase 5 closed, the first structured end-to-end HPL-MxP optimization pass
+for the **2 GAAS nodes × 8 H200 GPUs/node** topology is also **COMPLETE**.
+
+The adopted blueprint terminates at Phase 5, and every phase is now closed for
+the executed scope:
+
+~~~text
+Phase 0
+  characterization + immutable baseline
+
+Phase 1
+  N / NB geometry and FP64-residency operating point
+
+Phase 2
+  process grid / order / GPU-NUMA-NIC placement
+
+Phase 3
+  host runtime / CPU locality / residency / remaining host-memory controls
+
+Phase 4
+  communication / panel transport / U-panel readiness
+
+Phase 5
+  scheduling / final-stack dependency validation
+~~~
+
+### 16.1 Final retained 2x8 stack
+
+~~~text
+N = 429056
+NB = 3072
+
+nprow = 4
+npcol = 4
+nporder = row
+
+gpu-affinity = 0:1:2:3:4:5:6:7
+cpu-affinity = omitted
+mem-affinity = omitted
+ucx-affinity = omitted / AUTO
+UCX_TLS = unset / AUTO
+UCX_NET_DEVICES = unset / AUTO
+
+OMP_NUM_THREADS = 4
+OMP_PLACES = omitted
+OMP_PROC_BIND = omitted
+effective launcher policy = sockets / TRUE
 
 fill-device = 1
 fill-device-buffer-size = 3048
@@ -1774,23 +2190,50 @@ prioritize-factorization = 1
 prioritize-trsm = 0
 use-separate-stream-for-gemm = 1
 
+test-loop = 1
 skip-tests = 0
 monitor-gpu = 0
-```
+~~~
 
-TASK-2X8-018 retained-control midpoint: **7.23545e+06 GFLOP/s**, approximately
-**+50.62%** over the immutable original baseline **4.8037e+06 GFLOP/s**.
+### 16.2 Baseline-to-final improvement
 
-The exact final stack reproduced across TASK-2X8-017 and TASK-2X8-018, and the
-mandatory Phase-5 dependency checkpoint reclosed E27/E28 without reopening an
-earlier phase. No additional final confirmation run is required.
+Immutable original 2x8 baseline:
 
-Because Phase 5 is the terminal phase of the adopted blueprint, this also
-formally marks the **first structured 2x8 GAAS HPL-MxP optimization pass as
-COMPLETE**.
+~~~text
+4.8037e+06 GFLOP/s
+~~~
 
-Scope note: this is completion of the executed first-pass campaign, not a
-claim of global optimum over every possible HPL-MxP control. FP16 and the
-effective package-default/SM90 GEMM kernel remained fixed rather than being
-exhaustively swept. Any future precision/kernel or newly discovered-control
-work is a second-pass reopening, not unfinished first-pass work.
+Final retained TASK-2X8-018 control midpoint:
+
+~~~text
+7.23545e+06 GFLOP/s
+~~~
+
+Campaign improvement:
+
+~~~text
++50.62%
+~~~
+
+The final point is also repeatable: the three final-stack observations from
+TASK-2X8-017 and TASK-2X8-018 are all within roughly 0.13% of one another.
+
+### 16.3 Final campaign state
+
+- Phase 5: **CLOSED**
+- TASK-2X8-017: **ANALYZED**
+- TASK-2X8-018: **ANALYZED**
+- E27 / E28: **RECLOSED**
+- Earlier phases: **remain closed**
+- Additional first-pass tuning task: **none pending**
+- 2x8 GAAS first-pass optimization campaign: **COMPLETE**
+
+This closure means the first structured campaign has finished, not that a
+global mathematical optimum over every possible HPL-MxP control has been
+proven.
+
+In particular, FP16 and the effective package-default / SM90 GEMM kernel were
+fixed rather than independently swept. A future precision/kernel study, new
+runtime control, software release, or materially different operating regime
+would be a **second-pass reopening**, not unfinished work from this campaign.
+
